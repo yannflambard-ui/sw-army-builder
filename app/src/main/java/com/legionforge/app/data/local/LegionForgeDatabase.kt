@@ -37,7 +37,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BuilderEntryEntity::class,
         WikiSectionEntity::class
     ],
-    version = 26,
+    version = 27,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -57,7 +57,7 @@ abstract class LegionForgeDatabase : RoomDatabase() {
                     context.applicationContext,
                     LegionForgeDatabase::class.java,
                     "legionforge.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).fallbackToDestructiveMigration().build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27).fallbackToDestructiveMigration().build().also { INSTANCE = it }
             }
         }
 
@@ -101,6 +101,14 @@ abstract class LegionForgeDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_26_27 = object : Migration(26, 27) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Vide catalog_cards pour forcer le re-seed (seedCatalog re-importe catalog.json
+                // avec les nouvelles données, ex: mercenaryFactions des unités Mandaloriennes).
+                // Préserve les listes d'armée et la collection (autres tables intactes).
+                db.execSQL("DELETE FROM catalog_cards")
+            }
+        }
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS catalog_cards (id TEXT NOT NULL PRIMARY KEY, gameSystem TEXT NOT NULL, kind TEXT NOT NULL, name TEXT NOT NULL, points INTEGER NOT NULL, factionId TEXT NOT NULL, legionRank TEXT, upgradeSlots TEXT NOT NULL, allowedUpgradeSlots TEXT NOT NULL, commander INTEGER NOT NULL, `unique` INTEGER NOT NULL, imageUrl TEXT, imageAssetPath TEXT, imageAssetPaths TEXT, rulesText TEXT, names TEXT DEFAULT NULL)")

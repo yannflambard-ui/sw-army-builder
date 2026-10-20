@@ -1,12 +1,9 @@
 package com.legionforge.app.data.repository
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.legionforge.app.data.model.CatalogDocument
-import com.legionforge.app.data.model.CardDefinition
 import com.legionforge.app.data.model.ArmadaSlot
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -128,5 +125,40 @@ class CatalogJsonValidationTest {
             println("REMAINING DUPLICATES: ${dupes.take(20)}")
         }
         assertEquals("No remaining strict duplicates", 0, dupes.size)
+    }
+
+    @Test
+    fun mandalorianUnitsHaveMercenaryFactions() {
+        val doc = loadCatalog()
+        val mandalorian = doc.cards.filter {
+            it.kind.name == "LEGION_UNIT" &&
+            (it.factionId == "mandalorians" || (it.cardSubtype?.contains("mandalorian", ignoreCase = true) == true))
+        }
+        println("Mandalorian units: ${mandalorian.size}")
+        // Toute unité Mandalorienne mercenaire doit avoir "mandalorians" dans mercenaryFactions
+        // pour apparaître dans une liste Mandalorienne (matchesFaction).
+        val mercWithoutMandalorian = mandalorian.filter {
+            it.factionId == "mercenary" && "mandalorians" !in (it.mercenaryFactions ?: emptyList())
+        }
+        if (mercWithoutMandalorian.isNotEmpty()) {
+            println("Mercenary Mandalorian units WITHOUT 'mandalorians' in mercenaryFactions: " +
+                mercWithoutMandalorian.map { it.name })
+        }
+        assertEquals("All mercenary Mandalorian units must include 'mandalorians' in mercenaryFactions",
+            0, mercWithoutMandalorian.size)
+    }
+
+    @Test
+    fun mandalorianFactionHasCorpsUnits() {
+        val doc = loadCatalog()
+        // Unités CORPS Mandaloriennes : factionId=mandalorians OU mercenaire avec "mandalorians" dans mercenaryFactions
+        val mandalorianCorps = doc.cards.filter {
+            it.kind.name == "LEGION_UNIT" &&
+            it.legionRank?.name == "CORPS" &&
+            (it.factionId == "mandalorians" || (it.factionId == "mercenary" && "mandalorians" in (it.mercenaryFactions ?: emptyList())))
+        }
+        println("Mandalorian CORPS units: ${mandalorianCorps.map { it.name }}")
+        assertTrue("Mandalorian faction should have at least 1 CORPS unit, got ${mandalorianCorps.size}",
+            mandalorianCorps.isNotEmpty())
     }
 }
