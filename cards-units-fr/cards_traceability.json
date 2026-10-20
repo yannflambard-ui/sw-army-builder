@@ -1,11 +1,11 @@
 {
  "schemaVersion": 2,
- "generated": "2026-10-15",
+ "generated": "2026-10-20",
  "purpose": "Base de données de traçabilité des cartes SW Legion par langue. Référence la version, le PDF source, le nb de fichiers et le site web de chaque carte pour éviter le travail en double et identifier les trous. Garder dans l'app la DERNIÈRE version de chaque carte dans chaque langue (erratas fréquents).",
  "stats": {
   "totalUnits": 169,
   "withFrenchImage": 128,
-  "verifiedThisBatch": 15,
+  "verifiedThisBatch": 19,
   "gaps": 41,
   "coveragePct": 75.7
  },
@@ -104,11 +104,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/rebel/fr/jyn-erso-stardust.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Rebel Alliance Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0173.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/rebel/jyn-erso-stardust.webp"
@@ -122,11 +122,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/rebel/fr/chewbacca-walking-carpet.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Rebel Alliance Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0185.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/rebel/chewbacca-walking-carpet.webp"
@@ -194,11 +194,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/rebel/fr/wookiee-warriors-freedom-fighters.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Rebel Alliance Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0125.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/rebel/wookiee-warriors-freedom-fighters.webp"
@@ -233,7 +233,7 @@
     "sourcePdf": "Rebel Alliance Units FR",
     "sourceUrl": "https://drive.google.com/file/d/1QIX-RC6zQ9mS9z3K1edGGd9YQlw04fUx/view?usp=drivesdk",
     "sourceDate": null,
-    "extractedFile": "card_0184.webp",
+    "extractedFile": "card_0129.webp",
     "verified": true
    },
    "en": {
@@ -467,7 +467,7 @@
     "sourcePdf": "Galactic Empire Units FR",
     "sourceUrl": "https://drive.google.com/file/d/1E81zbWQmMkhOYf2deSnV97qOO9hr2Dm0/view?usp=drivesdk",
     "sourceDate": null,
-    "extractedFile": "card_0040.webp",
+    "extractedFile": "card_0039.webp",
     "verified": true
    },
    "en": {
@@ -1022,11 +1022,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/republic/fr/arc-troopers.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Galactic Republic Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0209.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/republic/arc-troopers.webp"
@@ -1061,7 +1061,7 @@
     "sourcePdf": "Separatist Alliance Units FR",
     "sourceUrl": "https://drive.google.com/file/d/1WNjtVZqM-M6WgG75onFQZuXKVMWXqYzo/view?usp=drivesdk",
     "sourceDate": null,
-    "extractedFile": "card_0340.webp",
+    "extractedFile": "card_0285.webp",
     "verified": true
    },
    "en": {
@@ -1133,7 +1133,7 @@
     "sourcePdf": "Galactic Empire Units FR",
     "sourceUrl": "https://drive.google.com/file/d/1E81zbWQmMkhOYf2deSnV97qOO9hr2Dm0/view?usp=drivesdk",
     "sourceDate": null,
-    "extractedFile": "card_0048.webp",
+    "extractedFile": "card_0047.webp",
     "verified": true
    },
    "en": {
@@ -1220,11 +1220,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/empire/fr/agent-kallus-hunter-of-spectres.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Galactic Empire Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0092.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/empire/agent-kallus-hunter-of-spectres.webp"
@@ -1850,11 +1850,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mercenary/fr/chewbacca-let-the-wookiee-win.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Ewoks & Mandalorian FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "merc_ewoks_fr_p2_c21.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mercenary/chewbacca-let-the-wookiee-win.webp"
@@ -1868,11 +1868,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mercenary/fr/ewok-skirmishers.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Ewoks & Mandalorian FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "merc_ewoks_fr_p1_c01.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mercenary/ewok-skirmishers.webp"
@@ -1922,11 +1922,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mercenary/fr/logray-superstitious-shaman.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Ewoks & Mandalorian FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "merc_ewoks_fr_p2_c10.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mercenary/logray-superstitious-shaman.webp"
@@ -1940,11 +1940,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/empire/fr/major-marquand-tempest-scout-2.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Galactic Empire Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0090.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/empire/major-marquand-tempest-scout-2.webp"
@@ -1976,11 +1976,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/empire/fr/seventh-sister-compelled-to-inflict-pain.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Galactic Empire Units FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "card_0094.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/empire/seventh-sister-compelled-to-inflict-pain.webp"
@@ -2804,11 +2804,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mercenary/fr/clan-kryze-veterans.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Mandalorian BattleForce Cards FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "mandalorian_bf_p10_c01.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mercenary/clan-kryze-veterans.webp"
@@ -2930,11 +2930,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mercenary/fr/clan-wren-veterans.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Mandalorian BattleForce Cards FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "mandalorian_bf_p2_c01.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mercenary/clan-wren-veterans.webp"
@@ -2966,11 +2966,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mercenary/fr/ursa-wren-leader-of-clan-wren.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Mandalorian BattleForce Cards FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "mandalorian_bf_p1_c01.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mercenary/ursa-wren-leader-of-clan-wren.webp"
@@ -3020,11 +3020,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mandalorians/fr/rook-kast-devoted-to-the-cause.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Mandalorian BattleForce Cards FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "mandalorian_bf_p3_c01.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mandalorians/rook-kast-devoted-to-the-cause.webp"
@@ -3038,11 +3038,11 @@
    "fr": {
     "hasImage": true,
     "path": "cards/swl/mandalorians/fr/super-commandos.webp",
-    "sourcePdf": null,
+    "sourcePdf": "Mandalorian BattleForce Cards FR",
     "sourceUrl": null,
     "sourceDate": null,
-    "extractedFile": null,
-    "verified": false
+    "extractedFile": "mandalorian_bf_p4_c01.webp",
+    "verified": true
    },
    "en": {
     "path": "cards/swl/mandalorians/super-commandos.webp"
