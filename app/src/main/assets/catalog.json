@@ -23335,6 +23335,29 @@
     "de": "Mar Tuuk",
     "es": "Mar Tuuk"
    }
+  },
+  {
+   "id": "legion_v2:lhq2/grogu",
+   "gameSystem": "LEGION_V2",
+   "kind": "LEGION_UNIT",
+   "name": "Grogu (The Child)",
+   "points": 17,
+   "factionId": "mercenary",
+   "legionRank": "OPERATIVE",
+   "upgradeSlots": [],
+   "allowedUpgradeSlots": [],
+   "commander": false,
+   "unique": true,
+   "imageUrl": null,
+   "imageAssetPath": "cards/swl/mercenary/grogu.webp",
+   "rulesText": null,
+   "legionStats": "{\"health\": 1, \"courage\": 1, \"speed\": 1, \"defenseDie\": \"w\", \"surgeAttack\": null, \"surgeDefense\": null, \"miniCount\": 1, \"keywords\": [\"Mercenary\", \"Hunted\", \"Latent Power\", \"Small\", \"Claim\"], \"weapons\": [], \"upgradeBar\": []}",
+   "cardSubtype": "trooper",
+   "title": "The Child",
+   "affiliation": "Children of the Watch",
+   "imageAssetPaths": {
+    "fr": "cards/swl/mercenary/fr/grogu.webp"
+   }
   }
  ]
 }
