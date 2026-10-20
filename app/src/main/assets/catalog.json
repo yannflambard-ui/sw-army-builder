@@ -23358,6 +23358,94 @@
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/grogu.webp"
    }
+  },
+  {
+   "id": "legion_v2:lhq2/qa",
+   "gameSystem": "LEGION_V2",
+   "kind": "LEGION_UNIT",
+   "name": "Kalani",
+   "points": 85,
+   "factionId": "separatists",
+   "legionRank": "COMMANDER",
+   "upgradeSlots": [],
+   "allowedUpgradeSlots": [],
+   "commander": true,
+   "unique": true,
+   "imageUrl": null,
+   "imageAssetPath": "cards/swl/separatists/qa.webp",
+   "rulesText": null,
+   "legionStats": "{\"health\": 5, \"courage\": 2, \"speed\": 2, \"defenseDie\": \"r\", \"surgeAttack\": \"h\", \"surgeDefense\": null, \"miniCount\": 1, \"keywords\": [\"Strategize\", \"Direct\", \"Exemplar\", \"Reinforcements\", \"Sharpshooter\"], \"weapons\": [{\"name\": \"Combat Expertise\", \"range\": {\"min\": 0, \"max\": 0}, \"dice\": {\"red\": 0, \"black\": 2, \"white\": 0}}, {\"name\": \"Blaster Rifle\", \"range\": {\"min\": 1, \"max\": 3}, \"dice\": {\"red\": 0, \"black\": 3, \"white\": 0}}], \"upgradeBar\": [\"command\", \"command\", \"command\", \"comms\", \"gear\"]}",
+   "cardSubtype": "droid trooper",
+   "title": "Super Tactical Droid",
+   "affiliation": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/separatists/fr/kalani.webp"
+   }
+  },
+  {
+   "id": "legion_v2:lhq2/pz",
+   "gameSystem": "LEGION_V2",
+   "kind": "LEGION_UNIT",
+   "name": "Kraken",
+   "points": 80,
+   "factionId": "separatists",
+   "legionRank": "COMMANDER",
+   "upgradeSlots": [],
+   "allowedUpgradeSlots": [],
+   "commander": true,
+   "unique": true,
+   "imageUrl": null,
+   "imageAssetPath": "cards/swl/separatists/pz.webp",
+   "rulesText": null,
+   "legionStats": "{\"health\": 5, \"courage\": 2, \"speed\": 2, \"defenseDie\": \"r\", \"surgeAttack\": \"c\", \"surgeDefense\": null, \"miniCount\": 1, \"keywords\": [\"Strategize\", \"Charge\", \"Exemplar\", \"Override\", \"Sharpshooter\"], \"weapons\": [{\"name\": \"Overwhelm\", \"range\": {\"min\": 0, \"max\": 0}, \"dice\": {\"red\": 4, \"black\": 0, \"white\": 0}}, {\"name\": \"Blaster Rifle\", \"range\": {\"min\": 1, \"max\": 3}, \"dice\": {\"red\": 3, \"black\": 0, \"white\": 0}}], \"upgradeBar\": [\"command\", \"command\", \"training\", \"comms\", \"gear\"]}",
+   "cardSubtype": "droid trooper",
+   "title": "Super Tactical Droid",
+   "affiliation": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/separatists/fr/kraken.webp"
+   }
+  },
+  {
+   "id": "legion_v2:lhq2/ji",
+   "gameSystem": "LEGION_V2",
+   "kind": "LEGION_UNIT",
+   "name": "C-3PO (Human-Cyborg Relations)",
+   "points": 15,
+   "factionId": "rebel",
+   "legionRank": "OPERATIVE",
+   "upgradeSlots": [],
+   "allowedUpgradeSlots": [],
+   "commander": false,
+   "unique": true,
+   "imageUrl": null,
+   "imageAssetPath": "cards/swl/rebel/ji.webp",
+   "rulesText": null,
+   "legionStats": "{\"health\": 2, \"courage\": 1, \"speed\": 1, \"defenseDie\": \"w\", \"surgeAttack\": null, \"surgeDefense\": null, \"miniCount\": 1, \"keywords\": [\"Calculate Odds\", \"Distract\", \"Counterpart\"], \"weapons\": [], \"upgradeBar\": []}",
+   "cardSubtype": "droid trooper",
+   "title": "Human-Cyborg Relations",
+   "affiliation": null,
+   "imageAssetPaths": {}
+  },
+  {
+   "id": "legion_v2:lhq2/jj",
+   "gameSystem": "LEGION_V2",
+   "kind": "LEGION_UNIT",
+   "name": "C-3PO (Made to Suffer)",
+   "points": 15,
+   "factionId": "republic",
+   "legionRank": "OPERATIVE",
+   "upgradeSlots": [],
+   "allowedUpgradeSlots": [],
+   "commander": false,
+   "unique": true,
+   "imageUrl": null,
+   "imageAssetPath": "cards/swl/republic/jj.webp",
+   "rulesText": null,
+   "legionStats": "{\"health\": 2, \"courage\": 1, \"speed\": 1, \"defenseDie\": \"w\", \"surgeAttack\": null, \"surgeDefense\": null, \"miniCount\": 1, \"keywords\": [\"Calculate Odds\", \"Distract\", \"Counterpart\"], \"weapons\": [], \"upgradeBar\": []}",
+   "cardSubtype": "droid trooper",
+   "title": "Made to Suffer",
+   "affiliation": null,
+   "imageAssetPaths": {}
   }
  ]
 }
