@@ -161,4 +161,25 @@ class CatalogJsonValidationTest {
         assertTrue("Mandalorian faction should have at least 1 CORPS unit, got ${mandalorianCorps.size}",
             mandalorianCorps.isNotEmpty())
     }
+
+    @Test
+    fun observeCardsQueryIncludesMercenaryMandalorianUnits() {
+        val doc = loadCatalog()
+        // Simule la requête DAO observeCards(system, "mandalorians") :
+        // factionId = 'mandalorians' OR factionId = 'neutral' OR
+        // (factionId = 'mercenary' AND (',' || mercenaryFactions || ',') LIKE '%,mandalorians,%')
+        fun mercContains(factions: List<String>?, target: String) =
+            ("," + (factions ?: emptyList()).joinToString(",") + ",").contains("," + target + ",")
+
+        val queryResults = doc.cards.filter {
+            it.gameSystem.name == "LEGION_V2" && it.kind.name == "LEGION_UNIT" &&
+            (it.factionId == "mandalorians" || it.factionId == "neutral" ||
+             (it.factionId == "mercenary" && mercContains(it.mercenaryFactions, "mandalorians")))
+        }
+        println("observeCards('mandalorians') simulator returns: ${queryResults.size} units")
+        val corps = queryResults.filter { it.legionRank?.name == "CORPS" }
+        println("  CORPS units visible in Mandalorian list: ${corps.map { it.name }}")
+        assertTrue("Mandalorian list via observeCards must see at least 1 CORPS unit, got ${corps.size}",
+            corps.isNotEmpty())
+    }
 }

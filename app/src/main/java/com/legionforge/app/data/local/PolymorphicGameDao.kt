@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PolymorphicGameDao {
-    @Query("SELECT * FROM catalog_cards WHERE gameSystem = :system AND (factionId = :factionId OR factionId = 'neutral') ORDER BY name")
+    @Query("SELECT * FROM catalog_cards WHERE gameSystem = :system AND (factionId = :factionId OR factionId = 'neutral' OR (factionId = 'mercenary' AND (',' || mercenaryFactions || ',') LIKE '%,' || :factionId || ',%')) ORDER BY name")
     fun observeCards(system: String, factionId: String): Flow<List<CatalogCardEntity>>
 
     @Query("SELECT * FROM catalog_cards WHERE gameSystem = :system ORDER BY factionId, name")
