@@ -40,7 +40,15 @@ fun FactionPickerScreen(system: GameSystem, onFactionSelected: (String) -> Unit,
     val error by vm.catalogError.collectAsState()
     androidx.compose.runtime.LaunchedEffect(system) { vm.loadAllCatalog(system) }
     val factionCards = cards.filter { if (system == GameSystem.LEGION_V2) it.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT else it.kind == com.legionforge.app.data.model.CardKind.ARMADA_SHIP }
-    val groups = factionCards.groupBy { it.factionId }
+    // Une carte appartient à sa factionId + à chaque faction de ses mercenaryFactions
+    // (ex: unités Mandaloriennes factionId=mercenary + mercenaryFactions=[mandalorians]).
+    val groups = factionCards.flatMap { c ->
+        val factions = buildList {
+            add(c.factionId)
+            if (c.factionId == "mercenary") addAll(c.mercenaryFactions)
+        }
+        factions.map { it to c }
+    }.groupBy({ it.first }, { it.second })
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.choose_faction)) }) }) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { Text(system.label(), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelLarge) }
