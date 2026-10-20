@@ -22199,29 +22199,6 @@
    }
   },
   {
-   "id": "armada-v15:bsdata:galactic-republic:7fe6-94b3-9ef2-90d2",
-   "gameSystem": "ARMADA_V15",
-   "kind": "ARMADA_SQUADRON",
-   "name": "Anakin Skywalker",
-   "points": 18,
-   "factionId": "republic",
-   "legionRank": null,
-   "upgradeSlots": [],
-   "allowedUpgradeSlots": [],
-   "commander": false,
-   "unique": true,
-   "imageUrl": null,
-   "imageAssetPath": "cards/swa/republic/anakin-skywalker-18.webp",
-   "rulesText": "Speed: 3\nHull Value: 6\nAnti-Squadron: 3 Blue\nBattery: 1 Red, 1 Blue\nKeywords: Adept 2.  Bomber.  Heavy.\nDefense Tokens: Brace, Brace\nSquadron Ability: During your activation, you may spend 1 defense token to ignore engagement until the end of your activation.",
-   "shipStats": "{\"hull\":4,\"speed\":4,\"antiSquadron\":[2,0,2],\"battery\":[0,0,1],\"defenseTokens\":[\"BRACE\",\"SCATTER\"],\"keywords\":[\"Adept\",\"Counter\",\"Dodge\"],\"kind\":\"SQUADRON\"}",
-   "names": {
-    "en": "Anakin Skywalker",
-    "fr": "Anakin Skywalker",
-    "de": "Anakin Skywalker",
-    "es": "Anakin Skywalker"
-   }
-  },
-  {
    "id": "armada-v15:bsdata:galactic-republic:70a5-2bd9-45b2-6e39",
    "gameSystem": "ARMADA_V15",
    "kind": "ARMADA_SQUADRON",

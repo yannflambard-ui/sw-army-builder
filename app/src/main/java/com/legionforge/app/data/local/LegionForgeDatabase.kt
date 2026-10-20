@@ -37,7 +37,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BuilderEntryEntity::class,
         WikiSectionEntity::class
     ],
-    version = 27,
+    version = 28,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -57,7 +57,7 @@ abstract class LegionForgeDatabase : RoomDatabase() {
                     context.applicationContext,
                     LegionForgeDatabase::class.java,
                     "legionforge.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27).fallbackToDestructiveMigration().build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27, MIGRATION_27_28).fallbackToDestructiveMigration().build().also { INSTANCE = it }
             }
         }
 
@@ -106,6 +106,12 @@ abstract class LegionForgeDatabase : RoomDatabase() {
                 // Vide catalog_cards pour forcer le re-seed (seedCatalog re-importe catalog.json
                 // avec les nouvelles données, ex: mercenaryFactions des unités Mandaloriennes).
                 // Préserve les listes d'armée et la collection (autres tables intactes).
+                db.execSQL("DELETE FROM catalog_cards")
+            }
+        }
+        private val MIGRATION_27_28 = object : Migration(27, 28) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Vide catalog_cards : force le re-seed (suppression Anakin 18 pts obsolète).
                 db.execSQL("DELETE FROM catalog_cards")
             }
         }
