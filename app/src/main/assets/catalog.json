@@ -524,7 +524,14 @@
    "affiliation": "rogue",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/boba-fett-infamous-bounty-hunter.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel",
+    "empire",
+    "republic",
+    "separatists"
+   ]
   },
   {
    "id": "legion_v2:lhq2/bossk-trandoshan-terror",
@@ -2431,7 +2438,10 @@
    "affiliation": "maul loyalist",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/gar-saxon-militant-commando.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians"
+   ]
   },
   {
    "id": "legion_v2:lhq2/mandalorian-super-commandos",
@@ -2461,7 +2471,10 @@
    "affiliation": "maul loyalist",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/mandalorian-super-commandos.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians"
+   ]
   },
   {
    "id": "legion_v2:lhq2/a-a5-speeder-truck:12cf694c",
@@ -2626,7 +2639,11 @@
    "affiliation": "Children of the Watch",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/din-djarin-cotw-the-mandalorian.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel"
+   ]
   },
   {
    "id": "legion_v2:lhq2/boba-fett-daimyo-of-mos-espa",
@@ -2654,7 +2671,14 @@
    "affiliation": "rogue",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/boba-fett-daimyo-of-mos-espa.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel",
+    "empire",
+    "republic",
+    "separatists"
+   ]
   },
   {
    "id": "legion_v2:lhq2/imperial-dark-troopers",
@@ -4184,7 +4208,10 @@
    "legionStats": "{\"health\":1,\"courage\":1,\"speed\":2,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"\",\"miniCount\":5,\"keywords\":[],\"weapons\":[{\"name\":\"Vibro Blades\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":0,\"black\":1,\"white\":0}},{\"name\":\"Blaster Rifles\",\"range\":{\"min\":1,\"max\":2},\"dice\":{\"red\":0,\"black\":1,\"white\":0}}],\"upgradeBar\":[\"clan\",\"heavy weapon\",\"personnel\",\"training\",\"grenades\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": null,
-   "affiliation": "Mandalorians"
+   "affiliation": "Mandalorians",
+   "mercenaryFactions": [
+    "mandalorians"
+   ]
   },
   {
    "id": "legion_v2:lhq2/mandalorian-warriors",
@@ -4212,7 +4239,10 @@
    "legionStats": "{\"health\":1,\"courage\":2,\"speed\":2,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"\",\"miniCount\":5,\"keywords\":[\"Jump\",\"Duelist\",\"Impervious\"],\"weapons\":[{\"name\":\"Vibro Blades\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":0,\"black\":1,\"white\":1}},{\"name\":\"Blaster Rifles\",\"range\":{\"min\":1,\"max\":2},\"dice\":{\"red\":0,\"black\":1,\"white\":0}}],\"upgradeBar\":[\"clan\",\"heavy weapon\",\"personnel\",\"training\",\"gear\",\"grenades\",\"armament\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": null,
-   "affiliation": "Mandalorians"
+   "affiliation": "Mandalorians",
+   "mercenaryFactions": [
+    "mandalorians"
+   ]
   },
   {
    "id": "legion_v2:lhq2/mandalorian-warriors-fire-support",
@@ -4239,7 +4269,10 @@
    "legionStats": "{\"health\":1,\"courage\":2,\"speed\":2,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"\",\"miniCount\":4,\"keywords\":[\"Jump\",\"Detachment\",\"Heavy Weapon Team\",\"Duelist\",\"Impervious\",\"Sharpshooter\"],\"weapons\":[{\"name\":\"Vibro Blades\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":0,\"black\":1,\"white\":1}},{\"name\":\"GALAAR-15 Carbines\",\"range\":{\"min\":1,\"max\":3},\"dice\":{\"red\":0,\"black\":1,\"white\":0}}],\"upgradeBar\":[\"clan\",\"heavy weapon\",\"personnel\",\"training\",\"gear\",\"grenades\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": "Fire Support",
-   "affiliation": "Mandalorians"
+   "affiliation": "Mandalorians",
+   "mercenaryFactions": [
+    "mandalorians"
+   ]
   },
   {
    "id": "legion_v2:lhq2/clan-kryze-veterans",
@@ -4268,7 +4301,12 @@
    "affiliation": "Clan Kryze",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/clan-kryze-veterans.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel",
+    "republic"
+   ]
   },
   {
    "id": "legion_v2:lhq2/mandalorian-leader",
@@ -4297,7 +4335,10 @@
    "legionStats": "{\"health\":5,\"courage\":2,\"speed\":3,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"b\",\"miniCount\":1,\"keywords\":[\"Jump\",\"Equip\",\"Impervious\",\"Retinue\"],\"weapons\":[{\"name\":\"Vibroknife\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":0,\"black\":2,\"white\":2}},{\"name\":\"Blaster Pistol\",\"range\":{\"min\":1,\"max\":2},\"dice\":{\"red\":2,\"black\":0,\"white\":2}}],\"upgradeBar\":[\"clan\",\"doctrine\",\"armament\",\"command\",\"training\",\"gear\",\"gear\",\"grenades\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": null,
-   "affiliation": "Mandalorians"
+   "affiliation": "Mandalorians",
+   "mercenaryFactions": [
+    "mandalorians"
+   ]
   },
   {
    "id": "legion_v2:lhq2/mandalorian-hunter",
@@ -4325,7 +4366,14 @@
    "legionStats": "{\"health\":5,\"courage\":2,\"speed\":3,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"\",\"miniCount\":1,\"keywords\":[\"Mercenary\",\"Jump\",\"Equip\",\"Impervious\"],\"weapons\":[{\"name\":\"Vibroknife\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":0,\"black\":2,\"white\":2}},{\"name\":\"Blaster Pistol\",\"range\":{\"min\":1,\"max\":2},\"dice\":{\"red\":2,\"black\":0,\"white\":2}}],\"upgradeBar\":[\"clan\",\"doctrine\",\"armament\",\"training\",\"gear\",\"gear\",\"grenades\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": null,
-   "affiliation": "Mandalorians"
+   "affiliation": "Mandalorians",
+   "mercenaryFactions": [
+    "mandalorians",
+    "empire",
+    "rebel",
+    "republic",
+    "separatists"
+   ]
   },
   {
    "id": "legion_v2:lhq2/bo-katan-kryze-savior-of-mandalore",
@@ -4353,7 +4401,12 @@
    "legionStats": "{\"health\":5,\"courage\":3,\"speed\":3,\"defenseDie\":\"r\",\"surgeAttack\":\"c\",\"surgeDefense\":\"b\",\"miniCount\":1,\"keywords\":[\"Mercenary\",\"Jump\",\"Death from Above\",\"Impervious\",\"Mandalorians Are Stronger Together\",\"Tactical\"],\"weapons\":[{\"name\":\"Dual Blaster Pistols\",\"range\":{\"min\":0,\"max\":2},\"dice\":{\"red\":2,\"black\":2,\"white\":0}}],\"upgradeBar\":[\"command\",\"training\",\"training\",\"gear\",\"gear\",\"armament\",\"grenades\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": "Savior of Mandalore",
-   "affiliation": "Clan Kryze"
+   "affiliation": "Clan Kryze",
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel",
+    "republic"
+   ]
   },
   {
    "id": "legion_v2:lhq2/axe-woves-cunning-warrior",
@@ -4380,7 +4433,12 @@
    "legionStats": "{\"health\":5,\"courage\":2,\"speed\":3,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"b\",\"miniCount\":1,\"keywords\":[\"Mercenary\",\"Jump\",\"Charge\",\"Coordinate\",\"Impervious\",\"Mandalorians Are Stronger Together\",\"Tactical\"],\"weapons\":[{\"name\":\"Vibroknife and Pistol\",\"range\":{\"min\":0,\"max\":2},\"dice\":{\"red\":2,\"black\":2,\"white\":0}}],\"upgradeBar\":[\"training\",\"training\",\"comms\",\"gear\",\"gear\",\"grenades\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": "Cunning Warrior",
-   "affiliation": "Clan Kryze"
+   "affiliation": "Clan Kryze",
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel",
+    "republic"
+   ]
   },
   {
    "id": "legion_v2:lhq2/the-armorer-forging-the-future",
@@ -4406,7 +4464,11 @@
    "legionStats": "{\"health\":6,\"courage\":3,\"speed\":2,\"defenseDie\":\"r\",\"surgeAttack\":\"\",\"surgeDefense\":\"b\",\"miniCount\":1,\"keywords\":[\"Jump\",\"Aid\",\"Charge\",\"Impervious\",\"Reliable\",\"This is the Way\"],\"weapons\":[{\"name\":\"Hammer and Tongs\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":3,\"black\":3,\"white\":0}}],\"upgradeBar\":[\"command\",\"command\",\"training\",\"gear\",\"gear\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": "Forging the Future",
-   "affiliation": "Children of the Watch"
+   "affiliation": "Children of the Watch",
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel"
+   ]
   },
   {
    "id": "legion_v2:lhq2/paz-vizsla-proud-warrior",
@@ -4431,7 +4493,11 @@
    "legionStats": "{\"health\":5,\"courage\":3,\"speed\":2,\"defenseDie\":\"r\",\"surgeAttack\":\"h\",\"surgeDefense\":\"b\",\"miniCount\":1,\"keywords\":[\"Jump\",\"Field Commander\",\"Impervious\",\"Steady\",\"This is the Way\"],\"weapons\":[{\"name\":\"Vibroknife\",\"range\":{\"min\":0,\"max\":0},\"dice\":{\"red\":2,\"black\":0,\"white\":2}},{\"name\":\"Repeating Blaster\",\"range\":{\"min\":1,\"max\":3},\"dice\":{\"red\":1,\"black\":2,\"white\":3}}],\"upgradeBar\":[\"training\",\"training\",\"gear\",\"gear\"]}",
    "cardSubtype": "mandalorian trooper",
    "title": "Proud Warrior",
-   "affiliation": "Children of the Watch"
+   "affiliation": "Children of the Watch",
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel"
+   ]
   },
   {
    "id": "legion_v2:lhq2/clan-wren-veterans",
@@ -4460,7 +4526,11 @@
    "affiliation": "Clan Wren",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/clan-wren-veterans.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel"
+   ]
   },
   {
    "id": "legion_v2:lhq2/geonosian-warriors-geonosian-engineers",
@@ -4510,7 +4580,11 @@
    "affiliation": "Clan Wren",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/ursa-wren-leader-of-clan-wren.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel"
+   ]
   },
   {
    "id": "legion_v2:lhq2/sabine-wren-back-in-the-fold",
@@ -23357,7 +23431,11 @@
    "affiliation": "Children of the Watch",
    "imageAssetPaths": {
     "fr": "cards/swl/mercenary/fr/grogu.webp"
-   }
+   },
+   "mercenaryFactions": [
+    "mandalorians",
+    "rebel"
+   ]
   },
   {
    "id": "legion_v2:lhq2/qa",
