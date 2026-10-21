@@ -5513,7 +5513,10 @@
    "imageAssetPath": "cards/swl/neutral/expanded-databanks.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Super Tactical Command Droid\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/expanded-databanks.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/turbo-charge",
@@ -6036,7 +6039,10 @@
    "imageAssetPath": "cards/swl/neutral/hatred.webp",
    "rulesText": "{\"requirements\": [{\"forceAffinity\": \"dark side\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/hatred.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/force-drain",
@@ -6076,7 +6082,10 @@
    "imageAssetPath": "cards/swl/neutral/strong-in-the-force.webp",
    "rulesText": "{\"requirements\": [{\"upgradeBar\": [\"force\"]}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/strong-in-the-force.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/hit-the-dirt",
@@ -6681,7 +6690,10 @@
    "imageAssetPath": "cards/swl/neutral/fragmentation-grenades.webp",
    "rulesText": null,
    "effectText": "While this weapon is in the Attack Pool, this unit gains \"[surge] : [critical]\".",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/fragmentation-grenades.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/impact-grenades",
@@ -6701,7 +6713,10 @@
    "imageAssetPath": "cards/swl/neutral/impact-grenades.webp",
    "rulesText": null,
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/impact-grenades.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/concussion-grenades",
@@ -6721,7 +6736,10 @@
    "imageAssetPath": "cards/swl/neutral/concussion-grenades.webp",
    "rulesText": null,
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/concussion-grenades.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/hq-uplink",
@@ -6789,7 +6807,10 @@
    "imageAssetPath": "cards/swl/neutral/overcharged-generator.webp",
    "rulesText": null,
    "effectText": "When this unit makes an attack with a Ranged weapon that has Fixed, during the Form Attack Pool step you may [tap] this card. If you do, add 1 black attack die to the Attack Pool and the Attack Pool gains Impact 1.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/overcharged-generator.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/barrage-generator",
@@ -6809,7 +6830,10 @@
    "imageAssetPath": "cards/swl/neutral/barrage-generator.webp",
    "rulesText": null,
    "effectText": "When this unit makes an attack with a Ranged weapon that has Fixed, during the Form Attack Pool step you may [tap] this card. If you do, add 2 white attack dice to the Attack Pool and the Attack Pool gains Suppressive.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/barrage-generator.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/force-push",
@@ -6829,7 +6853,10 @@
    "imageAssetPath": "cards/swl/neutral/force-push.webp",
    "rulesText": null,
    "effectText": "exhaust_free: Choose an enemy Trooper unit within 1 of this unit. The chosen unit makes a Speed-1 Move, even if it is Engaged. You resolve this Move.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/force-push.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/force-reflexes",
@@ -6851,7 +6878,8 @@
    "effectText": "exhaust_free: This unit gains 1 Dodge token.",
    "legionStats": null,
    "imageAssetPaths": {
-    "de": "cards/swl/neutral/de/force-reflexes.webp"
+    "de": "cards/swl/neutral/de/force-reflexes.webp",
+    "fr": "cards/swl/neutral/fr/force-reflexes.webp"
    }
   },
   {
@@ -6872,7 +6900,10 @@
    "imageAssetPath": "cards/swl/neutral/saber-throw.webp",
    "rulesText": null,
    "effectText": "When this unit makes an attack with this weapon, during the Form Attack Pool step, choose 1 of this unit's Melee weapons. The weapon dice for this weapon are equal to half of the chosen weapon's total dice, rounding up, and the Attack Pool gains the chosen weapon's weapon keywords.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/saber-throw.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/jedi-mind-trick",
@@ -8272,7 +8303,10 @@
    "imageAssetPath": "cards/swl/neutral/electrobinoculars.webp",
    "rulesText": null,
    "effectText": "This unit gains [action] Spotter 1.\nB1 Battle Droids units can equip this card even though they do not have a [gear] upgrade slot.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/electrobinoculars.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/linked-targeting-array",
@@ -8292,7 +8326,10 @@
    "imageAssetPath": "cards/swl/neutral/linked-targeting-array.webp",
    "rulesText": "{\"requirements\": [\"OR\", {\"cardSubtype\": \"ground vehicle\"}, {\"cardSubtype\": \"repulsor vehicle\"}, {\"cardSubtype\": \"emplacement trooper\"}], \"tts\": null}",
    "effectText": "This unit gains Target 1.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/linked-targeting-array.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/smoke-grenades",
@@ -9161,7 +9198,10 @@
    "imageAssetPath": "cards/swl/neutral/situational-awareness.webp",
    "rulesText": null,
    "effectText": "This unit gains Outmaneuver.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/situational-awareness.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/bx-vibroswords",
@@ -9222,7 +9262,10 @@
    "imageAssetPath": "cards/swl/neutral/command-control-array.webp",
    "rulesText": "{\"requirements\": [\"OR\", {\"cardSubtype\": \"ground vehicle\"}, {\"cardSubtype\": \"repulsor vehicle\"}], \"tts\": null}",
    "effectText": "When this unit uses Coordinate, it may issue an Order to a unit within 2 instead of within 1.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/command-control-array.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/ascension-cables",
@@ -9289,7 +9332,10 @@
    "imageAssetPath": "cards/swl/neutral/portable-scanner.webp",
    "rulesText": null,
    "effectText": "This unit gains [action] Take Cover 1.\nB1 Battle Droids units can equip this card even though they do not have a [gear] upgrade slot.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/portable-scanner.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/offensive-stance",
@@ -9377,7 +9423,10 @@
    "imageAssetPath": "cards/swl/neutral/seize-the-initiative.webp",
    "rulesText": "{\"requirements\": [\"OR\", {\"rank\": \"commander\"}, {\"rank\": \"operative\"}], \"tts\": null}",
    "effectText": "During the Issue Orders step of the Command Phase, you may exhaust this card. If you do, this unit issues an Order to itself.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/seize-the-initiative.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/inspiring-presence",
@@ -9678,7 +9727,10 @@
    "imageAssetPath": "cards/swl/neutral/onboard-comms-channel.webp",
    "rulesText": "{\"requirements\": [\"OR\", {\"cardSubtype\": \"ground vehicle\"}, {\"cardSubtype\": \"repulsor vehicle\"}], \"tts\": null}",
    "effectText": "This unit gains Coordinate: Trooper.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/onboard-comms-channel.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/ag-2g-quad-laser",
@@ -9939,7 +9991,10 @@
    "imageAssetPath": "cards/swl/neutral/burst-of-speed.webp",
    "rulesText": null,
    "effectText": "At the start of this unit's Activation, you may discard this card to treat this unit's maximum Speed as 3 until the end of the Round. If you do, during the End Phase, this unit gains 1 Immobilize token.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/burst-of-speed.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/into-the-fray",
@@ -10087,7 +10142,10 @@
    "imageAssetPath": "cards/swl/neutral/engagement-protocols.webp",
    "rulesText": "{\"requirements\": [{\"cardSubtype\": \"ground vehicle\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/engagement-protocols.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/defense-protocols",
@@ -10321,7 +10379,10 @@
    "imageAssetPath": "cards/swl/neutral/underworld-connections.webp",
    "rulesText": null,
    "effectText": "This unit gains Allies of Convenience.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/underworld-connections.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/p13-m-disruptor-soldier",
@@ -10683,7 +10744,10 @@
    "imageAssetPath": "cards/swl/neutral/emergency-transponder.webp",
    "rulesText": null,
    "effectText": "At the start of this unit's Activation, if it was activated with an Order token from the Order Pool, you may discard this card. If you do, this unit gains 1 Aim token, gains 1 Dodge token, or removes 1 Suppression token.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/emergency-transponder.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/frenzied-gunner",
