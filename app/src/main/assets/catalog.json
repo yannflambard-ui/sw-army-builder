@@ -7104,7 +7104,10 @@
    "imageAssetPath": "cards/swl/neutral/dh-447-sniper.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Rebel Commandos\", \"title\": \"Strike Team\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/dh-447-sniper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/scatter-gun-trooper",
@@ -7164,7 +7167,10 @@
    "imageAssetPath": "cards/swl/neutral/dlt-19-stormtrooper.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Stormtroopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/dlt-19-stormtrooper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/hh-12-stormtrooper",
@@ -7205,7 +7211,9 @@
    "rulesText": "{\"requirements\": [{\"cardName\": \"Scout Troopers\", \"title\": \"Strike Team\"}], \"tts\": null}",
    "effectText": null,
    "legionStats": null,
-   "imageAssetPaths": {}
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/dlt-19x-sniper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/sonic-charge-saboteur",
@@ -7225,7 +7233,10 @@
    "imageAssetPath": "cards/swl/neutral/sonic-charge-saboteur.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Scout Troopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/sonic-charge-saboteur.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/t-7-ion-snowtrooper",
@@ -7265,7 +7276,10 @@
    "imageAssetPath": "cards/swl/neutral/flametrooper.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Snowtroopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/flametrooper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/rebel-comms-technician",
@@ -7331,7 +7345,10 @@
    "imageAssetPath": "cards/swl/neutral/astromech-droid.webp",
    "rulesText": "{\"requirements\": [{\"faction\": \"rebels\", \"rank\": \"corps\", \"cardSubtype\": \"trooper\"}], \"tts\": \"Astromech Droid\"}",
    "effectText": "Add 1 Astromech Droid miniature.\nNoncombatant.\nfree: Repair 1: Capacity 2.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/astromech-droid.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/2-1b-medical-droid",
@@ -7395,7 +7412,9 @@
    "rulesText": "{\"requirements\": [{\"cardName\": \"Stormtroopers\"}], \"tts\": null}",
    "effectText": null,
    "legionStats": null,
-   "imageAssetPaths": {}
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/stormtrooper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/imperial-comms-technician",
@@ -7627,7 +7646,10 @@
    "imageAssetPath": "cards/swl/neutral/dw-3-grenade-launcher.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"AT-ST\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/dw-3-grenade-launcher.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/wedge-antilles",
@@ -7780,7 +7802,10 @@
    "imageAssetPath": "cards/swl/neutral/rt-97c-blaster-rifle.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Dewback Rider\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/rt-97c-blaster-rifle.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/cr-24-flame-rifle",
@@ -8076,7 +8101,10 @@
    "imageAssetPath": "cards/swl/neutral/m-45-ion-blaster.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"X-34 Landspeeder\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/m-45-ion-blaster.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/pintle-mounted-dlt-19",
@@ -8159,7 +8187,10 @@
    "imageAssetPath": "cards/swl/neutral/b1-battle-droid.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"B1 Battle Droids\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/b1-battle-droid.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/e-5c-b1-battle-droid",
@@ -8239,7 +8270,10 @@
    "imageAssetPath": "cards/swl/neutral/e-60r-b1-battle-droid.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"B1 Battle Droids\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/e-60r-b1-battle-droid.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/t-21-blaster-rifle",
@@ -8259,7 +8293,10 @@
    "imageAssetPath": "cards/swl/neutral/t-21-blaster-rifle.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Dewback Rider\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/t-21-blaster-rifle.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/force-guidance",
@@ -8529,7 +8566,10 @@
    "imageAssetPath": "cards/swl/neutral/b1-security-droid.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"B1 Battle Droids\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/b1-security-droid.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/dlt-20a-trooper",
@@ -8589,7 +8629,10 @@
    "imageAssetPath": "cards/swl/neutral/e-5s-b1-battle-droid.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"B1 Battle Droids\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/e-5s-b1-battle-droid.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/rps-6-clone-trooper",
@@ -8629,7 +8672,10 @@
    "imageAssetPath": "cards/swl/neutral/rt-97c-stormtrooper.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Stormtroopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/rt-97c-stormtrooper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/sx-21-trooper",
@@ -8714,7 +8760,10 @@
    "imageAssetPath": "cards/swl/neutral/stormtrooper-captain.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Stormtroopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/stormtrooper-captain.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/rebel-trooper-captain",
@@ -9115,7 +9164,10 @@
    "imageAssetPath": "cards/swl/neutral/bx-deflector-shields.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"BX-Series Droid Commandos\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/bx-deflector-shields.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/bx-series-droid-sniper",
@@ -9221,7 +9273,10 @@
    "imageAssetPath": "cards/swl/neutral/bx-vibroswords.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"BX-Series Droid Commandos\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/bx-vibroswords.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/electro-gauntlets",
@@ -9578,7 +9633,10 @@
    "imageAssetPath": "cards/swl/neutral/viper-recon-droid.webp",
    "rulesText": "{\"requirements\": [{\"faction\": \"separatists\", \"cardSubtype\": \"droid trooper\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/viper-recon-droid.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/pk-series-worker-droid",
@@ -9750,7 +9808,10 @@
    "imageAssetPath": "cards/swl/neutral/ag-2g-quad-laser.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"A-A5 Speeder Truck\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/ag-2g-quad-laser.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/hotshot-pilot",
@@ -10867,7 +10928,10 @@
    "imageAssetPath": "cards/swl/neutral/the-darksaber-gideon.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Moff Gideon\"}], \"tts\": null}",
    "effectText": "This unit gains Dauntless and Immune: Melee Pierce.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/the-darksaber-gideon.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/xs-iv-assault-cannon",
@@ -10947,7 +11011,10 @@
    "imageAssetPath": "cards/swl/neutral/imperial-dark-trooper.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Imperial Dark Troopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/imperial-dark-trooper.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/programmed-loyalty",
@@ -10967,7 +11034,10 @@
    "imageAssetPath": "cards/swl/neutral/programmed-loyalty.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Imperial Dark Troopers\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/programmed-loyalty.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/forest-dwellers",
@@ -11167,7 +11237,10 @@
    "imageAssetPath": "cards/swl/neutral/force-pike-warrior.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Geonosian Warriors\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/force-pike-warrior.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/sonic-cannon-warrior",
@@ -11187,7 +11260,10 @@
    "imageAssetPath": "cards/swl/neutral/sonic-cannon-warrior.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Geonosian Warriors\"}], \"tts\": null}",
    "effectText": null,
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/sonic-cannon-warrior.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/geonosian-warrior",
@@ -12642,7 +12718,10 @@
    "imageAssetPath": "cards/swl/neutral/beskad-duelist.webp",
    "rulesText": "{\"requirements\": [{\"cardName\": \"Clan Wren Veterans\"}], \"tts\": null}",
    "effectText": "Add 1 Beskad Duelist miniature.\nThis unit gains Duelist.",
-   "legionStats": null
+   "legionStats": null,
+   "imageAssetPaths": {
+    "fr": "cards/swl/neutral/fr/beskad-duelist.webp"
+   }
   },
   {
    "id": "legion_v2:lhq2/clan-kryze",
