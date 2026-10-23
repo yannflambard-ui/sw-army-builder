@@ -1,0 +1,154 @@
+{
+ "schemaVersion": 1,
+ "generated": "2026-10-23",
+ "purpose": "Traceability of FR upgrade card images: source PDF, page, cell for re-extraction",
+ "source": {
+  "generic": {
+   "name": "generic_upgrades_fr.pdf",
+   "url": "https://iron-squadron.fr/ressources-star-wars-legion/",
+   "pdfPath": "/tmp/generic_upgrades_fr.pdf",
+   "pages": 22,
+   "grid": "3x3",
+   "colsGutters": [
+    884,
+    1610
+   ],
+   "rowsTitleBands": [
+    1130,
+    2170
+   ],
+   "dpi": 300
+  },
+  "empire": {
+   "name": "emp_upgrades_fr.pdf",
+   "url": "https://iron-squadron.fr/ressources-star-wars-legion/",
+   "pdfPath": "/tmp/emp_upgrades_fr.pdf",
+   "pages": 13,
+   "grid": "3x3"
+  },
+  "rebel": {
+   "name": "reb_upgrades_fr.pdf",
+   "url": "https://iron-squadron.fr/ressources-star-wars-legion/",
+   "pdfPath": "/tmp/reb_upgrades_fr.pdf",
+   "pages": 13,
+   "grid": "3x3"
+  },
+  "separatist": {
+   "name": "sep_upgrades_fr.pdf",
+   "url": "https://iron-squadron.fr/ressources-star-wars-legion/",
+   "pdfPath": "/tmp/sep_upgrades_fr.pdf",
+   "pages": 11,
+   "grid": "3x3"
+  }
+ },
+ "cards": {
+  "force-guidance": {
+   "pdf": "generic",
+   "page": 21,
+   "row": 1,
+   "col": 0
+  },
+  "offensive-stance": {
+   "pdf": "generic",
+   "page": 11,
+   "row": 1,
+   "col": 0
+  },
+  "prepared-supplies": {
+   "pdf": "generic",
+   "page": 4,
+   "row": 2,
+   "col": 0
+  },
+  "recon-intel": {
+   "pdf": "generic",
+   "page": 4,
+   "row": 2,
+   "col": 2
+  },
+  "sonic-imploders": {
+   "pdf": "generic",
+   "page": 16,
+   "row": 0,
+   "col": 0
+  },
+  "force-push": {
+   "pdf": "generic",
+   "page": 21,
+   "row": 1,
+   "col": 1
+  },
+  "lead-by-example": {
+   "pdf": "generic",
+   "page": 1,
+   "row": 1,
+   "col": 2
+  },
+  "strict-orders": {
+   "pdf": "generic",
+   "page": 1,
+   "row": 2,
+   "col": 1
+  },
+  "underworld-connections": {
+   "pdf": "generic",
+   "page": 2,
+   "row": 2,
+   "col": 0
+  },
+  "concussion-grenades": {
+   "pdf": "generic",
+   "page": 15,
+   "row": 0,
+   "col": 0
+  },
+  "impact-grenades": {
+   "pdf": "generic",
+   "page": 15,
+   "row": 2,
+   "col": 1
+  },
+  "electrobinoculars": {
+   "pdf": "generic",
+   "page": 2,
+   "row": 1,
+   "col": 0
+  },
+  "grappling-hooks": {
+   "pdf": "generic",
+   "page": 3,
+   "row": 1,
+   "col": 0
+  },
+  "targeting-scopes": {
+   "pdf": "generic",
+   "page": 4,
+   "row": 1,
+   "col": 0
+  },
+  "on-the-hunt": {
+   "pdf": "generic",
+   "page": 6,
+   "row": 1,
+   "col": 0
+  },
+  "tenacity": {
+   "pdf": "generic",
+   "page": 10,
+   "row": 1,
+   "col": 0
+  },
+  "spotter-uplink": {
+   "pdf": "generic",
+   "page": 8,
+   "row": 1,
+   "col": 0
+  },
+  "portable-scanner": {
+   "pdf": "generic",
+   "page": 3,
+   "row": 2,
+   "col": 0
+  }
+ }
+}
