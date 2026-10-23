@@ -39,6 +39,15 @@
    "pdfPath": "/tmp/sep_upgrades_fr.pdf",
    "pages": 11,
    "grid": "3x3"
+  },
+  "tristan-wren": {
+   "name": "Mandalorian BattleForce Cards FR.pdf",
+   "url": "https://drive.google.com/file/d/1mo2k0Y6jcl1mfOu6cqfVBsdxldSBpBz5/view",
+   "pdfPath": "/tmp/tw.pdf",
+   "pages": 9,
+   "cardPage": 9,
+   "grid": "2x3",
+   "dpi": 300
   }
  },
  "cards": {
@@ -255,6 +264,12 @@
   "sonic-charge-saboteur": {
    "pdf": "empire",
    "page": 4,
+   "row": 1,
+   "col": 1
+  },
+  "tristan-wren": {
+   "pdf": "tristan-wren",
+   "page": 9,
    "row": 1,
    "col": 1
   }
