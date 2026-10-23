@@ -149,6 +149,114 @@
    "page": 3,
    "row": 2,
    "col": 0
+  },
+  "duck-and-cover": {
+   "pdf": "generic",
+   "page": 5,
+   "row": 1,
+   "col": 0
+  },
+  "command-control-array": {
+   "pdf": "generic",
+   "page": 12,
+   "row": 1,
+   "col": 0
+  },
+  "high-energy-shells": {
+   "pdf": "generic",
+   "page": 18,
+   "row": 1,
+   "col": 0
+  },
+  "fear": {
+   "pdf": "generic",
+   "page": 19,
+   "row": 1,
+   "col": 0
+  },
+  "endurance": {
+   "pdf": "generic",
+   "page": 5,
+   "row": 1,
+   "col": 2
+  },
+  "into-the-fray": {
+   "pdf": "generic",
+   "page": 7,
+   "row": 1,
+   "col": 0
+  },
+  "seize-the-initiative": {
+   "pdf": "generic",
+   "page": 9,
+   "row": 1,
+   "col": 0
+  },
+  "defense-protocols": {
+   "pdf": "generic",
+   "page": 11,
+   "row": 1,
+   "col": 1
+  },
+  "onboard-comms-channel": {
+   "pdf": "generic",
+   "page": 14,
+   "row": 1,
+   "col": 0
+  },
+  "attack-protocols": {
+   "pdf": "generic",
+   "page": 14,
+   "row": 1,
+   "col": 2
+  },
+  "smoke-grenades": {
+   "pdf": "generic",
+   "page": 16,
+   "row": 1,
+   "col": 1
+  },
+  "unorthodox-tactician": {
+   "pdf": "rebel",
+   "page": 10,
+   "row": 2,
+   "col": 0
+  },
+  "twin-laser-turret": {
+   "pdf": "rebel",
+   "page": 11,
+   "row": 0,
+   "col": 1
+  },
+  "flame-projector": {
+   "pdf": "rebel",
+   "page": 11,
+   "row": 0,
+   "col": 2
+  },
+  "jetpack-rockets": {
+   "pdf": "rebel",
+   "page": 12,
+   "row": 0,
+   "col": 2
+  },
+  "ag-2g-quad-laser": {
+   "pdf": "rebel",
+   "page": 12,
+   "row": 1,
+   "col": 2
+  },
+  "heavy-laser-retrofit": {
+   "pdf": "rebel",
+   "page": 12,
+   "row": 2,
+   "col": 0
+  },
+  "sonic-charge-saboteur": {
+   "pdf": "empire",
+   "page": 4,
+   "row": 1,
+   "col": 1
   }
  }
 }
