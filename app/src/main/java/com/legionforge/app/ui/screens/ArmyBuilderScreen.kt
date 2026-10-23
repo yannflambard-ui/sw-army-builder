@@ -157,11 +157,11 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
         Column(Modifier.fillMaxSize().background(Color(0xFF0A0E15)).padding(pad)) {
             val total = validation.totalPoints
             val limit = list?.pointsLimit ?: if (game == GameSystem.LEGION_V2) 1000 else 400
-            Card(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Card(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+                Column(Modifier.padding(9.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("$total", color = Color(0xFFFFC857), style = MaterialTheme.typography.headlineMedium)
+                            Text("$total", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleLarge)
                             Text(stringResource(R.string.points_label, limit), color = Color.LightGray, style = MaterialTheme.typography.labelSmall)
                         }
                         val count = entries.filter { it.card.kind == if (game == GameSystem.LEGION_V2) CardKind.LEGION_UNIT else CardKind.ARMADA_SHIP }.sumOf { it.quantity }
@@ -183,7 +183,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
             }
             if (validation.violations.isNotEmpty()) {
                 Card(Modifier.fillMaxWidth().padding(horizontal = 14.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF3B2224))) {
-                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Column(Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         validation.violations.take(3).forEach { Text("! ${it.message}", color = Color(0xFFFFC7B7), style = MaterialTheme.typography.bodySmall) }
                         if (validation.violations.size > 3) Text(stringResource(R.string.rules_to_fix, validation.violations.size - 3), color = Color.LightGray, style = MaterialTheme.typography.labelSmall)
                     }
@@ -197,8 +197,8 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                 })
             }
             if (selectedParent != null && selectedTab == 1) {
-                Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp), shape = RoundedCornerShape(12.dp), color = Color(0xFFFFB800).copy(alpha = 0.15f)) {
-                    Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp), shape = RoundedCornerShape(12.dp), color = Color(0xFFFFB800).copy(alpha = 0.15f)) {
+                    Row(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(stringResource(R.string.adding_to, selectedParent.card.displayName()), color = Color(0xFFFFC857), style = MaterialTheme.typography.bodySmall)
                         TextButton(onClick = { selectedParentId = null }) { Text("✕", color = Color.White) }
                     }
@@ -232,8 +232,8 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                     }
                 }
             } else {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = search, onValueChange = { search = it }, modifier = Modifier.weight(1f), placeholder = { Text(stringResource(R.string.search_hint)) }, singleLine = true, textStyle = MaterialTheme.typography.bodyMedium)
+                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = search, onValueChange = { search = it }, modifier = Modifier.weight(1f).height(44.dp), placeholder = { Text(stringResource(R.string.search_hint)) }, singleLine = true, textStyle = MaterialTheme.typography.bodyMedium)
                     // Bouton filtre compact à droite de la barre de recherche
                     Box {
                         Surface(onClick = { filtersMenuOpen = true }, shape = RoundedCornerShape(10.dp), color = if (filterRank != null || filterMaxPts != null || filterKeyword != null || collectionOnly) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
