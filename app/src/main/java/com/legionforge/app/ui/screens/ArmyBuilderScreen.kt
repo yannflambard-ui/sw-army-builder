@@ -418,7 +418,7 @@ private fun BuilderEntryCard(entry: ListEntry, isChild: Boolean = false, accentC
         shape = RoundedCornerShape(if (isChild) 10.dp else 15.dp),
         colors = CardDefaults.cardColors(containerColor = if (isChild) Color(0xFF1E2A3A) else Color(0xFF18212D))) {
         Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            CardArtwork(entry.card, Modifier.width(64.dp))
+            CardArtwork(entry.card, Modifier.width(if (entry.card.kind == CardKind.LEGION_UNIT) 96.dp else 64.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(entry.card.displayName(), color = Color.White, style = MaterialTheme.typography.titleSmall)
                 Text("${entry.card.points * entry.quantity} pts  •  ${entry.card.legionRank?.name?.replace('_', ' ') ?: kindLabel(entry.card.kind)}", color = accentColor, style = MaterialTheme.typography.labelSmall)
@@ -463,7 +463,7 @@ private fun CatalogCard(card: CardDefinition, entries: List<ListEntry>, preselec
     val alreadyCount = entries.filter { it.card.id == card.id }.sumOf { it.quantity }
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF18212D))) {
             Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(11.dp), verticalAlignment = Alignment.CenterVertically) {
-                CardArtwork(card, Modifier.width(58.dp).clickable { onPreview() })
+                CardArtwork(card, Modifier.width(if (card.kind == CardKind.LEGION_UNIT) 88.dp else 58.dp).clickable { onPreview() })
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(card.displayName(), color = Color.White, style = MaterialTheme.typography.titleSmall)
                 Text("${card.points} pts • ${kindLabel(card.kind)}", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall)
