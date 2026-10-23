@@ -31,7 +31,7 @@
     <string name="limit_pts">Pkt</string>
 
     <!-- Home -->
-    <string name="search_hint">Karte, Stichwort oder Regel suchen…</string>
+    <string name="search_hint">search</string>
         <string name="wiki_rules">Offizielles Regel-Wiki (Armada &amp; Legion)</string>
     <string name="catalog_error">Katalogfehler</string>
     <string name="icon_desc">Symbol %1$s</string>
