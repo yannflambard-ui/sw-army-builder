@@ -502,7 +502,7 @@ private fun CatalogCard(card: CardDefinition, entries: List<ListEntry>, preselec
                     enabled = (!requiresTarget || eligibleTargets.isNotEmpty()) && !alreadyAdded && !compatibleSlotFull && validSelection,
                     onClick = { onAdd(if (requiresTarget) targetId else null, selectedSlot) },
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                 ) { Text("+", fontWeight = FontWeight.Bold) }
                 Text("$alreadyCount", color = if (alreadyCount > 0) Color(0xFFFFC857) else Color(0xFF5A6A7A), style = MaterialTheme.typography.labelSmall)
             }
