@@ -229,7 +229,7 @@
     <string name="vehicle_damage">Dégâts de véhicule</string>
     <string name="vd_immobilized">Immobilisé</string>
     <string name="vd_weapon">Arme détruite</string>
-    <string name="order_pool">Pool d&apos;ordres</string>
+    <string name="order_pool">Pions d ordre</string>
     <string name="round_ended">Round %1$d terminé</string>
     <string name="undo">Annuler</string>
 </resources>
