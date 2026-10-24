@@ -18,20 +18,16 @@
   = chaos de crops obsolètes. Source de vérité pour les corriger : 198 cellules gen_cards
   (`/tmp/gen_cards/`, 668-694x1039-1130) + manifest. À recadrer comme en 0.9.75/0.9.89 : OCR titre
   (psm 6 bandeau bas, upscaled) → match FR→EN → **vérification vision AVANT injection** (+ bump Room).
-- **Progression 0.9.90 (2026-10-24)** : 64/79 corrigées (6 génériques + 20 empire + 20 rebel + 6
-  republic + 7 separatist + 5 mercenary). Restent ~15 non trouvées dans les PDFs Upgrades faction :
-  astromech-droid, at-rt-flamethrower, barc-rps-6-gunner, barc-twin-laser-gunner, beam-turret,
-  beskad-duelist, bowcaster-wookiee, clan-kryze, clan-wren, dh-447-sniper, dioxis-mine-saboteur,
-  dlt-19x-sniper, dt-f16, dw-3-grenade-launcher, e-60r-b1-battle-droid, expanded-databanks,
-  flametrooper, fleet-trooper, force-push, fx-9-medical-droid, general-weiss, governor-pryce,
-  hotshot-pilot, ig-100-magnaguard-pilot, impact-grenades, imperial-tie-pilot,
-  linked-targeting-array, m-45-ion-blaster, plo-koon, range-trooper, rebel-comms-technician,
-  rebel-trooper, rebel-trooper-captain, rebel-veteran, rps-6-rocket-gunner, rt-97c-stormtrooper,
-  ryder-azadi, sabine-wren, shoretrooper, shriv-suurgav, snowtrooper, sonic-charge-saboteur,
-  stormtrooper, stormtrooper-captain, t-series-tactical-droid-pilot, tristan-wren,
-  twin-laser-turret, veteran-clone-pilot, viper-recon-droid, wedge-antilles, z-6-trooper.
-  (Certaines sont des cartes "Escouade"/versions faction ≠ slugs neutral → à traiter via
-  pipeline textless ou autre source.)
+- **Progression 0.9.90 (2026-10-24)** : 69/79 corrigées (6 génériques + 20 empire + 20 rebel + 6
+  republic + 7 separatist + 5 mercenary + 2 extra e-60r/astromech-droid + 3 simples
+  rebel-trooper/fleet-trooper/rebel-veteran). Restent 16 non trouvées dans les PDFs Upgrades
+  faction : bowcaster-wookiee, z-6-trooper, barc-twin-laser-gunner, clan-wren, expanded-databanks,
+  sabine-wren, clan-kryze, e-5s-b1-battle-droid, at-rt-flamethrower, b1-battle-droid,
+  jetpack-rockets, ig-100-magnaguard-pilot, barc-rps-6-gunner, m-45-ion-blaster,
+  veteran-clone-pilot, twin-blaster-cannons. Ce sont des upgrades de personnel qui vivent dans
+  les PDFs Units (rotation 180°, pipeline extract_units_fr.py) — pas dans les PDFs Upgrades.
+  Les 3 PDFs "Nouvelles cartes" (VF 21.11.25, amélio 07.25, amélio MAJ23.02.2026) vérifiés :
+  ne contiennent que command cards/upgrades génériques, PAS ces 16.
 
 ## Build & CI
 - **TOUJOURS build par GitHub Actions** (workflow `.github/workflows/build.yml`), jamais en local.
