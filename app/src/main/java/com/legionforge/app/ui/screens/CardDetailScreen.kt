@@ -17,14 +17,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Help
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
@@ -936,7 +935,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val activated = state.activated ?: false
             Surface(onClick = { set(state.copy(activated = !activated)) }, shape = RoundedCornerShape(10.dp), color = if (activated) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(if (activated) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked, contentDescription = null, tint = if (activated) Color(0xFF77D9A7) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    if (activated) Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp)) else Box(Modifier.size(18.dp).border(2.dp, Color(0xFF5A6A7A), CircleShape))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (activated) R.string.legion_activated else R.string.legion_not_activated), color = if (activated) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
@@ -1482,7 +1481,7 @@ internal fun CollapsibleSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(title, color = Color(0xFFFFC857), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand), tint = Color(0xFF9EACBC), modifier = Modifier.size(18.dp))
+                Icon(if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand), tint = Color(0xFF9EACBC), modifier = Modifier.size(18.dp))
             }
             if (expanded) {
                 HorizontalDivider(color = Color(0xFF2A3A4A))
@@ -1538,8 +1537,8 @@ internal fun EffectsPanel(
                                         val fallbackIcon = when (eff.type) {
                                             EffectType.UPGRADE -> Icons.Filled.Build
                                             EffectType.COMMANDER -> Icons.Filled.Star
-                                            EffectType.CRIT -> Icons.Filled.Bolt
-                                            else -> Icons.Filled.Help
+                                            EffectType.CRIT -> Icons.Filled.Warning
+                                            else -> Icons.Filled.Info
                                         }
                                         Icon(fallbackIcon, contentDescription = eff.label, tint = if (eff.used) Color(0xFF5A6A7A) else iconColor, modifier = Modifier.size(16.dp))
                                     }
@@ -1559,7 +1558,7 @@ internal fun EffectsPanel(
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 if (eff.pts > 0) Text("${eff.pts} pts", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                                                 Surface(onClick = { selectedEffect = if (selectedEffect == eff) null else eff }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) {
-                                                                    Icon(if (selectedEffect == eff) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null, tint = Color(0xFF9EACBC), modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
+                                                                    Icon(if (selectedEffect == eff) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF9EACBC), modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
                                                                 }
                             }
                         }
