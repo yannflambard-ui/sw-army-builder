@@ -18,6 +18,20 @@
   = chaos de crops obsolètes. Source de vérité pour les corriger : 198 cellules gen_cards
   (`/tmp/gen_cards/`, 668-694x1039-1130) + manifest. À recadrer comme en 0.9.75/0.9.89 : OCR titre
   (psm 6 bandeau bas, upscaled) → match FR→EN → **vérification vision AVANT injection** (+ bump Room).
+- **Progression 0.9.90 (2026-10-24)** : 64/79 corrigées (6 génériques + 20 empire + 20 rebel + 6
+  republic + 7 separatist + 5 mercenary). Restent ~15 non trouvées dans les PDFs Upgrades faction :
+  astromech-droid, at-rt-flamethrower, barc-rps-6-gunner, barc-twin-laser-gunner, beam-turret,
+  beskad-duelist, bowcaster-wookiee, clan-kryze, clan-wren, dh-447-sniper, dioxis-mine-saboteur,
+  dlt-19x-sniper, dt-f16, dw-3-grenade-launcher, e-60r-b1-battle-droid, expanded-databanks,
+  flametrooper, fleet-trooper, force-push, fx-9-medical-droid, general-weiss, governor-pryce,
+  hotshot-pilot, ig-100-magnaguard-pilot, impact-grenades, imperial-tie-pilot,
+  linked-targeting-array, m-45-ion-blaster, plo-koon, range-trooper, rebel-comms-technician,
+  rebel-trooper, rebel-trooper-captain, rebel-veteran, rps-6-rocket-gunner, rt-97c-stormtrooper,
+  ryder-azadi, sabine-wren, shoretrooper, shriv-suurgav, snowtrooper, sonic-charge-saboteur,
+  stormtrooper, stormtrooper-captain, t-series-tactical-droid-pilot, tristan-wren,
+  twin-laser-turret, veteran-clone-pilot, viper-recon-droid, wedge-antilles, z-6-trooper.
+  (Certaines sont des cartes "Escouade"/versions faction ≠ slugs neutral → à traiter via
+  pipeline textless ou autre source.)
 
 ## Build & CI
 - **TOUJOURS build par GitHub Actions** (workflow `.github/workflows/build.yml`), jamais en local.
