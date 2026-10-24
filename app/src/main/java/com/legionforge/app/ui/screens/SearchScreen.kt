@@ -48,11 +48,11 @@ fun SearchScreen(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it; vm.searchCards(it) },
-                placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF5A6A7A), fontSize = 14.sp) },
+                placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF5A6A7A), fontSize = 13.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                textStyle = MaterialTheme.typography.bodyMedium
+                textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp)
             )
             when {
                 searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color(0xFFFFC857), strokeWidth = 2.dp) }
