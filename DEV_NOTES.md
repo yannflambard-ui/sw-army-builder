@@ -18,16 +18,15 @@
   = chaos de crops obsolètes. Source de vérité pour les corriger : 198 cellules gen_cards
   (`/tmp/gen_cards/`, 668-694x1039-1130) + manifest. À recadrer comme en 0.9.75/0.9.89 : OCR titre
   (psm 6 bandeau bas, upscaled) → match FR→EN → **vérification vision AVANT injection** (+ bump Room).
-- **Progression 0.9.90 (2026-10-24)** : 69/79 corrigées (6 génériques + 20 empire + 20 rebel + 6
-  republic + 7 separatist + 5 mercenary + 2 extra e-60r/astromech-droid + 3 simples
-  rebel-trooper/fleet-trooper/rebel-veteran). Restent 16 non trouvées dans les PDFs Upgrades
-  faction : bowcaster-wookiee, z-6-trooper, barc-twin-laser-gunner, clan-wren, expanded-databanks,
-  sabine-wren, clan-kryze, e-5s-b1-battle-droid, at-rt-flamethrower, b1-battle-droid,
-  jetpack-rockets, ig-100-magnaguard-pilot, barc-rps-6-gunner, m-45-ion-blaster,
-  veteran-clone-pilot, twin-blaster-cannons. Ce sont des upgrades de personnel qui vivent dans
-  les PDFs Units (rotation 180°, pipeline extract_units_fr.py) — pas dans les PDFs Upgrades.
-  Les 3 PDFs "Nouvelles cartes" (VF 21.11.25, amélio 07.25, amélio MAJ23.02.2026) vérifiés :
-  ne contiennent que command cards/upgrades génériques, PAS ces 16.
+- **Progression 0.9.92 (2026-10-24)** : 78/79 corrigées. Les 7 dernières via PDFs Upgrades faction
+  (barc-twin-laser-gunner, barc-rps-6-gunner, b1-battle-droid, z-6-trooper, e-5s-b1-battle-droid,
+  ig-100-magnaguard-pilot, m-45-ion-blaster). Restent 9 NON-corrigeables depuis les PDFs FR
+  disponibles (gen_cards, Upgrades faction, Units faction, Mandalorian BattleForce, Nouvelles cartes) :
+  - 3 upgrades d'affiliation Mandalorienne : clan-wren, clan-kryze, sabine-wren (absentes des PDFs)
+  - 6 upgrades : bowcaster-wookiee (PDF=Wookiee Arme d'Épaule≠Bowcaster), expanded-databanks,
+    at-rt-flamethrower (PDF=TL-TT Flamethrower≠AT-RT), jetpack-rockets (PDF=Jetpack de Din≠Jetpack
+    Rockets), veteran-clone-pilot, twin-blaster-cannons (PDF republic≠separatist).
+  → pipeline textless ou autre source FR.
 
 ## Build & CI
 - **TOUJOURS build par GitHub Actions** (workflow `.github/workflows/build.yml`), jamais en local.
