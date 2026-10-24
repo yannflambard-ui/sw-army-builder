@@ -990,7 +990,6 @@ internal fun StatChip(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Text(label, color = Color(0xFF9EACBC), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-        Text(value, color = color, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }
 @Composable
