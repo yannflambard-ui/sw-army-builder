@@ -1,5 +1,24 @@
 # Legion Forge — Notes de développement
 
+## 🔍 Détection des cartes FR hors-format (2026-10-24)
+- **`detect_bad_cards.py` est INVALIDE — supprimé.** Il jugeait une carte par la LUMINOSITÉ
+  des bords (RIGHT/LEFT_LIGHT, TOP_WHITE). Faux : un liseré clair >120 est NORMAL sur une carte
+  Legion → il flag ~100% des références EN bien cadrées aussi (empire/rebel/republic/separatists
+  EN = toutes flaggées). Ne jamais se fier à l'heuristique de luminosité des bords.
+- **Fiable : `scripts/detect_bad_dims.py`** — contrôle DIMENSIONNEL.
+  Critères (de la recette 0.9.75) : ratio carte std FR ~0.694 (713x1027) / pleine 0.698 (726x1040),
+  paysage ~1.431 (1039x726). Suspect si ratio hors [0.68,0.71] et hors [1.40,1.46], OU exactement
+  365x525 (= CONTENU FAUX confirmé, basse rés mauvais contenu). NE PAS flag les 713/714x1027.
+- Résultat 2026-10-24 : **79 cartes FR réellement hors-format** (78 neutral/upgrades + 1 separatist).
+  Réparties en : ratio trop large/étroit (ex 776x1039 r=0.748, 675x1117 r=0.604) + **14×365x525
+  contenu FAUX** (linked-targeting-array, b1-security-droid, expanded-databanks, e-5s-b1,
+  viper-recon-droid, astromech-droid, e-60r-b1, b1-battle-droid, stormtrooper-captain,
+  fragmentation-grenades, the-darksaber-gideon, flametrooper, beskad-duelist, force-pike-warrior).
+- État actuel des 143 upgrades neutral/fr : **40 combinaisons de dimensions** (365x525 à 777x1040)
+  = chaos de crops obsolètes. Source de vérité pour les corriger : 198 cellules gen_cards
+  (`/tmp/gen_cards/`, 668-694x1039-1130) + manifest. À recadrer comme en 0.9.75/0.9.89 : OCR titre
+  (psm 6 bandeau bas, upscaled) → match FR→EN → **vérification vision AVANT injection** (+ bump Room).
+
 ## Build & CI
 - **TOUJOURS build par GitHub Actions** (workflow `.github/workflows/build.yml`), jamais en local.
 - Le serveur Debian (8 Go RAM, gradle Xmx512m, workers=1) n'a **pas assez de mémoire** pour compiler : `Not enough memory to run compilation` (ksp/Room/Compose dépassent 512m). Inutile d'essayer.
