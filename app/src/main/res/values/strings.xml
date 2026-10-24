@@ -223,4 +223,5 @@
     <string name="legion_cover">Couverture</string>
     <string name="priority">Priorité</string>
     <string name="pass_tokens">Jetons de passe</string>
+    <string name="end_round">Fin de round</string>
 </resources>
