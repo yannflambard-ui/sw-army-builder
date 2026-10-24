@@ -233,7 +233,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                 }
             } else {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = search, onValueChange = { search = it }, modifier = Modifier.weight(1f).height(44.dp), placeholder = { Text(stringResource(R.string.search_hint), fontSize = 13.sp) }, singleLine = true, textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp))
+                    OutlinedTextField(value = search, onValueChange = { search = it }, modifier = Modifier.weight(1f).height(40.dp), placeholder = { Text(stringResource(R.string.search_hint), fontSize = 12.sp) }, singleLine = true, textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 16.sp))
                     // Bouton filtre compact à droite de la barre de recherche
                     Box {
                         Surface(onClick = { filtersMenuOpen = true }, shape = RoundedCornerShape(10.dp), color = if (filterRank != null || filterMaxPts != null || filterKeyword != null || collectionOnly) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
