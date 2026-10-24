@@ -330,13 +330,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
                     }
                     // Fin de round : reset cartes jouées + avance (avec Snackbar Annuler).
+                    val roundEndedMsg = stringResource(R.string.round_ended, round)
+                    val undoLabel = stringResource(R.string.undo)
                     Surface(onClick = {
                         val prevRound = round
-                        val msg = stringResource(R.string.round_ended, prevRound)
-                        val undoLabel = stringResource(R.string.undo)
                         playedCommands = emptySet()
                         if (round < 6) round++
-                        scope.launch { snackbarHostState.showSnackbar(msg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound }
+                        scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound }
                     }, shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(18.dp))
