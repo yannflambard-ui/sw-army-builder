@@ -24,7 +24,8 @@ data class SyncedUnitState(
     val activeCrits: List<String> = emptyList(),  // noms des dégâts critiques actifs
     val usedUpgrades: Set<String> = emptySet(),   // ids des upgrades marqués utilisés
     val activated: Boolean? = null,  // Armada squadron (activé/désactivé)
-    val cover: Int? = null            // Legion couverture (0/1/2)
+    val cover: Int? = null,           // Legion couverture (0/1/2)
+    val defeated: Boolean? = null     // Legion unité vaincue
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */

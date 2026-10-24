@@ -996,6 +996,15 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     Text(stringResource(if (activated) R.string.legion_activated else R.string.legion_not_activated), color = if (activated) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
             }
+            // Unité vaincue (retirée du jeu).
+            val defeated = state.defeated ?: false
+            Surface(onClick = { set(state.copy(defeated = !defeated)) }, shape = RoundedCornerShape(10.dp), color = if (defeated) Color(0xFF3B2224) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(if (defeated) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (defeated) Color(0xFFFF6B6B) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (defeated) R.string.legion_defeated else R.string.legion_active), color = if (defeated) Color(0xFFFFC7B7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
             // Compteur de suppression : alimente l'état Supprimé (>= courage) / Paniqué (>= 2x courage).
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.legion_suppression_label), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
@@ -1009,11 +1018,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val cover = state.cover ?: 0
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.legion_cover), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Surface(onClick = { if (cover > 0) set(state.copy(cover = cover - 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
-                    Text("$cover", color = if (cover > 0) Color(0xFF77D9A7) else Color(0xFF5A6A7A), fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(30.dp))
-                    Surface(onClick = { if (cover < 2) set(state.copy(cover = cover + 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
-                }
+                Stepper("$cover", { if (cover > 0) set(state.copy(cover = cover - 1)) }, { if (cover < 2) set(state.copy(cover = cover + 1)) }, valueColor = if (cover > 0) Color(0xFF77D9A7) else Color(0xFF5A6A7A), valueWidth = 30.dp)
             }
             // Armes de l'unité (range + dés)
             if (stats?.weapons?.isNotEmpty() == true) {
@@ -2137,6 +2142,16 @@ internal fun BigCounter(label: String, value: Int, max: Int, color: Color, onInc
             Text("$value", color = color, fontSize = 32.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(54.dp))
             Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
         }
+    }
+}
+
+// Stepper générique +/- réutilisable (blessures, suppression, couverture, coque).
+@Composable
+internal fun Stepper(value: String, onDec: () -> Unit, onInc: () -> Unit, size: Dp = 40.dp, valueColor: Color = Color.White, valueWidth: Dp = 40.dp) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(size)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
+        Text(value, color = valueColor, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(valueWidth))
+        Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(size)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
     }
 }
 

@@ -224,4 +224,6 @@
     <string name="priority">Priorité</string>
     <string name="pass_tokens">Jetons de passe</string>
     <string name="end_round">Fin de round</string>
+    <string name="legion_defeated">Vaincue</string>
+    <string name="legion_active">Active</string>
 </resources>
