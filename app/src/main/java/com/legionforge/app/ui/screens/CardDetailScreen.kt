@@ -332,9 +332,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // Fin de round : reset cartes jouées + avance (avec Snackbar Annuler).
                     Surface(onClick = {
                         val prevRound = round
+                        val msg = stringResource(R.string.round_ended, prevRound)
+                        val undoLabel = stringResource(R.string.undo)
                         playedCommands = emptySet()
                         if (round < 6) round++
-                        scope.launch { snackbarHostState.showSnackbar(stringResource(R.string.round_ended, prevRound), actionLabel = stringResource(R.string.undo), duration = SnackbarDuration.Short); round = prevRound }
+                        scope.launch { snackbarHostState.showSnackbar(msg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound }
                     }, shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(18.dp))
