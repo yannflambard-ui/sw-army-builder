@@ -23,7 +23,8 @@ data class SyncedUnitState(
     val commandOrder: String? = null,  // Armada roue de commandement (nom de l'ordre)
     val activeCrits: List<String> = emptyList(),  // noms des dégâts critiques actifs
     val usedUpgrades: Set<String> = emptySet(),   // ids des upgrades marqués utilisés
-    val activated: Boolean? = null   // Armada squadron (activé/désactivé)
+    val activated: Boolean? = null,  // Armada squadron (activé/désactivé)
+    val cover: Int? = null            // Legion couverture (0/1/2)
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */

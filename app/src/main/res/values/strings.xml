@@ -217,4 +217,10 @@
     <string name="legion_not_activated">Non activée</string>
     <string name="score">Score</string>
     <string name="play_2p_guidance">Choisissez Heberger ou Rejoindre, puis connectez les deux telephones.</string>
+    <string name="tokens_action">Actions</string>
+    <string name="tokens_keyword">Mots-clés</string>
+    <string name="tokens_vehicle">Véhicule</string>
+    <string name="legion_cover">Couverture</string>
+    <string name="priority">Priorité</string>
+    <string name="pass_tokens">Jetons de passe</string>
 </resources>

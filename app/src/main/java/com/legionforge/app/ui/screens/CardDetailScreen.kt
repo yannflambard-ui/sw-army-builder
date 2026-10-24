@@ -198,6 +198,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var oppVp by remember { mutableIntStateOf(0) }
     var kills by remember { mutableIntStateOf(0) }
     var oppKills by remember { mutableIntStateOf(0) }
+    // Priorité (qui active en premier) + jetons de passe (règle v2).
+    var priority by remember { mutableStateOf("own") }
+    var passes by remember { mutableIntStateOf(0) }
+    var oppPasses by remember { mutableIntStateOf(0) }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
     var twoPlayer by remember { mutableStateOf(false) }
     var viewingArmy by remember { mutableStateOf<String?>(null) }
@@ -363,6 +367,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 ScoreStepper(stringResource(R.string.play_my_army), vp, kills, { vp = (vp + 1).coerceAtMost(15) }, { vp = (vp - 1).coerceAtLeast(0) }, { kills = kills + 1 }, { kills = (kills - 1).coerceAtLeast(0) })
                                 ScoreStepper(stringResource(R.string.play_opponent), oppVp, oppKills, { oppVp = (oppVp + 1).coerceAtMost(15) }, { oppVp = (oppVp - 1).coerceAtLeast(0) }, { oppKills = oppKills + 1 }, { oppKills = (oppKills - 1).coerceAtLeast(0) })
+                            }
+                            // Priorité + jetons de passe.
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.priority), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Surface(onClick = { priority = "own" }, shape = RoundedCornerShape(8.dp), color = if (priority == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_my_army), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                    Surface(onClick = { priority = "opp" }, shape = RoundedCornerShape(8.dp), color = if (priority == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_opponent), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                }
+                            }
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.pass_tokens), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    PassCounter(passes, { passes = (passes + 1).coerceAtMost(5) }, { passes = (passes - 1).coerceAtLeast(0) })
+                                    PassCounter(oppPasses, { oppPasses = (oppPasses + 1).coerceAtMost(5) }, { oppPasses = (oppPasses - 1).coerceAtLeast(0) })
+                                }
                             }
                         }
                     }
@@ -973,6 +992,16 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     Surface(onClick = { if (suppressions > 0) set(state.copy(suppressions = suppressions - 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
                     Text("$suppressions / $courage", color = if (isPanicked) Color(0xFFFF6B6B) else if (isSuppressed) Color(0xFFFFB74D) else Color(0xFF77D9A7), fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     Surface(onClick = { set(state.copy(suppressions = suppressions + 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
+                }
+            }
+            // Couverture de l'unité (0/1/2) — état de couverture en défense.
+            val cover = state.cover ?: 0
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.legion_cover), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Surface(onClick = { if (cover > 0) set(state.copy(cover = cover - 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
+                    Text("$cover", color = if (cover > 0) Color(0xFF77D9A7) else Color(0xFF5A6A7A), fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(30.dp))
+                    Surface(onClick = { if (cover < 2) set(state.copy(cover = cover + 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
                 }
             }
             // Armes de l'unité (range + dés)
@@ -2003,33 +2032,43 @@ internal fun TokenSection(tokens: List<String>, onAdd: (String) -> Unit, onRemov
         LegionToken(stringResource(R.string.legion_token_smoke), Color(0xFF9EACBC), "\u25CF"),
         LegionToken(stringResource(R.string.legion_token_charge), Color(0xFFFFB74D), "\u2694"),
         // Jetons de keywords + mécaniques (rulebook p.10) : Order, Commander, Ion, Poison, Immobilize, Shield, Incognito, Bane, Graffiti.
-        LegionToken(stringResource(R.string.legion_token_order), Color(0xFF26C6DA), "\u25C6"),
-        LegionToken(stringResource(R.string.legion_token_commander), Color(0xFFFFC857), "\u2605"),
-        LegionToken(stringResource(R.string.legion_token_ion), Color(0xFF4DD0E1), "\u26A1"),
-        LegionToken(stringResource(R.string.legion_token_poison), Color(0xFF81C784), "\u2620"),
-        LegionToken(stringResource(R.string.legion_token_immobilize), Color(0xFFB388FF), "\u2696"),
-        LegionToken(stringResource(R.string.legion_token_shield), Color(0xFF64B5F6), "\u25C9"),
-        LegionToken(stringResource(R.string.legion_token_incognito), Color(0xFF9EACBC), "\u25C7"),
-        LegionToken(stringResource(R.string.legion_token_bane), Color(0xFFB8395A), "\u2691"),
-        LegionToken(stringResource(R.string.legion_token_graffiti), Color(0xFFFF8A65), "\u270E")
-    ) + if (isVehicle) listOf(LegionToken(stringResource(R.string.legion_token_vehicle_damage), Color(0xFFFF6B6B), "\u26A0")) else emptyList()
+        LegionToken(stringResource(R.string.legion_token_order), Color(0xFF26C6DA), "\u25C6", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_commander), Color(0xFFFFC857), "\u2605", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_ion), Color(0xFF4DD0E1), "\u26A1", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_poison), Color(0xFF81C784), "\u2620", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_immobilize), Color(0xFFB388FF), "\u2696", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_shield), Color(0xFF64B5F6), "\u25C9", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_incognito), Color(0xFF9EACBC), "\u25C7", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_bane), Color(0xFFB8395A), "\u2691", "keyword"),
+        LegionToken(stringResource(R.string.legion_token_graffiti), Color(0xFFFF8A65), "\u270E", "keyword")
+    ) + if (isVehicle) listOf(LegionToken(stringResource(R.string.legion_token_vehicle_damage), Color(0xFFFF6B6B), "\u26A0", "vehicle")) else emptyList()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.tokens_markers), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelLarge)
-        // Disques de jetons (vrais tokens) : retour à la ligne automatique si trop nombreux.
-        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            allTokens.forEach { t -> LegionTokenDisc(t.label, t.color, t.symbol, onClick = { onAdd(t.label) }) }
-        }
+        // Jetons posés (avec quantité) : chips retirables.
         if (tokens.isNotEmpty()) {
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                tokens.forEach { t ->
+                tokens.groupingBy { it }.eachCount().forEach { (t, count) ->
                     val meta = allTokens.firstOrNull { it.label == t }
                     Surface(onClick = { onRemove(t) }, shape = RoundedCornerShape(8.dp), color = Color(0xFF3B2224)) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
                             Text(meta?.symbol ?: "\u25A3", color = meta?.color ?: Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(6.dp))
-                            Text("$t  \u2715", color = Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("$t ×$count  \u2715", color = Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                }
+            }
+        }
+        // Disques de jetons regroupés par catégorie (Action / Keyword / Véhicule).
+        val categories = listOf("action" to stringResource(R.string.tokens_action), "keyword" to stringResource(R.string.tokens_keyword), "vehicle" to stringResource(R.string.tokens_vehicle))
+        categories.forEach { (cat, catLabel) ->
+            val catTokens = allTokens.filter { it.category == cat }
+            if (catTokens.isEmpty()) return@forEach
+            Text(catLabel, color = Color(0xFF5A6A7A), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                catTokens.forEach { t ->
+                    val count = tokens.count { it == t.label }
+                    LegionTokenDisc(t.label, t.color, t.symbol, count = count, onClick = { onAdd(t.label) })
                 }
             }
         }
@@ -2039,24 +2078,31 @@ internal fun TokenSection(tokens: List<String>, onAdd: (String) -> Unit, onRemov
 
 // Jeton d'action Legion : disque coloré avec symbole, cliquable pour l'ajouter.
 @Composable
-internal fun LegionTokenDisc(label: String, color: Color, symbol: String, onClick: () -> Unit) {
+internal fun LegionTokenDisc(label: String, color: Color, symbol: String, count: Int = 0, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            onClick = onClick,
-            shape = CircleShape,
-            color = color.copy(alpha = 0.22f),
-            border = androidx.compose.foundation.BorderStroke(2.dp, color),
-            modifier = Modifier.size(52.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) { Text(symbol, color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+        Box {
+            Surface(
+                onClick = onClick,
+                shape = CircleShape,
+                color = color.copy(alpha = 0.22f),
+                border = androidx.compose.foundation.BorderStroke(2.dp, color),
+                modifier = Modifier.size(42.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) { Text(symbol, color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+            }
+            if (count > 0) {
+                Box(Modifier.align(Alignment.TopEnd).size(16.dp).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
+                    Text("$count", color = Color(0xFF0A0E15), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
         Spacer(Modifier.height(3.dp))
-        Text(label, color = color, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = color, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
 // Modèle d'un jeton d'action Legion (label localisé + couleur + symbole).
-internal data class LegionToken(val label: String, val color: Color, val symbol: String)
+internal data class LegionToken(val label: String, val color: Color, val symbol: String, val category: String = "action")
 
 // Badge d'état auto (Blessé / Supprimé / Paniqué) : actif = coloré, sinon grisé.
 @Composable
@@ -2100,6 +2146,16 @@ internal fun ScoreStepper(label: String, vp: Int, kills: Int, onVpInc: () -> Uni
             Surface(onClick = onKillDec, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
             Surface(onClick = onKillInc, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
         }
+    }
+}
+
+// Compteur de jetons de passe (règle v2) : petit stepper compact.
+@Composable
+internal fun PassCounter(value: Int, onInc: () -> Unit, onDec: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(30.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
+        Text("$value", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(24.dp))
+        Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(30.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) } }
     }
 }
 
