@@ -56,6 +56,7 @@ import com.legionforge.app.data.nearby.SyncedUnitState
 import com.legionforge.app.util.rememberNearbyPermissionAction
 import com.legionforge.app.util.NearbyDiagnosticPanel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 // Retrouve la section wiki correspondant à un mot-clé/titre (insensible à la casse).
 internal fun findWikiSection(wikiSections: List<WikiSectionEntity>, keyword: String): WikiSectionEntity? {
@@ -202,6 +203,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var priority by remember { mutableStateOf("own") }
     var passes by remember { mutableIntStateOf(0) }
     var oppPasses by remember { mutableIntStateOf(0) }
+    // Pool d'ordres (pions d'ordre par rang) — état global de partie.
+    var orderPool by remember { mutableStateOf(mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)) }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
     var twoPlayer by remember { mutableStateOf(false) }
     var viewingArmy by remember { mutableStateOf<String?>(null) }
@@ -274,6 +277,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         e.parentInstanceId == null && (e.card.kind == CardKind.LEGION_UNIT || e.card.kind == CardKind.ARMADA_SHIP || e.card.kind == CardKind.ARMADA_SQUADRON || e.card.kind == CardKind.COMMANDER)
     }
     val oppPagerState = rememberPagerState(pageCount = { oppPlayable.size.coerceAtLeast(1) })
+    // Snackbar pour les confirmations/annulations (EV2).
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.play_mode), style = MaterialTheme.typography.titleMedium) },
@@ -299,7 +305,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15)))
-    }, bottomBar = {
+    }, snackbarHost = { SnackbarHost(snackbarHostState) }, bottomBar = {
         if (isLegion) {
             BottomAppBar(containerColor = Color(0xFF111827)) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
@@ -323,8 +329,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Text("R$round", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { round = 1 }))
                         Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
                     }
-                    // Fin de round : reset cartes jouées + avance.
-                    Surface(onClick = { playedCommands = emptySet(); if (round < 6) round++ }, shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
+                    // Fin de round : reset cartes jouées + avance (avec Snackbar Annuler).
+                    Surface(onClick = {
+                        val prevRound = round
+                        playedCommands = emptySet()
+                        if (round < 6) round++
+                        scope.launch { snackbarHostState.showSnackbar(stringResource(R.string.round_ended, prevRound), actionLabel = stringResource(R.string.undo), duration = SnackbarDuration.Short); round = prevRound }
+                    }, shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(18.dp))
                             Text(stringResource(R.string.end_round), color = Color(0xFFFFC7B7), fontSize = 9.sp, fontWeight = FontWeight.Bold)
@@ -392,6 +403,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     PassCounter(passes, { passes = (passes + 1).coerceAtMost(5) }, { passes = (passes - 1).coerceAtLeast(0) })
                                     PassCounter(oppPasses, { oppPasses = (oppPasses + 1).coerceAtMost(5) }, { oppPasses = (oppPasses - 1).coerceAtLeast(0) })
+                                }
+                            }
+                        }
+                    }
+                    // ── Pool d'ordres (pions par rang) ──
+                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.order_pool), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Stepper("${orderPool[rank] ?: 0}", { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
                                 }
                             }
                         }
@@ -702,7 +725,14 @@ internal fun BattleDeckSheet(
                 val catCards = cards.filter { it.category == cat }
                 if (catCards.isEmpty()) return@forEach
                 val sel = deck.count { id -> catCards.any { it.name == id } }
-                Text("$label  ($sel/3)", color = Color(0xFFB4BFCE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                val rev = revealed[cat]
+                // En-tête compact : label + count + mission + bouton ↻ sur une ligne.
+                Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("$label ($sel/3)", color = Color(0xFFB4BFCE), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(8.dp))
+                    Text("→ ${rev.takeIf { !it.isNullOrEmpty() } ?: "—"}", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (deckComplete(cat)) Surface(onClick = { onCycleReveal(cat) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) { Text("↻", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     catCards.forEach { c ->
                         val inDeck = c.name in deck
@@ -716,13 +746,6 @@ internal fun BattleDeckSheet(
                             onClick = { zoomCard = c }
                         )
                     }
-                }
-                // Mission : révéler / remplacer la carte courante de cette catégorie.
-                val rev = revealed[cat]
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Mission → ", color = Color(0xFF9EACBC), fontSize = 10.sp)
-                    Text(rev.takeIf { !it.isNullOrEmpty() } ?: "—", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.weight(1f))
-                    if (deckComplete(cat)) Button(onClick = { onCycleReveal(cat) }, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) { Text("↻", fontSize = 14.sp) }
                 }
             }
         }
@@ -1019,6 +1042,23 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.legion_cover), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 Stepper("$cover", { if (cover > 0) set(state.copy(cover = cover - 1)) }, { if (cover < 2) set(state.copy(cover = cover + 1)) }, valueColor = if (cover > 0) Color(0xFF77D9A7) else Color(0xFF5A6A7A), valueWidth = 30.dp)
+            }
+            // Dégâts de véhicule (immobilisé, arme détruite) — véhicules uniquement.
+            if (unit.card.cardSubtype?.contains("vehicle") == true) {
+                val vd = state.vehicleDamage
+                Text(stringResource(R.string.vehicle_damage), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("immobilized" to stringResource(R.string.vd_immobilized), "weapon" to stringResource(R.string.vd_weapon)).forEach { (key, label) ->
+                        val active = key in vd
+                        Surface(onClick = { set(state.copy(vehicleDamage = if (active) vd - key else vd + key)) }, shape = RoundedCornerShape(8.dp), color = if (active) Color(0xFF3B2224) else Color(0xFF2A3A4A)) {
+                            Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(if (active) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (active) Color(0xFFFF6B6B) else Color(0xFF5A6A7A), modifier = Modifier.size(12.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(label, color = if (active) Color(0xFFFFC7B7) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
             }
             // Armes de l'unité (range + dés)
             if (stats?.weapons?.isNotEmpty() == true) {
