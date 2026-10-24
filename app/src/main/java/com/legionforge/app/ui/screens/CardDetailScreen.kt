@@ -108,6 +108,16 @@ internal fun slotIconPath(slot: ArmadaSlot): String? = when (slot) {
 }
 
 // Badge d'upgrade : lettre + couleur distincte par type de slot (au lieu du bleu unique).
+internal fun factionColor(factionId: String): Color = when (factionId.lowercase()) {
+        "rebel" -> Color(0xFF4FC3F7)      // bleu Rebelle
+        "empire" -> Color(0xFFFF6B6B)     // rouge Empire
+        "republic" -> Color(0xFFFFB74D)   // orange République
+        "separatist" -> Color(0xFFE57373) // rouge Séparatiste
+        "mercenary" -> Color(0xFF77D9A7)  // vert Mercenaire
+        "mandalorian" -> Color(0xFF9B6DFF) // violet Mandalorien
+        else -> Color(0xFFFFC857)         // or neutre
+    }
+
 internal fun slotBadge(slot: ArmadaSlot): Pair<String, Color> = when (slot) {
     ArmadaSlot.COMMANDER -> "C" to Color(0xFFFFC857)
     ArmadaSlot.OFFICER -> "O" to Color(0xFFFFB74D)
@@ -183,6 +193,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val safeIndex = initialIndex.coerceIn(0, (playable.size - 1).coerceAtLeast(0))
     val ownPagerState = rememberPagerState(pageCount = { playable.size.coerceAtLeast(1) }, initialPage = safeIndex)
     var round by remember { mutableIntStateOf(1) }
+    // Points de victoire + unités vaincues (état global de partie, mode 2 joueurs).
+    var vp by remember { mutableIntStateOf(0) }
+    var oppVp by remember { mutableIntStateOf(0) }
+    var kills by remember { mutableIntStateOf(0) }
+    var oppKills by remember { mutableIntStateOf(0) }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
     var twoPlayer by remember { mutableStateOf(false) }
     var viewingArmy by remember { mutableStateOf<String?>(null) }
@@ -313,6 +328,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // Connexion Nearby : panneau si pas connecté, sinon indicateur.
                     if (syncMode != ShareMode.CONNECTED) {
                         val endpoints by playSyncVm.endpoints.collectAsState()
+                        Text(stringResource(R.string.play_2p_guidance), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 4.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { runWithPermission { playSyncVm.startHost() } }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (syncMode == ShareMode.ADVERTISING) Color(0xFFFFC857) else Color(0xFF1A2330))) {
                                 Text(stringResource(R.string.play_host), color = if (syncMode == ShareMode.ADVERTISING) Color(0xFF0A0E15) else Color.White, fontWeight = FontWeight.Bold)
@@ -339,6 +355,16 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         )
                     } else {
                         Text("Connecté — choisissez une armée", color = Color(0xFF77D9A7), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    }
+                    // ── Score (VP + unités vaincues) ──
+                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.score), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                ScoreStepper(stringResource(R.string.play_my_army), vp, kills, { vp = (vp + 1).coerceAtMost(15) }, { vp = (vp - 1).coerceAtLeast(0) }, { kills = kills + 1 }, { kills = (kills - 1).coerceAtLeast(0) })
+                                ScoreStepper(stringResource(R.string.play_opponent), oppVp, oppKills, { oppVp = (oppVp + 1).coerceAtMost(15) }, { oppVp = (oppVp - 1).coerceAtLeast(0) }, { oppKills = oppKills + 1 }, { oppKills = (oppKills - 1).coerceAtLeast(0) })
+                            }
+                        }
                     }
                     // ── Mon armée ──
                     Card(onClick = { viewingArmy = "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
@@ -1445,7 +1471,7 @@ internal fun CardBlock(unit: ListEntry, children: List<ListEntry>, totalPts: Int
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 if (onCardClick != null) CardArtwork(unit.card, Modifier.width(96.dp).clickable { onCardClick() })
                 Column(Modifier.weight(1f)) {
-                    Text(unit.card.displayName(), color = Color.White, style = MaterialTheme.typography.headlineSmall)
+                    Text(unit.card.displayName(), color = factionColor(unit.card.factionId), style = MaterialTheme.typography.headlineSmall)
                     val kind = unit.card.legionRank?.name?.replace('_', ' ')?.lowercase()?.replaceFirstChar { it.uppercase() } ?: unit.card.kind.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
                     Text("$kind  •  ${unit.card.factionId.replace('-', ' ').replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelLarge)
                 }
@@ -2053,6 +2079,26 @@ internal fun BigCounter(label: String, value: Int, max: Int, color: Color, onInc
             Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
             Text("$value", color = color, fontSize = 32.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(54.dp))
             Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
+        }
+    }
+}
+
+// Stepper de score (VP + unités vaincues) pour l'écran 2 joueurs.
+@Composable
+internal fun ScoreStepper(label: String, vp: Int, kills: Int, onVpInc: () -> Unit, onVpDec: () -> Unit, onKillInc: () -> Unit, onKillDec: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Surface(onClick = onVpDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$vp VP", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("$kills ✕", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
+            Surface(onClick = onVpInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Surface(onClick = onKillDec, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onKillInc, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
         }
     }
 }
