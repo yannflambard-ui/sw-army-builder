@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -15,6 +16,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +37,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -280,12 +295,12 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     }
                                 }
                             }
-                            Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) {
-                                Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                            Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) {
+                                Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round précédent" }) }
                             }
-                            Text(" R$round ", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            Surface(onClick = { round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) {
-                                Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                            Text(" R$round ", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { round = 1 }))
+                            Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) {
+                                Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) }
                             }
                         },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15)))
@@ -410,7 +425,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 }
                 if (pagerEntries.size > 1) {
                     Row(Modifier.fillMaxWidth().padding(bottom = 50.dp).align(Alignment.BottomCenter), horizontalArrangement = Arrangement.Center) {
-                        repeat(pagerEntries.size) { i -> Box(Modifier.padding(3.dp).size(if (i == pagerState.currentPage) 10.dp else 7.dp).clip(CircleShape).background(if (i == pagerState.currentPage) Color(0xFFFFC857) else Color(0xFF3A4A5A))) }
+                        repeat(pagerEntries.size) { i -> Box(Modifier.padding(3.dp).size(if (i == pagerState.currentPage) 12.dp else 9.dp).clip(CircleShape).background(if (i == pagerState.currentPage) Color(0xFFFFC857) else Color(0xFF3A4A5A))) }
                     }
                 }
             }
@@ -869,6 +884,15 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
     val set: (SyncedUnitState) -> Unit = { if (!readOnly) onChange(it) }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0A0E15)).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (readOnly) {
+            Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Lock, contentDescription = null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.read_only), color = Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
         CardBlock(unit, children, totalPts, wikiSections, onRuleClick, onCardClick = { showCard = true })
         // ── stats réelles de la carte (repliable) ──
         CollapsibleSection(stringResource(R.string.profile), initiallyExpanded = false) {
@@ -899,7 +923,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
                                                         }
                                         }
                                         // ── suivi des blessures (valeur restante) (repliable) ──
-        CollapsibleSection(stringResource(R.string.tracking), initiallyExpanded = false) {
+        CollapsibleSection(stringResource(R.string.tracking), initiallyExpanded = true) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) { BigCounter(stringResource(R.string.minis), wounds, maxHp, Color(0xFFFF6B6B), { if (wounds < maxHp) set(state.copy(wounds = wounds + 1)) }, { if (wounds > 0) set(state.copy(wounds = wounds - 1)) }) }
             HealthBar(wounds.toFloat() / maxHp, wounds, maxHp)
             // ── état de l'unité (auto-calculé depuis blessures + suppression / courage) ──
@@ -908,13 +932,22 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
                 StateChip(stringResource(R.string.legion_state_suppressed), isSuppressed, Color(0xFFFFB74D))
                 StateChip(stringResource(R.string.legion_state_panicked), isPanicked, Color(0xFFFF6B6B))
             }
+            // Activation de l'unité (drapeau 'activée' dans le round courant).
+            val activated = state.activated ?: false
+            Surface(onClick = { set(state.copy(activated = !activated)) }, shape = RoundedCornerShape(10.dp), color = if (activated) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(if (activated) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked, contentDescription = null, tint = if (activated) Color(0xFF77D9A7) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (activated) R.string.legion_activated else R.string.legion_not_activated), color = if (activated) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
             // Compteur de suppression : alimente l'état Supprimé (>= courage) / Paniqué (>= 2x courage).
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.legion_suppression_label), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(onClick = { if (suppressions > 0) set(state.copy(suppressions = suppressions - 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(34.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
+                    Surface(onClick = { if (suppressions > 0) set(state.copy(suppressions = suppressions - 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
                     Text("$suppressions / $courage", color = if (isPanicked) Color(0xFFFF6B6B) else if (isSuppressed) Color(0xFFFFB74D) else Color(0xFF77D9A7), fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                    Surface(onClick = { set(state.copy(suppressions = suppressions + 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(34.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
+                    Surface(onClick = { set(state.copy(suppressions = suppressions + 1)) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold) } }
                 }
             }
             // Armes de l'unité (range + dés)
@@ -956,6 +989,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
 @Composable
 internal fun StatChip(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Text(label, color = Color(0xFF9EACBC), fontSize = 9.sp, fontWeight = FontWeight.Bold)
         Text(value, color = color, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
@@ -1190,7 +1224,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     Text("${unit.card.points}", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 if (stats != null) ShipStatsBlock(stats)
-                else if (!unit.card.rulesText.isNullOrBlank()) ClickableRulesText(unit.card.rulesText, wikiSections, onRuleClick, color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall, maxLines = 6)
+                else if (!unit.card.rulesText.isNullOrBlank()) ClickableRulesText(unit.card.rulesText, wikiSections, onRuleClick, color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall, maxLines = 2)
                 // ── résumé coque (avec +/-) + vitesse + bouton +DGT CRIT (toujours visible) ──
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     HullCounter(hull, maxHp, { if (hull < maxHp) set(state.copy(hull = hull + 1)) }, { if (hull > 0) set(state.copy(hull = hull - 1)) })
@@ -1411,7 +1445,7 @@ internal fun CardBlock(unit: ListEntry, children: List<ListEntry>, totalPts: Int
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                if (onCardClick != null) CardArtwork(unit.card, Modifier.width(64.dp).clickable { onCardClick() })
+                if (onCardClick != null) CardArtwork(unit.card, Modifier.width(96.dp).clickable { onCardClick() })
                 Column(Modifier.weight(1f)) {
                     Text(unit.card.displayName(), color = Color.White, style = MaterialTheme.typography.headlineSmall)
                     val kind = unit.card.legionRank?.name?.replace('_', ' ')?.lowercase()?.replaceFirstChar { it.uppercase() } ?: unit.card.kind.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
@@ -1448,7 +1482,7 @@ internal fun CollapsibleSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(title, color = Color(0xFFFFC857), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(if (expanded) "\u25B2" else "\u25BC", color = Color(0xFF9EACBC), fontSize = 12.sp)
+                Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand), tint = Color(0xFF9EACBC), modifier = Modifier.size(18.dp))
             }
             if (expanded) {
                 HorizontalDivider(color = Color(0xFF2A3A4A))
@@ -1501,7 +1535,13 @@ internal fun EffectsPanel(
                                             colorFilter = ColorFilter.tint(if (eff.used) Color(0xFF5A6A7A) else iconColor)
                                         )
                                     } else {
-                                        Text(icon, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (eff.used) Color(0xFF5A6A7A) else iconColor)
+                                        val fallbackIcon = when (eff.type) {
+                                            EffectType.UPGRADE -> Icons.Filled.Build
+                                            EffectType.COMMANDER -> Icons.Filled.Star
+                                            EffectType.CRIT -> Icons.Filled.Bolt
+                                            else -> Icons.Filled.Help
+                                        }
+                                        Icon(fallbackIcon, contentDescription = eff.label, tint = if (eff.used) Color(0xFF5A6A7A) else iconColor, modifier = Modifier.size(16.dp))
                                     }
                                 }
                                 Spacer(Modifier.width(8.dp))
@@ -1519,7 +1559,7 @@ internal fun EffectsPanel(
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 if (eff.pts > 0) Text("${eff.pts} pts", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                                                 Surface(onClick = { selectedEffect = if (selectedEffect == eff) null else eff }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) {
-                                                                    Text(if (selectedEffect == eff) "\u25B2" else "\u25BC", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = Color(0xFF9EACBC), fontSize = 12.sp)
+                                                                    Icon(if (selectedEffect == eff) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null, tint = Color(0xFF9EACBC), modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
                                                                 }
                             }
                         }
@@ -1566,8 +1606,10 @@ internal fun CritSelectorDropdown(crits: List<CritCard>, expanded: Boolean, onDi
 @Composable
 internal fun HealthBar(ratio: Float, current: Int, max: Int) {
     val barColor = when { ratio > 0.66f -> Color(0xFF77D9A7); ratio > 0.33f -> Color(0xFFFFC857); else -> Color(0xFFFF6B6B) }
-    LinearProgressIndicator(progress = { ratio }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = barColor, trackColor = Color(0xFF2A3A4A))
-    Box(Modifier.fillMaxWidth()) { Text("$current / $max", color = barColor, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.CenterEnd)) }
+    Box(Modifier.fillMaxWidth().height(20.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFF2A3A4A))) {
+        Box(Modifier.fillMaxWidth(fraction = ratio.coerceIn(0f, 1f)).fillMaxHeight().background(barColor))
+        Text("$current / $max", color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
+    }
 }
 
 @Composable
@@ -1749,7 +1791,7 @@ internal fun DiceRect(dice: List<Int>?, vertical: Boolean = false) {
 internal fun CircleShield(value: Int, onInc: () -> Unit, onDec: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
             Surface(
                 shape = CircleShape,
                 color = Color.White,
@@ -1760,7 +1802,7 @@ internal fun CircleShield(value: Int, onInc: () -> Unit, onDec: () -> Unit) {
                     Text("$value", color = Color(0xFF1B2B4B), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
         }
     }
 }
@@ -1937,14 +1979,14 @@ internal fun TokenSection(tokens: List<String>, onAdd: (String) -> Unit, onRemov
         LegionToken(stringResource(R.string.legion_token_smoke), Color(0xFF9EACBC), "\u25CF"),
         LegionToken(stringResource(R.string.legion_token_charge), Color(0xFFFFB74D), "\u2694"),
         // Jetons de keywords + mécaniques (rulebook p.10) : Order, Commander, Ion, Poison, Immobilize, Shield, Incognito, Bane, Graffiti.
-        LegionToken(stringResource(R.string.legion_token_order), Color(0xFF4FC3F7), "\u25C6"),
+        LegionToken(stringResource(R.string.legion_token_order), Color(0xFF26C6DA), "\u25C6"),
         LegionToken(stringResource(R.string.legion_token_commander), Color(0xFFFFC857), "\u2605"),
         LegionToken(stringResource(R.string.legion_token_ion), Color(0xFF4DD0E1), "\u26A1"),
         LegionToken(stringResource(R.string.legion_token_poison), Color(0xFF81C784), "\u2620"),
         LegionToken(stringResource(R.string.legion_token_immobilize), Color(0xFFB388FF), "\u2696"),
-        LegionToken(stringResource(R.string.legion_token_shield), Color(0xFF4FC3F7), "\u25C9"),
+        LegionToken(stringResource(R.string.legion_token_shield), Color(0xFF64B5F6), "\u25C9"),
         LegionToken(stringResource(R.string.legion_token_incognito), Color(0xFF9EACBC), "\u25C7"),
-        LegionToken(stringResource(R.string.legion_token_bane), Color(0xFFB8395A), "\u2620"),
+        LegionToken(stringResource(R.string.legion_token_bane), Color(0xFFB8395A), "\u2691"),
         LegionToken(stringResource(R.string.legion_token_graffiti), Color(0xFFFF8A65), "\u270E")
     ) + if (isVehicle) listOf(LegionToken(stringResource(R.string.legion_token_vehicle_damage), Color(0xFFFF6B6B), "\u26A0")) else emptyList()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1996,7 +2038,11 @@ internal data class LegionToken(val label: String, val color: Color, val symbol:
 @Composable
 internal fun StateChip(label: String, active: Boolean, color: Color) {
     Surface(shape = RoundedCornerShape(8.dp), color = if (active) color.copy(alpha = 0.22f) else Color(0xFF1E2A3A)) {
-        Text(label, Modifier.padding(horizontal = 12.dp, vertical = 7.dp), color = if (active) color else Color(0xFF5A6A7A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(if (active) Icons.Filled.Check else Icons.Filled.Close, contentDescription = null, tint = if (active) color else Color(0xFF5A6A7A), modifier = Modifier.size(12.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(label, color = if (active) color else Color(0xFF5A6A7A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -2006,9 +2052,9 @@ internal fun BigCounter(label: String, value: Int, max: Int, color: Color, onInc
         Text(label, color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(5.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(38.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
             Text("$value", color = color, fontSize = 32.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(54.dp))
-            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(38.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) } }
         }
     }
 }
@@ -2019,9 +2065,9 @@ internal fun HullCounter(value: Int, max: Int, onInc: () -> Unit, onDec: () -> U
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(stringResource(R.string.hull), color = Color(0xFFFF8A80), fontSize = 8.sp, fontWeight = FontWeight.Bold)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
             Text("$value/$max", color = Color(0xFFFF8A80), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(56.dp))
-            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
         }
     }
 }

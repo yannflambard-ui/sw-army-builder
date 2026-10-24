@@ -210,4 +210,9 @@
     <string name="legion_state_wounded">Wounded</string>
     <string name="legion_state_suppressed">Suppressed</string>
     <string name="legion_state_panicked">Panicked</string>
+    <string name="read_only">Lecture seule</string>
+    <string name="collapse">Replier</string>
+    <string name="expand">Déplier</string>
+    <string name="legion_activated">Activée</string>
+    <string name="legion_not_activated">Non activée</string>
 </resources>
