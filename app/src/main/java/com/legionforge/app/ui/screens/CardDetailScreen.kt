@@ -1511,7 +1511,7 @@ internal fun CardBlock(unit: ListEntry, children: List<ListEntry>, totalPts: Int
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 if (onCardClick != null) CardArtwork(unit.card, Modifier.width(96.dp).clickable { onCardClick() })
                 Column(Modifier.weight(1f)) {
-                    Text(unit.card.displayName(), color = factionColor(unit.card.factionId), style = MaterialTheme.typography.headlineSmall)
+                    Text(unit.card.displayName(), color = factionColor(unit.card.factionId), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     val kind = unit.card.legionRank?.name?.replace('_', ' ')?.lowercase()?.replaceFirstChar { it.uppercase() } ?: unit.card.kind.name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
                     Text("$kind  •  ${unit.card.factionId.replace('-', ' ').replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelLarge)
                 }
