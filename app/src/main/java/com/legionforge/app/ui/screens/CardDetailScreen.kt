@@ -446,6 +446,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Text(stringResource(R.string.deploy), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
+                                // Déployer mes unités : ouvrir la liste pour marquer Zone 1/2.
+                                Surface(onClick = { viewingArmy = "own" }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
+                                    Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("Déployer mon armée", color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text("Tapez chaque unité → Zone 1 / Zone 2", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                                    }
+                                }
                                 // Priorité initiale.
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                     Text(stringResource(R.string.priority), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
