@@ -306,6 +306,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var showMenu by remember { mutableStateOf(false) }
     var setupStep by remember { mutableIntStateOf(1) }
     var showPoolSheet by remember { mutableStateOf(false) }
+    var showOppPicker by remember { mutableStateOf(false) }
+    var soloOppStates by remember { mutableStateOf<Map<String, SyncedUnitState>>(emptyMap()) }
     // Refonte liste/détail : unité sélectionnée pour le détail, sélection comparée, sheet comparé.
     var selectedUnit by remember { mutableStateOf<ListEntry?>(null) }
     var compareSel by remember { mutableStateOf<List<ListEntry>>(emptyList()) }
@@ -313,23 +315,29 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Store d'état de jeu : mon armée (éditable) + armée adverse (reçue, lecture seule).
     val ownStates by playSyncVm.ownStates.collectAsState()
     val oppStates by playSyncVm.oppStates.collectAsState()
-    // Armée adverse : résolue depuis le payload partagé (cardId -> carte du catalogue local).
-    val opp = remember(opponentListJson) {
-        try { com.google.gson.Gson().fromJson(opponentListJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java) } catch (_: Exception) { null }
-    }
-    val oppEntries = remember(opp, vm.cards.value) {
-        opp?.entries?.mapNotNull { e ->
-            vm.cards.value.firstOrNull { it.id == e.cardId }?.let { card ->
-                ListEntry(
-                    instanceId = e.instanceId ?: "opp_${e.cardId}_${e.parentInstanceId ?: "root"}",
-                    card = card,
-                    parentInstanceId = e.parentInstanceId,
-                    quantity = e.quantity,
-                    chosenSlot = e.chosenSlot?.let { s -> runCatching { ArmadaSlot.valueOf(s) }.getOrNull() }
-                )
-            }
-        } ?: emptyList()
-    }
+    val soloOppEntries by vm.soloOppEntries.collectAsState()
+    val soloOppList by vm.soloOppList.collectAsState()
+    // Armée adverse : en 2 joueurs depuis le payload partagé, en solo depuis la liste adverse choisie.
+    val opp = if (twoPlayer) {
+        remember(opponentListJson) {
+            try { com.google.gson.Gson().fromJson(opponentListJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java) } catch (_: Exception) { null }
+        }
+    } else soloOppList
+    val oppEntries = if (twoPlayer) {
+        remember(opp, vm.cards.value) {
+            opp?.entries?.mapNotNull { e ->
+                vm.cards.value.firstOrNull { it.id == e.cardId }?.let { card ->
+                    ListEntry(
+                        instanceId = e.instanceId ?: "opp_${e.cardId}_${e.parentInstanceId ?: "root"}",
+                        card = card,
+                        parentInstanceId = e.parentInstanceId,
+                        quantity = e.quantity,
+                        chosenSlot = e.chosenSlot?.let { s -> runCatching { ArmadaSlot.valueOf(s) }.getOrNull() }
+                    )
+                }
+            } ?: emptyList()
+        }
+    } else soloOppEntries
     val oppPlayable = oppEntries.filter { e ->
         e.parentInstanceId == null && (e.card.kind == CardKind.LEGION_UNIT || e.card.kind == CardKind.ARMADA_SHIP || e.card.kind == CardKind.ARMADA_SQUADRON || e.card.kind == CardKind.COMMANDER)
     }
@@ -433,6 +441,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         )
                     } else {
                         Text("Connecté — choisissez une armée", color = Color(0xFF77D9A7), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    }
+                    // Mode solo : choisir l'armée adverse (2 armées sur le même appareil).
+                    if (!twoPlayer) {
+                        Surface(onClick = { showOppPicker = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
+                            Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(if (soloOppList != null) "Armée adverse : ${soloOppList?.name}" else "Choisir l'armée adverse (solo)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                Text("Choisir", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                     // ── Bascule Setup / Partie ──
                     if (phase == PlayPhase.PREP) {
@@ -603,14 +622,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     } else {
                         BattlefieldView(
                             myUnits = playable, oppUnits = oppPlayable,
-                            myStates = ownStates, oppStates = oppStates,
+                            myStates = ownStates, oppStates = if (twoPlayer) oppStates else soloOppStates,
                             myCmd = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                             oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                             turn = turn,
                             onOpenUnit = { selectedUnit = it },
                             onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
                             onCmdClick = { showCmdSheet = true },
-                            showOpponent = twoPlayer
+                            showOpponent = true,
+                            onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true)) }
                         )
                     }
                     }
@@ -758,6 +778,24 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     if (showPoolSheet) {
         PoolSheet(orderPool, { rank, v -> orderPool = orderPool + (rank to v) }, onClose = { showPoolSheet = false })
+    }
+    // Sélecteur d'armée adverse (mode solo).
+    if (showOppPicker) {
+        val allLists by vm.allLists.collectAsState()
+        ModalBottomSheet(onDismissRequest = { showOppPicker = false }, containerColor = Color(0xFF111827)) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Choisir l'armée adverse", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                if (allLists.isEmpty()) Text("Aucune liste enregistrée", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                allLists.forEach { l ->
+                    Surface(onClick = { vm.loadOpponentList(l.id); showOppPicker = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(l.name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text("${l.factionId} • ${l.pointsLimit} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
+        }
     }
     // Détail d'unité (refonte A1/A8) : sheet réutilisant la page unité.
     selectedUnit?.let { unit ->
@@ -1505,10 +1543,11 @@ internal fun BattlefieldView(
     onOpenUnit: (ListEntry) -> Unit,
     onActivate: (String) -> Unit,
     onCmdClick: () -> Unit,
-    showOpponent: Boolean = true
+    showOpponent: Boolean = true,
+    onOppActivate: ((String) -> Unit)? = null
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = null)
+        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate)
     }

@@ -32,6 +32,11 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
     val currentList: StateFlow<BuilderListEntity?> = _currentList.asStateFlow()
     private val _entries = MutableStateFlow<List<ListEntry>>(emptyList())
     val entries: StateFlow<List<ListEntry>> = _entries.asStateFlow()
+    // Armée adverse en mode solo (2 armées sur le même appareil).
+    private val _soloOppList = MutableStateFlow<BuilderListEntity?>(null)
+    val soloOppList: StateFlow<BuilderListEntity?> = _soloOppList.asStateFlow()
+    private val _soloOppEntries = MutableStateFlow<List<ListEntry>>(emptyList())
+    val soloOppEntries: StateFlow<List<ListEntry>> = _soloOppEntries.asStateFlow()
     private val _validation = MutableStateFlow(RuleValidationResult(false, 0, emptyList()))
     val validation: StateFlow<RuleValidationResult> = _validation.asStateFlow()
     private val _searchResults = MutableStateFlow<List<CardDefinition>>(emptyList())
@@ -230,6 +235,21 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
                     _cards.value = cards
                     recalculate()
                     _currentList.value?.takeIf { it.factionId == list.factionId }?.let(::watchEntries)
+                }
+            }
+        }
+    }
+
+    /** Charge une liste comme armée adverse (mode solo 2 armées). */
+    fun loadOpponentList(id: String) {
+        viewModelScope.launch {
+            awaitCatalog()
+            val list = repository.getList(id) ?: return@launch
+            _soloOppList.value = list
+            val system = GameSystem.valueOf(list.gameSystem)
+            repository.observeCards(system, list.factionId).collect { cards ->
+                repository.observeEntries(list.id, cards).collect { loaded ->
+                    _soloOppEntries.value = loaded
                 }
             }
         }
