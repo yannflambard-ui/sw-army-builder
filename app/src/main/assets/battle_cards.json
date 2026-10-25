@@ -32,37 +32,37 @@
    "imageAssetPathFr": "cards/swl/battle/fr/close-the-pocket.webp"
   },
   {
-   "category": "objective",
+   "category": "secondary",
    "name": "Marked Targets",
    "imageAssetPath": "cards/swl/battle/marked-targets.webp",
    "imageAssetPathFr": "cards/swl/battle/fr/marked-targets.webp"
   },
   {
-   "category": "objective",
+   "category": "secondary",
    "name": "Bring Them to Heel",
    "imageAssetPath": "cards/swl/battle/bring-them-to-heel.webp",
    "imageAssetPathFr": "cards/swl/battle/fr/bring-them-to-heel.webp"
   },
   {
-   "category": "objective",
+   "category": "secondary",
    "name": "Sweep and Clear",
    "imageAssetPath": "cards/swl/battle/sweep-and-clear.webp",
    "imageAssetPathFr": "cards/swl/battle/fr/sweep-and-clear.webp"
   },
   {
-   "category": "objective",
+   "category": "secondary",
    "name": "Surface Scan",
    "imageAssetPath": "cards/swl/battle/surface-scan.webp",
    "imageAssetPathFr": "cards/swl/battle/fr/surface-scan.webp"
   },
   {
-   "category": "objective",
+   "category": "secondary",
    "name": "Destroy Enemy Base",
    "imageAssetPath": "cards/swl/battle/destroy-enemy-base.webp",
    "imageAssetPathFr": "cards/swl/battle/fr/destroy-enemy-base.webp"
   },
   {
-   "category": "objective",
+   "category": "secondary",
    "name": "Recon Mission",
    "imageAssetPath": "cards/swl/battle/recon-mission.webp",
    "imageAssetPathFr": "cards/swl/battle/fr/recon-mission.webp"
