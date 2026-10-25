@@ -334,7 +334,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Text("⋮", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, containerColor = Color(0xFF1A2330)) {
+                                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                     val victoryOwn = stringResource(R.string.victory_own)
                                     val victoryOpp = stringResource(R.string.victory_opp)
                                     val victoryDraw = stringResource(R.string.victory_draw)
@@ -532,7 +532,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     }
                     // ── Bannière ACTIVER (à qui d'activer) ──
                     Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
