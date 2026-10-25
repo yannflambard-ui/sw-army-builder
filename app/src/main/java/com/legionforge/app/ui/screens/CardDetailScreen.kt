@@ -437,6 +437,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             TextButton(onClick = { passes = 3; oppPasses = 3 }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.pass_auto), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                         }
                     }
+                    }
                     // ── Tour d'activation (à qui d'activer) ──
                     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
