@@ -434,7 +434,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                             // Règle v2 : passes = unités non vaincues - 1.
                             Text(stringResource(R.string.pass_v2_rule), color = Color(0xFF5A6A7A), fontSize = 10.sp)
-                            TextButton(onClick = { passes = 3; oppPasses = 3 }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.pass_auto), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                            TextButton(onClick = { passes = 3; oppPasses = 3 }) { Text(stringResource(R.string.pass_auto), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                         }
                     }
                     }
