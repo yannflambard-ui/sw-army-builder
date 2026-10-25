@@ -580,35 +580,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
                         Text("Passer mon tour →", Modifier.padding(vertical = 10.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
-                    // ── Carte de commandement du round (synchro 2 joueurs) ──
-                    val myCmd = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } }
-                    val oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } }
-                    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("TOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                if (myCmd != null) {
-                                    AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
-                                        modifier = Modifier.width(52.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable { showCmdSheet = true },
-                                        contentScale = ContentScale.Crop)
-                                } else {
-                                    Surface(onClick = { showCmdSheet = true }, shape = CircleShape, color = Color(0xFF2A3A4A)) {
-                                        Text("?", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                                Text(myCmd?.name ?: "Choisir (CMD)", color = Color(0xFF9EACBC), fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("PIP ${myCmd?.pip ?: ""}", color = Color(0xFFFFC857), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Text(if (myCmd != null && oppCmd != null) (if (myCmd.pip.toIntOrNull() ?: 9 <= oppCmd.pip.toIntOrNull() ?: 9) "◀" else "▶") else "⏳", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("ADV", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                Surface(shape = CircleShape, color = if (oppCmd != null) Color(0xFF3B2224) else Color(0xFF2A3A4A)) {
-                                    Text(oppCmd?.pip ?: "?", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                }
-                                Text(oppCmd?.name ?: "En attente", color = Color(0xFF9EACBC), fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-                    }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
                     if (gameResult != null) {
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
@@ -637,7 +608,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                             turn = turn,
                             onOpenUnit = { selectedUnit = it },
-                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) }
+                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                            onCmdClick = { showCmdSheet = true }
                         )
                     }
                     }
@@ -1530,11 +1502,12 @@ internal fun BattlefieldView(
     myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?,
     turn: String,
     onOpenUnit: (ListEntry) -> Unit,
-    onActivate: (String) -> Unit
+    onActivate: (String) -> Unit,
+    onCmdClick: () -> Unit
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = null)
-        CommandCenterRow(myCmd, oppCmd, turn)
+        CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate)
     }
 }
@@ -1566,7 +1539,7 @@ internal fun CampRow(
                             defeated -> Color(0xFF3A3A4A)
                             else -> Color(0xFF66BB6A)
                         }
-                        Box(Modifier.width(56.dp).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
+                        Box(Modifier.width(72.dp).aspectRatio(1.43f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
                             if (artPath != null) {
                                 AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                                     modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
@@ -1586,7 +1559,7 @@ internal fun CampRow(
 
 // ── Centre : cartes de commandement des 2 camps + qui joue ──
 @Composable
-internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String) {
+internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String, onCmdClick: () -> Unit) {
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFFFFC857) else Color(0xFFFFC7B7), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
@@ -1596,9 +1569,9 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                     Text("MOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     if (myCmd != null) {
                         AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
-                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
+                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable(onCmdClick), contentScale = ContentScale.Crop)
                     } else {
-                        Surface(shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                        Surface(onClick = onCmdClick, shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                     }
                     Text("PIP ${myCmd?.pip ?: "—"}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
