@@ -399,12 +399,12 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }) { pad ->
         if (playable.isEmpty()) { Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) { Text(stringResource(R.string.add_units_play), color = Color.Gray) }; return@Scaffold }
         Box(Modifier.fillMaxSize().padding(pad)) {
-            // ── ÉCRAN 2 JOUEURS : liste des armées (Mon armée / Armée adverse) ──
-            if (twoPlayer && viewingArmy == null) {
+            // ── ÉCRAN DE PARTIE : setup + features de jeu (solo ou 2 joueurs) ──
+            if (viewingArmy == null) {
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.play_2players), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    // Connexion Nearby : panneau si pas connecté, sinon indicateur.
-                    if (syncMode != ShareMode.CONNECTED) {
+                    // Connexion Nearby (2 joueurs uniquement) : panneau si pas connecté, sinon indicateur.
+                    if (twoPlayer && syncMode != ShareMode.CONNECTED) {
                         val endpoints by playSyncVm.endpoints.collectAsState()
                         Text(stringResource(R.string.play_2p_guidance), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 4.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -609,7 +609,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             turn = turn,
                             onOpenUnit = { selectedUnit = it },
                             onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
-                            onCmdClick = { showCmdSheet = true }
+                            onCmdClick = { showCmdSheet = true },
+                            showOpponent = twoPlayer
                         )
                     }
                     }
@@ -1503,10 +1504,11 @@ internal fun BattlefieldView(
     turn: String,
     onOpenUnit: (ListEntry) -> Unit,
     onActivate: (String) -> Unit,
-    onCmdClick: () -> Unit
+    onCmdClick: () -> Unit,
+    showOpponent: Boolean = true
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = null)
+        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = null)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate)
     }
