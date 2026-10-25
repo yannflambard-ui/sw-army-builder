@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -548,8 +549,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         }
                     }
-                    // ── Bannière ACTIVER (à qui d'activer) ──
-                    Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                    // ── Bannière ACTIVER (à qui d'activer) — pulse quand c'est ton tour ──
+                    val pulseAlpha = if (turn == "own") {
+                        val tr = rememberInfiniteTransition(label = "pulse")
+                        val a by tr.animateFloat(initialValue = 1f, targetValue = 0.55f, animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alpha")
+                        a
+                    } else 1f
+                    Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth().alpha(pulseAlpha), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
@@ -678,12 +684,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                     }
                 } else {
-                    // En jeu : grille de miniatures pour choisir une activation.
-                    UnitActivationGrid(
-                        units = listEntries, allEntries = listAll, states = states, readOnly = readOnly,
-                        onActivate = { id -> onUnitChange(id, (states[id] ?: SyncedUnitState(id)).copy(activated = true)) },
-                        onOpen = { selectedUnit = it }
-                    )
+                    // En jeu : bandeau d'aperçu (état) + grille de miniatures (action).
+                    Column(Modifier.fillMaxSize()) {
+                        UnitActivationStrip(units = listEntries, states = states, onOpen = { selectedUnit = it })
+                        Spacer(Modifier.height(4.dp))
+                        UnitActivationGrid(
+                            units = listEntries, allEntries = listAll, states = states, readOnly = readOnly,
+                            onActivate = { id -> onUnitChange(id, (states[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                            onOpen = { selectedUnit = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -1354,7 +1365,8 @@ internal fun UnitActivationGrid(
     states: Map<String, SyncedUnitState>,
     readOnly: Boolean,
     onActivate: (String) -> Unit,
-    onOpen: (ListEntry) -> Unit
+    onOpen: (ListEntry) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // Tri : activables en tête, activées puis vaincues en queue.
     val sorted = remember(units, states) {
@@ -1367,7 +1379,7 @@ internal fun UnitActivationGrid(
             }
         }
     }
-    LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(sorted, key = { it.instanceId }) { unit ->
             val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
             val children = allEntries.filter { it.parentInstanceId == unit.instanceId }
@@ -1418,11 +1430,48 @@ internal fun UnitActivationCell(
             }
             // Nom en surimpression bas.
             Text(unit.card.name, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xAA0A0E15)).padding(horizontal = 4.dp, vertical = 2.dp))
-            // Badge état en haut-droit.
+            // Badge état en haut-droit (symbole + couleur pour daltonisme).
             if (activated) {
-                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFFF6B6B), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEF5350), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
             } else if (defeated) {
                 Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✕", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            } else if (activable) {
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2E7D32), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("●", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF66BB6A), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            }
+        }
+    }
+}
+
+
+// ── Bandeau horizontal d'activation (aperçu d'état) : miniatures rouge=activée, vert=activable, gris=vaincue ──
+@Composable
+internal fun UnitActivationStrip(
+    units: List<ListEntry>,
+    states: Map<String, SyncedUnitState>,
+    onOpen: (ListEntry) -> Unit
+) {
+    LazyRow(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(units, key = { it.instanceId }) { unit ->
+            val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+            val defeated = st.defeated == true
+            val activated = st.activated == true
+            val artPath = unit.card.imagePath()
+            val borderColor = when {
+                activated -> Color(0xFFEF5350)
+                defeated -> Color(0xFF3A3A4A)
+                else -> Color(0xFF66BB6A)
+            }
+            Box(Modifier.width(64.dp).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { onOpen(unit) }) {
+                if (artPath != null) {
+                    AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
+                        modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
+                        contentScale = ContentScale.Crop)
+                } else {
+                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
+                }
+                // Symbole d'état (daltonisme) : ✓ activée, ✕ vaincue, ● activable.
+                Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
             }
         }
     }
