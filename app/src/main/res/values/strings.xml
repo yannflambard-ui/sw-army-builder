@@ -263,4 +263,5 @@
     <string name="setup_command_deck">Main de commandement (7)</string>
     <string name="start_game">Lancer la partie</string>
     <string name="back_to_setup">Retour au Setup</string>
+    <string name="setup_incomplete">Battle deck 3+3+3 + main de 7 requis</string>
 </resources>

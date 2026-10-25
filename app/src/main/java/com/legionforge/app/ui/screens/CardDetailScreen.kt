@@ -463,9 +463,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Stepper("${orderPool[rank] ?: 0}", { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
                                     }
                                 }
-                                // Lancer la partie.
-                                Button(onClick = { phase = PlayPhase.GAME }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
-                                    Text(stringResource(R.string.start_game), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
+                                // Lancer la partie (garde-fou : battle deck 3+3+3 complet + main de 7).
+                                val battleComplete = listOf("objective", "secondary", "advantage").all { cat -> battleCards.count { it.category == cat && it.name in battleDeck } >= 3 }
+                                val cmdComplete = commandDeck.size >= 7
+                                Button(onClick = { phase = PlayPhase.GAME }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) Color(0xFF77D9A7) else Color(0xFF2A3A4A))) {
+                                    Text(if (battleComplete && cmdComplete) stringResource(R.string.start_game) else stringResource(R.string.setup_incomplete), color = if (battleComplete && cmdComplete) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
