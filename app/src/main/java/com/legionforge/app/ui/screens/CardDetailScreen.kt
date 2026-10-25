@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -551,6 +554,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                    // Passer mon tour (bascule manuelle — jamais automatique).
+                    Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
+                        Text("Passer mon tour →", Modifier.padding(vertical = 10.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    }
                     // ── Carte de commandement du round (synchro 2 joueurs) ──
                     val myCmd = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } }
                     val oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } }
@@ -558,10 +565,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("TOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                Surface(onClick = { showCmdSheet = true }, shape = CircleShape, color = if (myCmd != null) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
-                                    Text(myCmd?.pip ?: "?", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                if (myCmd != null) {
+                                    AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
+                                        modifier = Modifier.width(52.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable { showCmdSheet = true },
+                                        contentScale = ContentScale.Crop)
+                                } else {
+                                    Surface(onClick = { showCmdSheet = true }, shape = CircleShape, color = Color(0xFF2A3A4A)) {
+                                        Text("?", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                                 Text(myCmd?.name ?: "Choisir (CMD)", color = Color(0xFF9EACBC), fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("PIP ${myCmd?.pip ?: ""}", color = Color(0xFFFFC857), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             }
                             Text(if (myCmd != null && oppCmd != null) (if (myCmd.pip.toIntOrNull() ?: 9 <= oppCmd.pip.toIntOrNull() ?: 9) "◀" else "▶") else "⏳", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -646,20 +660,30 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     Text(if (isOpp) "Armée adverse vide (aucune unité reçue)" else stringResource(R.string.add_units_play), color = Color.Gray)
                 }
             } else {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(listEntries, key = { it.instanceId }) { unit ->
-                        val unitState = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
-                        val children = listAll.filter { it.parentInstanceId == unit.instanceId }
-                        UnitListRow(
-                            unit = unit, state = unitState, children = children,
-                            isPrep = phase == PlayPhase.PREP, readOnly = readOnly,
-                            onOpen = { selectedUnit = unit },
-                            onCycleDeploy = if (readOnly) null else {
-                                { onUnitChange(unit.instanceId, unitState.copy(deployZone = when (unitState.deployZone) { null -> 1; 1 -> 2; else -> null })) }
-                            },
-                            onCompare = {}
-                        )
+                if (phase == PlayPhase.PREP) {
+                    // En setup : liste avec boutons de zone de déploiement.
+                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(listEntries, key = { it.instanceId }) { unit ->
+                            val unitState = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                            val children = listAll.filter { it.parentInstanceId == unit.instanceId }
+                            UnitListRow(
+                                unit = unit, state = unitState, children = children,
+                                isPrep = true, readOnly = readOnly,
+                                onOpen = { selectedUnit = unit },
+                                onCycleDeploy = if (readOnly) null else {
+                                    { onUnitChange(unit.instanceId, unitState.copy(deployZone = when (unitState.deployZone) { null -> 1; 1 -> 2; else -> null })) }
+                                },
+                                onCompare = {}
+                            )
+                        }
                     }
+                } else {
+                    // En jeu : grille de miniatures pour choisir une activation.
+                    UnitActivationGrid(
+                        units = listEntries, allEntries = listAll, states = states, readOnly = readOnly,
+                        onActivate = { id -> onUnitChange(id, (states[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                        onOpen = { selectedUnit = it }
+                    )
                 }
             }
         }
@@ -1320,6 +1344,89 @@ internal fun UnitListRow(
     }
 }
 
+
+
+// ── Grille d'activation (P1) : miniatures d'unités pour choisir une activation ──
+@Composable
+internal fun UnitActivationGrid(
+    units: List<ListEntry>,
+    allEntries: List<ListEntry>,
+    states: Map<String, SyncedUnitState>,
+    readOnly: Boolean,
+    onActivate: (String) -> Unit,
+    onOpen: (ListEntry) -> Unit
+) {
+    // Tri : activables en tête, activées puis vaincues en queue.
+    val sorted = remember(units, states) {
+        units.sortedBy { u ->
+            val st = states[u.instanceId]
+            when {
+                st?.defeated == true -> 2
+                st?.activated == true -> 1
+                else -> 0
+            }
+        }
+    }
+    LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(sorted, key = { it.instanceId }) { unit ->
+            val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+            val children = allEntries.filter { it.parentInstanceId == unit.instanceId }
+            UnitActivationCell(unit, st, children, readOnly, onActivate, onOpen)
+        }
+    }
+}
+
+// ── Cellule d'activation : miniature + nom + jauge coque + état (rouge=activée, gris=vaincue) ──
+@Composable
+internal fun UnitActivationCell(
+    unit: ListEntry, state: SyncedUnitState, children: List<ListEntry>,
+    readOnly: Boolean, onActivate: (String) -> Unit, onOpen: (ListEntry) -> Unit
+) {
+    val totalPts = unit.card.points + children.sumOf { it.card.points * it.quantity }
+    val maxHp = when (unit.card.kind) {
+        CardKind.LEGION_UNIT -> {
+            val st = remember(unit.instanceId) { LegionStatsParser.parse(unit.card.legionStats) }
+            (st?.health?.takeIf { it > 0 } ?: 1) * (st?.miniCount?.takeIf { it > 0 } ?: 1)
+        }
+        else -> null
+    }
+    val remaining = when {
+        unit.card.kind == CardKind.LEGION_UNIT -> state.wounds ?: maxHp
+        else -> state.hull
+    }
+    val defeated = state.defeated == true
+    val activated = state.activated == true
+    val activable = !defeated && !activated && !readOnly
+    val artPath = unit.card.imagePath()
+    Card(
+        onClick = { if (activable) onActivate(unit.instanceId) else onOpen(unit) },
+        modifier = Modifier.fillMaxWidth().aspectRatio(1f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) Color(0xFFFF6B6B) else if (defeated) Color(0xFF3A3A4A) else Color.Transparent, RoundedCornerShape(10.dp)),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            if (artPath != null) {
+                AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
+                    modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
+                    contentScale = ContentScale.Crop)
+            } else {
+                Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(4.dp)) }
+            }
+            // Jauge coque en bas.
+            if (remaining != null && maxHp != null) {
+                LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
+            }
+            // Nom en surimpression bas.
+            Text(unit.card.name, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xAA0A0E15)).padding(horizontal = 4.dp, vertical = 2.dp))
+            // Badge état en haut-droit.
+            if (activated) {
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFFF6B6B), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            } else if (defeated) {
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✕", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            }
+        }
+    }
+}
 
 // ── Contenu d'une page unité (réutilisé par le détail et la vue comparée) ──
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
