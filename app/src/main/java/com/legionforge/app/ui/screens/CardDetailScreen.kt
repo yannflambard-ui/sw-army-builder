@@ -1,6 +1,7 @@
 package com.legionforge.app.ui.screens
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -1565,7 +1566,7 @@ internal fun CampRow(
                             defeated -> Color(0xFF3A3A4A)
                             else -> Color(0xFF66BB6A)
                         }
-                        Box(Modifier.width(56.dp).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate(unit.instanceId) else onOpenUnit(unit) }) {
+                        Box(Modifier.width(56.dp).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
                             if (artPath != null) {
                                 AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                                     modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
