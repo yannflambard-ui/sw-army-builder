@@ -617,53 +617,27 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         }
                     }
-                    // ── Mon armée ──
-                    Card(onClick = { viewingArmy = "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(stringResource(R.string.play_my_army), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text("${vm.currentList.value?.name ?: ""} • ${vm.currentList.value?.factionId ?: ""} • ${vm.currentList.value?.pointsLimit ?: 0} pts", color = Color.White, style = MaterialTheme.typography.labelMedium)
-                            Text("${playable.size} unités", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    // ── Armée adverse ──
-                    if (opp == null) {
+                    // ── Écran central "champ de bataille" (2 armées + commandement) ──
+                    if (opp == null || oppPlayable.isEmpty()) {
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(stringResource(R.string.play_opponent), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                Text(stringResource(R.string.play_connecting), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
-                                Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
-                                    Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
-                                }
-                                TextButton(onClick = {
-                                    com.legionforge.app.util.CrashReporter.reportEvent(
-                                        "Synchro 2 joueurs: liste adverse absente (${android.os.Build.MODEL}) ${System.currentTimeMillis()}",
-                                        "Mode=${syncMode} · connecté=${playSyncVm.connectedEndpoint.value != null} · " +
-                                        "liste adverse reçue=${opponentListJson != null} · " +
-                                        "ma liste chargée=${vm.currentList.value != null} · " +
-                                        "erreur=${playSyncVm.error.value ?: "aucune"}"
-                                    )
-                                }) { Text("Signaler sur GitHub", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                            }
-                        }
-                    } else if (oppPlayable.isEmpty()) {
-                        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
-                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(stringResource(R.string.play_opponent), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                Text("${opp.name} • ${opp.gameSystem} • ${opp.pointsLimit} pts", color = Color.White, style = MaterialTheme.typography.labelMedium)
-                                Text("0 unité reçue — la liste adverse n'est pas encore arrivée", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                                Text(if (opp == null) stringResource(R.string.play_connecting) else "0 unité reçue — la liste adverse n'est pas encore arrivée", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
                                 Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
                                     Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
                     } else {
-                        Card(onClick = { viewingArmy = "opp" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
-                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(stringResource(R.string.play_opponent), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                Text("${opp.name} • ${opp.gameSystem} • ${opp.pointsLimit} pts", color = Color.White, style = MaterialTheme.typography.labelMedium)
-                                Text("${oppPlayable.size} unités", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
+                        BattlefieldView(
+                            myUnits = playable, oppUnits = oppPlayable,
+                            myStates = ownStates, oppStates = oppStates,
+                            myCmd = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
+                            oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
+                            turn = turn,
+                            onOpenUnit = { selectedUnit = it },
+                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) }
+                        )
                     }
                     }
                 }
@@ -1541,6 +1515,104 @@ internal fun UnitActivationStrip(
                 // Symbole d'état (daltonisme) : ✓ activée, ✕ vaincue, ● activable.
                 Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 12.sp, fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
+            }
+        }
+    }
+}
+
+
+// ── Écran central "champ de bataille" (façon Pokemon TCG) : adversaire haut, commandement centre, moi bas ──
+@Composable
+internal fun BattlefieldView(
+    myUnits: List<ListEntry>, oppUnits: List<ListEntry>,
+    myStates: Map<String, SyncedUnitState>, oppStates: Map<String, SyncedUnitState>,
+    myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?,
+    turn: String,
+    onOpenUnit: (ListEntry) -> Unit,
+    onActivate: (String) -> Unit
+) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = null)
+        CommandCenterRow(myCmd, oppCmd, turn)
+        CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate)
+    }
+}
+
+// ── Rangée d'un camp : miniatures d'unités, bordure colorée si camp actif ──
+@Composable
+internal fun CampRow(
+    label: String, units: List<ListEntry>, states: Map<String, SyncedUnitState>,
+    isActive: Boolean, onOpenUnit: (ListEntry) -> Unit, onActivate: ((String) -> Unit)?
+) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (isActive) Color(0xFF1E3A2A) else Color(0xFF111827), border = BorderStroke(if (isActive) 2.dp else 1.dp, if (isActive) Color(0xFF66BB6A) else Color(0xFF2A3A4A))) {
+        Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(label, color = if (isActive) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("${units.count { u -> states[u.instanceId]?.activated == true }}/${units.size} activées", color = Color(0xFF8F9BAD), fontSize = 9.sp)
+            }
+            if (units.isEmpty()) {
+                Text("Aucune unité", color = Color(0xFF5A6A7A), fontSize = 10.sp)
+            } else {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(units, key = { it.instanceId }) { unit ->
+                        val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                        val defeated = st.defeated == true
+                        val activated = st.activated == true
+                        val activable = !defeated && !activated && onActivate != null
+                        val artPath = unit.card.imagePath()
+                        val borderColor = when {
+                            activated -> Color(0xFFEF5350)
+                            defeated -> Color(0xFF3A3A4A)
+                            else -> Color(0xFF66BB6A)
+                        }
+                        Box(Modifier.width(56.dp).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate(unit.instanceId) else onOpenUnit(unit) }) {
+                            if (artPath != null) {
+                                AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
+                                    modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
+                                    contentScale = ContentScale.Crop)
+                            } else {
+                                Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
+                            }
+                            Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Centre : cartes de commandement des 2 camps + qui joue ──
+@Composable
+internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFFFFC857) else Color(0xFFFFC7B7), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                // Ma carte
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("MOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    if (myCmd != null) {
+                        AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
+                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
+                    } else {
+                        Surface(shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    }
+                    Text("PIP ${myCmd?.pip ?: "—"}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+                Text(if (myCmd != null && oppCmd != null) (if (myCmd.pip.toIntOrNull() ?: 9 <= oppCmd.pip.toIntOrNull() ?: 9) "◀" else "▶") else "⏳", color = Color(0xFFFFC857), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                // Carte adverse
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("ADV", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    if (oppCmd != null) {
+                        AsyncImage(model = "file:///android_asset/${oppCmd.imagePath()}", contentDescription = oppCmd.name,
+                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
+                    } else {
+                        Surface(shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC7B7), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    }
+                    Text("PIP ${oppCmd?.pip ?: "—"}", color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
