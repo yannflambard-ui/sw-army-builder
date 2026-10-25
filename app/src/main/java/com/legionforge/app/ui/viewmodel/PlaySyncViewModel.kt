@@ -25,6 +25,10 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     val error: StateFlow<String?> = sync.error
     val receivedRound: StateFlow<Int?> = sync.receivedRound
     val receivedUnits: StateFlow<List<SyncedUnitState>> = sync.receivedUnits
+    val receivedDeploymentDone: StateFlow<Boolean?> = sync.receivedDeploymentDone
+    // Déploiement terminé (Legion setup) : mon état + état adverse reçu.
+    private val _deploymentDone = MutableStateFlow(false)
+    val deploymentDone: StateFlow<Boolean> = _deploymentDone.asStateFlow()
     // Store d'état de jeu : mon armée (éditable, diffusée) + armée adverse (reçue, lecture seule).
     private val _ownStates = MutableStateFlow<Map<String, SyncedUnitState>>(emptyMap())
     val ownStates: StateFlow<Map<String, SyncedUnitState>> = _ownStates.asStateFlow()
@@ -104,6 +108,12 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     fun setOwnState(id: String, next: SyncedUnitState) {
         _ownStates.value = _ownStates.value + (id to next)
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendState(listOf(next))
+    }
+
+    /** Marque mon déploiement terminé (ou non) et le diffuse à l'adversaire. */
+    fun setDeploymentDone(done: Boolean) {
+        _deploymentDone.value = done
+        if (sync.mode.value == ShareMode.CONNECTED) sync.sendDeploymentDone(done)
     }
 
     override fun onCleared() {

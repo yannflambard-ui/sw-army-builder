@@ -28,6 +28,7 @@ data class SyncedUnitState(
     val defeated: Boolean? = null,    // Legion unité vaincue
     val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
     val promoted: Boolean? = null     // Legion unité promue commandant
+    val deployZone: Int? = null        // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */
@@ -36,6 +37,7 @@ data class PlaySyncPayload(
     val round: Int? = null,
     val units: List<SyncedUnitState> = emptyList(),
     val listJson: String? = null // liste de l'armée adverse (sérialisée)
+    val deploymentDone: Boolean? = null // Legion : déploiement terminé (par joueur)
 )
 
 /**
@@ -67,6 +69,9 @@ class PlaySyncManager(context: Context) {
     private val _listRequested = MutableStateFlow(false)
     val listRequested: StateFlow<Boolean> = _listRequested.asStateFlow()
 
+    private val _receivedDeploymentDone = MutableStateFlow<Boolean?>(null)
+    val receivedDeploymentDone: StateFlow<Boolean?> = _receivedDeploymentDone.asStateFlow()
+
     init {
         // Décode les payloads reçus.
         CoroutineScope(Dispatchers.Main).launch {
@@ -78,6 +83,7 @@ class PlaySyncManager(context: Context) {
                     "state" -> _receivedUnits.value = payload.units
                     "list" -> _receivedListJson.value = payload.listJson
                     "request" -> _listRequested.value = true
+                    "deploydone" -> _receivedDeploymentDone.value = payload.deploymentDone
                 }
             }
         }
@@ -98,6 +104,11 @@ class PlaySyncManager(context: Context) {
 
     fun sendList(json: String) {
         nearby.sendList(gson.toJson(PlaySyncPayload(type = "list", listJson = json)))
+    }
+
+    /** Envoie l'état "déploiement terminé" (Legion setup). */
+    fun sendDeploymentDone(done: Boolean) {
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "deploydone", deploymentDone = done)))
     }
 
     /** Demande à l'autre joueur de renvoyer sa liste (synchro manuelle). */

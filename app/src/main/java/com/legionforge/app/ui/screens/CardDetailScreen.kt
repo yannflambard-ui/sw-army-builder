@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.pager.HorizontalPager
@@ -221,6 +223,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val syncMode by playSyncVm.mode.collectAsState()
     val syncRound by playSyncVm.receivedRound.collectAsState()
     val opponentListJson by playSyncVm.opponentListJson.collectAsState()
+    val myDeployDone by playSyncVm.deploymentDone.collectAsState()
+    val oppDeployDone by playSyncVm.receivedDeploymentDone.collectAsState()
     // Wiki des règles : chargé pour rendre les mots-clés du texte de règles cliquables.
     val wikiSections by vm.wikiSections.collectAsState()
     var ruleSection by remember { mutableStateOf<WikiSectionEntity?>(null) }
@@ -266,6 +270,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Lanceur de dés (PR5) : pool d'attaque + résultats.
     var showDiceSheet by remember { mutableStateOf(false) }
     var showDeploySheet by remember { mutableStateOf(false) }
+    // Refonte liste/détail : unité sélectionnée pour le détail, sélection comparée, sheet comparé.
+    var selectedUnit by remember { mutableStateOf<ListEntry?>(null) }
+    var compareSel by remember { mutableStateOf<List<ListEntry>>(emptyList()) }
+    var showCompare by remember { mutableStateOf(false) }
     // Store d'état de jeu : mon armée (éditable) + armée adverse (reçue, lecture seule).
     val ownStates by playSyncVm.ownStates.collectAsState()
     val oppStates by playSyncVm.oppStates.collectAsState()
@@ -321,7 +329,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }, snackbarHost = { SnackbarHost(snackbarHostState) }, bottomBar = {
         if (isLegion) {
             BottomAppBar(containerColor = Color(0xFF111827)) {
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                     // Deck de commandement
                     Surface(onClick = { showCmdSheet = true }, shape = RoundedCornerShape(10.dp), color = if (commandDeck.isNotEmpty()) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -338,23 +346,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     }
                     // Compteur de round
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round précédent" }) } }
+                        Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(48.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round précédent" }) } }
                         Text("R$round", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { round = 1 }))
-                        Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
-                    }
-                    // Déploiement.
-                    Surface(onClick = { showDeploySheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
-                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.Place, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.deploy), color = Color(0xFF77D9A7), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    // Lanceur de dés.
-                    Surface(onClick = { showDiceSheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
-                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.dice), color = Color(0xFFFFC857), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        }
+                        Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(48.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
                     }
                     // Fin de round : reset cartes jouées + avance (avec Snackbar Annuler).
                     val roundEndedMsg = stringResource(R.string.round_ended, round)
@@ -456,6 +450,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Surface(onClick = { priority = "opp" }, shape = RoundedCornerShape(8.dp), color = if (priority == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_opponent), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
                                     }
                                 }
+                                // Déploiement terminé (A3) : signal qui détermine qui finit en premier.
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Déploiement terminé", color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Surface(onClick = { playSyncVm.setDeploymentDone(!myDeployDone) }, shape = RoundedCornerShape(8.dp), color = if (myDeployDone) Color(0xFF77D9A7) else Color(0xFF2A3A4A)) { Text("Moi", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (myDeployDone) Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                        Text(if (oppDeployDone == true) "Adversaire ✓" else "Adversaire", color = if (oppDeployDone == true) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                                 // Pool d'ordres initial.
                                 Text(stringResource(R.string.order_pool), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
@@ -480,11 +482,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     }
                     // ── Features de jeu (phase GAME) ──
                     if (phase == PlayPhase.GAME) {
-                    // ── Score (VP + unités vaincues) ──
-                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.score), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    // ── Score (VP + unités vaincues) — repliable (A9) ──
+                    CollapsibleSection(stringResource(R.string.score), initiallyExpanded = true) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 ScoreStepper(stringResource(R.string.play_my_army), vp, kills, { vp = (vp + 1).coerceAtMost(15) }, { vp = (vp - 1).coerceAtLeast(0) }, { kills = kills + 1 }, { kills = (kills - 1).coerceAtLeast(0) })
                                 ScoreStepper(stringResource(R.string.play_opponent), oppVp, oppKills, { oppVp = (oppVp + 1).coerceAtMost(15) }, { oppVp = (oppVp - 1).coerceAtLeast(0) }, { oppKills = oppKills + 1 }, { oppKills = (oppKills - 1).coerceAtLeast(0) })
                             }
@@ -507,7 +507,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             // Règle v2 : passes = unités non vaincues - 1.
                             Text(stringResource(R.string.pass_v2_rule), color = Color(0xFF5A6A7A), fontSize = 10.sp)
                             TextButton(onClick = { passes = 3; oppPasses = 3 }) { Text(stringResource(R.string.pass_auto), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                        }
                     }
                     }
                     // ── Tour d'activation (à qui d'activer) ──
@@ -607,40 +606,35 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 }
                 return@Box
             }
-            // ── PAGER : mon armée (éditable) ou armée adverse (lecture seule live) ──
+            // ── LISTE : mon armée (éditable) ou armée adverse (lecture seule live) ──
             val isOpp = twoPlayer && viewingArmy == "opp"
-            val pagerEntries = if (isOpp) oppPlayable else playable
-            val pagerAll = if (isOpp) oppEntries else entries
+            val listEntries = if (isOpp) oppPlayable else playable
+            val listAll = if (isOpp) oppEntries else entries
             val states = if (isOpp) oppStates else ownStates
-            val pagerState = if (isOpp) oppPagerState else ownPagerState
             val readOnly = isOpp
             val onUnitChange: (String, SyncedUnitState) -> Unit = if (isOpp) { _, _ -> } else { id, next -> playSyncVm.setOwnState(id, next) }
-            if (pagerEntries.isEmpty()) {
+            if (listEntries.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(if (isOpp) "Armée adverse vide (aucune unité reçue)" else stringResource(R.string.add_units_play), color = Color.Gray)
                 }
             } else {
-                HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-                    val unit = pagerEntries[page]; val children = pagerAll.filter { it.parentInstanceId == unit.instanceId }
-                    // Liens wiki : ne montrer que les mots-clés du jeu courant (pas de mélange Legion/Armada)
-                    val unitWikiSections = remember(unit, wikiSections) {
-                        wikiSections.filter { it.gameSystem == unit.card.gameSystem.name }
-                    }
-                    val unitState = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
-                    when (unit.card.kind) {
-                        CardKind.ARMADA_SHIP -> ArmadaShipPage(unit, children, pagerAll, unitWikiSections, onRuleClick,
-                            state = unitState, onChange = { next -> onUnitChange(unit.instanceId, next) }, readOnly = readOnly)
-                        CardKind.ARMADA_SQUADRON -> ArmadaSquadronPage(unit, unitWikiSections, onRuleClick,
-                            state = unitState, onChange = { next -> onUnitChange(unit.instanceId, next) }, readOnly = readOnly)
-                        // Degats critiques reserves aux vaisseaux capitaux (par Regle Armada). Un commandant est equipe sur un vaisseau, il n'a pas de page de degats propres.
-                        CardKind.COMMANDER -> CommanderPage(unit, unitWikiSections, onRuleClick)
-                        else -> LegionUnitPage(unit, children, pagerAll, unitWikiSections, onRuleClick,
-                            state = unitState, onChange = { next -> onUnitChange(unit.instanceId, next) }, readOnly = readOnly)
-                    }
-                }
-                if (pagerEntries.size > 1) {
-                    Row(Modifier.fillMaxWidth().padding(bottom = 50.dp).align(Alignment.BottomCenter), horizontalArrangement = Arrangement.Center) {
-                        repeat(pagerEntries.size) { i -> Box(Modifier.padding(3.dp).size(if (i == pagerState.currentPage) 12.dp else 9.dp).clip(CircleShape).background(if (i == pagerState.currentPage) Color(0xFFFFC857) else Color(0xFF3A4A5A))) }
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(listEntries, key = { it.instanceId }) { unit ->
+                        val unitState = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                        val children = listAll.filter { it.parentInstanceId == unit.instanceId }
+                        UnitListRow(
+                            unit = unit, state = unitState, children = children,
+                            isPrep = phase == PlayPhase.PREP, readOnly = readOnly,
+                            onOpen = { selectedUnit = unit },
+                            onCycleDeploy = if (readOnly) null else {
+                                { onUnitChange(unit.instanceId, unitState.copy(deployZone = when (unitState.deployZone) { null -> 1; 1 -> 2; else -> null })) }
+                            },
+                            onCompare = {
+                                val next = (compareSel + unit).distinctBy { it.instanceId }
+                                compareSel = next
+                                if (next.size >= 2) showCompare = true
+                            }
+                        )
                     }
                 }
             }
@@ -699,6 +693,27 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     if (showDeploySheet) {
         DeploymentSheet(onClose = { showDeploySheet = false })
+    }
+    // Détail d'unité (refonte A1/A8) : sheet réutilisant la page unité.
+    selectedUnit?.let { unit ->
+        val isOppDetail = twoPlayer && viewingArmy == "opp"
+        val detailAll = if (isOppDetail) oppEntries else entries
+        val detailStates = if (isOppDetail) oppStates else ownStates
+        val detailState = detailStates[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+        val detailChildren = detailAll.filter { it.parentInstanceId == unit.instanceId }
+        val detailWiki = remember(unit, wikiSections) { wikiSections.filter { it.gameSystem == unit.card.gameSystem.name } }
+        val detailReadOnly = isOppDetail
+        val detailOnChange: (SyncedUnitState) -> Unit = if (detailReadOnly) { _ -> } else { next -> playSyncVm.setOwnState(unit.instanceId, next) }
+        UnitDetailSheet(unit, detailChildren, detailAll, detailWiki, onRuleClick, detailState, detailOnChange, detailReadOnly, onDice = { showDiceSheet = true }, onClose = { selectedUnit = null })
+    }
+    // Vue comparée 2 unités (A2).
+    if (showCompare && compareSel.size >= 2) {
+        val isOppCompare = twoPlayer && viewingArmy == "opp"
+        val compareAll = if (isOppCompare) oppEntries else entries
+        val compareStates = if (isOppCompare) oppStates else ownStates
+        val compareReadOnly = isOppCompare
+        val compareOnChange: (String, SyncedUnitState) -> Unit = if (compareReadOnly) { _, _ -> } else { id, next -> playSyncVm.setOwnState(id, next) }
+        UnitCompareSheet(compareSel[0], compareSel[1], compareAll, compareStates, wikiSections, onRuleClick, compareOnChange, compareReadOnly, onClose = { showCompare = false; compareSel = emptyList() })
     }
 }
 
@@ -1002,25 +1017,17 @@ internal fun CommandDeckSheet(
 @Composable
 internal fun DeploymentSheet(onClose: () -> Unit) {
     var first by remember { mutableStateOf("own") }  // qui déploie en premier
-    var zone1 by remember { mutableIntStateOf(0) }   // unités déployées zone 1
-    var zone2 by remember { mutableIntStateOf(0) }   // unités déployées zone 2
     ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.deploy), color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            // Ordre de déploiement.
+            // Ordre de déploiement (seule info de déploiement utile — les zones se marquent en tapant les unités de la liste).
             Text(stringResource(R.string.deploy_order), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Surface(onClick = { first = "own" }, shape = RoundedCornerShape(8.dp), color = if (first == "own") Color(0xFF77D9A7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_my_army), Modifier.padding(vertical = 10.dp), color = if (first == "own") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                 Spacer(Modifier.width(8.dp))
                 Surface(onClick = { first = "opp" }, shape = RoundedCornerShape(8.dp), color = if (first == "opp") Color(0xFF77D9A7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_opponent), Modifier.padding(vertical = 10.dp), color = if (first == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
             }
-            // Zones de déploiement.
-            Text(stringResource(R.string.deploy_zones), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.zone1), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold); Stepper("$zone1", { zone1 = (zone1 - 1).coerceAtLeast(0) }, { zone1 = (zone1 + 1).coerceAtMost(12) }, size = 36.dp, valueColor = Color(0xFF77D9A7), valueWidth = 28.dp) }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.zone2), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold); Stepper("$zone2", { zone2 = (zone2 - 1).coerceAtLeast(0) }, { zone2 = (zone2 + 1).coerceAtMost(12) }, size = 36.dp, valueColor = Color(0xFF77D9A7), valueWidth = 28.dp) }
-            }
-            Text(stringResource(R.string.deploy_total, zone1 + zone2), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text("Marquez les unités déployées en les tapant dans la liste (Zone 1 / Zone 2).", color = Color(0xFF5A6A7A), fontSize = 11.sp)
         }
     }
 }
@@ -1203,6 +1210,133 @@ internal fun DeckCardZoom(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
+
+// ── Ligne d'unité dans la liste d'armée (refonte A1) : jauge coque/wounds, activation, vaincue, déploiement, comparer ──
+@Composable
+internal fun UnitListRow(
+    unit: ListEntry,
+    state: SyncedUnitState,
+    children: List<ListEntry>,
+    isPrep: Boolean,
+    readOnly: Boolean,
+    onOpen: () -> Unit,
+    onCycleDeploy: (() -> Unit)?,
+    onCompare: () -> Unit
+) {
+    val totalPts = unit.card.points + children.sumOf { it.card.points * it.quantity }
+    val maxHp = when (unit.card.kind) {
+        CardKind.LEGION_UNIT -> {
+            val st = remember(unit.instanceId) { LegionStatsParser.parse(unit.card.legionStats) }
+            (st?.health?.takeIf { it > 0 } ?: 1) * (st?.miniCount?.takeIf { it > 0 } ?: 1)
+        }
+        else -> null
+    }
+    val remaining = when {
+        unit.card.kind == CardKind.LEGION_UNIT -> state.wounds ?: maxHp
+        else -> state.hull
+    }
+    val defeated = state.defeated == true
+    val activated = state.activated == true
+    val deployZone = state.deployZone
+    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = if (defeated) Color(0xFF2A1A1A) else Color(0xFF1A2330))) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(unit.card.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("$totalPts pts", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (remaining != null && maxHp != null) {
+                    LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
+                    Text("$remaining/$maxHp", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+                if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = Color(0xFF77D9A7), modifier = Modifier.size(16.dp)) }
+                if (defeated) { Text("Vaincue", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                if (isPrep && onCycleDeploy != null) {
+                    Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> Color(0xFF1E3A2A); 2 -> Color(0xFF2A3A4A); else -> Color(0xFF3A3A4A) }) {
+                        Text(if (deployZone == null) "Déployer" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Surface(onClick = onCompare, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) {
+                    Text("⚔", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+
+// ── Contenu d'une page unité (réutilisé par le détail et la vue comparée) ──
+@Composable
+internal fun UnitPageContent(
+    unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>,
+    wikiSections: List<WikiSectionEntity>, onRuleClick: (WikiSectionEntity) -> Unit,
+    state: SyncedUnitState, onChange: (SyncedUnitState) -> Unit, readOnly: Boolean
+) {
+    val unitWikiSections = remember(unit, wikiSections) { wikiSections.filter { it.gameSystem == unit.card.gameSystem.name } }
+    when (unit.card.kind) {
+        CardKind.ARMADA_SHIP -> ArmadaShipPage(unit, children, allEntries, unitWikiSections, onRuleClick, state = state, onChange = onChange, readOnly = readOnly)
+        CardKind.ARMADA_SQUADRON -> ArmadaSquadronPage(unit, unitWikiSections, onRuleClick, state = state, onChange = onChange, readOnly = readOnly)
+        CardKind.COMMANDER -> CommanderPage(unit, unitWikiSections, onRuleClick)
+        else -> LegionUnitPage(unit, children, allEntries, unitWikiSections, onRuleClick, state = state, onChange = onChange, readOnly = readOnly)
+    }
+}
+
+// ── Détail d'unité (A8) : sheet plein écran réutilisant la page unité ──
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun UnitDetailSheet(
+    unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>,
+    wikiSections: List<WikiSectionEntity>, onRuleClick: (WikiSectionEntity) -> Unit,
+    state: SyncedUnitState, onChange: (SyncedUnitState) -> Unit, readOnly: Boolean,
+    onDice: () -> Unit, onClose: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF0A0E15)) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(unit.card.name, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Surface(onClick = onDice, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
+                    Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(R.string.dice), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Box(Modifier.fillMaxWidth().heightIn(max = 900.dp)) {
+                UnitPageContent(unit, children, allEntries, wikiSections, onRuleClick, state, onChange, readOnly)
+            }
+        }
+    }
+}
+
+// ── Vue comparée 2 unités (A2) : résolution de combat ──
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun UnitCompareSheet(
+    a: ListEntry, b: ListEntry, allEntries: List<ListEntry>,
+    states: Map<String, SyncedUnitState>, wikiSections: List<WikiSectionEntity>,
+    onRuleClick: (WikiSectionEntity) -> Unit,
+    onChange: (String, SyncedUnitState) -> Unit, readOnly: Boolean,
+    onClose: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF0A0E15)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 16.dp)) {
+            Text("Comparer", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(a, b).forEach { unit ->
+                    val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                    val children = allEntries.filter { it.parentInstanceId == unit.instanceId }
+                    Box(Modifier.weight(1f).heightIn(max = 700.dp)) {
+                        UnitPageContent(unit, children, allEntries, wikiSections, onRuleClick, st, { next -> onChange(unit.instanceId, next) }, readOnly)
+                    }
+                }
+            }
+        }
+    }
+}
+
 internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>, wikiSections: List<WikiSectionEntity> = emptyList(), onRuleClick: (WikiSectionEntity) -> Unit = {}, state: SyncedUnitState = SyncedUnitState(unit.instanceId), onChange: (SyncedUnitState) -> Unit = {}, readOnly: Boolean = false) {
     val totalPts = unit.card.points + children.sumOf { it.card.points * it.quantity }
     val stats = remember(unit.instanceId) { LegionStatsParser.parse(unit.card.legionStats) }
