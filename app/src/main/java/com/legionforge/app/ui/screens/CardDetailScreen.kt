@@ -270,6 +270,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Lanceur de dés (PR5) : pool d'attaque + résultats.
     var showDiceSheet by remember { mutableStateOf(false) }
     var showDeploySheet by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    var setupStep by remember { mutableIntStateOf(1) }
+    var showPoolSheet by remember { mutableStateOf(false) }
     // Refonte liste/détail : unité sélectionnée pour le détail, sélection comparée, sheet comparé.
     var selectedUnit by remember { mutableStateOf<ListEntry?>(null) }
     var compareSel by remember { mutableStateOf<List<ListEntry>>(emptyList()) }
@@ -324,46 +327,37 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     }
                                 }
                             }
+                            // Menu ⋮ (tiroir) : fin de partie, pool, battle deck, réglages.
+                            Box {
+                                Surface(onClick = { showMenu = true }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), modifier = Modifier.padding(end = 4.dp)) {
+                                    Box(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                        Text("⋮", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, containerColor = Color(0xFF1A2330)) {
+                                    val victoryOwn = stringResource(R.string.victory_own)
+                                    val victoryOpp = stringResource(R.string.victory_opp)
+                                    val victoryDraw = stringResource(R.string.victory_draw)
+                                    DropdownMenuItem(text = { Text("Fin de partie", color = Color(0xFFFFC7B7)) }, onClick = {
+                                        showMenu = false
+                                        gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> victoryDraw }
+                                    })
+                                    DropdownMenuItem(text = { Text("Pool d'ordres", color = Color.White) }, onClick = { showMenu = false; showPoolSheet = true })
+                                    DropdownMenuItem(text = { Text("Battle deck", color = Color.White) }, onClick = { showMenu = false; showBattleSheet = true })
+                                    DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else Color(0xFF5A6A7A)) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
+                                }
+                            }
                         },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15)))
     }, snackbarHost = { SnackbarHost(snackbarHostState) }, bottomBar = {
         if (isLegion) {
             BottomAppBar(containerColor = Color(0xFF111827)) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                    // Deck de commandement
+                    // Deck de commandement (seul bouton de la barre en phase de jeu)
                     Surface(onClick = { showCmdSheet = true }, shape = RoundedCornerShape(10.dp), color = if (commandDeck.isNotEmpty()) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
                             Text("CMD ${commandDeck.size}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    // Battle deck
-                    Surface(onClick = { showBattleSheet = true }, shape = RoundedCornerShape(10.dp), color = if (battleDeck.isNotEmpty()) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
-                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
-                            Text("BAT ${battleDeck.size}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    // Compteur de round
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(48.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round précédent" }) } }
-                        Text("R$round", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { round = 1 }))
-                        Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(48.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
-                    }
-                    // Fin de round : reset cartes jouées + avance (avec Snackbar Annuler).
-                    val roundEndedMsg = stringResource(R.string.round_ended, round)
-                    val undoLabel = stringResource(R.string.undo)
-                    Surface(onClick = {
-                        val prevRound = round
-                        val prevPool = orderPool
-                        playedCommands = emptySet()
-                        orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
-                        if (round < 6) round++
-                        scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
-                    }, shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
-                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.Check, contentDescription = null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.end_round), color = Color(0xFFFFC7B7), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -414,6 +408,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Text(stringResource(R.string.setup_title), color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 Text(stringResource(R.string.setup_desc), color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+                                // Indicateur d'étape (wizard).
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Étape $setupStep / 3", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        repeat(3) { i -> Box(Modifier.size(8.dp).clip(CircleShape).background(if (i + 1 == setupStep) Color(0xFFFFC857) else Color(0xFF2A3A4A))) }
+                                    }
+                                }
+                                if (setupStep == 1) {
                                 // Battle deck (construction 3+3+3).
                                 Surface(onClick = { showBattleSheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -434,6 +436,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Text("${commandDeck.size + 1}/7", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
+                                }
+                                if (setupStep == 2) {
                                 // Déploiement.
                                 Surface(onClick = { showDeploySheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -458,6 +462,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Text(if (oppDeployDone == true) "Adversaire ✓" else "Adversaire", color = if (oppDeployDone == true) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
+                                }
+                                if (setupStep == 3) {
                                 // Pool d'ordres initial.
                                 Text(stringResource(R.string.order_pool), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
@@ -472,6 +478,16 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Button(onClick = { phase = PlayPhase.GAME }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) Color(0xFF77D9A7) else Color(0xFF2A3A4A))) {
                                     Text(if (battleComplete && cmdComplete) stringResource(R.string.start_game) else stringResource(R.string.setup_incomplete), color = if (battleComplete && cmdComplete) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontWeight = FontWeight.Bold)
                                 }
+                                }
+                                // Navigation (wizard).
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    if (setupStep > 1) {
+                                        Surface(onClick = { setupStep-- }, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) { Text("Précédent", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                                    }
+                                    if (setupStep < 3) {
+                                        Surface(onClick = { setupStep++ }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) { Text("Suivant", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                                    }
+                                }
                             }
                         }
                     } else {
@@ -482,75 +498,50 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     }
                     // ── Features de jeu (phase GAME) ──
                     if (phase == PlayPhase.GAME) {
-                    // ── Score (VP + unités vaincues) — repliable (A9) ──
-                    CollapsibleSection(stringResource(R.string.score), initiallyExpanded = true) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                ScoreStepper(stringResource(R.string.play_my_army), vp, kills, { vp = (vp + 1).coerceAtMost(15) }, { vp = (vp - 1).coerceAtLeast(0) }, { kills = kills + 1 }, { kills = (kills - 1).coerceAtLeast(0) })
-                                ScoreStepper(stringResource(R.string.play_opponent), oppVp, oppKills, { oppVp = (oppVp + 1).coerceAtMost(15) }, { oppVp = (oppVp - 1).coerceAtLeast(0) }, { oppKills = oppKills + 1 }, { oppKills = (oppKills - 1).coerceAtLeast(0) })
+                    // ── Bandeau d'état compact (score + round + tour) ──
+                    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF1A2330)) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            // Score
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Vous $vp · $oppVp Adv", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("${kills} / ${oppKills} vaincues", color = Color(0xFF9EACBC), fontSize = 9.sp)
                             }
-                            // Priorité + jetons de passe.
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(stringResource(R.string.priority), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Surface(onClick = { priority = "own" }, shape = RoundedCornerShape(8.dp), color = if (priority == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_my_army), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                                    Surface(onClick = { priority = "opp" }, shape = RoundedCornerShape(8.dp), color = if (priority == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_opponent), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                                }
-                                // Priorité par pips (règle : le plus petit pip commande en premier).
-                                Text(stringResource(R.string.priority_pips), color = Color(0xFF5A6A7A), fontSize = 10.sp)
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(stringResource(R.string.pass_tokens), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    PassCounter(passes, { passes = (passes + 1).coerceAtMost(5) }, { passes = (passes - 1).coerceAtLeast(0) })
-                                    PassCounter(oppPasses, { oppPasses = (oppPasses + 1).coerceAtMost(5) }, { oppPasses = (oppPasses - 1).coerceAtLeast(0) })
+                            // Round + fin de round (un seul contrôle)
+                            val roundEndedMsg = stringResource(R.string.round_ended, round)
+                            val undoLabel = stringResource(R.string.undo)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("R$round", color = Color(0xFFFFC857), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+                                    Text("$round / 6", color = Color(0xFF9EACBC), fontSize = 9.sp)
+                                    Surface(onClick = {
+                                        val prevRound = round
+                                        val prevPool = orderPool
+                                        playedCommands = emptySet()
+                                        orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
+                                        if (round < 6) round++
+                                        scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
+                                    }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
                                 }
                             }
-                            // Règle v2 : passes = unités non vaincues - 1.
-                            Text(stringResource(R.string.pass_v2_rule), color = Color(0xFF5A6A7A), fontSize = 10.sp)
-                            TextButton(onClick = { passes = 3; oppPasses = 3 }) { Text(stringResource(R.string.pass_auto), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                    }
-                    }
-                    // ── Tour d'activation (à qui d'activer) ──
-                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.activation_turn), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Surface(onClick = { turn = "own" }, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_my_army), Modifier.padding(vertical = 10.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                                Spacer(Modifier.width(8.dp))
-                                Surface(onClick = { turn = "opp" }, shape = RoundedCornerShape(8.dp), color = if (turn == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_opponent), Modifier.padding(vertical = 10.dp), color = if (turn == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                            // Tour actif
+                            Surface(shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
+                                Text(if (turn == "own") "VOTRE TOUR" else "Tour adverse", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
-                    // ── Fin de partie : calcul du vainqueur ──
-                    val victoryOwn = stringResource(R.string.victory_own)
-                    val victoryOpp = stringResource(R.string.victory_opp)
-                    val victoryDraw = stringResource(R.string.victory_draw)
-                    if (gameResult == null) {
-                        Button(onClick = {
-                            gameResult = when {
-                                vp > oppVp -> victoryOwn
-                                oppVp > vp -> victoryOpp
-                                else -> victoryDraw
-                            }
-                        }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B2224))) {
-                            Text(stringResource(R.string.end_game), color = Color(0xFFFFC7B7), fontWeight = FontWeight.Bold)
+                    // ── Bannière ACTIVER (à qui d'activer) ──
+                    Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
-                    } else {
+                    }
+                    // ── Résultat de partie (déclenché via le menu ⋮) ──
+                    if (gameResult != null) {
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
                             Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(gameResult!!, color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 TextButton(onClick = { gameResult = null }) { Text(stringResource(R.string.new_game), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                            }
-                        }
-                    }
-                    // ── Pool d'ordres (pions par rang) ──
-                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.order_pool), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Stepper("${orderPool[rank] ?: 0}", { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
-                                }
                             }
                         }
                     }
@@ -629,11 +620,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onCycleDeploy = if (readOnly) null else {
                                 { onUnitChange(unit.instanceId, unitState.copy(deployZone = when (unitState.deployZone) { null -> 1; 1 -> 2; else -> null })) }
                             },
-                            onCompare = {
-                                val next = (compareSel + unit).distinctBy { it.instanceId }
-                                compareSel = next
-                                if (next.size >= 2) showCompare = true
-                            }
+                            onCompare = {}
                         )
                     }
                 }
@@ -694,6 +681,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     if (showDeploySheet) {
         DeploymentSheet(onClose = { showDeploySheet = false })
     }
+    if (showPoolSheet) {
+        PoolSheet(orderPool, { rank, v -> orderPool = orderPool + (rank to v) }, onClose = { showPoolSheet = false })
+    }
     // Détail d'unité (refonte A1/A8) : sheet réutilisant la page unité.
     selectedUnit?.let { unit ->
         val isOppDetail = twoPlayer && viewingArmy == "opp"
@@ -704,7 +694,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val detailWiki = remember(unit, wikiSections) { wikiSections.filter { it.gameSystem == unit.card.gameSystem.name } }
         val detailReadOnly = isOppDetail
         val detailOnChange: (SyncedUnitState) -> Unit = if (detailReadOnly) { _ -> } else { next -> playSyncVm.setOwnState(unit.instanceId, next) }
-        UnitDetailSheet(unit, detailChildren, detailAll, detailWiki, onRuleClick, detailState, detailOnChange, detailReadOnly, onDice = { showDiceSheet = true }, onClose = { selectedUnit = null })
+        UnitDetailSheet(unit, detailChildren, detailAll, detailWiki, onRuleClick, detailState, detailOnChange, detailReadOnly, onDice = { showDiceSheet = true }, onCompare = { val next = (compareSel + unit).distinctBy { it.instanceId }; compareSel = next; if (next.size >= 2) showCompare = true }, onClose = { selectedUnit = null })
     }
     // Vue comparée 2 unités (A2).
     if (showCompare && compareSel.size >= 2) {
@@ -1032,6 +1022,23 @@ internal fun DeploymentSheet(onClose: () -> Unit) {
     }
 }
 
+// ── Pool d'ordres (accessible via menu ⋮) ────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun PoolSheet(orderPool: Map<String, Int>, onSet: (String, Int) -> Unit, onClose: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.order_pool), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Stepper("${orderPool[rank] ?: 0}", { onSet(rank, ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { onSet(rank, ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
+                }
+            }
+        }
+    }
+}
+
 // ── Lanceur de dés (PR5) : résolution d'attaque ─────────────────────────
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -1208,7 +1215,7 @@ internal fun DeckCardZoom(
     }
 }
 
-// ── Ligne d'unité dans la liste d'armée (refonte A1) : jauge coque/wounds, activation, vaincue, déploiement, comparer ──
+// ── Ligne d'unité ultrafine (P1-4) : nom + jauge coque + activé + vaincu (+ zone déploiement en PREP) ──
 @Composable
 internal fun UnitListRow(
     unit: ListEntry,
@@ -1235,28 +1242,18 @@ internal fun UnitListRow(
     val defeated = state.defeated == true
     val activated = state.activated == true
     val deployZone = state.deployZone
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = if (defeated) Color(0xFF2A1A1A) else Color(0xFF1A2330))) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(unit.card.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("$totalPts pts", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = if (defeated) Color(0xFF2A1A1A) else Color(0xFF1A2330))) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            if (remaining != null && maxHp != null) {
+                LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.width(56.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
+                Text("$remaining/$maxHp", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (remaining != null && maxHp != null) {
-                    LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
-                    Text("$remaining/$maxHp", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                } else {
-                    Spacer(Modifier.weight(1f))
-                }
-                if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = Color(0xFF77D9A7), modifier = Modifier.size(16.dp)) }
-                if (defeated) { Text("Vaincue", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                if (isPrep && onCycleDeploy != null) {
-                    Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> Color(0xFF1E3A2A); 2 -> Color(0xFF2A3A4A); else -> Color(0xFF3A3A4A) }) {
-                        Text(if (deployZone == null) "Déployer" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-                Surface(onClick = onCompare, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) {
-                    Text("⚔", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = Color(0xFF77D9A7), modifier = Modifier.size(16.dp)) }
+            if (defeated) { Text("Vaincue", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            if (isPrep && onCycleDeploy != null) {
+                Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> Color(0xFF1E3A2A); 2 -> Color(0xFF2A3A4A); else -> Color(0xFF3A3A4A) }) {
+                    Text(if (deployZone == null) "Déployer" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1288,7 +1285,7 @@ internal fun UnitDetailSheet(
     unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>,
     wikiSections: List<WikiSectionEntity>, onRuleClick: (WikiSectionEntity) -> Unit,
     state: SyncedUnitState, onChange: (SyncedUnitState) -> Unit, readOnly: Boolean,
-    onDice: () -> Unit, onClose: () -> Unit
+    onDice: () -> Unit, onCompare: () -> Unit, onClose: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF0A0E15)) {
         Column(Modifier.fillMaxWidth()) {
@@ -1299,6 +1296,14 @@ internal fun UnitDetailSheet(
                         Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
                         Text(stringResource(R.string.dice), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.width(6.dp))
+                Surface(onClick = onCompare, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
+                    Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("⚔", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Comparer", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
