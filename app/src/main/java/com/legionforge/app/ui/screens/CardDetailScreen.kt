@@ -177,9 +177,9 @@ enum class ArmadaCommandOrder(val label: String, val iconFile: String, val order
 internal enum class EffectType { COMMANDER, UPGRADE, CRIT, ABILITY }
 internal data class ActiveEffect(val type: EffectType, val label: String, val desc: String, val id: String, val used: Boolean = false, val slot: ArmadaSlot? = null, val pts: Int = 0, val imageAssetPath: String? = null)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 enum class PlayPhase { PREP, GAME }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: () -> Unit, listId: String? = null, vm: ArmyBuilderViewModel = viewModel(), playSyncVm: PlaySyncViewModel = viewModel()) {
     // Charge la liste dans CE vm (scopé à l'écran play) : sinon currentList est null et la
