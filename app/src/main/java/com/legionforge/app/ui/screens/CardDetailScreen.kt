@@ -1208,9 +1208,6 @@ internal fun DeckCardZoom(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-
 // ── Ligne d'unité dans la liste d'armée (refonte A1) : jauge coque/wounds, activation, vaincue, déploiement, comparer ──
 @Composable
 internal fun UnitListRow(
@@ -1268,6 +1265,7 @@ internal fun UnitListRow(
 
 
 // ── Contenu d'une page unité (réutilisé par le détail et la vue comparée) ──
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun UnitPageContent(
     unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>,
@@ -1337,6 +1335,8 @@ internal fun UnitCompareSheet(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
 internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>, wikiSections: List<WikiSectionEntity> = emptyList(), onRuleClick: (WikiSectionEntity) -> Unit = {}, state: SyncedUnitState = SyncedUnitState(unit.instanceId), onChange: (SyncedUnitState) -> Unit = {}, readOnly: Boolean = false) {
     val totalPts = unit.card.points + children.sumOf { it.card.points * it.quantity }
     val stats = remember(unit.instanceId) { LegionStatsParser.parse(unit.card.legionStats) }
