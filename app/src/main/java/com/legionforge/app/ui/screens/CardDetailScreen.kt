@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
@@ -259,6 +260,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var showBattleSheet by remember { mutableStateOf(false) }
     // Lanceur de dés (PR5) : pool d'attaque + résultats.
     var showDiceSheet by remember { mutableStateOf(false) }
+    var showDeploySheet by remember { mutableStateOf(false) }
     // Store d'état de jeu : mon armée (éditable) + armée adverse (reçue, lecture seule).
     val ownStates by playSyncVm.ownStates.collectAsState()
     val oppStates by playSyncVm.oppStates.collectAsState()
@@ -335,6 +337,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Text("R$round", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { round = 1 }))
                         Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
                     }
+                    // Déploiement.
+                    Surface(onClick = { showDeploySheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
+                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Filled.Place, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp))
+                            Text(stringResource(R.string.deploy), color = Color(0xFF77D9A7), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                     // Lanceur de dés.
                     Surface(onClick = { showDiceSheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -347,9 +356,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     val undoLabel = stringResource(R.string.undo)
                     Surface(onClick = {
                         val prevRound = round
+                        val prevPool = orderPool
                         playedCommands = emptySet()
+                        orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
                         if (round < 6) round++
-                        scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound }
+                        scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
                     }, shape = RoundedCornerShape(10.dp), color = Color(0xFF3B2224)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(18.dp))
@@ -412,7 +423,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     Surface(onClick = { priority = "own" }, shape = RoundedCornerShape(8.dp), color = if (priority == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_my_army), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
                                     Surface(onClick = { priority = "opp" }, shape = RoundedCornerShape(8.dp), color = if (priority == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_opponent), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
                                 }
-                            }
+                                // Priorité par pips (règle : le plus petit pip commande en premier).
+                                Text(stringResource(R.string.priority_pips), color = Color(0xFF5A6A7A), fontSize = 10.sp)
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(stringResource(R.string.pass_tokens), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -420,6 +432,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     PassCounter(oppPasses, { oppPasses = (oppPasses + 1).coerceAtMost(5) }, { oppPasses = (oppPasses - 1).coerceAtLeast(0) })
                                 }
                             }
+                            // Règle v2 : passes = unités non vaincues - 1.
+                            Text(stringResource(R.string.pass_v2_rule), color = Color(0xFF5A6A7A), fontSize = 10.sp)
+                            TextButton(onClick = { passes = 3; oppPasses = 3 }, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.pass_auto), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                         }
                     }
                     // ── Tour d'activation (à qui d'activer) ──
@@ -607,6 +622,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Sheet du lanceur de dés (PR5) — résolution d'attaque.
     if (showDiceSheet) {
         DiceRollerSheet(onClose = { showDiceSheet = false })
+    }
+    if (showDeploySheet) {
+        DeploymentSheet(onClose = { showDeploySheet = false })
     }
 }
 
@@ -897,6 +915,34 @@ internal fun CommandDeckSheet(
             isPlayed = isPlayed,
             onClose = { zoomCard = null }
         )
+    }
+}
+
+// ── Sheet de déploiement (PR1) : ordre + zones ──────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun DeploymentSheet(onClose: () -> Unit) {
+    var first by remember { mutableStateOf("own") }  // qui déploie en premier
+    var zone1 by remember { mutableIntStateOf(0) }   // unités déployées zone 1
+    var zone2 by remember { mutableIntStateOf(0) }   // unités déployées zone 2
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.deploy), color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            // Ordre de déploiement.
+            Text(stringResource(R.string.deploy_order), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Surface(onClick = { first = "own" }, shape = RoundedCornerShape(8.dp), color = if (first == "own") Color(0xFF77D9A7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_my_army), Modifier.padding(vertical = 10.dp), color = if (first == "own") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                Spacer(Modifier.width(8.dp))
+                Surface(onClick = { first = "opp" }, shape = RoundedCornerShape(8.dp), color = if (first == "opp") Color(0xFF77D9A7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_opponent), Modifier.padding(vertical = 10.dp), color = if (first == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+            }
+            // Zones de déploiement.
+            Text(stringResource(R.string.deploy_zones), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.zone1), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold); Stepper("$zone1", { zone1 = (zone1 - 1).coerceAtLeast(0) }, { zone1 = (zone1 + 1).coerceAtMost(12) }, size = 36.dp, valueColor = Color(0xFF77D9A7), valueWidth = 28.dp) }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) { Text(stringResource(R.string.zone2), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold); Stepper("$zone2", { zone2 = (zone2 - 1).coerceAtLeast(0) }, { zone2 = (zone2 + 1).coerceAtMost(12) }, size = 36.dp, valueColor = Color(0xFF77D9A7), valueWidth = 28.dp) }
+            }
+            Text(stringResource(R.string.deploy_total, zone1 + zone2), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
