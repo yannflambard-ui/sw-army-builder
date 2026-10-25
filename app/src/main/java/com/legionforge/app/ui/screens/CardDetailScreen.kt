@@ -1569,7 +1569,7 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                     Text("MOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     if (myCmd != null) {
                         AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
-                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable(onCmdClick), contentScale = ContentScale.Crop)
+                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable(onClick = onCmdClick), contentScale = ContentScale.Crop)
                     } else {
                         Surface(onClick = onCmdClick, shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                     }
