@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
@@ -1171,7 +1170,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val promoted = state.promoted ?: false
             Surface(onClick = { set(state.copy(promoted = !promoted)) }, shape = RoundedCornerShape(10.dp), color = if (promoted) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(if (promoted) Icons.Filled.Star else Icons.Filled.StarBorder, contentDescription = null, tint = if (promoted) Color(0xFFFFC857) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.Star, contentDescription = null, tint = if (promoted) Color(0xFFFFC857) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (promoted) R.string.legion_promoted else R.string.legion_promote), color = if (promoted) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
