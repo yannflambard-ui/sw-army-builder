@@ -242,4 +242,10 @@
     <string name="victory_opp">Victoire : Armée adverse !</string>
     <string name="victory_draw">Égalité !</string>
     <string name="new_game">Nouvelle partie</string>
+    <string name="activation_turn">Qui active</string>
+    <string name="legion_promoted">Promue commandant</string>
+    <string name="legion_promote">Promouvoir commandant</string>
+    <string name="attack">Attaque</string>
+    <string name="defense">Défense</string>
+    <string name="dice_summary_def">Blocs: %1$d  Surges: %2$d</string>
 </resources>

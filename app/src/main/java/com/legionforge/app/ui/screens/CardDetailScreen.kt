@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.*
@@ -207,6 +208,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var orderPool by remember { mutableStateOf(mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)) }
     // Résultat de partie (PR7) : null = en cours, sinon vainqueur.
     var gameResult by remember { mutableStateOf<String?>(null) }
+    // Tour d'activation courant (PR3) : "own" ou "opp".
+    var turn by remember { mutableStateOf("own") }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
     var twoPlayer by remember { mutableStateOf(false) }
     var viewingArmy by remember { mutableStateOf<String?>(null) }
@@ -417,6 +420,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     PassCounter(passes, { passes = (passes + 1).coerceAtMost(5) }, { passes = (passes - 1).coerceAtLeast(0) })
                                     PassCounter(oppPasses, { oppPasses = (oppPasses + 1).coerceAtMost(5) }, { oppPasses = (oppPasses - 1).coerceAtLeast(0) })
                                 }
+                            }
+                        }
+                    }
+                    // ── Tour d'activation (à qui d'activer) ──
+                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.activation_turn), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Surface(onClick = { turn = "own" }, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_my_army), Modifier.padding(vertical = 10.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                                Spacer(Modifier.width(8.dp))
+                                Surface(onClick = { turn = "opp" }, shape = RoundedCornerShape(8.dp), color = if (turn == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_opponent), Modifier.padding(vertical = 10.dp), color = if (turn == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                             }
                         }
                     }
@@ -895,22 +909,37 @@ internal fun DiceRollerSheet(onClose: () -> Unit) {
     var black by remember { mutableIntStateOf(0) }
     var white by remember { mutableIntStateOf(0) }
     var results by remember { mutableStateOf<List<Pair<String, Color>>>(emptyList()) }
-    // Faces des dés : "hit" (touche), "crit" (critique), "surge" (surge), "blank" (vide).
+    var mode by remember { mutableStateOf("attack") }  // "attack" | "defense"
+    // Faces des dés : attaque (hit/crit/surge/blank) ou défense (block/surge/blank).
     fun rollDie(color: String): Pair<String, Color> {
-        val faces = when (color) {
-            "red" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
-            "black" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
-            else -> listOf("hit", "crit", "surge", "blank", "blank", "blank", "blank", "blank")
+        val faces = if (mode == "defense") {
+            when (color) {
+                "red" -> listOf("block", "block", "surge", "blank", "blank", "blank", "blank", "blank")
+                "black" -> listOf("block", "block", "surge", "blank", "blank", "blank", "blank", "blank")
+                else -> listOf("block", "surge", "blank", "blank", "blank", "blank", "blank", "blank")
+            }
+        } else {
+            when (color) {
+                "red" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
+                "black" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
+                else -> listOf("hit", "crit", "surge", "blank", "blank", "blank", "blank", "blank")
+            }
         }
         val face = faces.random()
         val c = when (face) {
-            "hit" -> Color(0xFFFF6B6B); "crit" -> Color(0xFFFFC857); "surge" -> Color(0xFF4FC3F7); else -> Color(0xFF5A6A7A)
+            "hit" -> Color(0xFFFF6B6B); "crit" -> Color(0xFFFFC857); "block" -> Color(0xFF77D9A7); "surge" -> Color(0xFF4FC3F7); else -> Color(0xFF5A6A7A)
         }
         return face to c
     }
     ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.dice_roller), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            // Mode attaque / défense.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Surface(onClick = { mode = "attack"; results = emptyList() }, shape = RoundedCornerShape(8.dp), color = if (mode == "attack") Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.attack), Modifier.padding(vertical = 8.dp), color = if (mode == "attack") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                Spacer(Modifier.width(8.dp))
+                Surface(onClick = { mode = "defense"; results = emptyList() }, shape = RoundedCornerShape(8.dp), color = if (mode == "defense") Color(0xFF77D9A7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.defense), Modifier.padding(vertical = 8.dp), color = if (mode == "defense") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+            }
             // Sélection du pool de dés.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 DicePoolSelector("R", red, Color(0xFFFF6B6B), { red = (red + 1).coerceAtMost(8) }, { red = (red - 1).coerceAtLeast(0) })
@@ -934,10 +963,16 @@ internal fun DiceRollerSheet(onClose: () -> Unit) {
                         }
                     }
                 }
-                val hits = results.count { it.first == "hit" }
-                val crits = results.count { it.first == "crit" }
-                val surges = results.count { it.first == "surge" }
-                Text(stringResource(R.string.dice_summary, hits, crits, surges), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                if (mode == "defense") {
+                    val blocks = results.count { it.first == "block" }
+                    val surges = results.count { it.first == "surge" }
+                    Text(stringResource(R.string.dice_summary_def, blocks, surges), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                } else {
+                    val hits = results.count { it.first == "hit" }
+                    val crits = results.count { it.first == "crit" }
+                    val surges = results.count { it.first == "surge" }
+                    Text(stringResource(R.string.dice_summary, hits, crits, surges), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -1130,6 +1165,15 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     Icon(if (defeated) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (defeated) Color(0xFFFF6B6B) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (defeated) R.string.legion_defeated else R.string.legion_active), color = if (defeated) Color(0xFFFFC7B7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            // Promotion de commandant (règle v2 : quand tous les commandants sont vaincus).
+            val promoted = state.promoted ?: false
+            Surface(onClick = { set(state.copy(promoted = !promoted)) }, shape = RoundedCornerShape(10.dp), color = if (promoted) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(if (promoted) Icons.Filled.Star else Icons.Filled.StarBorder, contentDescription = null, tint = if (promoted) Color(0xFFFFC857) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (promoted) R.string.legion_promoted else R.string.legion_promote), color = if (promoted) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
             }
             // Compteur de suppression : alimente l'état Supprimé (>= courage) / Paniqué (>= 2x courage).

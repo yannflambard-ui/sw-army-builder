@@ -26,7 +26,8 @@ data class SyncedUnitState(
     val activated: Boolean? = null,  // Armada squadron (activé/désactivé)
     val cover: Int? = null,           // Legion couverture (0/1/2)
     val defeated: Boolean? = null,    // Legion unité vaincue
-    val vehicleDamage: List<String> = emptyList()  // Legion véhicule : états (immobilized, weapon)
+    val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
+    val promoted: Boolean? = null     // Legion unité promue commandant
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */
