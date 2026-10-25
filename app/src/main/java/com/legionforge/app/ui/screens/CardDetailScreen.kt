@@ -322,7 +322,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         remember(opponentListJson) {
             try { com.google.gson.Gson().fromJson(opponentListJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java) } catch (_: Exception) { null }
         }
-    } else soloOppList
+    } else null
     val oppEntries = if (twoPlayer) {
         remember(opp, vm.cards.value) {
             opp?.entries?.mapNotNull { e ->
