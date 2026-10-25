@@ -1532,7 +1532,7 @@ internal fun BattlefieldView(
     onOpenUnit: (ListEntry) -> Unit,
     onActivate: (String) -> Unit
 ) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = null)
         CommandCenterRow(myCmd, oppCmd, turn)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate)
