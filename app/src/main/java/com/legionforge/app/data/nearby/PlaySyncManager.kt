@@ -27,7 +27,7 @@ data class SyncedUnitState(
     val cover: Int? = null,           // Legion couverture (0/1/2)
     val defeated: Boolean? = null,    // Legion unité vaincue
     val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
-    val promoted: Boolean? = null     // Legion unité promue commandant
+    val promoted: Boolean? = null,    // Legion unité promue commandant
     val deployZone: Int? = null        // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
 )
 
@@ -36,7 +36,7 @@ data class PlaySyncPayload(
     val type: String,           // "round" | "state" | "list" | "request"
     val round: Int? = null,
     val units: List<SyncedUnitState> = emptyList(),
-    val listJson: String? = null // liste de l'armée adverse (sérialisée)
+    val listJson: String? = null, // liste de l'armée adverse (sérialisée)
     val deploymentDone: Boolean? = null // Legion : déploiement terminé (par joueur)
 )
 
