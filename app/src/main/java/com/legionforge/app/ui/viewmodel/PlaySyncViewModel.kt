@@ -26,6 +26,7 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     val receivedRound: StateFlow<Int?> = sync.receivedRound
     val receivedUnits: StateFlow<List<SyncedUnitState>> = sync.receivedUnits
     val receivedDeploymentDone: StateFlow<Boolean?> = sync.receivedDeploymentDone
+    val receivedRoundCard: StateFlow<String?> = sync.receivedRoundCard
     // Déploiement terminé (Legion setup) : mon état + état adverse reçu.
     private val _deploymentDone = MutableStateFlow(false)
     val deploymentDone: StateFlow<Boolean> = _deploymentDone.asStateFlow()
@@ -114,6 +115,11 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     fun setDeploymentDone(done: Boolean) {
         _deploymentDone.value = done
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendDeploymentDone(done)
+    }
+
+    /** Envoie la carte de commandement jouée ce round à l'adversaire. */
+    fun sendRoundCard(cardId: String?) {
+        if (sync.mode.value == ShareMode.CONNECTED) sync.sendRoundCard(cardId)
     }
 
     override fun onCleared() {

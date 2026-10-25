@@ -37,7 +37,8 @@ data class PlaySyncPayload(
     val round: Int? = null,
     val units: List<SyncedUnitState> = emptyList(),
     val listJson: String? = null, // liste de l'armée adverse (sérialisée)
-    val deploymentDone: Boolean? = null // Legion : déploiement terminé (par joueur)
+    val deploymentDone: Boolean? = null, // Legion : déploiement terminé (par joueur)
+    val roundCard: String? = null // Legion : id de la carte de commandement jouée ce round
 )
 
 /**
@@ -72,6 +73,9 @@ class PlaySyncManager(context: Context) {
     private val _receivedDeploymentDone = MutableStateFlow<Boolean?>(null)
     val receivedDeploymentDone: StateFlow<Boolean?> = _receivedDeploymentDone.asStateFlow()
 
+    private val _receivedRoundCard = MutableStateFlow<String?>(null)
+    val receivedRoundCard: StateFlow<String?> = _receivedRoundCard.asStateFlow()
+
     init {
         // Décode les payloads reçus.
         CoroutineScope(Dispatchers.Main).launch {
@@ -84,6 +88,7 @@ class PlaySyncManager(context: Context) {
                     "list" -> _receivedListJson.value = payload.listJson
                     "request" -> _listRequested.value = true
                     "deploydone" -> _receivedDeploymentDone.value = payload.deploymentDone
+                    "roundcard" -> _receivedRoundCard.value = payload.roundCard
                 }
             }
         }
@@ -109,6 +114,11 @@ class PlaySyncManager(context: Context) {
     /** Envoie l'état "déploiement terminé" (Legion setup). */
     fun sendDeploymentDone(done: Boolean) {
         nearby.sendList(gson.toJson(PlaySyncPayload(type = "deploydone", deploymentDone = done)))
+    }
+
+    /** Envoie la carte de commandement jouée ce round (id). */
+    fun sendRoundCard(cardId: String?) {
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "roundcard", roundCard = cardId)))
     }
 
     /** Demande à l'autre joueur de renvoyer sa liste (synchro manuelle). */

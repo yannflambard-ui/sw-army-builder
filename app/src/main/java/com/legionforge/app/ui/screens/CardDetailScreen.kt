@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -225,6 +227,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val opponentListJson by playSyncVm.opponentListJson.collectAsState()
     val myDeployDone by playSyncVm.deploymentDone.collectAsState()
     val oppDeployDone by playSyncVm.receivedDeploymentDone.collectAsState()
+    val oppRoundCommand by playSyncVm.receivedRoundCard.collectAsState()
     // Wiki des règles : chargé pour rendre les mots-clés du texte de règles cliquables.
     val wikiSections by vm.wikiSections.collectAsState()
     var ruleSection by remember { mutableStateOf<WikiSectionEntity?>(null) }
@@ -234,6 +237,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     LaunchedEffect(syncRound) { if (twoPlayer && syncRound != null && syncRound != round) round = syncRound!! }
     // Émet le round quand il change en mode 2 joueurs.
     LaunchedEffect(round) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRound(round) }
+    // Émet la carte de commandement jouée ce round en mode 2 joueurs.
+    LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
+    // Nouveau round → réinitialise la carte jouée (on re-pique une carte).
+    LaunchedEffect(round) { roundCommand = null }
     // Envoie la liste dès qu'elle est chargée ET qu'on est connecté. openList est async :
     // currentList ET entries se remplissent en arrière-plan, donc on réessaie à chaque
     // changement des deux (sinon on peut envoyer une liste VIDE si entries n'est pas encore chargé).
@@ -261,6 +268,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val cmdCards = remember { loadCommandCards(legionContext) }
     var commandDeck by remember { mutableStateOf(setOf<String>()) }
     var playedCommands by remember { mutableStateOf(setOf<String>()) }
+    var roundCommand by remember { mutableStateOf<String?>(null) }  // ma carte de commandement jouée ce round
     var showCmdSheet by remember { mutableStateOf(false) }
     // Battle deck (Legion v2) : 9 cartes (3+3+3) + mission (carte révélée par catégorie).
     val battleCards = remember { loadBattleCards(legionContext) }
@@ -543,6 +551,28 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                    // ── Carte de commandement du round (synchro 2 joueurs) ──
+                    val myCmd = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } }
+                    val oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } }
+                    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("TOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Surface(onClick = { showCmdSheet = true }, shape = CircleShape, color = if (myCmd != null) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
+                                    Text(myCmd?.pip ?: "?", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Text(myCmd?.name ?: "Choisir (CMD)", color = Color(0xFF9EACBC), fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Text(if (myCmd != null && oppCmd != null) (if (myCmd.pip.toIntOrNull() ?: 9 <= oppCmd.pip.toIntOrNull() ?: 9) "◀" else "▶") else "⏳", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("ADV", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Surface(shape = CircleShape, color = if (oppCmd != null) Color(0xFF3B2224) else Color(0xFF2A3A4A)) {
+                                    Text(oppCmd?.pip ?: "?", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Text(oppCmd?.name ?: "En attente", color = Color(0xFF9EACBC), fontSize = 8.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
                     if (gameResult != null) {
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
@@ -676,8 +706,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             },
             deck = commandDeck,
             played = playedCommands,
+            roundCommand = roundCommand,
             onToggleDeck = { id -> commandDeck = if (id in commandDeck) commandDeck - id else commandDeck + id },
             onTogglePlayed = { id -> playedCommands = if (id in playedCommands) playedCommands - id else playedCommands + id },
+            onSelectRound = { id -> roundCommand = if (roundCommand == id) null else id },
             onClose = { showCmdSheet = false }
         )
     }
@@ -933,8 +965,10 @@ internal fun CommandDeckSheet(
     cards: List<LegionCommandCard>,
     deck: Set<String>,
     played: Set<String>,
+    roundCommand: String?,
     onToggleDeck: (String) -> Unit,
     onTogglePlayed: (String) -> Unit,
+    onSelectRound: (String) -> Unit,
     onClose: () -> Unit
 ) {
     // Règle officielle v2 : main = 2×1-pip + 2×2-pip + 2×3-pip + Standing Orders (4-pip, obligatoire).
@@ -978,7 +1012,7 @@ internal fun CommandDeckSheet(
                         DeckCardThumb(
                             imageAssetPath = c.imagePath(),
                             name = c.name,
-                            badge = pip,
+                            badge = if (c.id == roundCommand) "★$pip" else pip,
                             selected = inDeck,
                             dimmed = full && !inDeck,
                             onClick = { zoomCard = c }
@@ -1004,6 +1038,8 @@ internal fun CommandDeckSheet(
             onToggleDeck = { onToggleDeck(c.id) },
             onTogglePlayed = { onTogglePlayed(c.id) },
             isPlayed = isPlayed,
+            roundSelected = c.id == roundCommand,
+            onSelectRound = { onSelectRound(c.id) },
             onClose = { zoomCard = null }
         )
     }
@@ -1179,6 +1215,8 @@ internal fun DeckCardZoom(
     onToggleDeck: () -> Unit,
     onTogglePlayed: (() -> Unit)? = null,
     isPlayed: Boolean = false,
+    roundSelected: Boolean = false,
+    onSelectRound: (() -> Unit)? = null,
     onClose: () -> Unit
 ) {
     val source = imageAssetPath?.let { "file:///android_asset/$it" }
@@ -1211,6 +1249,11 @@ internal fun DeckCardZoom(
                     } else if (inDeck || canAdd) {
                         Surface(onClick = onToggleDeck, shape = RoundedCornerShape(8.dp), color = if (inDeck) Color(0xFF5A2E2E) else Color(0xFF1E3A2A)) {
                             Text(if (inDeck) "Retirer" else "Ajouter", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    if (onSelectRound != null && inDeck) {
+                        Surface(onClick = onSelectRound, shape = RoundedCornerShape(8.dp), color = if (roundSelected) Color(0xFF3B2224) else Color(0xFF1E3A2A)) {
+                            Text(if (roundSelected) "★ Carte du round" else "♛ Jouer ce round", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = if (roundSelected) Color(0xFF77D9A7) else Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     Surface(onClick = onClose, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
@@ -1250,10 +1293,20 @@ internal fun UnitListRow(
     val activated = state.activated == true
     val deployZone = state.deployZone
     Card(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = if (defeated) Color(0xFF2A1A1A) else Color(0xFF1A2330))) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Illustration de l'unité (petite vignette, masquée par l'état).
+            val artPath = unit.card.imagePath()
+            if (artPath != null) {
+                AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
+                    modifier = Modifier.width(56.dp).aspectRatio(1.43f).clip(RoundedCornerShape(6.dp)).alpha(if (defeated) 0.35f else 1f).then(if (activated) Modifier.border(2.dp, Color(0xFFFFC857), RoundedCornerShape(6.dp)) else Modifier),
+                    contentScale = ContentScale.Crop)
+            }
+            Column(Modifier.weight(1f)) {
+                Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("$totalPts pts • ${unit.card.legionRank?.name ?: ""}", color = Color(0xFF8F9BAD), fontSize = 10.sp, maxLines = 1)
+            }
             if (remaining != null && maxHp != null) {
-                LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.width(56.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
+                LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
                 Text("$remaining/$maxHp", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
             if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = Color(0xFF77D9A7), modifier = Modifier.size(16.dp)) }
