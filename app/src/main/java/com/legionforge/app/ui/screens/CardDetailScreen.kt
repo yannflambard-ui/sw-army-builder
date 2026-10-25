@@ -205,6 +205,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var oppPasses by remember { mutableIntStateOf(0) }
     // Pool d'ordres (pions d'ordre par rang) — état global de partie.
     var orderPool by remember { mutableStateOf(mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)) }
+    // Résultat de partie (PR7) : null = en cours, sinon vainqueur.
+    var gameResult by remember { mutableStateOf<String?>(null) }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
     var twoPlayer by remember { mutableStateOf(false) }
     var viewingArmy by remember { mutableStateOf<String?>(null) }
@@ -253,6 +255,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var battleDeck by remember { mutableStateOf(setOf<String>()) }
     var battleRevealed by remember { mutableStateOf(mapOf<String, String>()) }
     var showBattleSheet by remember { mutableStateOf(false) }
+    // Lanceur de dés (PR5) : pool d'attaque + résultats.
+    var showDiceSheet by remember { mutableStateOf(false) }
     // Store d'état de jeu : mon armée (éditable) + armée adverse (reçue, lecture seule).
     val ownStates by playSyncVm.ownStates.collectAsState()
     val oppStates by playSyncVm.oppStates.collectAsState()
@@ -328,6 +332,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round précédent" }) } }
                         Text("R$round", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { round = 1 }))
                         Surface(onClick = { if (round < 6) round++ }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { contentDescription = "Round suivant" }) } }
+                    }
+                    // Lanceur de dés.
+                    Surface(onClick = { showDiceSheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
+                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
+                            Text(stringResource(R.string.dice), color = Color(0xFFFFC857), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                     // Fin de round : reset cartes jouées + avance (avec Snackbar Annuler).
                     val roundEndedMsg = stringResource(R.string.round_ended, round)
@@ -406,6 +417,25 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     PassCounter(passes, { passes = (passes + 1).coerceAtMost(5) }, { passes = (passes - 1).coerceAtLeast(0) })
                                     PassCounter(oppPasses, { oppPasses = (oppPasses + 1).coerceAtMost(5) }, { oppPasses = (oppPasses - 1).coerceAtLeast(0) })
                                 }
+                            }
+                        }
+                    }
+                    // ── Fin de partie : calcul du vainqueur ──
+                    if (gameResult == null) {
+                        Button(onClick = {
+                            gameResult = when {
+                                vp > oppVp -> stringResource(R.string.victory_own)
+                                oppVp > vp -> stringResource(R.string.victory_opp)
+                                else -> stringResource(R.string.victory_draw)
+                            }
+                        }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B2224))) {
+                            Text(stringResource(R.string.end_game), color = Color(0xFFFFC7B7), fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
+                            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(gameResult!!, color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                TextButton(onClick = { gameResult = null }) { Text(stringResource(R.string.new_game), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                             }
                         }
                     }
@@ -557,6 +587,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             onTogglePlayed = { id -> playedCommands = if (id in playedCommands) playedCommands - id else playedCommands + id },
             onClose = { showCmdSheet = false }
         )
+    }
+    // Sheet du lanceur de dés (PR5) — résolution d'attaque.
+    if (showDiceSheet) {
+        DiceRollerSheet(onClose = { showDiceSheet = false })
     }
 }
 
@@ -847,6 +881,71 @@ internal fun CommandDeckSheet(
             isPlayed = isPlayed,
             onClose = { zoomCard = null }
         )
+    }
+}
+
+// ── Lanceur de dés (PR5) : résolution d'attaque ─────────────────────────
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun DiceRollerSheet(onClose: () -> Unit) {
+    var red by remember { mutableIntStateOf(0) }
+    var black by remember { mutableIntStateOf(0) }
+    var white by remember { mutableIntStateOf(0) }
+    var results by remember { mutableStateOf<List<Pair<String, Color>>>(emptyList()) }
+    // Faces des dés : "hit" (touche), "crit" (critique), "surge" (surge), "blank" (vide).
+    fun rollDie(color: String): Pair<String, Color> {
+        val faces = when (color) {
+            "red" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
+            "black" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
+            else -> listOf("hit", "crit", "surge", "blank", "blank", "blank", "blank", "blank")
+        }
+        val face = faces.random()
+        val c = when (face) {
+            "hit" -> Color(0xFFFF6B6B); "crit" -> Color(0xFFFFC857); "surge" -> Color(0xFF4FC3F7); else -> Color(0xFF5A6A7A)
+        }
+        return face to c
+    }
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.dice_roller), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            // Sélection du pool de dés.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                DicePoolSelector("R", red, Color(0xFFFF6B6B), { red = (red + 1).coerceAtMost(8) }, { red = (red - 1).coerceAtLeast(0) })
+                DicePoolSelector("N", black, Color(0xFF9EACBC), { black = (black + 1).coerceAtMost(8) }, { black = (black - 1).coerceAtLeast(0) })
+                DicePoolSelector("B", white, Color(0xFF4FC3F7), { white = (white + 1).coerceAtMost(8) }, { white = (white - 1).coerceAtLeast(0) })
+            }
+            // Bouton lancer.
+            Button(onClick = {
+                val pool = buildList { repeat(red) { add("red") }; repeat(black) { add("black") }; repeat(white) { add("white") } }
+                results = if (pool.isEmpty()) emptyList() else pool.map { rollDie(it) }
+            }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857))) {
+                Text(stringResource(R.string.roll), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
+            }
+            // Résultats.
+            if (results.isNotEmpty()) {
+                Text(stringResource(R.string.results), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    results.forEach { (face, c) ->
+                        Surface(shape = RoundedCornerShape(8.dp), color = c.copy(alpha = 0.22f), border = androidx.compose.foundation.BorderStroke(1.dp, c)) {
+                            Text(face.uppercase(), Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = c, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                val hits = results.count { it.first == "hit" }
+                val crits = results.count { it.first == "crit" }
+                val surges = results.count { it.first == "surge" }
+                Text(stringResource(R.string.dice_summary, hits, crits, surges), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+// Sélecteur de pool de dés (couleur + compte).
+@Composable
+internal fun DicePoolSelector(label: String, count: Int, color: Color, onInc: () -> Unit, onDec: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, color = color, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Stepper("$count", onDec, onInc, size = 36.dp, valueColor = color, valueWidth = 28.dp)
     }
 }
 

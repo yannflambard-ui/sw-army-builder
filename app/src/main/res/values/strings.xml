@@ -232,4 +232,14 @@
     <string name="order_pool">Pions d ordre</string>
     <string name="round_ended">Round %1$d terminé</string>
     <string name="undo">Annuler</string>
+    <string name="dice">Dés</string>
+    <string name="dice_roller">Lanceur de dés</string>
+    <string name="roll">Lancer</string>
+    <string name="results">Résultats</string>
+    <string name="dice_summary">Touches: %1$d  Critiques: %2$d  Surges: %3$d</string>
+    <string name="end_game">Fin de partie</string>
+    <string name="victory_own">Victoire : Mon armée !</string>
+    <string name="victory_opp">Victoire : Armée adverse !</string>
+    <string name="victory_draw">Égalité !</string>
+    <string name="new_game">Nouvelle partie</string>
 </resources>
