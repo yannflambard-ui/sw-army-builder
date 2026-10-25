@@ -237,10 +237,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     LaunchedEffect(syncRound) { if (twoPlayer && syncRound != null && syncRound != round) round = syncRound!! }
     // Émet le round quand il change en mode 2 joueurs.
     LaunchedEffect(round) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRound(round) }
-    // Émet la carte de commandement jouée ce round en mode 2 joueurs.
-    LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
-    // Nouveau round → réinitialise la carte jouée (on re-pique une carte).
-    LaunchedEffect(round) { roundCommand = null }
     // Envoie la liste dès qu'elle est chargée ET qu'on est connecté. openList est async :
     // currentList ET entries se remplissent en arrière-plan, donc on réessaie à chaque
     // changement des deux (sinon on peut envoyer une liste VIDE si entries n'est pas encore chargé).
@@ -269,6 +265,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var commandDeck by remember { mutableStateOf(setOf<String>()) }
     var playedCommands by remember { mutableStateOf(setOf<String>()) }
     var roundCommand by remember { mutableStateOf<String?>(null) }  // ma carte de commandement jouée ce round
+    // Émet la carte de commandement jouée ce round en mode 2 joueurs.
+    LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
+    // Nouveau round → réinitialise la carte jouée (on re-pique une carte).
+    LaunchedEffect(round) { roundCommand = null }
     var showCmdSheet by remember { mutableStateOf(false) }
     // Battle deck (Legion v2) : 9 cartes (3+3+3) + mission (carte révélée par catégorie).
     val battleCards = remember { loadBattleCards(legionContext) }
