@@ -257,4 +257,10 @@
     <string name="pass_v2_rule">Règle v2 : jetons de passe = unités non vaincues - 1</string>
     <string name="pass_auto">Auto (3)</string>
     <string name="priority_pips">Priorité : le plus petit pip commande en premier</string>
+    <string name="setup_title">SETUP</string>
+    <string name="setup_desc">Préparation de la partie : construisez le battle deck, la main de commandement, déployez et réglez la priorité.</string>
+    <string name="setup_battle_deck">Battle deck (3+3+3)</string>
+    <string name="setup_command_deck">Main de commandement (7)</string>
+    <string name="start_game">Lancer la partie</string>
+    <string name="back_to_setup">Retour au Setup</string>
 </resources>

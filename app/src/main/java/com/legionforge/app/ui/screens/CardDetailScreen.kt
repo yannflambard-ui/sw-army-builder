@@ -178,6 +178,8 @@ internal enum class EffectType { COMMANDER, UPGRADE, CRIT, ABILITY }
 internal data class ActiveEffect(val type: EffectType, val label: String, val desc: String, val id: String, val used: Boolean = false, val slot: ArmadaSlot? = null, val pts: Int = 0, val imageAssetPath: String? = null)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+enum class PlayPhase { PREP, GAME }
+
 @Composable
 fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: () -> Unit, listId: String? = null, vm: ArmyBuilderViewModel = viewModel(), playSyncVm: PlaySyncViewModel = viewModel()) {
     // Charge la liste dans CE vm (scopé à l'écran play) : sinon currentList est null et la
@@ -208,6 +210,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var orderPool by remember { mutableStateOf(mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)) }
     // Résultat de partie (PR7) : null = en cours, sinon vainqueur.
     var gameResult by remember { mutableStateOf<String?>(null) }
+    // Phase de jeu (Setup vs partie) : les features préparatoires sont isolées dans l'écran Setup.
+    var phase by remember { mutableStateOf(PlayPhase.PREP) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
     var turn by remember { mutableStateOf("own") }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
@@ -408,6 +412,71 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     } else {
                         Text("Connecté — choisissez une armée", color = Color(0xFF77D9A7), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                     }
+                    // ── Bascule Setup / Partie ──
+                    if (phase == PlayPhase.PREP) {
+                        // Écran Setup : features préparatoires isolées (battle deck, command deck, déploiement, priorité, pool d'ordres).
+                        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text(stringResource(R.string.setup_title), color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.setup_desc), color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+                                // Battle deck (construction 3+3+3).
+                                Surface(onClick = { showBattleSheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                                    Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.setup_battle_deck), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(Modifier.weight(1f))
+                                        Text("${battleDeck.size}/9", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                // Command deck (main de 7).
+                                Surface(onClick = { showCmdSheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                                    Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.setup_command_deck), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(Modifier.weight(1f))
+                                        Text("${commandDeck.size}/7", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                // Déploiement.
+                                Surface(onClick = { showDeploySheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                                    Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Place, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.deploy), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                // Priorité initiale.
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(stringResource(R.string.priority), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Surface(onClick = { priority = "own" }, shape = RoundedCornerShape(8.dp), color = if (priority == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_my_army), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                        Surface(onClick = { priority = "opp" }, shape = RoundedCornerShape(8.dp), color = if (priority == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_opponent), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                    }
+                                }
+                                // Pool d'ordres initial.
+                                Text(stringResource(R.string.order_pool), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Stepper("${orderPool[rank] ?: 0}", { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
+                                    }
+                                }
+                                // Lancer la partie.
+                                Button(onClick = { phase = PlayPhase.GAME }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
+                                    Text(stringResource(R.string.start_game), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    } else {
+                        // ── Bouton retour Setup ──
+                        Button(onClick = { phase = PlayPhase.PREP }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
+                            Text(stringResource(R.string.back_to_setup), color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    // ── Features de jeu (phase GAME) ──
+                    if (phase == PlayPhase.GAME) {
                     // ── Score (VP + unités vaincues) ──
                     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -530,6 +599,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Text("${oppPlayable.size} unités", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
                             }
                         }
+                    }
                     }
                 }
                 return@Box
