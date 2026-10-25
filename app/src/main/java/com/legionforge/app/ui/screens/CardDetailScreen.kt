@@ -374,7 +374,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         Box(Modifier.fillMaxSize().padding(pad)) {
             // ── ÉCRAN 2 JOUEURS : liste des armées (Mon armée / Armée adverse) ──
             if (twoPlayer && viewingArmy == null) {
-                Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.play_2players), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     // Connexion Nearby : panneau si pas connecté, sinon indicateur.
                     if (syncMode != ShareMode.CONNECTED) {
