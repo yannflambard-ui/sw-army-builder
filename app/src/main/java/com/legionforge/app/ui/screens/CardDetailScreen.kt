@@ -691,6 +691,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 } else {
                     // En jeu : bandeau d'aperçu (état) + grille de miniatures (action).
                     Column(Modifier.fillMaxSize()) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("Activation", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Surface(onClick = {
+                                val next = listEntries.firstOrNull { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }
+                                if (next != null) onUnitChange(next.instanceId, (states[next.instanceId] ?: SyncedUnitState(next.instanceId)).copy(activated = true))
+                            }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                                Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                         UnitActivationStrip(units = listEntries, states = states, onOpen = { selectedUnit = it })
                         Spacer(Modifier.height(4.dp))
                         UnitActivationGrid(
@@ -733,6 +742,22 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 }
             },
             deckComplete = { cat -> battleCards.count { it.category == cat && it.name in battleDeck } >= 3 },
+            onAutoFill = {
+                val auto = battleCards.groupBy { it.category }
+                val newDeck = battleDeck.toMutableSet()
+                listOf("objective", "secondary", "advantage").forEach { cat ->
+                    val have = battleCards.count { it.category == cat && it.name in newDeck }
+                    val need = 3 - have
+                    if (need > 0) auto[cat]?.filter { it.name !in newDeck }?.take(need)?.forEach { newDeck.add(it.name) }
+                }
+                battleDeck = newDeck
+                listOf("objective", "secondary", "advantage").forEach { cat ->
+                    if (battleRevealed[cat] == null) {
+                        val first = battleCards.firstOrNull { it.category == cat && it.name in newDeck }?.name
+                        if (first != null) battleRevealed = battleRevealed + (cat to first)
+                    }
+                }
+            },
             onClose = { showBattleSheet = false }
         )
     }
@@ -750,6 +775,19 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             onToggleDeck = { id -> commandDeck = if (id in commandDeck) commandDeck - id else commandDeck + id },
             onTogglePlayed = { id -> playedCommands = if (id in playedCommands) playedCommands - id else playedCommands + id },
             onSelectRound = { id -> roundCommand = if (roundCommand == id) null else id },
+            onAutoFill = {
+                val avail = cmdCards.filter {
+                    (it.generic || it.faction == cmdFaction) &&
+                    (it.commanders.isEmpty() || it.commanders.any { c -> c in armyNames })
+                }
+                val newDeck = commandDeck.toMutableSet()
+                listOf("1", "2", "3").forEach { pip ->
+                    val have = commandDeck.count { id -> avail.any { it.id == id && it.pip == pip } }
+                    val need = 2 - have
+                    if (need > 0) avail.filter { it.pip == pip && it.id !in newDeck }.take(need).forEach { newDeck.add(it.id) }
+                }
+                commandDeck = newDeck
+            },
             onClose = { showCmdSheet = false }
         )
     }
@@ -945,14 +983,22 @@ internal fun BattleDeckSheet(
     onToggleDeck: (String) -> Unit,
     onCycleReveal: (String) -> Unit,         // category -> passer à la carte suivante du deck
     deckComplete: (String) -> Boolean,       // category -> 3 sélectionnées
+    onAutoFill: () -> Unit,
     onClose: () -> Unit
 ) {
     val order = listOf("objective" to "OBJECTIVE + MAP", "secondary" to "SECONDARY OBJECTIVE", "advantage" to "ADVANTAGE")
     var zoomCard by remember { mutableStateOf<LegionBattleCard?>(null) }
     ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("BATTLE DECK (9 cartes)", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Officiel : 3 Objective(+Map) + 3 Secondary + 3 Advantage, sans doublon.", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("BATTLE DECK (9 cartes)", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Officiel : 3 Objective(+Map) + 3 Secondary + 3 Advantage, sans doublon.", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+                }
+                Surface(onClick = onAutoFill, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
             Box(Modifier.fillMaxWidth().height(2.dp).background(Color(0xFF2A3A4A)))
             order.forEach { (cat, label) ->
                 val catCards = cards.filter { it.category == cat }
@@ -1009,6 +1055,7 @@ internal fun CommandDeckSheet(
     onToggleDeck: (String) -> Unit,
     onTogglePlayed: (String) -> Unit,
     onSelectRound: (String) -> Unit,
+    onAutoFill: () -> Unit,
     onClose: () -> Unit
 ) {
     // Règle officielle v2 : main = 2×1-pip + 2×2-pip + 2×3-pip + Standing Orders (4-pip, obligatoire).
@@ -1018,8 +1065,15 @@ internal fun CommandDeckSheet(
     var zoomCard by remember { mutableStateOf<LegionCommandCard?>(null) }
     ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("MAIN DE COMMANDEMENT", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Officielle : 2×1-pip + 2×2-pip + 2×3-pip + Standing Orders (4-pip).  ${hand.size}/7", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("MAIN DE COMMANDEMENT", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Officielle : 2×1-pip + 2×2-pip + 2×3-pip + Standing Orders (4-pip).  ${hand.size}/7", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+                }
+                Surface(onClick = onAutoFill, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
             // Standing Orders : toujours incluse, verrouillée.
             if (standingOrders != null) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
