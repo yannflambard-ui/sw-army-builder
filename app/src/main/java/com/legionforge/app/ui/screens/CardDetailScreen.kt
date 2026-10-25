@@ -421,12 +421,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                     }
                     // ── Fin de partie : calcul du vainqueur ──
+                    val victoryOwn = stringResource(R.string.victory_own)
+                    val victoryOpp = stringResource(R.string.victory_opp)
+                    val victoryDraw = stringResource(R.string.victory_draw)
                     if (gameResult == null) {
                         Button(onClick = {
                             gameResult = when {
-                                vp > oppVp -> stringResource(R.string.victory_own)
-                                oppVp > vp -> stringResource(R.string.victory_opp)
-                                else -> stringResource(R.string.victory_draw)
+                                vp > oppVp -> victoryOwn
+                                oppVp > vp -> victoryOpp
+                                else -> victoryDraw
                             }
                         }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B2224))) {
                             Text(stringResource(R.string.end_game), color = Color(0xFFFFC7B7), fontWeight = FontWeight.Bold)
@@ -885,7 +888,7 @@ internal fun CommandDeckSheet(
 }
 
 // ── Lanceur de dés (PR5) : résolution d'attaque ─────────────────────────
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun DiceRollerSheet(onClose: () -> Unit) {
     var red by remember { mutableIntStateOf(0) }
