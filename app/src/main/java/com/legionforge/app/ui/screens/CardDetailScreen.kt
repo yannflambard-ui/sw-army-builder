@@ -818,8 +818,11 @@ internal data class LegionCommandCard(
     val generic: Boolean = false,
     val commanders: List<String> = emptyList(),
     val keywords: List<String> = emptyList(),
-    val imageAssetPath: String? = null
-)
+    val imageAssetPath: String? = null,
+    val imageAssetPathFr: String? = null
+) {
+    fun imagePath(): String? = if (java.util.Locale.getDefault().language == "fr") imageAssetPathFr ?: imageAssetPath else imageAssetPath
+}
 
 internal fun loadCommandCards(context: android.content.Context): List<LegionCommandCard> {
     return try {
@@ -830,19 +833,21 @@ internal fun loadCommandCards(context: android.content.Context): List<LegionComm
                 val o = arr.getJSONObject(i)
                 val cmdrs = buildList { val a = o.optJSONArray("commanders"); if (a != null) for (j in 0 until a.length()) add(a.getString(j)) }
                 val kws = buildList { val a = o.optJSONArray("keywords"); if (a != null) for (j in 0 until a.length()) add(a.getString(j)) }
-                add(LegionCommandCard(o.optString("id"), o.optString("name"), o.optString("pip"), o.optString("faction"), o.optBoolean("generic"), cmdrs, kws, o.optString("imageAssetPath").takeIf { it.isNotBlank() }))
+                add(LegionCommandCard(o.optString("id"), o.optString("name"), o.optString("pip"), o.optString("faction"), o.optBoolean("generic"), cmdrs, kws, o.optString("imageAssetPath").takeIf { it.isNotBlank() }, o.optString("imageAssetPathFr").takeIf { it.isNotBlank() }))
             }
         }
     } catch (_: Exception) { emptyList() }
 }
 
-internal data class LegionBattleCard(val category: String, val name: String, val imageAssetPath: String? = null)
+internal data class LegionBattleCard(val category: String, val name: String, val imageAssetPath: String? = null, val imageAssetPathFr: String? = null) {
+    fun imagePath(): String? = if (java.util.Locale.getDefault().language == "fr") imageAssetPathFr ?: imageAssetPath else imageAssetPath
+}
 
 internal fun loadBattleCards(context: android.content.Context): List<LegionBattleCard> {
     return try {
         val s = context.assets.open("battle_cards.json").bufferedReader().use { it.readText() }
         val arr = org.json.JSONObject(s).getJSONArray("cards")
-        buildList { for (i in 0 until arr.length()) { val o = arr.getJSONObject(i); add(LegionBattleCard(o.optString("category"), o.optString("name"), o.optString("imageAssetPath").takeIf { it.isNotBlank() })) } }
+        buildList { for (i in 0 until arr.length()) { val o = arr.getJSONObject(i); add(LegionBattleCard(o.optString("category"), o.optString("name"), o.optString("imageAssetPath").takeIf { it.isNotBlank() }, o.optString("imageAssetPathFr").takeIf { it.isNotBlank() })) } }
     } catch (_: Exception) { emptyList() }
 }
 
@@ -881,7 +886,7 @@ internal fun BattleDeckSheet(
                         val inDeck = c.name in deck
                         val full = sel >= 3
                         DeckCardThumb(
-                            imageAssetPath = c.imageAssetPath,
+                            imageAssetPath = c.imagePath(),
                             name = c.name,
                             badge = if (inDeck && revealed[cat] == c.name) "★" else null,
                             selected = inDeck,
@@ -898,7 +903,7 @@ internal fun BattleDeckSheet(
         val cat = c.category
         val full = deck.count { id -> cards.any { it.name == id && it.category == cat } } >= 3
         DeckCardZoom(
-            imageAssetPath = c.imageAssetPath,
+            imageAssetPath = c.imagePath(),
             title = c.name,
             subtitle = order.firstOrNull { it.first == cat }?.second,
             inDeck = inDeck,
@@ -932,7 +937,7 @@ internal fun CommandDeckSheet(
             if (standingOrders != null) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     DeckCardThumb(
-                        imageAssetPath = standingOrders.imageAssetPath,
+                        imageAssetPath = standingOrders.imagePath(),
                         name = standingOrders.name,
                         badge = "4",
                         selected = true,
@@ -958,7 +963,7 @@ internal fun CommandDeckSheet(
                         val isPlayed = c.id in played
                         val full = sel >= 2
                         DeckCardThumb(
-                            imageAssetPath = c.imageAssetPath,
+                            imageAssetPath = c.imagePath(),
                             name = c.name,
                             badge = pip,
                             selected = inDeck,
@@ -977,7 +982,7 @@ internal fun CommandDeckSheet(
         val full = selectedCount(pip) >= 2
         val locked = pip == "4"   // Standing Orders : toujours dans la main, non retirable.
         DeckCardZoom(
-            imageAssetPath = c.imageAssetPath,
+            imageAssetPath = c.imagePath(),
             title = c.name,
             subtitle = "PIP $pip",
             inDeck = inDeck,

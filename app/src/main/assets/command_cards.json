@@ -13,7 +13,8 @@
    "keywords": [
     "Indomitable"
    ],
-   "imageAssetPath": "cards/swl/cmd/come-and-prove-it.webp"
+   "imageAssetPath": "cards/swl/cmd/come-and-prove-it.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/come-and-prove-it.webp"
   },
   {
    "id": "cmd:die-at-my-hand",
@@ -27,7 +28,8 @@
    "keywords": [
     "Relentless"
    ],
-   "imageAssetPath": "cards/swl/cmd/die-at-my-hand.webp"
+   "imageAssetPath": "cards/swl/cmd/die-at-my-hand.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/die-at-my-hand.webp"
   },
   {
    "id": "cmd:drive-them-out",
@@ -39,7 +41,8 @@
    "keywords": [
     "Demoralize"
    ],
-   "imageAssetPath": "cards/swl/cmd/drive-them-out.webp"
+   "imageAssetPath": "cards/swl/cmd/drive-them-out.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/drive-them-out.webp"
   },
   {
    "id": "cmd:face-me",
@@ -53,7 +56,8 @@
    "keywords": [
     "Hold the Line"
    ],
-   "imageAssetPath": "cards/swl/cmd/face-me.webp"
+   "imageAssetPath": "cards/swl/cmd/face-me.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/face-me.webp"
   },
   {
    "id": "cmd:fearsome-oration",
@@ -89,7 +93,8 @@
     "Tactical",
     "Suppressive"
    ],
-   "imageAssetPath": "cards/swl/cmd/gunner-infantry.webp"
+   "imageAssetPath": "cards/swl/cmd/gunner-infantry.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/gunner-infantry.webp"
   },
   {
    "id": "cmd:unrelenting-fire",
@@ -99,7 +104,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/unrelenting-fire.webp"
+   "imageAssetPath": "cards/swl/cmd/unrelenting-fire.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/unrelenting-fire.webp"
   },
   {
    "id": "cmd:isb-investigation",
@@ -111,7 +117,8 @@
     "Agent Kallus"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/isb-investigation.webp"
+   "imageAssetPath": "cards/swl/cmd/isb-investigation.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/isb-investigation.webp"
   },
   {
    "id": "cmd:overwhelming-barrage",
@@ -127,7 +134,8 @@
     "Immune: Deflect",
     "Suppressive"
    ],
-   "imageAssetPath": "cards/swl/cmd/overwhelming-barrage.webp"
+   "imageAssetPath": "cards/swl/cmd/overwhelming-barrage.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/overwhelming-barrage.webp"
   },
   {
    "id": "cmd:squadron-on-me",
@@ -139,7 +147,8 @@
     "Major Marquand"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/squadron-on-me.webp"
+   "imageAssetPath": "cards/swl/cmd/squadron-on-me.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/squadron-on-me.webp"
   },
   {
    "id": "cmd:unexpected-but-not-unwelcome",
@@ -151,7 +160,8 @@
     "Seventh Sister"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/unexpected-but-not-unwelcome.webp"
+   "imageAssetPath": "cards/swl/cmd/unexpected-but-not-unwelcome.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/unexpected-but-not-unwelcome.webp"
   },
   {
    "id": "cmd:we-need-reinforcements",
@@ -163,7 +173,8 @@
    "keywords": [
     "Disengage"
    ],
-   "imageAssetPath": "cards/swl/cmd/we-need-reinforcements.webp"
+   "imageAssetPath": "cards/swl/cmd/we-need-reinforcements.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/we-need-reinforcements.webp"
   },
   {
    "id": "cmd:you-have-something-i-want",
@@ -175,7 +186,8 @@
     "Moff Gideon"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/you-have-something-i-want.webp"
+   "imageAssetPath": "cards/swl/cmd/you-have-something-i-want.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/you-have-something-i-want.webp"
   },
   {
    "id": "cmd:you-would-question-me",
@@ -201,7 +213,8 @@
     "Major Marquand"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/armored-cavalry.webp"
+   "imageAssetPath": "cards/swl/cmd/armored-cavalry.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/armored-cavalry.webp"
   },
   {
    "id": "cmd:constantly-alert",
@@ -224,7 +237,8 @@
     "Spur",
     "Suppressive"
    ],
-   "imageAssetPath": "cards/swl/cmd/debark-for-ground-assault.webp"
+   "imageAssetPath": "cards/swl/cmd/debark-for-ground-assault.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/debark-for-ground-assault.webp"
   },
   {
    "id": "cmd:i-care-not-for-your-struggles",
@@ -238,7 +252,8 @@
    "keywords": [
     "Dauntless"
    ],
-   "imageAssetPath": "cards/swl/cmd/i-care-not-for-your-struggles.webp"
+   "imageAssetPath": "cards/swl/cmd/i-care-not-for-your-struggles.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/i-care-not-for-your-struggles.webp"
   },
   {
    "id": "cmd:inexorable-advance",
@@ -264,7 +279,8 @@
     "Moff Gideon"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/moment-of-consideration.webp"
+   "imageAssetPath": "cards/swl/cmd/moment-of-consideration.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/moment-of-consideration.webp"
   },
   {
    "id": "cmd:ruthless-tactics",
@@ -278,7 +294,8 @@
    "keywords": [
     "Suppressive"
    ],
-   "imageAssetPath": "cards/swl/cmd/ruthless-tactics.webp"
+   "imageAssetPath": "cards/swl/cmd/ruthless-tactics.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/ruthless-tactics.webp"
   },
   {
    "id": "cmd:you-hide-your-fear-well",
@@ -290,7 +307,8 @@
     "Seventh Sister"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/you-hide-your-fear-well.webp"
+   "imageAssetPath": "cards/swl/cmd/you-hide-your-fear-well.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/you-hide-your-fear-well.webp"
   },
   {
    "id": "cmd:witch-magick",
@@ -302,7 +320,8 @@
     "Maul"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/witch-magick.webp"
+   "imageAssetPath": "cards/swl/cmd/witch-magick.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/witch-magick.webp"
   },
   {
    "id": "cmd:his-eminence",
@@ -314,7 +333,8 @@
     "Maul"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/his-eminence.webp"
+   "imageAssetPath": "cards/swl/cmd/his-eminence.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/his-eminence.webp"
   },
   {
    "id": "cmd:seize-what-power-we-can",
@@ -326,7 +346,8 @@
     "Maul"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/seize-what-power-we-can.webp"
+   "imageAssetPath": "cards/swl/cmd/seize-what-power-we-can.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/seize-what-power-we-can.webp"
   },
   {
    "id": "cmd:a-simple-man",
@@ -340,7 +361,8 @@
    "keywords": [
     "Marksman"
    ],
-   "imageAssetPath": "cards/swl/cmd/a-simple-man.webp"
+   "imageAssetPath": "cards/swl/cmd/a-simple-man.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/a-simple-man.webp"
   },
   {
    "id": "cmd:ambush",
@@ -350,7 +372,8 @@
    "generic": true,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/ambush.webp"
+   "imageAssetPath": "cards/swl/cmd/ambush.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/ambush.webp"
   },
   {
    "id": "cmd:duel-of-the-fates",
@@ -364,7 +387,8 @@
    "keywords": [
     "Disengage"
    ],
-   "imageAssetPath": "cards/swl/cmd/duel-of-the-fates.webp"
+   "imageAssetPath": "cards/swl/cmd/duel-of-the-fates.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/duel-of-the-fates.webp"
   },
   {
    "id": "cmd:focused-on-the-kill",
@@ -401,7 +425,8 @@
     "Gar Saxon"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/marked-for-elimination.webp"
+   "imageAssetPath": "cards/swl/cmd/marked-for-elimination.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/marked-for-elimination.webp"
   },
   {
    "id": "cmd:mechanical-carnage",
@@ -415,7 +440,8 @@
    "keywords": [
     "Gunslinger"
    ],
-   "imageAssetPath": "cards/swl/cmd/mechanical-carnage.webp"
+   "imageAssetPath": "cards/swl/cmd/mechanical-carnage.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/mechanical-carnage.webp"
   },
   {
    "id": "cmd:never-tell-me-the-odds",
@@ -453,7 +479,8 @@
    "keywords": [
     "Relentless"
    ],
-   "imageAssetPath": "cards/swl/cmd/this-is-the-way.webp"
+   "imageAssetPath": "cards/swl/cmd/this-is-the-way.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/this-is-the-way.webp"
   },
   {
    "id": "cmd:a-machine-made-for-killing",
@@ -479,7 +506,8 @@
    "generic": true,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/aggression.webp"
+   "imageAssetPath": "cards/swl/cmd/aggression.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/aggression.webp"
   },
   {
    "id": "cmd:fight-another-day",
@@ -493,7 +521,8 @@
    "keywords": [
     "Outmaneuver"
    ],
-   "imageAssetPath": "cards/swl/cmd/fight-another-day.webp"
+   "imageAssetPath": "cards/swl/cmd/fight-another-day.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/fight-another-day.webp"
   },
   {
    "id": "cmd:i-like-those-odds",
@@ -505,7 +534,8 @@
     "Din Djarin"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/i-like-those-odds.webp"
+   "imageAssetPath": "cards/swl/cmd/i-like-those-odds.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/i-like-those-odds.webp"
   },
   {
    "id": "cmd:independent-programming",
@@ -520,7 +550,8 @@
     "Permanent",
     "Independent"
    ],
-   "imageAssetPath": "cards/swl/cmd/independent-programming.webp"
+   "imageAssetPath": "cards/swl/cmd/independent-programming.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/independent-programming.webp"
   },
   {
    "id": "cmd:making-his-way-in-the-galaxy",
@@ -536,7 +567,8 @@
     "Impact",
     "Versatile"
    ],
-   "imageAssetPath": "cards/swl/cmd/making-his-way-in-the-galaxy.webp"
+   "imageAssetPath": "cards/swl/cmd/making-his-way-in-the-galaxy.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/making-his-way-in-the-galaxy.webp"
   },
   {
    "id": "cmd:push",
@@ -546,7 +578,8 @@
    "generic": true,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/push.webp"
+   "imageAssetPath": "cards/swl/cmd/push.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/push.webp"
   },
   {
    "id": "cmd:speak-softly-and-drive-a-big-tank",
@@ -582,7 +615,8 @@
    "keywords": [
     "Deflect"
    ],
-   "imageAssetPath": "cards/swl/cmd/the-hand-thing.webp"
+   "imageAssetPath": "cards/swl/cmd/the-hand-thing.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/the-hand-thing.webp"
   },
   {
    "id": "cmd:the-phantom-menace",
@@ -597,7 +631,8 @@
     "Divulge",
     "Infiltrate"
    ],
-   "imageAssetPath": "cards/swl/cmd/the-phantom-menace.webp"
+   "imageAssetPath": "cards/swl/cmd/the-phantom-menace.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/the-phantom-menace.webp"
   },
   {
    "id": "cmd:wookiee-life-debt",
@@ -636,7 +671,8 @@
      "value": 4
     }
    ],
-   "imageAssetPath": "cards/swl/cmd/anti-capture-protocols.webp"
+   "imageAssetPath": "cards/swl/cmd/anti-capture-protocols.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/anti-capture-protocols.webp"
   },
   {
    "id": "cmd:assault",
@@ -646,7 +682,8 @@
    "generic": true,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/assault.webp"
+   "imageAssetPath": "cards/swl/cmd/assault.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/assault.webp"
   },
   {
    "id": "cmd:at-last",
@@ -660,7 +697,8 @@
    "keywords": [
     "Jedi Hunter"
    ],
-   "imageAssetPath": "cards/swl/cmd/at-last.webp"
+   "imageAssetPath": "cards/swl/cmd/at-last.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/at-last.webp"
   },
   {
    "id": "cmd:boring-conversation-anyway",
@@ -682,7 +720,8 @@
    "generic": true,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/discretion.webp"
+   "imageAssetPath": "cards/swl/cmd/discretion.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/discretion.webp"
   },
   {
    "id": "cmd:i-smell-profit",
@@ -708,7 +747,8 @@
     "Boba Fett"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/rule-with-respect.webp"
+   "imageAssetPath": "cards/swl/cmd/rule-with-respect.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/rule-with-respect.webp"
   },
   {
    "id": "cmd:stories-so-many-of-them-true",
@@ -734,7 +774,8 @@
    "keywords": [
     "Outmaneuver"
    ],
-   "imageAssetPath": "cards/swl/cmd/victory-or-death.webp"
+   "imageAssetPath": "cards/swl/cmd/victory-or-death.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/victory-or-death.webp"
   },
   {
    "id": "cmd:we-do-what-we-do",
@@ -764,7 +805,8 @@
     "Din Djarin"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/whistling-birds.webp"
+   "imageAssetPath": "cards/swl/cmd/whistling-birds.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/whistling-birds.webp"
   },
   {
    "id": "cmd:standing-orders",
@@ -813,7 +855,8 @@
     "Lando Calrissian"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/corellian-spike.webp"
+   "imageAssetPath": "cards/swl/cmd/corellian-spike.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/corellian-spike.webp"
   },
   {
    "id": "cmd:delaying-tactics",
@@ -823,7 +866,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/delaying-tactics.webp"
+   "imageAssetPath": "cards/swl/cmd/delaying-tactics.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/delaying-tactics.webp"
   },
   {
    "id": "cmd:i-am-no-jedi",
@@ -837,7 +881,8 @@
    "keywords": [
     "Agile"
    ],
-   "imageAssetPath": "cards/swl/cmd/i-am-no-jedi.webp"
+   "imageAssetPath": "cards/swl/cmd/i-am-no-jedi.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/i-am-no-jedi.webp"
   },
   {
    "id": "cmd:log-traps",
@@ -865,7 +910,8 @@
     "Permanent",
     "Teamwork"
    ],
-   "imageAssetPath": "cards/swl/cmd/a-beautiful-friendship.webp"
+   "imageAssetPath": "cards/swl/cmd/a-beautiful-friendship.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/a-beautiful-friendship.webp"
   },
   {
    "id": "cmd:ace-up-his-sleeve",
@@ -877,7 +923,8 @@
     "Lando Calrissian"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/ace-up-his-sleeve.webp"
+   "imageAssetPath": "cards/swl/cmd/ace-up-his-sleeve.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/ace-up-his-sleeve.webp"
   },
   {
    "id": "cmd:battlefield-reconnaissance",
@@ -899,7 +946,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/courage-of-the-rebellion.webp"
+   "imageAssetPath": "cards/swl/cmd/courage-of-the-rebellion.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/courage-of-the-rebellion.webp"
   },
   {
    "id": "cmd:family-reunion",
@@ -913,7 +961,8 @@
    "keywords": [
     "Teamwork"
    ],
-   "imageAssetPath": "cards/swl/cmd/family-reunion.webp"
+   "imageAssetPath": "cards/swl/cmd/family-reunion.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/family-reunion.webp"
   },
   {
    "id": "cmd:hiding-in-plain-sight",
@@ -951,7 +1000,8 @@
    "keywords": [
     "Guardian"
    ],
-   "imageAssetPath": "cards/swl/cmd/swift-protector.webp"
+   "imageAssetPath": "cards/swl/cmd/swift-protector.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/swift-protector.webp"
   },
   {
    "id": "cmd:a-new-beginning",
@@ -965,7 +1015,8 @@
    "keywords": [
     "Inspire"
    ],
-   "imageAssetPath": "cards/swl/cmd/a-new-beginning.webp"
+   "imageAssetPath": "cards/swl/cmd/a-new-beginning.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/a-new-beginning.webp"
   },
   {
    "id": "cmd:courageous-counterattack",
@@ -1012,7 +1063,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/hold-at-any-cost.webp"
+   "imageAssetPath": "cards/swl/cmd/hold-at-any-cost.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/hold-at-any-cost.webp"
   },
   {
    "id": "cmd:idiot-s-array",
@@ -1024,7 +1076,8 @@
     "Lando Calrissian"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/idiot-s-array.webp"
+   "imageAssetPath": "cards/swl/cmd/idiot-s-array.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/idiot-s-array.webp"
   },
   {
    "id": "cmd:bring-it-down",
@@ -1036,7 +1089,8 @@
     "Clone Commander Cody"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/bring-it-down.webp"
+   "imageAssetPath": "cards/swl/cmd/bring-it-down.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/bring-it-down.webp"
   },
   {
    "id": "cmd:defiance",
@@ -1046,7 +1100,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/defiance.webp"
+   "imageAssetPath": "cards/swl/cmd/defiance.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/defiance.webp"
   },
   {
    "id": "cmd:flow-of-the-force",
@@ -1075,7 +1130,8 @@
     "Charge",
     "Disengage"
    ],
-   "imageAssetPath": "cards/swl/cmd/size-matters-not.webp"
+   "imageAssetPath": "cards/swl/cmd/size-matters-not.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/size-matters-not.webp"
   },
   {
    "id": "cmd:sneak-attack",
@@ -1091,7 +1147,8 @@
      "value": "1"
     }
    ],
-   "imageAssetPath": "cards/swl/cmd/sneak-attack.webp"
+   "imageAssetPath": "cards/swl/cmd/sneak-attack.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/sneak-attack.webp"
   },
   {
    "id": "cmd:synchronized-offensive",
@@ -1101,7 +1158,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/synchronized-offensive.webp"
+   "imageAssetPath": "cards/swl/cmd/synchronized-offensive.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/synchronized-offensive.webp"
   },
   {
    "id": "cmd:this-is-where-the-fun-begins",
@@ -1116,7 +1174,8 @@
     "Jump",
     "Prepared Position"
    ],
-   "imageAssetPath": "cards/swl/cmd/this-is-where-the-fun-begins.webp"
+   "imageAssetPath": "cards/swl/cmd/this-is-where-the-fun-begins.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/this-is-where-the-fun-begins.webp"
   },
   {
    "id": "cmd:wisdom-of-the-council",
@@ -1157,7 +1216,8 @@
     },
     "Immune: Deflect"
    ],
-   "imageAssetPath": "cards/swl/cmd/air-support.webp"
+   "imageAssetPath": "cards/swl/cmd/air-support.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/air-support.webp"
   },
   {
    "id": "cmd:get-in-position",
@@ -1169,7 +1229,8 @@
    "keywords": [
     "Agile"
    ],
-   "imageAssetPath": "cards/swl/cmd/get-in-position.webp"
+   "imageAssetPath": "cards/swl/cmd/get-in-position.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/get-in-position.webp"
   },
   {
    "id": "cmd:have-i-ever-let-you-down",
@@ -1181,7 +1242,8 @@
     "Clone Commander Cody"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/have-i-ever-let-you-down.webp"
+   "imageAssetPath": "cards/swl/cmd/have-i-ever-let-you-down.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/have-i-ever-let-you-down.webp"
   },
   {
    "id": "cmd:lead-from-the-front",
@@ -1206,7 +1268,8 @@
      "value": "1"
     }
    ],
-   "imageAssetPath": "cards/swl/cmd/recon-division.webp"
+   "imageAssetPath": "cards/swl/cmd/recon-division.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/recon-division.webp"
   },
   {
    "id": "cmd:revenge-is-not-the-jedi-way",
@@ -1236,7 +1299,8 @@
     "Deflect",
     "Guardian"
    ],
-   "imageAssetPath": "cards/swl/cmd/size-matters-sometimes.webp"
+   "imageAssetPath": "cards/swl/cmd/size-matters-sometimes.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/size-matters-sometimes.webp"
   },
   {
    "id": "cmd:tactical-planning",
@@ -1246,7 +1310,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/tactical-planning.webp"
+   "imageAssetPath": "cards/swl/cmd/tactical-planning.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/tactical-planning.webp"
   },
   {
    "id": "cmd:there-is-no-try",
@@ -1261,7 +1326,8 @@
     "Outmaneuver",
     "Relentless"
    ],
-   "imageAssetPath": "cards/swl/cmd/there-is-no-try.webp"
+   "imageAssetPath": "cards/swl/cmd/there-is-no-try.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/there-is-no-try.webp"
   },
   {
    "id": "cmd:you-underestimate-my-power",
@@ -1273,7 +1339,8 @@
     "Anakin Skywalker"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/you-underestimate-my-power.webp"
+   "imageAssetPath": "cards/swl/cmd/you-underestimate-my-power.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/you-underestimate-my-power.webp"
   },
   {
    "id": "cmd:affirmative-general",
@@ -1296,7 +1363,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/attack-of-the-clones.webp"
+   "imageAssetPath": "cards/swl/cmd/attack-of-the-clones.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/attack-of-the-clones.webp"
   },
   {
    "id": "cmd:combined-arms",
@@ -1308,7 +1376,8 @@
     "Clone Commander Cody"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/combined-arms.webp"
+   "imageAssetPath": "cards/swl/cmd/combined-arms.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/combined-arms.webp"
   },
   {
    "id": "cmd:daring-defense",
@@ -1320,7 +1389,8 @@
    "keywords": [
     "Demoralize"
    ],
-   "imageAssetPath": "cards/swl/cmd/daring-defense.webp"
+   "imageAssetPath": "cards/swl/cmd/daring-defense.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/daring-defense.webp"
   },
   {
    "id": "cmd:flexible-strategy",
@@ -1330,7 +1400,8 @@
    "generic": false,
    "commanders": [],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/flexible-strategy.webp"
+   "imageAssetPath": "cards/swl/cmd/flexible-strategy.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/flexible-strategy.webp"
   },
   {
    "id": "cmd:general-skywalker",
@@ -1344,7 +1415,8 @@
    "keywords": [
     "Inspire"
    ],
-   "imageAssetPath": "cards/swl/cmd/general-skywalker.webp"
+   "imageAssetPath": "cards/swl/cmd/general-skywalker.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/general-skywalker.webp"
   },
   {
    "id": "cmd:i-go-where-i-m-needed",
@@ -1372,7 +1444,8 @@
     "Permanent",
     "Indomitable"
    ],
-   "imageAssetPath": "cards/swl/cmd/leaders-of-the-501st.webp"
+   "imageAssetPath": "cards/swl/cmd/leaders-of-the-501st.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/leaders-of-the-501st.webp"
   },
   {
    "id": "cmd:luminous-beings-are-we",
@@ -1384,7 +1457,8 @@
     "Yoda"
    ],
    "keywords": [],
-   "imageAssetPath": "cards/swl/cmd/luminous-beings-are-we.webp"
+   "imageAssetPath": "cards/swl/cmd/luminous-beings-are-we.webp",
+   "imageAssetPathFr": "cards/swl/cmd/fr/luminous-beings-are-we.webp"
   },
   {
    "id": "cmd:ai-coordination",

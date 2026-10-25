@@ -4,57 +4,68 @@
   {
    "category": "objective",
    "name": "Recover the Research",
-   "imageAssetPath": "cards/swl/battle/recover-the-research.webp"
+   "imageAssetPath": "cards/swl/battle/recover-the-research.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/recover-the-research.webp"
   },
   {
    "category": "objective",
    "name": "Intercept Signals",
-   "imageAssetPath": "cards/swl/battle/intercept-signals.webp"
+   "imageAssetPath": "cards/swl/battle/intercept-signals.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/intercept-signals.webp"
   },
   {
    "category": "objective",
    "name": "Breakthrough",
-   "imageAssetPath": "cards/swl/battle/breakthrough.webp"
+   "imageAssetPath": "cards/swl/battle/breakthrough.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/breakthrough.webp"
   },
   {
    "category": "objective",
    "name": "Bunker Assault",
-   "imageAssetPath": "cards/swl/battle/bunker-assault.webp"
+   "imageAssetPath": "cards/swl/battle/bunker-assault.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/bunker-assault.webp"
   },
   {
    "category": "objective",
    "name": "Close the Pocket",
-   "imageAssetPath": "cards/swl/battle/close-the-pocket.webp"
+   "imageAssetPath": "cards/swl/battle/close-the-pocket.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/close-the-pocket.webp"
   },
   {
    "category": "objective",
    "name": "Marked Targets",
-   "imageAssetPath": "cards/swl/battle/marked-targets.webp"
+   "imageAssetPath": "cards/swl/battle/marked-targets.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/marked-targets.webp"
   },
   {
    "category": "objective",
    "name": "Bring Them to Heel",
-   "imageAssetPath": "cards/swl/battle/bring-them-to-heel.webp"
+   "imageAssetPath": "cards/swl/battle/bring-them-to-heel.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/bring-them-to-heel.webp"
   },
   {
    "category": "objective",
    "name": "Sweep and Clear",
-   "imageAssetPath": "cards/swl/battle/sweep-and-clear.webp"
+   "imageAssetPath": "cards/swl/battle/sweep-and-clear.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/sweep-and-clear.webp"
   },
   {
    "category": "objective",
    "name": "Surface Scan",
-   "imageAssetPath": "cards/swl/battle/surface-scan.webp"
+   "imageAssetPath": "cards/swl/battle/surface-scan.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/surface-scan.webp"
   },
   {
    "category": "objective",
    "name": "Destroy Enemy Base",
-   "imageAssetPath": "cards/swl/battle/destroy-enemy-base.webp"
+   "imageAssetPath": "cards/swl/battle/destroy-enemy-base.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/destroy-enemy-base.webp"
   },
   {
    "category": "objective",
    "name": "Recon Mission",
-   "imageAssetPath": "cards/swl/battle/recon-mission.webp"
+   "imageAssetPath": "cards/swl/battle/recon-mission.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/recon-mission.webp"
   },
   {
    "category": "objective",
@@ -74,12 +85,14 @@
   {
    "category": "objective",
    "name": "Outflank",
-   "imageAssetPath": "cards/swl/battle/outflank.webp"
+   "imageAssetPath": "cards/swl/battle/outflank.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/outflank.webp"
   },
   {
    "category": "objective",
    "name": "Shifting Priorities",
-   "imageAssetPath": "cards/swl/battle/shifting-priorities.webp"
+   "imageAssetPath": "cards/swl/battle/shifting-priorities.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/shifting-priorities.webp"
   },
   {
    "category": "secondary",
@@ -89,7 +102,8 @@
   {
    "category": "secondary",
    "name": "Supply Run",
-   "imageAssetPath": "cards/swl/battle/supply-run.webp"
+   "imageAssetPath": "cards/swl/battle/supply-run.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/supply-run.webp"
   },
   {
    "category": "secondary",
@@ -104,37 +118,44 @@
   {
    "category": "advantage",
    "name": "Advanced Intel",
-   "imageAssetPath": "cards/swl/battle/advanced-intel.webp"
+   "imageAssetPath": "cards/swl/battle/advanced-intel.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/advanced-intel.webp"
   },
   {
    "category": "advantage",
    "name": "Cunning Deployment",
-   "imageAssetPath": "cards/swl/battle/cunning-deployment.webp"
+   "imageAssetPath": "cards/swl/battle/cunning-deployment.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/cunning-deployment.webp"
   },
   {
    "category": "advantage",
    "name": "Fortified Position",
-   "imageAssetPath": "cards/swl/battle/fortified-position.webp"
+   "imageAssetPath": "cards/swl/battle/fortified-position.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/fortified-position.webp"
   },
   {
    "category": "advantage",
    "name": "Garrison",
-   "imageAssetPath": "cards/swl/battle/garrison.webp"
+   "imageAssetPath": "cards/swl/battle/garrison.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/garrison.webp"
   },
   {
    "category": "advantage",
    "name": "Ordnance",
-   "imageAssetPath": "cards/swl/battle/ordnance.webp"
+   "imageAssetPath": "cards/swl/battle/ordnance.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/ordnance.webp"
   },
   {
    "category": "advantage",
    "name": "Strafing Run",
-   "imageAssetPath": "cards/swl/battle/strafing-run.webp"
+   "imageAssetPath": "cards/swl/battle/strafing-run.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/strafing-run.webp"
   },
   {
    "category": "advantage",
    "name": "Command Override",
-   "imageAssetPath": "cards/swl/battle/command-override.webp"
+   "imageAssetPath": "cards/swl/battle/command-override.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/command-override.webp"
   },
   {
    "category": "advantage",
@@ -144,7 +165,8 @@
   {
    "category": "advantage",
    "name": "No Time to Lose",
-   "imageAssetPath": "cards/swl/battle/no-time-to-lose.webp"
+   "imageAssetPath": "cards/swl/battle/no-time-to-lose.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/no-time-to-lose.webp"
   },
   {
    "category": "advantage",
@@ -159,7 +181,8 @@
   {
    "category": "advantage",
    "name": "Black Ops",
-   "imageAssetPath": "cards/swl/battle/black-ops.webp"
+   "imageAssetPath": "cards/swl/battle/black-ops.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/black-ops.webp"
   },
   {
    "category": "advantage",
@@ -169,7 +192,8 @@
   {
    "category": "advantage",
    "name": "Coordinated Strike",
-   "imageAssetPath": "cards/swl/battle/coordinated-strike.webp"
+   "imageAssetPath": "cards/swl/battle/coordinated-strike.webp",
+   "imageAssetPathFr": "cards/swl/battle/fr/coordinated-strike.webp"
   }
  ]
 }
