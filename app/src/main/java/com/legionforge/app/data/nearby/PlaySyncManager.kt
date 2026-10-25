@@ -38,7 +38,8 @@ data class PlaySyncPayload(
     val units: List<SyncedUnitState> = emptyList(),
     val listJson: String? = null, // liste de l'armée adverse (sérialisée)
     val deploymentDone: Boolean? = null, // Legion : déploiement terminé (par joueur)
-    val roundCard: String? = null // Legion : id de la carte de commandement jouée ce round
+    val roundCard: String? = null, // Legion : id de la carte de commandement jouée ce round
+    val turnOwner: String? = null // Legion : qui active ("A" ou "B")
 )
 
 /**
@@ -76,6 +77,13 @@ class PlaySyncManager(context: Context) {
     private val _receivedRoundCard = MutableStateFlow<String?>(null)
     val receivedRoundCard: StateFlow<String?> = _receivedRoundCard.asStateFlow()
 
+    private val _receivedTurn = MutableStateFlow<String?>(null)
+    val receivedTurn: StateFlow<String?> = _receivedTurn.asStateFlow()
+
+    // Identité de joueur : hôte = "A", client = "B".
+    var playerId: String = "A"
+        private set
+
     init {
         // Décode les payloads reçus.
         CoroutineScope(Dispatchers.Main).launch {
@@ -89,13 +97,14 @@ class PlaySyncManager(context: Context) {
                     "request" -> _listRequested.value = true
                     "deploydone" -> _receivedDeploymentDone.value = payload.deploymentDone
                     "roundcard" -> _receivedRoundCard.value = payload.roundCard
+                    "turn" -> _receivedTurn.value = payload.turnOwner
                 }
             }
         }
     }
 
-    fun startHost() = nearby.startAdvertising()
-    fun startClient() = nearby.startDiscovery()
+    fun startHost() { playerId = "A"; nearby.startAdvertising() }
+    fun startClient() { playerId = "B"; nearby.startDiscovery() }
     fun connectTo(endpointId: String) = nearby.connectTo(endpointId)
     fun stop() = nearby.stop()
 
@@ -119,6 +128,11 @@ class PlaySyncManager(context: Context) {
     /** Envoie la carte de commandement jouée ce round (id). */
     fun sendRoundCard(cardId: String?) {
         nearby.sendList(gson.toJson(PlaySyncPayload(type = "roundcard", roundCard = cardId)))
+    }
+
+    /** Envoie qui active ("A" ou "B"). */
+    fun sendTurn(turnOwner: String) {
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "turn", turnOwner = turnOwner)))
     }
 
     /** Demande à l'autre joueur de renvoyer sa liste (synchro manuelle). */

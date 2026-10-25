@@ -237,6 +237,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val myDeployDone by playSyncVm.deploymentDone.collectAsState()
     val oppDeployDone by playSyncVm.receivedDeploymentDone.collectAsState()
     val oppRoundCommand by playSyncVm.receivedRoundCard.collectAsState()
+    val receivedTurn by playSyncVm.receivedTurn.collectAsState()
     // Wiki des règles : chargé pour rendre les mots-clés du texte de règles cliquables.
     val wikiSections by vm.wikiSections.collectAsState()
     var ruleSection by remember { mutableStateOf<WikiSectionEntity?>(null) }
@@ -246,6 +247,20 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     LaunchedEffect(syncRound) { if (twoPlayer && syncRound != null && syncRound != round) round = syncRound!! }
     // Émet le round quand il change en mode 2 joueurs.
     LaunchedEffect(round) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRound(round) }
+    // Synchro du tour (identité de joueur) : corrige le clignotement "VOTRE TOUR" sur les 2 tablettes.
+    val myPlayerId = playSyncVm.playerId
+    fun toggleTurn() {
+        turn = if (turn == "own") "opp" else "own"
+        if (twoPlayer && syncMode == ShareMode.CONNECTED) {
+            val owner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A")
+            playSyncVm.sendTurn(owner)
+        }
+    }
+    LaunchedEffect(receivedTurn) {
+        if (twoPlayer && receivedTurn != null) {
+            turn = if (receivedTurn == myPlayerId) "own" else "opp"
+        }
+    }
     // Envoie la liste dès qu'elle est chargée ET qu'on est connecté. openList est async :
     // currentList ET entries se remplissent en arrière-plan, donc on réessaie à chaque
     // changement des deux (sinon on peut envoyer une liste VIDE si entries n'est pas encore chargé).
@@ -554,19 +569,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         }
                     }
-                    // ── Bannière ACTIVER (à qui d'activer) — pulse quand c'est ton tour ──
-                    val pulseAlpha = if (turn == "own") {
-                        val tr = rememberInfiniteTransition(label = "pulse")
-                        val a by tr.animateFloat(initialValue = 1f, targetValue = 0.55f, animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alpha")
-                        a
-                    } else 1f
-                    Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth().alpha(pulseAlpha), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                    // ── Bannière ACTIVER (à qui d'activer) — état statique coloré, pas de clignotement ──
+                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // Passer mon tour (bascule manuelle — jamais automatique).
-                    Surface(onClick = { turn = if (turn == "own") "opp" else "own" }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
+                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
                         Text("Passer mon tour →", Modifier.padding(vertical = 10.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
                     // ── Carte de commandement du round (synchro 2 joueurs) ──
