@@ -29,6 +29,11 @@ data class SyncedUnitState(
     val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
     val promoted: Boolean? = null,    // Legion unité promue commandant
     val deployZone: Int? = null        // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
+    val detachedThreshold: Int? = null,  // Legion : blessures avant détachée
+    val eliminatedThreshold: Int? = null, // Legion : blessures avant éliminée
+    val detached: Boolean? = null,       // Legion : unité détachée (perte de cohésion)
+    val eliminated: Boolean? = null,     // Legion : unité éliminée
+    val orderReceived: Boolean? = null   // Legion : a reçu un ordre ce round
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */
@@ -40,6 +45,17 @@ data class PlaySyncPayload(
     val deploymentDone: Boolean? = null, // Legion : déploiement terminé (par joueur)
     val roundCard: String? = null, // Legion : id de la carte de commandement jouée ce round
     val turnOwner: String? = null // Legion : qui active ("A" ou "B")
+)
+
+/** État de jeu partagé (round, VP, tour, objectifs, phase) — synchronisé entre les 2 joueurs. */
+data class GameStatePayload(
+    val round: Int = 1,
+    val vpA: Int = 0,
+    val vpB: Int = 0,
+    val turnOwner: String? = null,   // "A" ou "B"
+    val activeObjectives: List<String> = emptyList(),
+    val phase: String = "game",      // "setup" | "game" | "end"
+    val seq: Long = 0                // horodatage/ordre pour last-write-wins
 )
 
 /**
@@ -80,6 +96,9 @@ class PlaySyncManager(context: Context) {
     private val _receivedTurn = MutableStateFlow<String?>(null)
     val receivedTurn: StateFlow<String?> = _receivedTurn.asStateFlow()
 
+    private val _receivedGameState = MutableStateFlow<GameStatePayload?>(null)
+    val receivedGameState: StateFlow<GameStatePayload?> = _receivedGameState.asStateFlow()
+
     // Identité de joueur : hôte = "A", client = "B".
     var playerId: String = "A"
         private set
@@ -98,6 +117,7 @@ class PlaySyncManager(context: Context) {
                     "deploydone" -> _receivedDeploymentDone.value = payload.deploymentDone
                     "roundcard" -> _receivedRoundCard.value = payload.roundCard
                     "turn" -> _receivedTurn.value = payload.turnOwner
+                    "game" -> _receivedGameState.value = try { gson.fromJson(json, GameStatePayload::class.java) } catch (_: Exception) { null }
                 }
             }
         }
@@ -133,6 +153,11 @@ class PlaySyncManager(context: Context) {
     /** Envoie qui active ("A" ou "B"). */
     fun sendTurn(turnOwner: String) {
         nearby.sendList(gson.toJson(PlaySyncPayload(type = "turn", turnOwner = turnOwner)))
+    }
+
+    /** Envoie l'état de jeu partagé (round, VP, tour, objectifs, phase). */
+    fun sendGameState(state: GameStatePayload) {
+        nearby.sendList(gson.toJson(state))
     }
 
     /** Demande à l'autre joueur de renvoyer sa liste (synchro manuelle). */

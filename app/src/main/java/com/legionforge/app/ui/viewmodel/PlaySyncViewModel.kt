@@ -28,6 +28,7 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     val receivedDeploymentDone: StateFlow<Boolean?> = sync.receivedDeploymentDone
     val receivedRoundCard: StateFlow<String?> = sync.receivedRoundCard
     val receivedTurn: StateFlow<String?> = sync.receivedTurn
+    val receivedGameState: StateFlow<com.legionforge.app.data.nearby.GameStatePayload?> = sync.receivedGameState
     val playerId: String get() = sync.playerId
     // Déploiement terminé (Legion setup) : mon état + état adverse reçu.
     private val _deploymentDone = MutableStateFlow(false)
@@ -122,6 +123,11 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     /** Envoie la carte de commandement jouée ce round à l'adversaire. */
     fun sendRoundCard(cardId: String?) {
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendRoundCard(cardId)
+    }
+
+    /** Envoie l'état de jeu partagé (round, VP, tour, objectifs, phase). */
+    fun sendGameState(state: com.legionforge.app.data.nearby.GameStatePayload) {
+        if (sync.mode.value == ShareMode.CONNECTED) sync.sendGameState(state)
     }
 
     /** Envoie qui active ("A" ou "B"). */

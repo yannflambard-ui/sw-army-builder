@@ -644,7 +644,34 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
                             onCmdClick = { showCmdSheet = true },
                             showOpponent = true,
-                            onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true)) }
+                            onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                            onWound = { id, delta ->
+                                if (id in ownStates) {
+                                    playSyncVm.updateOwnState(id) { st -> st.copy(wounds = ((st.wounds ?: 0) + delta).coerceAtLeast(0)) }
+                                } else if (!twoPlayer) {
+                                    soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(wounds = ((soloOppStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0))))
+                                }
+                            },
+                            onOrder = { id ->
+                                if (id in ownStates) {
+                                    playSyncVm.updateOwnState(id) { st -> st.copy(orderReceived = !(st.orderReceived == true)) }
+                                } else if (!twoPlayer) {
+                                    soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(orderReceived = !(soloOppStates[id]?.orderReceived == true))))
+                                }
+                            },
+                            onToken = { id, tk, delta ->
+                                if (id in ownStates) {
+                                    playSyncVm.updateOwnState(id) { st ->
+                                        if (tk == "supp") st.copy(suppressions = ((st.suppressions ?: 0) + delta).coerceAtLeast(0))
+                                        else { val cur = st.tokens.toMutableList(); if (delta > 0) cur.add(tk) else cur.remove(tk); st.copy(tokens = cur) }
+                                    }
+                                } else if (!twoPlayer) {
+                                    soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).let { st ->
+                                        if (tk == "supp") st.copy(suppressions = ((st.suppressions ?: 0) + delta).coerceAtLeast(0))
+                                        else { val cur = st.tokens.toMutableList(); if (delta > 0) cur.add(tk) else cur.remove(tk); st.copy(tokens = cur) }
+                                    }))
+                                }
+                            }
                         )
                     }
                     }
@@ -686,9 +713,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("Activation", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Surface(onClick = {
-                                // Simule le tirage du pool d'ordres : unité non activée / non vaincue au hasard.
-                                val next = listEntries.filter { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }.shuffled().firstOrNull()
-                                if (next != null) onUnitChange(next.instanceId, (states[next.instanceId] ?: SyncedUnitState(next.instanceId)).copy(activated = true))
+                                // Simule le tirage du pool d'ordres : unité avec ordre d'abord, sinon au hasard.
+                                val candidates = listEntries.filter { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }
+                                val next = candidates.filter { u -> states[u.instanceId]?.orderReceived == true }.shuffled().firstOrNull() ?: candidates.shuffled().firstOrNull()
+                                if (next != null) onUnitChange(next.instanceId, (states[next.instanceId] ?: SyncedUnitState(next.instanceId)).copy(activated = true, orderReceived = false))
                             }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                                 Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
@@ -1646,20 +1674,26 @@ internal fun BattlefieldView(
     onActivate: (String) -> Unit,
     onCmdClick: () -> Unit,
     showOpponent: Boolean = true,
-    onOppActivate: ((String) -> Unit)? = null
+    onOppActivate: ((String) -> Unit)? = null,
+    onWound: ((String, Int) -> Unit)? = null,
+    onToken: ((String, String, Int) -> Unit)? = null,
+    onOrder: ((String) -> Unit)? = null
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate)
+        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
-        CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate)
+        CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder)
     }
 }
 
 // ── Rangée d'un camp : miniatures d'unités, bordure colorée si camp actif ──
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 internal fun CampRow(
     label: String, units: List<ListEntry>, states: Map<String, SyncedUnitState>,
-    isActive: Boolean, onOpenUnit: (ListEntry) -> Unit, onActivate: ((String) -> Unit)?
+    isActive: Boolean, onOpenUnit: (ListEntry) -> Unit, onActivate: ((String) -> Unit)?,
+    onWound: ((String, Int) -> Unit)? = null, onToken: ((String, String, Int) -> Unit)? = null,
+    onOrder: ((String) -> Unit)? = null
 ) {
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (isActive) Color(0xFF1E3A2A) else Color(0xFF111827), border = BorderStroke(if (isActive) 2.dp else 1.dp, if (isActive) Color(0xFF66BB6A) else Color(0xFF2A3A4A))) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1684,16 +1718,50 @@ internal fun CampRow(
                             defeated -> Color(0xFF3A3A4A)
                             else -> Color(0xFF66BB6A)
                         }
-                        Box(Modifier.width(72.dp).aspectRatio(1.43f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
-                            if (artPath != null) {
-                                AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
-                                    modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
-                                    contentScale = ContentScale.Crop)
-                            } else {
-                                Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
+                        Column(Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(Modifier.width(72.dp).aspectRatio(1.43f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
+                                if (artPath != null) {
+                                    AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
+                                        modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
+                                        contentScale = ContentScale.Crop)
+                                } else {
+                                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
+                                }
+                                Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
+                                // Badge blessures X/Y (bas-gauche).
+                                if (onWound != null && st.wounds != null) {
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomStart).padding(2.dp)) {
+                                        Text("${st.wounds}/${st.eliminatedThreshold ?: "?"}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (st.wounds == 0) Color(0xFFFF6B6B) else Color(0xFFFFC857), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                // Indicateur d'ordre reçu (haut-gauche).
+                                if (st.orderReceived == true || onOrder != null) {
+                                    Surface(shape = RoundedCornerShape(4.dp), color = if (st.orderReceived == true) Color(0xFF1E3A2A) else Color(0xCC0A0E15), modifier = Modifier.align(Alignment.TopStart).padding(2.dp).clickable(enabled = onOrder != null) { onOrder?.invoke(unit.instanceId) }) {
+                                        Text(if (st.orderReceived == true) "📨" else "＋", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), fontSize = 8.sp)
+                                    }
+                                }
                             }
-                            Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                                modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
+                            // Rangée de jetons d'état (tap +1, long-press -1).
+                            if (onToken != null) {
+                                Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    listOf("aim" to "◎", "dodge" to "◈", "surge" to "⚡", "supp" to "✚", "stdby" to "◉").forEach { (tk, sym) ->
+                                        val count = when (tk) {
+                                            "aim" -> st.tokens.count { it == "aim" }
+                                            "dodge" -> st.tokens.count { it == "dodge" }
+                                            "surge" -> st.tokens.count { it == "surge" }
+                                            "supp" -> st.suppressions ?: 0
+                                            "stdby" -> st.tokens.count { it == "standby" }
+                                            else -> 0
+                                        }
+                                        if (count > 0 || tk == "supp") {
+                                            Surface(shape = RoundedCornerShape(3.dp), color = if (tk == "supp" && count > 0) Color(0xFFB71C1C) else Color(0xFF2A3A4A), modifier = Modifier.combinedClickable(onClick = { onToken(unit.instanceId, tk, 1) }, onLongClick = { onToken(unit.instanceId, tk, -1) })) {
+                                                Text("$sym$count", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (tk == "supp" && count > 0) Color.White else Color(0xFF9EACBC), fontSize = 7.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
