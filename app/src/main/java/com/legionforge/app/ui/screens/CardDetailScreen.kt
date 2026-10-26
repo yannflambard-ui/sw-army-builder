@@ -672,7 +672,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("Activation", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Surface(onClick = {
-                                val next = listEntries.firstOrNull { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }
+                                // Simule le tirage du pool d'ordres : unité non activée / non vaincue au hasard.
+                                val next = listEntries.filter { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }.shuffled().firstOrNull()
                                 if (next != null) onUnitChange(next.instanceId, (states[next.instanceId] ?: SyncedUnitState(next.instanceId)).copy(activated = true))
                             }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                                 Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -1563,7 +1564,9 @@ internal fun CampRow(
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(label, color = if (isActive) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("${units.count { u -> states[u.instanceId]?.activated == true }}/${units.size} activées", color = Color(0xFF8F9BAD), fontSize = 9.sp)
+                val nonDefeated = units.count { u -> states[u.instanceId]?.defeated != true }
+                val activated = units.count { u -> states[u.instanceId]?.activated == true }
+                Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
             }
             if (units.isEmpty()) {
                 Text("Aucune unité", color = Color(0xFF5A6A7A), fontSize = 10.sp)
@@ -1604,6 +1607,7 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFFFFC857) else Color(0xFFFFC7B7), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            val myPrio = (myCmd?.pip?.toIntOrNull() ?: 9) <= (oppCmd?.pip?.toIntOrNull() ?: 9)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 // Ma carte
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1614,9 +1618,12 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                     } else {
                         Surface(onClick = onCmdClick, shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                     }
-                    Text("PIP ${myCmd?.pip ?: "—"}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("PIP ${myCmd?.pip ?: "—"} • Ordres ${myCmd?.pip ?: "—"}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    if (myCmd != null && oppCmd != null && myPrio) {
+                        Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFC857)) { Text("⚑ PRIORITÉ", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF0A0E15), fontSize = 8.sp, fontWeight = FontWeight.Bold) }
+                    }
                 }
-                Text(if (myCmd != null && oppCmd != null) (if (myCmd.pip.toIntOrNull() ?: 9 <= oppCmd.pip.toIntOrNull() ?: 9) "◀" else "▶") else "⏳", color = Color(0xFFFFC857), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("VS", color = Color(0xFF3A3A4A), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 // Carte adverse
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("ADV", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
@@ -1626,7 +1633,10 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                     } else {
                         Surface(shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC7B7), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                     }
-                    Text("PIP ${oppCmd?.pip ?: "—"}", color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("PIP ${oppCmd?.pip ?: "—"} • Ordres ${oppCmd?.pip ?: "—"}", color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    if (oppCmd != null && myCmd != null && !myPrio) {
+                        Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFC857)) { Text("⚑ PRIORITÉ", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF0A0E15), fontSize = 8.sp, fontWeight = FontWeight.Bold) }
+                    }
                 }
             }
         }
