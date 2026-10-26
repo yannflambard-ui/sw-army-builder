@@ -1809,8 +1809,8 @@ internal fun CampRow(
                             defeated -> Color(0xFF3A3A4A)
                             else -> Color(0xFF66BB6A)
                         }
-                        Column(Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.width(72.dp).aspectRatio(1.43f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
+                        Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(Modifier.width(88.dp).aspectRatio(1.43f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                                         modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
@@ -1891,7 +1891,7 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                     Text("MOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     if (myCmd != null) {
                         AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
-                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable(onClick = onCmdClick), contentScale = ContentScale.Crop)
+                            modifier = Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable(onClick = onCmdClick), contentScale = ContentScale.Crop)
                     } else {
                         Surface(onClick = onCmdClick, shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                     }
@@ -1906,7 +1906,7 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                     Text("ADV", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     if (oppCmd != null) {
                         AsyncImage(model = "file:///android_asset/${oppCmd.imagePath()}", contentDescription = oppCmd.name,
-                            modifier = Modifier.width(48.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
+                            modifier = Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
                     } else {
                         Surface(shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC7B7), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                     }
