@@ -28,7 +28,7 @@ data class SyncedUnitState(
     val defeated: Boolean? = null,    // Legion unité vaincue
     val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
     val promoted: Boolean? = null,    // Legion unité promue commandant
-    val deployZone: Int? = null        // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
+    val deployZone: Int? = null,       // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
     val detachedThreshold: Int? = null,  // Legion : blessures avant détachée
     val eliminatedThreshold: Int? = null, // Legion : blessures avant éliminée
     val detached: Boolean? = null,       // Legion : unité détachée (perte de cohésion)
