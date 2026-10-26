@@ -33,7 +33,9 @@ data class SyncedUnitState(
     val eliminatedThreshold: Int? = null, // Legion : blessures avant éliminée
     val detached: Boolean? = null,       // Legion : unité détachée (perte de cohésion)
     val eliminated: Boolean? = null,     // Legion : unité éliminée
-    val orderReceived: Boolean? = null   // Legion : a reçu un ordre ce round
+    val orderReceived: Boolean? = null,  // Legion : a reçu un ordre ce round
+    val panicThreshold: Int? = null,     // Legion : suppressions avant panique
+    val panicking: Boolean? = null       // Legion : unité paniquée
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */

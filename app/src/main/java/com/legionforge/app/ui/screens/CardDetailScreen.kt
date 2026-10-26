@@ -307,6 +307,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var setupStep by remember { mutableIntStateOf(1) }
     var showPoolSheet by remember { mutableStateOf(false) }
     var showOppPicker by remember { mutableStateOf(false) }
+    var panicRoll by remember { mutableStateOf<Int?>(null) }
+    var round by remember { mutableStateOf(1) }
+    var vpA by remember { mutableStateOf(0) }
+    var vpB by remember { mutableStateOf(0) }
+    var activeObjectives by remember { mutableStateOf<Set<String>>(emptySet()) }
     var soloOppStates by remember { mutableStateOf<Map<String, SyncedUnitState>>(emptyMap()) }
     // Round 0 / Build a Mission (v2.6).
     var showMissionSheet by remember { mutableStateOf(false) }
@@ -628,8 +633,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(stringResource(R.string.play_opponent), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 Text(if (opp == null) stringResource(R.string.play_connecting) else "0 unité reçue — la liste adverse n'est pas encore arrivée", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
-                                Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
-                                    Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
+                                        Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
+                                    }
+                                    Button(onClick = { playSyncVm.resync() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
+                                        Text("Resync", color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -658,6 +668,16 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 } else if (!twoPlayer) {
                                     soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(orderReceived = !(soloOppStates[id]?.orderReceived == true))))
                                 }
+                            },
+                            round = round, vpA = vpA, vpB = vpB, activeObjectives = activeObjectives,
+                            objectives = battleCards.filter { it.category == "objective" },
+                            onRound = { r -> round = r },
+                            onVP = { side, delta -> if (side == "A") vpA = (vpA + delta).coerceAtLeast(0) else vpB = (vpB + delta).coerceAtLeast(0) },
+                            onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name },
+                            onNextRound = {
+                                round += 1
+                                ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
+                                if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
                             },
                             onToken = { id, tk, delta ->
                                 if (id in ownStates) {
@@ -719,6 +739,20 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 if (next != null) onUnitChange(next.instanceId, (states[next.instanceId] ?: SyncedUnitState(next.instanceId)).copy(activated = true, orderReceived = false))
                             }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                                 Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Surface(onClick = { panicRoll = (1..6).random() }, shape = RoundedCornerShape(8.dp), color = Color(0xFF3B2224)) {
+                                Text("⚡ Jet de panique", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Surface(onClick = {
+                                listEntries.forEach { u -> if (states[u.instanceId]?.panicking == true) onUnitChange(u.instanceId, (states[u.instanceId] ?: SyncedUnitState(u.instanceId)).copy(panicking = false)) }
+                                panicRoll = null
+                            }, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
+                                Text("Lever la panique", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                            if (panicRoll != null) {
+                                Text("Résultat : $panicRoll", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                         UnitActivationStrip(units = listEntries, states = states, onOpen = { selectedUnit = it })
@@ -1677,12 +1711,61 @@ internal fun BattlefieldView(
     onOppActivate: ((String) -> Unit)? = null,
     onWound: ((String, Int) -> Unit)? = null,
     onToken: ((String, String, Int) -> Unit)? = null,
-    onOrder: ((String) -> Unit)? = null
+    onOrder: ((String) -> Unit)? = null,
+    round: Int = 1, vpA: Int = 0, vpB: Int = 0, activeObjectives: Set<String> = emptySet(),
+    objectives: List<LegionBattleCard> = emptyList(),
+    onRound: (Int) -> Unit = {}, onVP: (String, Int) -> Unit = { _, _ -> },
+    onToggleObjective: (String) -> Unit = {}, onNextRound: () -> Unit = {}
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ScoreRoundBar(round, vpA, vpB, activeObjectives, objectives, onRound, onVP, onToggleObjective, onNextRound)
         if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder)
+    }
+}
+
+
+// ── Bandeau score/round/objectifs (F5) ──
+@Composable
+internal fun ScoreRoundBar(
+    round: Int, vpA: Int, vpB: Int, activeObjectives: Set<String>,
+    objectives: List<LegionBattleCard>,
+    onRound: (Int) -> Unit, onVP: (String, Int) -> Unit, onToggleObjective: (String) -> Unit,
+    onNextRound: () -> Unit
+) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Round", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onRound(round + 1) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) { Text("$round", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("VP", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onVP("A", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("−", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                    Text("$vpA", color = Color(0xFF4FC3F7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onVP("A", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("+", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                    Text("—", color = Color(0xFF5A6A7A), fontSize = 12.sp)
+                    Surface(onClick = { onVP("B", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("−", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                    Text("$vpB", color = Color(0xFFFF6B6B), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onVP("B", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("+", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                }
+                Surface(onClick = onNextRound, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("⚡ Nouveau round", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            if (objectives.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    objectives.forEach { obj ->
+                        val active = obj.name in activeObjectives
+                        Surface(onClick = { onToggleObjective(obj.name) }, shape = RoundedCornerShape(6.dp), color = if (active) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
+                            Text(if (active) "● ${obj.name}" else "○ ${obj.name}", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (active) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1713,7 +1796,9 @@ internal fun CampRow(
                         val activated = st.activated == true
                         val activable = !defeated && !activated && onActivate != null
                         val artPath = unit.card.imagePath()
+                        val panicking = (st.suppressions ?: 0) >= (st.panicThreshold ?: Int.MAX_VALUE) && (st.suppressions ?: 0) > 0
                         val borderColor = when {
+                            panicking -> Color(0xFFFF5252)
                             activated -> Color(0xFFEF5350)
                             defeated -> Color(0xFF3A3A4A)
                             else -> Color(0xFF66BB6A)
@@ -1729,6 +1814,12 @@ internal fun CampRow(
                                 }
                                 Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 11.sp, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
+                                // Badge PANIQUE (haut-centre) si unité paniquée.
+                                if (panicking) {
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.align(Alignment.TopCenter).padding(2.dp)) {
+                                        Text("PANIQUE", Modifier.padding(horizontal = 4.dp, vertical = 1.dp), color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                                 // Badge blessures X/Y (bas-gauche).
                                 if (onWound != null && st.wounds != null) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomStart).padding(2.dp)) {
