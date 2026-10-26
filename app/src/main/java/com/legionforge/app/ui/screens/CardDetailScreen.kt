@@ -308,6 +308,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var showPoolSheet by remember { mutableStateOf(false) }
     var showOppPicker by remember { mutableStateOf(false) }
     var soloOppStates by remember { mutableStateOf<Map<String, SyncedUnitState>>(emptyMap()) }
+    // Round 0 / Build a Mission (v2.6).
+    var showMissionSheet by remember { mutableStateOf(false) }
+    var bluePlayer by remember { mutableStateOf<String?>(null) }  // "own" | "opp"
+    var missionRevealed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }  // "own_objective" -> nom
+    var modsLeft by remember { mutableStateOf<Map<String, Int>>(mapOf("own" to 2, "opp" to 2)) }
     // Refonte liste/détail : unité sélectionnée pour le détail, sélection comparée, sheet comparé.
     var selectedUnit by remember { mutableStateOf<ListEntry?>(null) }
     var compareSel by remember { mutableStateOf<List<ListEntry>>(emptyList()) }
@@ -529,6 +534,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                         Stepper("${orderPool[rank] ?: 0}", { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
+                                    }
+                                }
+                                // Round 0 / Build a Mission (v2.6) : détermination blue + révélation + modifications.
+                                Surface(onClick = { showMissionSheet = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A)) {
+                                    Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Round 0 — Build a Mission", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                        Text(if (bluePlayer != null) "✓" else "→", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                                 // Lancer la partie (garde-fou : battle deck 3+3+3 complet + main de 7).
@@ -797,6 +811,32 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 }
             }
         }
+    }
+    // Round 0 / Build a Mission (v2.6).
+    if (showMissionSheet) {
+        MissionBuilderSheet(
+            battleCards = battleCards, battleDeck = battleDeck,
+            bluePlayer = bluePlayer, missionRevealed = missionRevealed, modsLeft = modsLeft,
+            onSetBlue = { bluePlayer = it },
+            onReveal = { key, name -> missionRevealed = missionRevealed + (key to name) },
+            onMod = { p, opt ->
+                when (opt) {
+                    "objective", "secondary", "advantage" -> {
+                        val key = "${p}_$opt"
+                        val opts = battleCards.filter { it.category == opt && it.name in battleDeck }.map { it.name }.distinct()
+                        if (opts.isNotEmpty()) {
+                            val cur = missionRevealed[key]
+                            val idx = opts.indexOf(cur).coerceAtLeast(0)
+                            missionRevealed = missionRevealed + (key to opts[(idx + 1) % opts.size])
+                        }
+                    }
+                    "steal" -> bluePlayer = if (bluePlayer == "own") "opp" else "own"
+                    "pass" -> {}
+                }
+                modsLeft = modsLeft + (p to ((modsLeft[p] ?: 0) - 1).coerceAtLeast(0))
+            },
+            onClose = { showMissionSheet = false }
+        )
     }
     // Détail d'unité (refonte A1/A8) : sheet réutilisant la page unité.
     selectedUnit?.let { unit ->
@@ -1167,6 +1207,67 @@ internal fun PoolSheet(orderPool: Map<String, Int>, onSet: (String, Int) -> Unit
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Stepper("${orderPool[rank] ?: 0}", { onSet(rank, ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { onSet(rank, ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
+                }
+            }
+        }
+    }
+}
+
+
+// ── Round 0 / Build a Mission (v2.6) : blue player + révélation + modifications ──
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun MissionBuilderSheet(
+    battleCards: List<LegionBattleCard>,
+    battleDeck: Set<String>,
+    bluePlayer: String?,
+    missionRevealed: Map<String, String>,
+    modsLeft: Map<String, Int>,
+    onSetBlue: (String) -> Unit,
+    onReveal: (String, String) -> Unit,
+    onMod: (String, String) -> Unit,
+    onClose: () -> Unit
+) {
+    val deckCards = battleCards.filter { it.name in battleDeck }
+    fun catCards(cat: String) = deckCards.filter { it.category == cat }
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("ROUND 0 — BUILD A MISSION", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Blue Player (détermine qui commence)", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Surface(onClick = { onSetBlue("own") }, shape = RoundedCornerShape(8.dp), color = if (bluePlayer == "own") Color(0xFF4FC3F7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("MOI", Modifier.padding(vertical = 8.dp), color = if (bluePlayer == "own") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                Surface(onClick = { onSetBlue("opp") }, shape = RoundedCornerShape(8.dp), color = if (bluePlayer == "opp") Color(0xFF4FC3F7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("ADV", Modifier.padding(vertical = 8.dp), color = if (bluePlayer == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+            }
+            listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
+                Text("$label — révélation", color = Color(0xFFB4BFCE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                listOf("objective" to "Objectif", "secondary" to "Secondaire", "advantage" to "Avantage").forEach { (cat, clabel) ->
+                    val key = "${p}_$cat"
+                    val cur = missionRevealed[key]
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(clabel, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        if (cur != null) {
+                            Text(cur, color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
+                        } else {
+                            val opts = catCards(cat)
+                            if (opts.isNotEmpty()) {
+                                Surface(onClick = { onReveal(key, opts.first().name) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF1E3A2A)) { Text("Révéler", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                            }
+                        }
+                    }
+                }
+            }
+            Text("Modifications (2 chacun)", color = Color(0xFFB4BFCE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+            listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
+                val left = modsLeft[p] ?: 0
+                Text("$label : $left restante(s)", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                if (left > 0) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Surface(onClick = { onMod(p, "objective") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Obj", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "secondary") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Sec", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "advantage") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Adv", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "steal") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF3B2224), modifier = Modifier.weight(1f)) { Text("Voler blue", Modifier.padding(vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "pass") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Passer", Modifier.padding(vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                    }
                 }
             }
         }
