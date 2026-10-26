@@ -1878,7 +1878,12 @@ internal fun CampRow(
 internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String, onCmdClick: () -> Unit) {
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFFFFC857) else Color(0xFFFFC7B7), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (turn == "own") Color(0xFF1E3A2A) else Color(0xFF2A2A3A)) {
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(if (turn == "own") "▶ À VOUS DE JOUER" else "⏳ TOUR ADVERSE", color = if (turn == "own") Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(if (turn == "own") "Tapez sur une unité verte pour l'activer" else "En attente de l'adversaire…", color = if (turn == "own") Color(0xFFB4C7B4) else Color(0xFF6A7A8A), fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                }
+            }
             val myPrio = (myCmd?.pip?.toIntOrNull() ?: 9) <= (oppCmd?.pip?.toIntOrNull() ?: 9)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 // Ma carte
