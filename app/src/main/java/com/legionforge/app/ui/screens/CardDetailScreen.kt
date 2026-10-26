@@ -308,7 +308,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var showPoolSheet by remember { mutableStateOf(false) }
     var showOppPicker by remember { mutableStateOf(false) }
     var panicRoll by remember { mutableStateOf<Int?>(null) }
-    var round by remember { mutableStateOf(1) }
     var vpA by remember { mutableStateOf(0) }
     var vpB by remember { mutableStateOf(0) }
     var activeObjectives by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -667,6 +666,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     playSyncVm.updateOwnState(id) { st -> st.copy(orderReceived = !(st.orderReceived == true)) }
                                 } else if (!twoPlayer) {
                                     soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(orderReceived = !(soloOppStates[id]?.orderReceived == true))))
+                                }
+                            },
+                            onCover = { id ->
+                                if (id in ownStates) {
+                                    playSyncVm.updateOwnState(id) { st -> st.copy(cover = ((st.cover ?: 0) + 1) % 3) }
+                                } else if (!twoPlayer) {
+                                    soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(cover = ((soloOppStates[id]?.cover ?: 0) + 1) % 3)))
                                 }
                             },
                             round = round, vpA = vpA, vpB = vpB, activeObjectives = activeObjectives,
@@ -1711,7 +1717,7 @@ internal fun BattlefieldView(
     onOppActivate: ((String) -> Unit)? = null,
     onWound: ((String, Int) -> Unit)? = null,
     onToken: ((String, String, Int) -> Unit)? = null,
-    onOrder: ((String) -> Unit)? = null,
+    onOrder: ((String) -> Unit)? = null, onCover: ((String) -> Unit)? = null,
     round: Int = 1, vpA: Int = 0, vpB: Int = 0, activeObjectives: Set<String> = emptySet(),
     objectives: List<LegionBattleCard> = emptyList(),
     onRound: (Int) -> Unit = {}, onVP: (String, Int) -> Unit = { _, _ -> },
@@ -1719,9 +1725,9 @@ internal fun BattlefieldView(
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScoreRoundBar(round, vpA, vpB, activeObjectives, objectives, onRound, onVP, onToggleObjective, onNextRound)
-        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder)
+        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
-        CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder)
+        CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
     }
 }
 
@@ -1776,7 +1782,7 @@ internal fun CampRow(
     label: String, units: List<ListEntry>, states: Map<String, SyncedUnitState>,
     isActive: Boolean, onOpenUnit: (ListEntry) -> Unit, onActivate: ((String) -> Unit)?,
     onWound: ((String, Int) -> Unit)? = null, onToken: ((String, String, Int) -> Unit)? = null,
-    onOrder: ((String) -> Unit)? = null
+    onOrder: ((String) -> Unit)? = null, onCover: ((String) -> Unit)? = null
 ) {
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (isActive) Color(0xFF1E3A2A) else Color(0xFF111827), border = BorderStroke(if (isActive) 2.dp else 1.dp, if (isActive) Color(0xFF66BB6A) else Color(0xFF2A3A4A))) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1824,6 +1830,12 @@ internal fun CampRow(
                                 if (onWound != null && st.wounds != null) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomStart).padding(2.dp)) {
                                         Text("${st.wounds}/${st.eliminatedThreshold ?: "?"}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (st.wounds == 0) Color(0xFFFF6B6B) else Color(0xFFFFC857), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                // Couverture (bas-droit, tap pour cycler 0/1/2).
+                                if (onCover != null) {
+                                    Surface(shape = RoundedCornerShape(4.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF1E3A2A) else Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp).clickable { onCover(unit.instanceId) }) {
+                                        Text("🛡${st.cover ?: 0}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 8.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                                 // Indicateur d'ordre reçu (haut-gauche).
