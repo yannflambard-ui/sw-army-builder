@@ -601,36 +601,29 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text("✕ Retour setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                    // ── Bandeau d'état compact (score + round + tour) ──
-                    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF1A2330)) {
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            // Score
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Vous $vp · $oppVp Adv", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                Text("${kills} / ${oppKills} vaincues", color = Color(0xFF9EACBC), fontSize = 9.sp)
-                            }
-                            // Round + fin de round (un seul contrôle)
-                            val roundEndedMsg = stringResource(R.string.round_ended, round)
-                            val undoLabel = stringResource(R.string.undo)
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("R$round", color = Color(0xFFFFC857), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
-                                    Text("$round / 6", color = Color(0xFF9EACBC), fontSize = 9.sp)
-                                    Surface(onClick = {
-                                        val prevRound = round
-                                        val prevPool = orderPool
-                                        playedCommands = emptySet()
-                                        orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
-                                        if (round < 6) { round++; logEvent("Début du round R$round") }
-                                        scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
-                                    }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
-                                }
-                            }
-                            // Tour actif
-                            Surface(shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
-                                Text(if (turn == "own") "VOTRE TOUR" else "Tour adverse", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                            }
+                    // ── MISSION DASHBOARD (style officiel, repliable) + contrôles round/tour ──
+                    MissionDashboard(
+                        round = round, vpOwn = vp, vpOpp = oppVp, killsOwn = kills, killsOpp = oppKills,
+                        objectives = battleCards.filter { it.name in battleDeck },
+                        bluePlayer = bluePlayer
+                    )
+                    // Contrôle round + tour (accessibles même repliés).
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        val roundEndedMsg = stringResource(R.string.round_ended, round)
+                        val undoLabel = stringResource(R.string.undo)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
+                            Text("R$round / 6", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Surface(onClick = {
+                                val prevRound = round; val prevPool = orderPool
+                                playedCommands = emptySet()
+                                orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
+                                if (round < 6) { round++; logEvent("Début du round R$round") }
+                                scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
+                            }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
+                        }
+                        Surface(onClick = { toggleTurn() }, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
+                            Text(if (turn == "own") "VOTRE TOUR" else "Tour adverse →", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // ── Bannière ACTIVER (à qui d'activer) — état statique coloré, pas de clignotement ──
@@ -1430,6 +1423,100 @@ internal fun MissionBuilderSheet(
                         Surface(onClick = { onMod(p, "advantage") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Adv", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                         Surface(onClick = { onMod(p, "steal") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF3B2224), modifier = Modifier.weight(1f)) { Text("Voler blue", Modifier.padding(vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                         Surface(onClick = { onMod(p, "pass") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Passer", Modifier.padding(vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── MISSION DASHBOARD (style officiel AMG) : repliable, à déployer pour visualiser la mission ──
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+internal fun MissionDashboard(
+    round: Int,
+    vpOwn: Int, vpOpp: Int,
+    killsOwn: Int, killsOpp: Int,
+    objectives: List<LegionBattleCard>,  // battle deck (catégorisées)
+    bluePlayer: String?,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val catMap = listOf("objective" to "OBJECTIF", "secondary" to "SECONDAIRE", "advantage" to "AVANTAGE")
+    Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, if (expanded) Color(0xFFF59E0B) else Color(0xFF2A3A4A))) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Header repli : résumé + chevron pour déplier
+            Surface(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text("MISSION", color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                        Text("$vpOwn — $vpOpp", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        // Traqueur de rounds miniature
+                        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                            (1..5).forEach { r ->
+                                Box(Modifier.size(9.dp).clip(CircleShape).background(if (r == round.coerceAtMost(5)) Color(0xFFFFC857) else if (r < round) Color(0xFFF59E0B) else Color(0xFF2A3A4A)))
+                            }
+                        }
+                        Text("R$round", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("${if (killsOwn > 0 || killsOpp > 0) "⚔$killsOwn/$killsOpp  " else ""}${if (expanded) "▲" else "▼"}", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            if (expanded) {
+                // ── Vue dépliée : style Mission Dashboard officiel ──
+                // Ligne 1 : traqueur de rounds (5 slots)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("ROUND", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (1..5).forEach { r ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
+                                        .background(if (r == round.coerceAtMost(5)) Color(0xFFFFC857) else Color(0xFF2A3A4A)),
+                                    contentAlignment = Alignment.Center
+                                ) { Text("$r", color = if (r == round.coerceAtMost(5)) Color(0xFF0A0E15) else Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                            }
+                        }
+                    }
+                }
+                // Ligne 2 : VP + piste 1-12
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("MOI", color = Color(0xFFF59E0B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Box(Modifier.size(3.dp).clip(CircleShape).background(Color(0xFF5A6A7A)))
+                        Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("ADV", color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Text(if (bluePlayer == "own") "Blue : MOI" else if (bluePlayer == "opp") "Blue : ADV" else "Blue : —", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+                // Piste VP 1-12
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    (1..12).forEach { n ->
+                        val mine = vpOwn >= n
+                        val theirs = vpOpp >= n
+                        Box(
+                            Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(2.dp))
+                                .background(if (mine && theirs) Color(0xFF8B5CF6) else if (mine) Color(0xFFF59E0B) else if (theirs) Color(0xFF38BDF8) else Color(0xFF2A3A4A))
+                        )
+                    }
+                }
+                Text("Victoire à 12 VP ou au plus de VP à la fin du round 5", color = Color(0xFF8F9BAD), fontSize = 8.sp)
+                // Ligne 3 : cartes mission (battle deck) par catégorie
+                catMap.forEach { (cat, label) ->
+                    val cards = objectives.filter { it.category == cat }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(label, color = when (cat) { "objective" -> Color(0xFFFF6B6B); "secondary" -> Color(0xFFFFC857); else -> Color(0xFF77D9A7) }, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp))
+                        if (cards.isEmpty()) { Text("—", color = Color(0xFF5A6A7A), fontSize = 10.sp) }
+                        else {
+                            cards.forEach { c ->
+                                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1A2330)) {
+                                    Text(c.name, Modifier.padding(horizontal = 6.dp, vertical = 3.dp), color = Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
                     }
                 }
             }
