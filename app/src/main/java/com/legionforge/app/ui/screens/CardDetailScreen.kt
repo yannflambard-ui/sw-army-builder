@@ -225,6 +225,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var orderPool by remember { mutableStateOf(mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)) }
     // Résultat de partie (PR7) : null = en cours, sinon vainqueur.
     var gameResult by remember { mutableStateOf<String?>(null) }
+    // Journal de partie (P2) : log chronologique exportable.
+    var gameLog by remember { mutableStateOf<List<String>>(emptyList()) }
+    var showLogSheet by remember { mutableStateOf(false) }
+    fun logEvent(msg: String) { gameLog = gameLog + "[R$round] $msg" }
     // Phase de jeu (Setup vs partie) : les features préparatoires sont isolées dans l'écran Setup.
     var phase by remember { mutableStateOf(PlayPhase.PREP) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
@@ -338,9 +342,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             opp?.entries?.mapNotNull { e ->
                 vm.cards.value.firstOrNull { it.id == e.cardId }?.let { card ->
                     ListEntry(
-                        instanceId = e.instanceId ?: "opp_${e.cardId}_${e.parentInstanceId ?: "root"}",
+                        // Préfixe "B:" sur les instanceId adverses → noms disjoints de mes UUID ("A:"),
+                        // évite la collision d'état si les 2 joueurs partagent la même liste (mêmes UUID).
+                        instanceId = e.instanceId?.let { "B:$it" } ?: "opp_${e.cardId}_${e.parentInstanceId ?: "root"}",
                         card = card,
-                        parentInstanceId = e.parentInstanceId,
+                        parentInstanceId = e.parentInstanceId?.let { "B:$it" },
                         quantity = e.quantity,
                         chosenSlot = e.chosenSlot?.let { s -> runCatching { ArmadaSlot.valueOf(s) }.getOrNull() }
                     )
@@ -396,6 +402,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     DropdownMenuItem(text = { Text("Pool d'ordres", color = Color.White) }, onClick = { showMenu = false; showPoolSheet = true })
                                     DropdownMenuItem(text = { Text("Battle deck", color = Color.White) }, onClick = { showMenu = false; showBattleSheet = true })
                                     DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else Color(0xFF5A6A7A)) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
+                                    DropdownMenuItem(text = { Text("Journal", color = Color.White) }, onClick = { showMenu = false; showLogSheet = true })
                                 }
                             }
                         },
@@ -597,7 +604,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         val prevPool = orderPool
                                         playedCommands = emptySet()
                                         orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
-                                        if (round < 6) round++
+                                        if (round < 6) { round++; logEvent("Début du round R$round") }
                                         scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
                                     }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
                                 }
@@ -649,7 +656,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
                                 selected = roundCommand,
                                 onSelect = { id -> roundCommand = id },
-                                onConfirm = { playPhase = "activation" }
+                                onConfirm = { playPhase = "activation"; roundCommand?.let { id -> cmdCards.firstOrNull { c -> c.id == id }?.let { c -> logEvent("Carte de commandement : ${c.name}") } } }
                             )
                         } else {
                         BattlefieldView(
@@ -659,15 +666,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                             turn = turn,
                             onOpenUnit = { selectedUnit = it },
-                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)); playable.firstOrNull { it.instanceId == id }?.let { logEvent("${it.card.name} activée") } },
                             onCmdClick = { showCmdSheet = true },
                             showOpponent = true,
                             onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
                             onWound = { id, delta ->
                                 if (id in ownStates) {
                                     playSyncVm.updateOwnState(id) { st -> st.copy(wounds = ((st.wounds ?: 0) + delta).coerceAtLeast(0)) }
+                                    playable.firstOrNull { it.instanceId == id }?.let { u -> logEvent("${u.card.name} : ${((ownStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0)} blessures") }
                                 } else if (!twoPlayer) {
                                     soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(wounds = ((soloOppStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0))))
+                                    oppPlayable.firstOrNull { it.instanceId == id }?.let { u -> logEvent("${u.card.name} (adv) : ${((soloOppStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0)} blessures") }
                                 }
                             },
                             onOrder = { id ->
@@ -871,6 +880,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     if (showPoolSheet) {
         PoolSheet(orderPool, { rank, v -> orderPool = orderPool + (rank to v) }, onClose = { showPoolSheet = false })
+    }
+    // Journal de partie (P2) : log chronologique exportable.
+    if (showLogSheet) {
+        GameLogSheet(gameLog, onClose = { showLogSheet = false })
     }
     // Sélecteur d'armée adverse (mode solo).
     if (showOppPicker) {
@@ -1291,6 +1304,35 @@ internal fun PoolSheet(orderPool: Map<String, Int>, onSet: (String, Int) -> Unit
     }
 }
 
+
+// ── Journal de partie (P2) : log chronologique exportable ──
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun GameLogSheet(log: List<String>, onClose: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Journal de partie", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            if (log.isEmpty()) {
+                Text("Aucun événement enregistré", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+            } else {
+                Column(Modifier.fillMaxWidth().heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    log.forEach { e -> Text(e, color = Color(0xFFD5DEE8), fontSize = 12.sp) }
+                }
+            }
+            Surface(onClick = {
+                val text = log.joinToString("\n")
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(android.content.Intent.EXTRA_TEXT, text)
+                }
+                ctx.startActivity(android.content.Intent.createChooser(send, "Exporter le journal"))
+            }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A)) {
+                Text("Exporter le journal", Modifier.padding(vertical = 12.dp), color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            }
+        }
+    }
+}
 
 // ── Round 0 / Build a Mission (v2.6) : blue player + révélation + modifications ──
 @OptIn(ExperimentalMaterial3Api::class)

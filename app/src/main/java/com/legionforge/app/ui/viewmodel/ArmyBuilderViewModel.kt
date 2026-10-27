@@ -249,7 +249,14 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
             val system = GameSystem.valueOf(list.gameSystem)
             repository.observeCards(system, list.factionId).collect { cards ->
                 repository.observeEntries(list.id, cards).collect { loaded ->
-                    _soloOppEntries.value = loaded
+                    // Préfixe "B:" sur les instanceId adverses → noms disjoints de mes UUID ("A:" implicite),
+                    // évite la collision d'état si les 2 armées partagent la même liste (mêmes UUID).
+                    _soloOppEntries.value = loaded.map { e ->
+                        e.copy(
+                            instanceId = "B:${e.instanceId}",
+                            parentInstanceId = e.parentInstanceId?.let { "B:$it" }
+                        )
+                    }
                 }
             }
         }

@@ -64,7 +64,9 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             sync.receivedUnits.collect { units ->
                 val m = _oppStates.value.toMutableMap()
-                units.forEach { st -> m[st.instanceId] = st }
+                // Préfixe "B:" sur les clés adverses → disjointes de mes UUID ("A:"), évite la collision
+                // d'état si les 2 joueurs partagent la même liste (mêmes UUID). Cohérent avec oppEntries.
+                units.forEach { st -> val pid = "B:${st.instanceId}"; m[pid] = st.copy(instanceId = pid) }
                 _oppStates.value = m
             }
         }
