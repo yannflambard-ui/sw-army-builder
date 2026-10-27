@@ -595,8 +595,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     }  // fin bloc setup (masqué en écran dédié plein écran phase GAME)
                     // ── Features de jeu (phase GAME) — écran dédié plein écran ──
                     if (phase == PlayPhase.GAME) {
-                    Box(Modifier.fillMaxSize()) {
-                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.fillMaxSize()) {
+                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Bouton discret pour revenir au setup (seule sortie du plein écran de jeu).
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Surface(onClick = { phase = PlayPhase.PREP }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
@@ -743,19 +743,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                     }
                         }  // fin colonne scrollable du champ de bataille
-                        // ── Main de commandement (façon Pokémon TCG) épinglée en bas ──
-                        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            CommandHand(
-                                hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
-                                roundCommand = roundCommand,
-                                onSelect = { card ->
-                                    roundCommand = card.id
-                                    playPhase = "activation"
-                                    logEvent("Carte de commandement : ${card.name}")
-                                }
-                            )
-                        }
-                    }  // fin Box plein écran jeu
+                        // ── Main de commandement (façon Pokémon TCG) : barre réservée en bas, ne recouvre jamais les unités ──
+                        CommandHand(
+                            hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
+                            roundCommand = roundCommand,
+                            onSelect = { card ->
+                                roundCommand = card.id
+                                playPhase = "activation"
+                                logEvent("Carte de commandement : ${card.name}")
+                            }
+                        )
+                    }  // fin colonne plein écran jeu
                     }  // fin phase GAME
                 }
                 return@Box
@@ -1988,7 +1986,7 @@ internal fun BattlefieldView(
     onJournal: () -> Unit = {}
 ) {
     Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B)))).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ScoreRoundBar(round, vpA, vpB, activeObjectives, objectives, onRound, onVP, onToggleObjective, onNextRound, onJournal = onJournal)
+        // (ScoreRoundBar retiré : le MissionDashboard affiche déjà round/VP en tête d'écran de jeu)
         if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick, activeObjectives = activeObjectives)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
