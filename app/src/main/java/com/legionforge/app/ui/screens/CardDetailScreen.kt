@@ -595,6 +595,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     }  // fin bloc setup (masqué en écran dédié plein écran phase GAME)
                     // ── Features de jeu (phase GAME) — écran dédié plein écran ──
                     if (phase == PlayPhase.GAME) {
+                    Box(Modifier.fillMaxSize()) {
+                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Bouton discret pour revenir au setup (seule sortie du plein écran de jeu).
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Surface(onClick = { phase = PlayPhase.PREP }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
@@ -740,7 +742,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         )
                         }
                     }
-                    }
+                        }  // fin colonne scrollable du champ de bataille
+                        // ── Main de commandement (façon Pokémon TCG) épinglée en bas ──
+                        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            CommandHand(
+                                hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
+                                roundCommand = roundCommand,
+                                onSelect = { card ->
+                                    roundCommand = card.id
+                                    playPhase = "activation"
+                                    logEvent("Carte de commandement : ${card.name}")
+                                }
+                            )
+                        }
+                    }  // fin Box plein écran jeu
+                    }  // fin phase GAME
                 }
                 return@Box
             }
@@ -1516,6 +1532,38 @@ internal fun MissionDashboard(
                                     Text(c.name, Modifier.padding(horizontal = 6.dp, vertical = 3.dp), color = Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Main de commandement (façon Pokémon TCG) : ton éventail de cartes de commande, tap = jouer ce round ──
+@Composable
+internal fun CommandHand(
+    hand: List<LegionCommandCard>,
+    roundCommand: String?,
+    onSelect: (LegionCommandCard) -> Unit
+) {
+    val played = hand.firstOrNull { it.id == roundCommand }
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xEE0F172A), shadowElevation = 8.dp) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("MAIN DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
+                Text(
+                    if (played != null) "Jouée : ${played.name}" else "Tapez une carte pour ce round",
+                    color = if (played != null) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis
+                )
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(hand, key = { it.id }) { card ->
+                    val isSel = card.id == roundCommand
+                    Surface(onClick = { onSelect(card) }, shape = RoundedCornerShape(8.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, Color(0xFFF59E0B)) else BorderStroke(1.dp, Color(0xFF2A3A4A))) {
+                        Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(Modifier.size(16.dp).clip(CircleShape).background(if (isSel) Color(0xFFF59E0B) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text("${card.pip}", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold) }
+                            Text(card.name, color = if (isSel) Color(0xFFFFC857) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
