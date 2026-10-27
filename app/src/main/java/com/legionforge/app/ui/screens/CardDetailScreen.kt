@@ -21,6 +21,8 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -49,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
@@ -635,17 +638,26 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                     }
                     // ── Écran central "champ de bataille" (2 armées + commandement) ──
-                    if (opp == null || oppPlayable.isEmpty()) {
+                    // Solo (2 armées même appareil) : opp == null, le champ dépend de l'armée adverse choisie.
+                    if ((twoPlayer && opp == null) || oppPlayable.isEmpty()) {
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(stringResource(R.string.play_opponent), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                Text(if (opp == null) stringResource(R.string.play_connecting) else "0 unité reçue — la liste adverse n'est pas encore arrivée", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
-                                        Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
-                                    }
-                                    Button(onClick = { playSyncVm.resync() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
-                                        Text("Resync", color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
+                                Text(if (twoPlayer) stringResource(R.string.play_opponent) else "Armée adverse (solo)", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(
+                                    when {
+                                        twoPlayer && opp == null -> stringResource(R.string.play_connecting)
+                                        twoPlayer -> "0 unité reçue — la liste adverse n'est pas encore arrivée"
+                                        else -> "Choisissez une armée adverse dans le menu setup pour lancer le mode play"
+                                    },
+                                    color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
+                                if (twoPlayer) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
+                                            Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
+                                        }
+                                        Button(onClick = { playSyncVm.resync() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
+                                            Text("Resync", color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
                             }
@@ -1775,7 +1787,7 @@ internal fun BattlefieldView(
     onRound: (Int) -> Unit = {}, onVP: (String, Int) -> Unit = { _, _ -> },
     onToggleObjective: (String) -> Unit = {}, onNextRound: () -> Unit = {}
 ) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B)))).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ScoreRoundBar(round, vpA, vpB, activeObjectives, objectives, onRound, onVP, onToggleObjective, onNextRound)
         if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
@@ -1792,34 +1804,32 @@ internal fun ScoreRoundBar(
     onRound: (Int) -> Unit, onVP: (String, Int) -> Unit, onToggleObjective: (String) -> Unit,
     onNextRound: () -> Unit
 ) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
-        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Round", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onRound(round + 1) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) { Text("$round", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("VP", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVP("A", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("−", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                    Text("$vpA", color = Color(0xFF4FC3F7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVP("A", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("+", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                    Text("—", color = Color(0xFF5A6A7A), fontSize = 12.sp)
-                    Surface(onClick = { onVP("B", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("−", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                    Text("$vpB", color = Color(0xFFFF6B6B), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVP("B", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A)) { Text("+", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                }
-                Surface(onClick = onNextRound, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
-                    Text("⚡ Nouveau round", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("ROUND", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Surface(onClick = { onRound(round + 1) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF1E293B)) { Text("$round", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = Color(0xFFF59E0B), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
             }
-            if (objectives.isNotEmpty()) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    objectives.forEach { obj ->
-                        val active = obj.name in activeObjectives
-                        Surface(onClick = { onToggleObjective(obj.name) }, shape = RoundedCornerShape(6.dp), color = if (active) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
-                            Text(if (active) "● ${obj.name}" else "○ ${obj.name}", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (active) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text("VP", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Surface(onClick = { onVP("A", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("−", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Text("$vpA", color = Color(0xFFF59E0B), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Surface(onClick = { onVP("A", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("+", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Text("—", color = Color(0xFF5A6A7A), fontSize = 12.sp)
+                Surface(onClick = { onVP("B", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("−", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Text("$vpB", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Surface(onClick = { onVP("B", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("+", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            }
+            Surface(onClick = onNextRound, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                Text("⚡ Round+", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        if (objectives.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 10.dp, end = 10.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                objectives.forEach { obj ->
+                    val active = obj.name in activeObjectives
+                    Surface(onClick = { onToggleObjective(obj.name) }, shape = RoundedCornerShape(6.dp), color = if (active) Color(0xFF1E3A2A) else Color(0xFF1A2330)) {
+                        Text(if (active) "● ${obj.name}" else "○ ${obj.name}", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (active) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -1834,19 +1844,20 @@ internal fun CommandSelectionPanel(
     hand: List<LegionCommandCard>, selected: String?,
     onSelect: (String) -> Unit, onConfirm: () -> Unit
 ) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = Color(0xFF16212E)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("1. CHOISISSEZ VOTRE CARTE DE COMMANDEMENT", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text("Tapez sur une carte pour la jouer ce round", color = Color(0xFF9EACBC), fontSize = 11.sp)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("1. CARTE DE COMMANDEMENT DU ROUND", color = Color(0xFFF59E0B), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("choisissez votre carte", color = Color(0xFF94A3B8), fontSize = 10.sp)
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(hand, key = { it.id }) { card ->
                     val isSel = card.id == selected
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        AsyncImage(model = "file:///android_asset/${card.imagePath()}", contentDescription = card.name,
-                            modifier = Modifier.width(72.dp).aspectRatio(0.7f).clip(RoundedCornerShape(8.dp)).border(if (isSel) 3.dp else 1.dp, if (isSel) Color(0xFFFFC857) else Color(0xFF2A3A4A), RoundedCornerShape(8.dp)).clickable { onSelect(card.id) },
-                            contentScale = ContentScale.Crop)
-                        Text(card.name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(72.dp))
-                        Text("PIP ${card.pip}", color = Color(0xFFFFC857), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onSelect(card.id) }, shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, Color(0xFFF59E0B)) else BorderStroke(1.dp, Color(0xFF2A3A4A))) {
+                        Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("PIP ${card.pip}", color = Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(card.name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
             }
@@ -1887,51 +1898,53 @@ internal fun CampRow(
                         val activable = !defeated && !activated && onActivate != null
                         val artPath = unit.card.imagePath()
                         val panicking = (st.suppressions ?: 0) >= (st.panicThreshold ?: Int.MAX_VALUE) && (st.suppressions ?: 0) > 0
-                        val borderColor = when {
+                        val campColor = if (label == "MOI") Color(0xFFF59E0B) else Color(0xFF38BDF8)
+                        val stateColor = when {
                             panicking -> Color(0xFFFF5252)
                             activated -> Color(0xFFEF5350)
                             defeated -> Color(0xFF3A3A4A)
-                            else -> Color(0xFF66BB6A)
+                            else -> campColor
                         }
-                        Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.width(88.dp).aspectRatio(1.43f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }) {
+                        val scale = animateFloatAsState(if (activable) 1.06f else 1f, label = "tileScale")
+                        Column(Modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(Modifier.width(60.dp).height(60.dp).clip(CircleShape)
+                                .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
+                                .border(2.dp, stateColor, CircleShape)
+                                .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
+                                .clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) },
+                                contentAlignment = Alignment.Center) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
-                                        modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
-                                        contentScale = ContentScale.Crop)
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape), contentScale = ContentScale.Crop)
                                 } else {
-                                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
+                                    Text(unit.card.name, color = Color.White, fontSize = 7.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp))
                                 }
-                                Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
-                                // Badge PANIQUE (haut-centre) si unité paniquée.
+                                Text(if (activated) "✓" else if (defeated) "✕" else "●", color = stateColor, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), CircleShape).padding(horizontal = 3.dp, vertical = 1.dp))
                                 if (panicking) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.align(Alignment.TopCenter).padding(2.dp)) {
-                                        Text("PANIQUE", Modifier.padding(horizontal = 4.dp, vertical = 1.dp), color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.Bold)
+                                        Text("PANIQUE", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = Color.White, fontSize = 6.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                // Badge blessures X/Y (bas-gauche).
                                 if (onWound != null && st.wounds != null) {
-                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomStart).padding(2.dp)) {
-                                        Text("${st.wounds}/${st.eliminatedThreshold ?: "?"}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (st.wounds == 0) Color(0xFFFF6B6B) else Color(0xFFFFC857), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomCenter).padding(2.dp).clickable { onWound(unit.instanceId, -1) }) {
+                                        Text("${st.wounds}/${st.eliminatedThreshold ?: "?"}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (st.wounds == 0) Color(0xFFFF6B6B) else campColor, fontSize = 7.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                // Couverture (bas-droit, tap pour cycler 0/1/2).
                                 if (onCover != null) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF1E3A2A) else Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp).clickable { onCover(unit.instanceId) }) {
-                                        Text("🛡${st.cover ?: 0}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                        Text("🛡${st.cover ?: 0}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 7.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                // Indicateur d'ordre reçu (haut-gauche).
                                 if (st.orderReceived == true || onOrder != null) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = if (st.orderReceived == true) Color(0xFF1E3A2A) else Color(0xCC0A0E15), modifier = Modifier.align(Alignment.TopStart).padding(2.dp).clickable(enabled = onOrder != null) { onOrder?.invoke(unit.instanceId) }) {
-                                        Text(if (st.orderReceived == true) "📨" else "＋", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), fontSize = 8.sp)
+                                        Text(if (st.orderReceived == true) "📨" else "＋", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), fontSize = 7.sp)
                                     }
                                 }
                             }
-                            // Rangée de jetons d'état (tap +1, long-press -1).
+                            Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 7.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(64.dp))
                             if (onToken != null) {
-                                Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(Modifier.padding(top = 1.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                                     listOf("aim" to "◎", "dodge" to "◈", "surge" to "⚡", "supp" to "✚", "stdby" to "◉").forEach { (tk, sym) ->
                                         val count = when (tk) {
                                             "aim" -> st.tokens.count { it == "aim" }
@@ -1943,7 +1956,7 @@ internal fun CampRow(
                                         }
                                         if (count > 0 || tk == "supp") {
                                             Surface(shape = RoundedCornerShape(3.dp), color = if (tk == "supp" && count > 0) Color(0xFFB71C1C) else Color(0xFF2A3A4A), modifier = Modifier.combinedClickable(onClick = { onToken(unit.instanceId, tk, 1) }, onLongClick = { onToken(unit.instanceId, tk, -1) })) {
-                                                Text("$sym$count", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (tk == "supp" && count > 0) Color.White else Color(0xFF9EACBC), fontSize = 7.sp, fontWeight = FontWeight.Bold)
+                                                Text("$sym$count", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (tk == "supp" && count > 0) Color.White else Color(0xFF9EACBC), fontSize = 6.sp, fontWeight = FontWeight.Bold)
                                             }
                                         }
                                     }
@@ -1960,45 +1973,36 @@ internal fun CampRow(
 // ── Centre : cartes de commandement des 2 camps + qui joue ──
 @Composable
 internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String, onCmdClick: () -> Unit) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF16212E)) {
-        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (turn == "own") Color(0xFF1E3A2A) else Color(0xFF2A2A3A)) {
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (turn == "own") "▶ À VOUS DE JOUER" else "⏳ TOUR ADVERSE", color = if (turn == "own") Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Text(if (turn == "own") "Tapez sur une unité verte pour l'activer" else "En attente de l'adversaire…", color = if (turn == "own") Color(0xFFB4C7B4) else Color(0xFF6A7A8A), fontSize = 10.sp, fontWeight = FontWeight.Medium)
+    val myPrio = (myCmd?.pip?.toIntOrNull() ?: 9) <= (oppCmd?.pip?.toIntOrNull() ?: 9)
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            // Ma carte (chip, tap → ouvrir le deck)
+            Column(horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Surface(onClick = onCmdClick, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B)) {
+                    Row(Modifier.padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Box(Modifier.size(18.dp).clip(CircleShape).background(if (myCmd != null) Color(0xFFF59E0B) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
+                            Text(if (myCmd != null) "★" else "?", color = Color(0xFF0A0E15), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Text(if (myCmd != null) myCmd.name else "—", color = Color(0xFFE2E8F0), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
+                Text("PIP ${myCmd?.pip ?: "—"}${if (myCmd != null && oppCmd != null && myPrio) " • ⚑" else ""}", color = Color(0xFFF59E0B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
-            val myPrio = (myCmd?.pip?.toIntOrNull() ?: 9) <= (oppCmd?.pip?.toIntOrNull() ?: 9)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                // Ma carte
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("MOI", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    if (myCmd != null) {
-                        AsyncImage(model = "file:///android_asset/${myCmd.imagePath()}", contentDescription = myCmd.name,
-                            modifier = Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)).clickable(onClick = onCmdClick), contentScale = ContentScale.Crop)
-                    } else {
-                        Surface(onClick = onCmdClick, shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                    }
-                    Text("PIP ${myCmd?.pip ?: "—"} • Ordres ${myCmd?.pip ?: "—"}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    if (myCmd != null && oppCmd != null && myPrio) {
-                        Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFC857)) { Text("⚑ PRIORITÉ", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF0A0E15), fontSize = 8.sp, fontWeight = FontWeight.Bold) }
+            // État du tour
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(if (turn == "own") "▶ À VOUS DE JOUER" else "⏳ TOUR ADVERSE", color = if (turn == "own") Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            // Carte adverse (dos, tap → suivre la commande adverse)
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Surface(onClick = onCmdClick, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B)) {
+                    Row(Modifier.padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text(if (oppCmd != null) "?" else "—", color = Color(0xFFE2E8F0), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Box(Modifier.size(18.dp).clip(CircleShape).background(if (oppCmd != null) Color(0xFF38BDF8) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
+                            Text(if (oppCmd != null) "★" else "?", color = Color(0xFF0A0E15), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
-                Text("VS", color = Color(0xFF3A3A4A), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                // Carte adverse
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("ADV", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    if (oppCmd != null) {
-                        AsyncImage(model = "file:///android_asset/${oppCmd.imagePath()}", contentDescription = oppCmd.name,
-                            modifier = Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
-                    } else {
-                        Surface(shape = CircleShape, color = Color(0xFF2A3A4A)) { Text("?", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC7B7), fontSize = 14.sp, fontWeight = FontWeight.Bold) }
-                    }
-                    Text("PIP ${oppCmd?.pip ?: "—"} • Ordres ${oppCmd?.pip ?: "—"}", color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    if (oppCmd != null && myCmd != null && !myPrio) {
-                        Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFC857)) { Text("⚑ PRIORITÉ", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF0A0E15), fontSize = 8.sp, fontWeight = FontWeight.Bold) }
-                    }
-                }
+                Text("PIP ${oppCmd?.pip ?: "—"}${if (oppCmd != null && myCmd != null && !myPrio) " • ⚑" else ""}", color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
