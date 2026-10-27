@@ -1472,7 +1472,7 @@ internal fun MissionDashboard(
     missionRevealed: Map<String, String> = emptyMap(),
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(true) }  // déplié par défaut : on voit la mission
     // Mission en jeu (règles v2) : 1 Objectif + 1 Secondaire + 1 Avantage/joueur + les 2 cartes de commandement. La Map est appariée à l'Objectif.
     val objName = missionRevealed["own_objective"] ?: missionRevealed["opp_objective"]
     val secName = missionRevealed["own_secondary"] ?: missionRevealed["opp_secondary"]
@@ -2093,10 +2093,11 @@ internal fun CampRow(
     onWound: ((String, Int) -> Unit)? = null, onToken: ((String, String, Int) -> Unit)? = null,
     onOrder: ((String) -> Unit)? = null, onCover: ((String) -> Unit)? = null
 ) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (isActive) Color(0xFF1E3A2A) else Color(0xFF111827), border = BorderStroke(if (isActive) 2.dp else 1.dp, if (isActive) Color(0xFF66BB6A) else Color(0xFF2A3A4A))) {
+    val campColor = if (label == "MOI") Color(0xFFF59E0B) else Color(0xFF38BDF8)
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (isActive) Color(0xFF1A2330) else Color(0xFF111827), border = BorderStroke(if (isActive) 2.dp else 1.dp, if (isActive) campColor else Color(0xFF2A3A4A))) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(label, color = if (isActive) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(label, color = if (isActive) campColor else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 val nonDefeated = units.count { u -> states[u.instanceId]?.defeated != true }
                 val activated = units.count { u -> states[u.instanceId]?.activated == true }
                 Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
