@@ -311,6 +311,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Lanceur de dés (PR5) : pool d'attaque + résultats.
     var showDiceSheet by remember { mutableStateOf(false) }
     var showDeploySheet by remember { mutableStateOf(false) }
+    var showDeployment by remember { mutableStateOf(false) }  // déploiement des 2 armées (sheet)
     var showMenu by remember { mutableStateOf(false) }
     var setupStep by remember { mutableIntStateOf(1) }
     var showPoolSheet by remember { mutableStateOf(false) }
@@ -525,11 +526,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Text(stringResource(R.string.deploy), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                // Déployer mes unités : ouvrir la liste pour marquer Zone 1/2.
-                                Surface(onClick = { viewingArmy = "own" }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
+                                // Déployer : ouvrir le panneau des 2 armées pour marquer Zone 1/2 (plus de vue "une seule armée").
+                                Surface(onClick = { showDeployment = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
                                     Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Déployer mon armée", color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        Text("Tapez chaque unité → Zone 1 / Zone 2", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                                        Text("Déployer les armées", color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text("Marquez la Zone 1 / Zone 2 de chaque unité des 2 armées", color = Color(0xFF8F9BAD), fontSize = 10.sp)
                                     }
                                 }
                                 // Priorité initiale.
@@ -907,6 +908,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     if (showPoolSheet) {
         PoolSheet(orderPool, { rank, v -> orderPool = orderPool + (rank to v) }, onClose = { showPoolSheet = false })
+    }
+    // Déploiement des 2 armées (solo = les 2, 2 joueurs = la mienne).
+    if (showDeployment) {
+        DeploymentSheet(
+            myUnits = playable, oppUnits = oppPlayable,
+            myStates = ownStates, oppStates = if (twoPlayer) oppStates else soloOppStates,
+            allMy = entries, allOpp = if (twoPlayer) oppEntries else soloOppEntries,
+            showOpp = !twoPlayer,
+            onCycleMy = { id -> playSyncVm.updateOwnState(id) { st -> st.copy(deployZone = when (st.deployZone) { null -> 1; 1 -> 2; else -> null }) } },
+            onCycleOpp = {
+                soloOppStates = soloOppStates + (it to ((soloOppStates[it] ?: SyncedUnitState(it)).copy(deployZone = when ((soloOppStates[it] ?: SyncedUnitState(it)).deployZone) { null -> 1; 1 -> 2; else -> null })))
+            },
+            onOpenMy = { selectedUnit = it }, onOpenOpp = { selectedUnit = it },
+            onClose = { showDeployment = false }
+        )
     }
     // Journal de partie (P2) : log chronologique exportable.
     if (showLogSheet) {
@@ -1631,28 +1647,23 @@ internal fun UnitListRow(
     val defeated = state.defeated == true
     val activated = state.activated == true
     val deployZone = state.deployZone
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = if (defeated) Color(0xFF2A1A1A) else Color(0xFF1A2330))) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Illustration de l'unité (petite vignette, masquée par l'état).
-            val artPath = unit.card.imagePath()
-            if (artPath != null) {
-                AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
-                    modifier = Modifier.width(56.dp).aspectRatio(1.43f).clip(RoundedCornerShape(6.dp)).alpha(if (defeated) 0.35f else 1f).then(if (activated) Modifier.border(2.dp, Color(0xFFFFC857), RoundedCornerShape(6.dp)) else Modifier),
-                    contentScale = ContentScale.Crop)
-            }
+    val isWounded = remaining != null && maxHp != null && remaining < maxHp
+    Surface(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (defeated) Color(0xFF2A1A1A) else Color(0xFF1A2330)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
-                Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("$totalPts pts • ${unit.card.legionRank?.name ?: ""}", color = Color(0xFF8F9BAD), fontSize = 10.sp, maxLines = 1)
+                Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("${totalPts} pts • ${unit.card.legionRank?.name ?: ""}", color = Color(0xFF8F9BAD), fontSize = 10.sp, maxLines = 1)
+                // Jauge de vie uniquement si l'unité est blessée (sinon bruit visuel en déploiement).
+                if (isWounded) {
+                    LinearProgressIndicator(progress = { (remaining!!.toFloat() / (maxHp ?: 1)).coerceIn(0f, 1f) }, modifier = Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
+                }
             }
-            if (remaining != null && maxHp != null) {
-                LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
-                Text("$remaining/$maxHp", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            }
+            if (isWounded) { Text("$remaining/${maxHp ?: "?"}", color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) Color(0xFFFF6B6B) else Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
             if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = Color(0xFF77D9A7), modifier = Modifier.size(16.dp)) }
             if (defeated) { Text("Vaincue", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
             if (isPrep && onCycleDeploy != null) {
                 Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> Color(0xFF1E3A2A); 2 -> Color(0xFF2A3A4A); else -> Color(0xFF3A3A4A) }) {
-                    Text(if (deployZone == null) "Déployer" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(if (deployZone == null) "Zone ?" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1660,6 +1671,44 @@ internal fun UnitListRow(
 }
 
 
+
+// ── Déploiement : LES 2 ARMÉES côte à côte, marquage Zone 1/2 par unité (plus de vue "une seule armée") ──
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+internal fun DeploymentSheet(
+    myUnits: List<ListEntry>, oppUnits: List<ListEntry>,
+    myStates: Map<String, SyncedUnitState>, oppStates: Map<String, SyncedUnitState>,
+    allMy: List<ListEntry>, allOpp: List<ListEntry>,
+    showOpp: Boolean,
+    onCycleMy: (String) -> Unit, onCycleOpp: (String) -> Unit,
+    onOpenMy: (ListEntry) -> Unit, onOpenOpp: (ListEntry) -> Unit,
+    onClose: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp).verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Déploiement — Zone 1 / Zone 2", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Tapez le bouton Zone de chaque unité pour l'assigner à une zone de déploiement", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+            // MOI
+            Text("MOI", color = Color(0xFFF59E0B), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            myUnits.forEach { unit ->
+                val st = myStates[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                UnitListRow(unit, st, allMy.filter { it.parentInstanceId == unit.instanceId }, isPrep = true, readOnly = false,
+                    onOpen = { onOpenMy(unit) }, onCycleDeploy = { onCycleMy(unit.instanceId) }, onCompare = {})
+            }
+            if (myUnits.isEmpty()) Text("Aucune unité à déployer", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+            Spacer(Modifier.height(4.dp))
+            if (showOpp) {
+                Text("ADVERSAIRE", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                oppUnits.forEach { unit ->
+                    val st = oppStates[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                    UnitListRow(unit, st, allOpp.filter { it.parentInstanceId == unit.instanceId }, isPrep = true, readOnly = false,
+                        onOpen = { onOpenOpp(unit) }, onCycleDeploy = { onCycleOpp(unit.instanceId) }, onCompare = {})
+                }
+                if (oppUnits.isEmpty()) Text("Aucune armée adverse chargée (choisissez-la dans le setup)", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+            }
+        }
+    }
+}
 
 // ── Grille d'activation (P1) : miniatures d'unités pour choisir une activation ──
 @Composable
