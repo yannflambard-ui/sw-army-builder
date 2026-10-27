@@ -607,7 +607,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     MissionDashboard(
                         round = round, vpOwn = vp, vpOpp = oppVp, killsOwn = kills, killsOpp = oppKills,
                         objectives = battleCards.filter { it.name in battleDeck },
-                        bluePlayer = bluePlayer
+                        bluePlayer = bluePlayer,
+                        cmdMine = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
+                        cmdOpp = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
+                        missionRevealed = missionRevealed
                     )
                     // Contrôle round + tour (accessibles même repliés).
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1444,6 +1447,17 @@ internal fun MissionBuilderSheet(
     }
 }
 
+// ── Emplacement de carte du Mission Dashboard (slots Iron Squadron) ──
+@Composable
+internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier) {
+    Surface(modifier, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
+        Column(Modifier.padding(horizontal = 4.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, color = color, fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center)
+            Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        }
+    }
+}
+
 // ── MISSION DASHBOARD (style officiel AMG) : repliable, à déployer pour visualiser la mission ──
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1451,12 +1465,20 @@ internal fun MissionDashboard(
     round: Int,
     vpOwn: Int, vpOpp: Int,
     killsOwn: Int, killsOpp: Int,
-    objectives: List<LegionBattleCard>,  // battle deck (catégorisées)
+    objectives: List<LegionBattleCard>,
     bluePlayer: String?,
+    cmdMine: LegionCommandCard? = null,
+    cmdOpp: LegionCommandCard? = null,
+    missionRevealed: Map<String, String> = emptyMap(),
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val catMap = listOf("objective" to "OBJECTIF", "secondary" to "SECONDAIRE", "advantage" to "AVANTAGE")
+    // Mission en jeu (règles v2) : 1 Objectif + 1 Secondaire + 1 Avantage/joueur + les 2 cartes de commandement. La Map est appariée à l'Objectif.
+    val objName = missionRevealed["own_objective"] ?: missionRevealed["opp_objective"]
+    val secName = missionRevealed["own_secondary"] ?: missionRevealed["opp_secondary"]
+    val advOwn = missionRevealed["own_advantage"]
+    val advOpp = missionRevealed["opp_advantage"]
+    val mapName = objName
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, if (expanded) Color(0xFFF59E0B) else Color(0xFF2A3A4A))) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Header repli : résumé + chevron pour déplier
@@ -1479,23 +1501,32 @@ internal fun MissionDashboard(
                 }
             }
             if (expanded) {
-                // ── Vue dépliée : style Mission Dashboard officiel ──
-                // Ligne 1 : traqueur de rounds (5 slots)
+                // ── Vue dépliée : style Mission Dashboard officiel (Iron Squadron) ──
+                // Rangée 5 emplacements : CMD | OBJECTIF | CARTE | SECONDAIRE | CMD
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
+                    DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f))
+                    DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f))
+                    DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f))
+                    DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
+                }
+                // Avantages (1 par joueur, depuis le battle deck).
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("AVANTAGE MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                // ── Traqueur de rounds (5 slots, style officiel) ──
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("ROUND", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         (1..5).forEach { r ->
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
-                                        .background(if (r == round.coerceAtMost(5)) Color(0xFFFFC857) else Color(0xFF2A3A4A)),
-                                    contentAlignment = Alignment.Center
-                                ) { Text("$r", color = if (r == round.coerceAtMost(5)) Color(0xFF0A0E15) else Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                            Box(Modifier.size(26.dp).clip(RoundedCornerShape(6.dp)).background(if (r == round.coerceAtMost(5)) Color(0xFFFFC857) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
+                                Text("$r", color = if (r == round.coerceAtMost(5)) Color(0xFF0A0E15) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
-                // Ligne 2 : VP + piste 1-12
+                // ── VP + piste 1-12 ──
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("MOI", color = Color(0xFFF59E0B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
@@ -1506,33 +1537,13 @@ internal fun MissionDashboard(
                     }
                     Text(if (bluePlayer == "own") "Blue : MOI" else if (bluePlayer == "opp") "Blue : ADV" else "Blue : —", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
-                // Piste VP 1-12
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     (1..12).forEach { n ->
-                        val mine = vpOwn >= n
-                        val theirs = vpOpp >= n
-                        Box(
-                            Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(2.dp))
-                                .background(if (mine && theirs) Color(0xFF8B5CF6) else if (mine) Color(0xFFF59E0B) else if (theirs) Color(0xFF38BDF8) else Color(0xFF2A3A4A))
-                        )
+                        val mine = vpOwn >= n; val theirs = vpOpp >= n
+                        Box(Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(2.dp)).background(if (mine && theirs) Color(0xFF8B5CF6) else if (mine) Color(0xFFF59E0B) else if (theirs) Color(0xFF38BDF8) else Color(0xFF2A3A4A)))
                     }
                 }
-                Text("Victoire à 12 VP ou au plus de VP à la fin du round 5", color = Color(0xFF8F9BAD), fontSize = 8.sp)
-                // Ligne 3 : cartes mission (battle deck) par catégorie
-                catMap.forEach { (cat, label) ->
-                    val cards = objectives.filter { it.category == cat }
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(label, color = when (cat) { "objective" -> Color(0xFFFF6B6B); "secondary" -> Color(0xFFFFC857); else -> Color(0xFF77D9A7) }, fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp))
-                        if (cards.isEmpty()) { Text("—", color = Color(0xFF5A6A7A), fontSize = 10.sp) }
-                        else {
-                            cards.forEach { c ->
-                                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1A2330)) {
-                                    Text(c.name, Modifier.padding(horizontal = 6.dp, vertical = 3.dp), color = Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                            }
-                        }
-                    }
-                }
+                Text("Victoire à 12 VP ou au plus de VP au round 5", color = Color(0xFF8F9BAD), fontSize = 8.sp)
             }
         }
     }
