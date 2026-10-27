@@ -715,6 +715,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
                                 if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
                             },
+                            onJournal = { showLogSheet = true },
                             onToken = { id, tk, delta ->
                                 if (id in ownStates) {
                                     playSyncVm.updateOwnState(id) { st ->
@@ -1785,12 +1786,13 @@ internal fun BattlefieldView(
     round: Int = 1, vpA: Int = 0, vpB: Int = 0, activeObjectives: Set<String> = emptySet(),
     objectives: List<LegionBattleCard> = emptyList(),
     onRound: (Int) -> Unit = {}, onVP: (String, Int) -> Unit = { _, _ -> },
-    onToggleObjective: (String) -> Unit = {}, onNextRound: () -> Unit = {}
+    onToggleObjective: (String) -> Unit = {}, onNextRound: () -> Unit = {},
+    onJournal: () -> Unit = {}
 ) {
     Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B)))).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ScoreRoundBar(round, vpA, vpB, activeObjectives, objectives, onRound, onVP, onToggleObjective, onNextRound)
+        ScoreRoundBar(round, vpA, vpB, activeObjectives, objectives, onRound, onVP, onToggleObjective, onNextRound, onJournal = onJournal)
         if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
-        CommandCenterRow(myCmd, oppCmd, turn, onCmdClick)
+        CommandCenterRow(myCmd, oppCmd, turn, onCmdClick, activeObjectives = activeObjectives)
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
     }
 }
@@ -1802,7 +1804,7 @@ internal fun ScoreRoundBar(
     round: Int, vpA: Int, vpB: Int, activeObjectives: Set<String>,
     objectives: List<LegionBattleCard>,
     onRound: (Int) -> Unit, onVP: (String, Int) -> Unit, onToggleObjective: (String) -> Unit,
-    onNextRound: () -> Unit
+    onNextRound: () -> Unit, onJournal: () -> Unit = {}
 ) {
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1820,8 +1822,13 @@ internal fun ScoreRoundBar(
                 Text("$vpB", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 Surface(onClick = { onVP("B", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("+", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
             }
-            Surface(onClick = onNextRound, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
-                Text("⚡ Round+", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Surface(onClick = onJournal, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B)) {
+                    Text("📓", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), fontSize = 11.sp)
+                }
+                Surface(onClick = onNextRound, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("⚡ Round+", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
         if (objectives.isNotEmpty()) {
@@ -1972,9 +1979,13 @@ internal fun CampRow(
 
 // ── Centre : cartes de commandement des 2 camps + qui joue ──
 @Composable
-internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String, onCmdClick: () -> Unit) {
+internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCard?, turn: String, onCmdClick: () -> Unit, activeObjectives: Set<String> = emptySet()) {
     val myPrio = (myCmd?.pip?.toIntOrNull() ?: 9) <= (oppCmd?.pip?.toIntOrNull() ?: 9)
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
+    val turnColor = if (turn == "own") Color(0xFFF59E0B) else Color(0xFF38BDF8)
+    // EV3 : halo pulsant sur la zone centrale pour montrer qui joue (100% présentation, aucun état).
+    val pulse = rememberInfiniteTransition(label = "turnPulse")
+    val glowAlpha by pulse.animateFloat(initialValue = 0.25f, targetValue = 0.6f, animationSpec = infiniteRepeatable(animation = tween(900), repeatMode = RepeatMode.Reverse), label = "glow")
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827), border = BorderStroke(1.dp, turnColor.copy(alpha = glowAlpha))) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             // Ma carte (chip, tap → ouvrir le deck)
             Column(horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -1988,9 +1999,18 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                 }
                 Text("PIP ${myCmd?.pip ?: "—"}${if (myCmd != null && oppCmd != null && myPrio) " • ⚑" else ""}", color = Color(0xFFF59E0B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
-            // État du tour
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(if (turn == "own") "▶ À VOUS DE JOUER" else "⏳ TOUR ADVERSE", color = if (turn == "own") Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                // Objectifs actifs en jetons (EV4 : zone centrale = no man's land).
+                if (activeObjectives.isNotEmpty()) {
+                    activeObjectives.forEach { name ->
+                        Surface(shape = CircleShape, color = Color(0xFF1E3A2A), border = BorderStroke(1.dp, Color(0xFF77D9A7))) {
+                            Text("●", Modifier.padding(6.dp), color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(if (turn == "own") "▶ À VOUS" else "⏳ TOUR ADV", color = turnColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
             }
             // Carte adverse (dos, tap → suivre la commande adverse)
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
