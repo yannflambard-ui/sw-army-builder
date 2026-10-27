@@ -366,6 +366,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
+        if (!(phase == PlayPhase.GAME && viewingArmy == null)) {
         TopAppBar(title = { Text(stringResource(R.string.play_mode), style = MaterialTheme.typography.titleMedium) },
             navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.back)) } },
             actions = {
@@ -410,8 +411,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15)))
+        }
     }, snackbarHost = { SnackbarHost(snackbarHostState) }, bottomBar = {
-        if (isLegion) {
+        if (isLegion && !(phase == PlayPhase.GAME && viewingArmy == null)) {
             BottomAppBar(containerColor = Color(0xFF111827)) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                     // Deck de commandement (seul bouton de la barre en phase de jeu)
@@ -429,7 +431,12 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         Box(Modifier.fillMaxSize().padding(pad)) {
             // ── ÉCRAN DE PARTIE : setup + features de jeu (solo ou 2 joueurs) ──
             if (viewingArmy == null) {
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    if (phase == PlayPhase.GAME) Modifier.fillMaxSize().padding(8.dp)
+                    else Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (phase == PlayPhase.GAME) 8.dp else 12.dp)
+                ) {
+                    if (phase == PlayPhase.PREP) {
                     Text(stringResource(R.string.play_2players), color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     // Connexion Nearby (2 joueurs uniquement) : panneau si pas connecté, sinon indicateur.
                     if (twoPlayer && syncMode != ShareMode.CONNECTED) {
@@ -584,8 +591,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text(stringResource(R.string.back_to_setup), color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
                         }
                     }
-                    // ── Features de jeu (phase GAME) ──
+                    }  // fin bloc setup (masqué en écran dédié plein écran phase GAME)
+                    // ── Features de jeu (phase GAME) — écran dédié plein écran ──
                     if (phase == PlayPhase.GAME) {
+                    // Bouton discret pour revenir au setup (seule sortie du plein écran de jeu).
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        Surface(onClick = { phase = PlayPhase.PREP }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
+                            Text("✕ Retour setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                     // ── Bandeau d'état compact (score + round + tour) ──
                     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF1A2330)) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1918,7 +1932,7 @@ internal fun CampRow(
                                 .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
                                 .border(2.dp, stateColor, CircleShape)
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
-                                .clickable { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) },
+                                .combinedClickable(onClick = { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }, onLongClick = { onOpenUnit(unit) }),
                                 contentAlignment = Alignment.Center) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
