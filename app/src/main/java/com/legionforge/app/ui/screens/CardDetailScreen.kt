@@ -603,43 +603,30 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text("✕ Retour setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
-                    // ── MISSION DASHBOARD (style officiel, repliable) + contrôles round/tour ──
+                    // ── Barre compacte : MissionDashboard (ROUND/VP/TOUR + mission dépliable) ──
                     MissionDashboard(
                         round = round, vpOwn = vp, vpOpp = oppVp, killsOwn = kills, killsOpp = oppKills,
                         objectives = battleCards.filter { it.name in battleDeck },
                         bluePlayer = bluePlayer,
                         cmdMine = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                         cmdOpp = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
-                        missionRevealed = missionRevealed
-                    )
-                    // Contrôle round + tour (accessibles même repliés).
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        val roundEndedMsg = stringResource(R.string.round_ended, round)
-                        val undoLabel = stringResource(R.string.undo)
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Surface(onClick = { if (round > 1) round-- }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
-                            Text("R$round / 6", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            Surface(onClick = {
-                                val prevRound = round; val prevPool = orderPool
+                        missionRevealed = missionRevealed,
+                        turn = turn,
+                        onRoundChange = { r ->
+                            if (r in 1..6) {
                                 playedCommands = emptySet()
                                 orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
-                                if (round < 6) { round++; logEvent("Début du round R$round") }
-                                scope.launch { snackbarHostState.showSnackbar(roundEndedMsg, actionLabel = undoLabel, duration = SnackbarDuration.Short); round = prevRound; orderPool = prevPool }
-                            }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
-                        }
-                        Surface(onClick = { toggleTurn() }, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
-                            Text(if (turn == "own") "VOTRE TOUR" else "Tour adverse →", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                                if (r > round) logEvent("Début du round R$r")
+                                round = r
+                            }
+                        },
+                        onToggleTurn = { toggleTurn() }
+                    )
                     // ── Bannière ACTIVER (à qui d'activer) — état statique coloré, pas de clignotement ──
                     Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
-                    }
-                    // Passer mon tour (bascule manuelle — jamais automatique).
-                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
-                        Text("Passer mon tour →", Modifier.padding(vertical = 10.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
                     if (gameResult != null) {
@@ -1470,9 +1457,12 @@ internal fun MissionDashboard(
     cmdMine: LegionCommandCard? = null,
     cmdOpp: LegionCommandCard? = null,
     missionRevealed: Map<String, String> = emptyMap(),
+    turn: String = "own",
+    onRoundChange: (Int) -> Unit = {},
+    onToggleTurn: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(true) }  // déplié par défaut : on voit la mission
+    var expanded by remember { mutableStateOf(false) }  // replié : barre compacte, mission dépliable
     // Mission en jeu (règles v2) : 1 Objectif + 1 Secondaire + 1 Avantage/joueur + les 2 cartes de commandement. La Map est appariée à l'Objectif.
     val objName = missionRevealed["own_objective"] ?: missionRevealed["opp_objective"]
     val secName = missionRevealed["own_secondary"] ?: missionRevealed["opp_secondary"]
@@ -1481,23 +1471,23 @@ internal fun MissionDashboard(
     val mapName = objName
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, if (expanded) Color(0xFFF59E0B) else Color(0xFF2A3A4A))) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Header repli : résumé + chevron pour déplier
-            Surface(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column(horizontalAlignment = Alignment.Start) {
-                        Text("MISSION", color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                        Text("$vpOwn — $vpOpp", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // Traqueur de rounds miniature
-                        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            (1..5).forEach { r ->
-                                Box(Modifier.size(9.dp).clip(CircleShape).background(if (r == round.coerceAtMost(5)) Color(0xFFFFC857) else if (r < round) Color(0xFFF59E0B) else Color(0xFF2A3A4A)))
-                            }
-                        }
-                        Text("R$round", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        Text("${if (killsOwn > 0 || killsOpp > 0) "⚔$killsOwn/$killsOpp  " else ""}${if (expanded) "▲" else "▼"}", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    }
+            // Barre compacte : ROUND -/+ | VP | TOUR | MISSION (dépliable)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Surface(onClick = { onRoundChange(round - 1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
+                    Text("R$round", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onRoundChange(round + 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text("—", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+                    Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+                Surface(onClick = onToggleTurn, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
+                    Text(if (turn == "own") "VOTRE TOUR" else "Tour adv →", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+                Surface(onClick = { expanded = !expanded }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
+                    Text("MISSION ${if (expanded) "▲" else "▼"}", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                 }
             }
             if (expanded) {
