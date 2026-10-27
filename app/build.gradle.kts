@@ -14,8 +14,8 @@ android {
         applicationId = "com.legionforge.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 179
-                                                versionName = "2.1.1"
+        versionCode = 180
+                                                versionName = "2.2.0"
 
         // Token fin-grained GitHub (issues:write, repo legion-forge-ci seul). Fichier gitignore (app/github_token.properties), absent du VCS.
         val ghTokenProp = Properties().apply {

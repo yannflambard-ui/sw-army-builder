@@ -290,10 +290,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var commandDeck by remember { mutableStateOf(setOf<String>()) }
     var playedCommands by remember { mutableStateOf(setOf<String>()) }
     var roundCommand by remember { mutableStateOf<String?>(null) }  // ma carte de commandement jouée ce round
+    var playPhase by remember { mutableStateOf("command") }  // "command" | "activation" — flux guidé : choisir la carte du round puis activer
     // Émet la carte de commandement jouée ce round en mode 2 joueurs.
     LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
-    // Nouveau round → réinitialise la carte jouée (on re-pique une carte).
-    LaunchedEffect(round) { roundCommand = null }
+    // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
+    LaunchedEffect(round) { roundCommand = null; playPhase = "command" }
     var showCmdSheet by remember { mutableStateOf(false) }
     // Battle deck (Legion v2) : 9 cartes (3+3+3) + mission (carte révélée par catégorie).
     val battleCards = remember { loadBattleCards(legionContext) }
@@ -643,6 +644,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         }
                     } else {
+                        if (playPhase == "command") {
+                            CommandSelectionPanel(
+                                hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
+                                selected = roundCommand,
+                                onSelect = { id -> roundCommand = id },
+                                onConfirm = { playPhase = "activation" }
+                            )
+                        } else {
                         BattlefieldView(
                             myUnits = playable, oppUnits = oppPlayable,
                             myStates = ownStates, oppStates = if (twoPlayer) oppStates else soloOppStates,
@@ -699,6 +708,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 }
                             }
                         )
+                        }
                     }
                     }
                 }
@@ -1769,6 +1779,38 @@ internal fun ScoreRoundBar(
                             Text(if (active) "● ${obj.name}" else "○ ${obj.name}", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (active) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+
+// ── Panneau guidé : choisir la carte de commandement du round ──
+@Composable
+internal fun CommandSelectionPanel(
+    hand: List<LegionCommandCard>, selected: String?,
+    onSelect: (String) -> Unit, onConfirm: () -> Unit
+) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = Color(0xFF16212E)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("1. CHOISISSEZ VOTRE CARTE DE COMMANDEMENT", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text("Tapez sur une carte pour la jouer ce round", color = Color(0xFF9EACBC), fontSize = 11.sp)
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(hand, key = { it.id }) { card ->
+                    val isSel = card.id == selected
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        AsyncImage(model = "file:///android_asset/${card.imagePath()}", contentDescription = card.name,
+                            modifier = Modifier.width(72.dp).aspectRatio(0.7f).clip(RoundedCornerShape(8.dp)).border(if (isSel) 3.dp else 1.dp, if (isSel) Color(0xFFFFC857) else Color(0xFF2A3A4A), RoundedCornerShape(8.dp)).clickable { onSelect(card.id) },
+                            contentScale = ContentScale.Crop)
+                        Text(card.name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(72.dp))
+                        Text("PIP ${card.pip}", color = Color(0xFFFFC857), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            if (selected != null) {
+                Surface(onClick = onConfirm, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A)) {
+                    Text("✓ Jouer cette carte — Passer à l'activation", Modifier.padding(vertical = 12.dp), color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 }
             }
         }
