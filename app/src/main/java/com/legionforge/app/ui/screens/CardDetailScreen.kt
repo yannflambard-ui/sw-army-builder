@@ -658,6 +658,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         onOpenMission = { showMissionSheet = true },
                         onOpenCommandHand = { showCommandHandSheet = true },
                         onZoomMission = { n, img -> missionZoom = n to img },
+                        onVPChange = { side, d -> if (side == 1) vp = (vp + d).coerceIn(0, 12) else oppVp = (oppVp + d).coerceIn(0, 12) },
+                        onJournal = { showLogSheet = true },
                         turn = turn,
                         onRoundChange = { r ->
                             if (r in 1..5) {
@@ -1552,6 +1554,8 @@ internal fun MissionDashboard(
     onOpenMission: () -> Unit = {},
     onOpenCommandHand: () -> Unit = {},
     onZoomMission: (String, String?) -> Unit = { _, _ -> },
+    onVPChange: (Int, Int) -> Unit = { _, _ -> },
+    onJournal: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }  // replié : barre compacte, mission dépliable
@@ -1570,10 +1574,14 @@ internal fun MissionDashboard(
                     Text("R$round", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Surface(onClick = { onRoundChange(round + 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Surface(onClick = { onVPChange(1, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                     Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onVPChange(1, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                     Text("—", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+                    Surface(onClick = { onVPChange(2, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                     Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { onVPChange(2, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                 }
                 Surface(onClick = onToggleTurn, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
                     Text(if (turn == "own") "VOTRE TOUR" else "Tour adv →", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
@@ -1584,6 +1592,9 @@ internal fun MissionDashboard(
                 Surface(onClick = onOpenMission, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                     Text("⚙", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
+                Surface(onClick = onJournal, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
+                    Text("🗒", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
             }
             // ── Cartes mission (toujours visibles, en miniatures) ──
             val objCard = objectives.firstOrNull { it.name == objName }
@@ -1591,10 +1602,10 @@ internal fun MissionDashboard(
             val mapCard = objectives.firstOrNull { it.name == mapName }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdMine?.imagePath(), onClick = onOpenCommandHand, onLongClick = cmdMine?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f), imagePath = objCard?.imagePath(), onLongClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f), imagePath = mapCard?.imagePath(), onLongClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f), imagePath = secCard?.imagePath(), onLongClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath(), onLongClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f), imagePath = objCard?.imagePath(), onClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f), imagePath = mapCard?.imagePath(), onClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f), imagePath = secCard?.imagePath(), onClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath(), onClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } })
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
