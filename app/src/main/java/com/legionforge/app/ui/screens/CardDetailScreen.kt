@@ -298,11 +298,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var playedCommands by remember { mutableStateOf(setOf<String>()) }
     var roundCommand by remember { mutableStateOf<String?>(null) }  // ma carte de commandement jouée ce round
     var discardedCommands by remember { mutableStateOf(setOf<String>()) }  // cartes défaussées (non rejouables)
+    var soloOppRoundCommand by remember { mutableStateOf<String?>(null) }  // carte de commandement adverse (solo)
     var playPhase by remember { mutableStateOf("command") }  // "command" | "activation" — flux guidé : choisir la carte du round puis activer
     // Émet la carte de commandement jouée ce round en mode 2 joueurs.
     LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
     // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
-    LaunchedEffect(round) { roundCommand = null; playPhase = "command" }
+    LaunchedEffect(round) {
+        roundCommand = null; playPhase = "command"
+        if (!twoPlayer) {  // B2: l'adversaire (solo) joue une carte de commandement chaque round
+            val pool = cmdCards.filter { it.id !in discardedCommands }
+            soloOppRoundCommand = pool.randomOrNull()?.id
+        }
+    }
     // PRIO-1/PRIO-2: la priorité (pips, jet de dé rouge sur égalité) ordonne le premier tour du round.
     LaunchedEffect(roundCommand, oppRoundCommand) {
         val myPip = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
@@ -638,7 +645,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         objectives = battleCards.filter { it.name in battleDeck },
                         bluePlayer = bluePlayer,
                         cmdMine = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
-                        cmdOpp = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
+                        cmdOpp = (if (twoPlayer) oppRoundCommand else soloOppRoundCommand)?.let { id -> cmdCards.firstOrNull { it.id == id } },
                         missionRevealed = missionRevealed,
                         onOpenMission = { showMissionSheet = true },
                         turn = turn,
@@ -656,10 +663,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         },
                         onToggleTurn = { toggleTurn() }
                     )
-                    // ── Bannière ACTIVER (à qui d'activer) — état statique coloré, pas de clignotement ──
+                    // ── Bannière de workflow : étape d'action attendue ──
+                    val stepText = when {
+                        turn != "own" -> "Tour adverse — attendez"
+                        playPhase == "command" -> "1. Choisissez votre carte de commandement"
+                        else -> "2. Activez une unité — ou Passer"
+                    }
                     Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(stepText, color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // Passer (règle v2 : le joueur peut passer son activation).
@@ -713,7 +725,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             myUnits = playable, oppUnits = oppPlayable,
                             myStates = ownStates, oppStates = if (twoPlayer) oppStates else soloOppStates,
                             myCmd = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
-                            oppCmd = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
+                            oppCmd = (if (twoPlayer) oppRoundCommand else soloOppRoundCommand)?.let { id -> cmdCards.firstOrNull { it.id == id } },
                             turn = turn,
                             onOpenUnit = { selectedUnit = it },
                             onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)); playable.firstOrNull { it.instanceId == id }?.let { logEvent("${it.card.name} activée") } },
@@ -777,6 +789,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         CommandHand(
                             hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
                             roundCommand = roundCommand,
+                            highlight = turn == "own" && playPhase == "command",
                             onSelect = { card ->
                                 roundCommand = card.id
                                 playPhase = "activation"
@@ -1476,11 +1489,16 @@ internal fun MissionBuilderSheet(
 
 // ── Emplacement de carte du Mission Dashboard (slots Iron Squadron) ──
 @Composable
-internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier) {
+internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier, imagePath: String? = null) {
     Surface(modifier, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
-        Column(Modifier.padding(horizontal = 4.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(title, color = color, fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center)
-            Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            if (imagePath != null) {
+                AsyncImage(model = "file:///android_asset/$imagePath", contentDescription = name,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Fit)
+            } else {
+                Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            }
         }
     }
 }
@@ -1534,13 +1552,16 @@ internal fun MissionDashboard(
                     Text("⚙", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            // ── Cartes mission (toujours visibles, compactes) ──
+            // ── Cartes mission (toujours visibles, en miniatures) ──
+            val objCard = objectives.firstOrNull { it.name == objName }
+            val secCard = objectives.firstOrNull { it.name == secName }
+            val mapCard = objectives.firstOrNull { it.name == mapName }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
-                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f))
-                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f))
-                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f))
-                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
+                DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdMine?.imagePath())
+                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f), imagePath = objCard?.imagePath())
+                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f), imagePath = mapCard?.imagePath())
+                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f), imagePath = secCard?.imagePath())
+                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath())
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -1586,10 +1607,11 @@ internal fun MissionDashboard(
 internal fun CommandHand(
     hand: List<LegionCommandCard>,
     roundCommand: String?,
-    onSelect: (LegionCommandCard) -> Unit
+    onSelect: (LegionCommandCard) -> Unit,
+    highlight: Boolean = false
 ) {
     val played = hand.firstOrNull { it.id == roundCommand }
-    Surface(Modifier.fillMaxWidth().navigationBarsPadding(), shape = RoundedCornerShape(14.dp), color = Color(0xEE0F172A), shadowElevation = 8.dp) {
+    Surface(Modifier.fillMaxWidth().navigationBarsPadding(), shape = RoundedCornerShape(14.dp), color = Color(0xEE0F172A), shadowElevation = 8.dp, border = if (highlight) BorderStroke(2.dp, Color(0xFFFFC857)) else null) {
         Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("MAIN DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
@@ -1941,7 +1963,7 @@ internal fun UnitActivationCell(
     val artPath = unit.card.imagePath()
     Card(
         onClick = { if (activable) onActivate(unit.instanceId) else onOpen(unit) },
-        modifier = Modifier.fillMaxWidth().aspectRatio(0.7f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) Color(0xFFFF6B6B) else if (defeated) Color(0xFF3A3A4A) else Color.Transparent, RoundedCornerShape(10.dp)),
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) Color(0xFFFF6B6B) else if (defeated) Color(0xFF3A3A4A) else Color.Transparent, RoundedCornerShape(10.dp)),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))
     ) {
@@ -1990,7 +2012,7 @@ internal fun UnitActivationStrip(
                 defeated -> Color(0xFF3A3A4A)
                 else -> Color(0xFF66BB6A)
             }
-            Box(Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { onOpen(unit) }) {
+            Box(Modifier.width(96.dp).aspectRatio(1.4f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { onOpen(unit) }) {
                 if (artPath != null) {
                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                         modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
@@ -2154,7 +2176,7 @@ internal fun CampRow(
                         }
                         val scale = animateFloatAsState(if (activable) 1.06f else 1f, label = "tileScale")
                         Column(Modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp))
+                            Box(Modifier.width(96.dp).aspectRatio(1.4f).clip(RoundedCornerShape(6.dp))
                                 .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
                                 .border(2.dp, stateColor, RoundedCornerShape(6.dp))
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
