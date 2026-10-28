@@ -623,9 +623,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         onToggleTurn = { toggleTurn() }
                     )
                     // ── Bannière ACTIVER (à qui d'activer) — état statique coloré, pas de clignotement ──
-                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
@@ -1490,22 +1490,20 @@ internal fun MissionDashboard(
                     Text("MISSION ${if (expanded) "▲" else "▼"}", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                 }
             }
+            // ── Cartes mission (toujours visibles, compactes) ──
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
+                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f))
+                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f))
+                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f))
+                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             if (expanded) {
-                // ── Vue dépliée : style Mission Dashboard officiel (Iron Squadron) ──
-                // Rangée 5 emplacements : CMD | OBJECTIF | CARTE | SECONDAIRE | CMD
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
-                    DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f))
-                    DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f))
-                    DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f))
-                    DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f))
-                }
-                // Avantages (1 par joueur, depuis le battle deck).
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("AVANTAGE MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                // ── Traqueur de rounds (5 slots, style officiel) ──
+                // ── Traqueur de rounds (5 slots) ──
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("ROUND", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -2112,20 +2110,20 @@ internal fun CampRow(
                         }
                         val scale = animateFloatAsState(if (activable) 1.06f else 1f, label = "tileScale")
                         Column(Modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.width(60.dp).height(60.dp).clip(CircleShape)
+                            Box(Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(6.dp))
                                 .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
-                                .border(2.dp, stateColor, CircleShape)
+                                .border(2.dp, stateColor, RoundedCornerShape(6.dp))
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
                                 .combinedClickable(onClick = { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }, onLongClick = { onOpenUnit(unit) }),
                                 contentAlignment = Alignment.Center) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
-                                        modifier = Modifier.fillMaxSize().clip(CircleShape), contentScale = ContentScale.Crop)
+                                        modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                                 } else {
                                     Text(unit.card.name, color = Color.White, fontSize = 7.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp))
                                 }
                                 Text(if (activated) "✓" else if (defeated) "✕" else "●", color = stateColor, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), CircleShape).padding(horizontal = 3.dp, vertical = 1.dp))
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
                                 if (panicking) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.align(Alignment.TopCenter).padding(2.dp)) {
                                         Text("PANIQUE", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = Color.White, fontSize = 6.sp, fontWeight = FontWeight.Bold)
