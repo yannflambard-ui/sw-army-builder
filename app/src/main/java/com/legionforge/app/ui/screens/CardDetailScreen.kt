@@ -299,14 +299,19 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var roundCommand by remember { mutableStateOf<String?>(null) }  // ma carte de commandement jouée ce round
     var discardedCommands by remember { mutableStateOf(setOf<String>()) }  // cartes défaussées (non rejouables)
     var soloOppRoundCommand by remember { mutableStateOf<String?>(null) }  // carte de commandement adverse (solo)
+    var soloOppCommandDeck by remember { mutableStateOf(setOf<String>()) }  // main de commandement adverse (solo)
     var playPhase by remember { mutableStateOf("command") }  // "command" | "activation" — flux guidé : choisir la carte du round puis activer
     // Émet la carte de commandement jouée ce round en mode 2 joueurs.
     LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
     // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
     LaunchedEffect(round) {
         roundCommand = null; playPhase = "command"
-        if (!twoPlayer) {  // B2: l'adversaire (solo) joue une carte de commandement chaque round
-            val pool = cmdCards.filter { it.id !in discardedCommands }
+        if (!twoPlayer) {  // B2: l'adversaire (solo) a sa propre main + joue une carte chaque round
+            if (soloOppCommandDeck.isEmpty()) {
+                val generic = cmdCards.filter { it.pip == "1" || it.pip == "2" || it.pip == "3" }
+                soloOppCommandDeck = (generic.map { it.id } + cmdCards.map { it.id }).distinct().shuffled().take(7).toSet()
+            }
+            val pool = cmdCards.filter { it.id in soloOppCommandDeck && it.id !in discardedCommands }
             soloOppRoundCommand = pool.randomOrNull()?.id
         }
     }
@@ -351,6 +356,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var soloOppStates by remember { mutableStateOf<Map<String, SyncedUnitState>>(emptyMap()) }
     // Round 0 / Build a Mission (v2.6).
     var showMissionSheet by remember { mutableStateOf(false) }
+    var showCommandHandSheet by remember { mutableStateOf(false) }  // main dépliée depuis le bas au clic sur CMD
+    var missionZoom by remember { mutableStateOf<Pair<String, String?>?>(null) }  // (nom, image) carte mission en grand (long-press)
     var bluePlayer by remember { mutableStateOf<String?>(null) }  // "own" | "opp"
     var missionRevealed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }  // "own_objective" -> nom
     var modsLeft by remember { mutableStateOf<Map<String, Int>>(mapOf("own" to 2, "opp" to 2)) }
@@ -648,6 +655,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         cmdOpp = (if (twoPlayer) oppRoundCommand else soloOppRoundCommand)?.let { id -> cmdCards.firstOrNull { it.id == id } },
                         missionRevealed = missionRevealed,
                         onOpenMission = { showMissionSheet = true },
+                        onOpenCommandHand = { showCommandHandSheet = true },
+                        onZoomMission = { n, img -> missionZoom = n to img },
                         turn = turn,
                         onRoundChange = { r ->
                             if (r in 1..5) {
@@ -663,20 +672,19 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         },
                         onToggleTurn = { toggleTurn() }
                     )
-                    // ── Bannière de workflow : étape d'action attendue ──
-                    val stepText = when {
-                        turn != "own" -> "Tour adverse — attendez"
-                        playPhase == "command" -> "1. Choisissez votre carte de commandement"
-                        else -> "2. Activez une unité — ou Passer"
-                    }
-                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF3B2224)) {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            Text(stepText, color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    // ── Bannière de workflow : qui joue (BLEU/ROUGE) + étape attendue + Passer (même ligne) ──
+                    val isMine = turn == "own"
+                    val mineColor = if (bluePlayer == "own") "BLEU" else "ROUGE"
+                    val oppColor = if (bluePlayer == "own") "ROUGE" else "BLEU"
+                    val activeColor = if (isMine) mineColor else oppColor
+                    val stepText = if (playPhase == "command") "1. Choisissez votre carte de commandement" else "2. Activez une unité"
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Surface(onClick = { toggleTurn() }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp), color = if (isMine) Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                            Text("TOUR JOUEUR $activeColor — $stepText", Modifier.padding(vertical = 8.dp).padding(horizontal = 6.dp), color = if (isMine) Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2)
                         }
-                    }
-                    // Passer (règle v2 : le joueur peut passer son activation).
-                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
-                        Text("Passer", Modifier.padding(vertical = 6.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                        Surface(onClick = { toggleTurn() }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
+                            Text("Passer", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
                     if (gameResult != null) {
@@ -785,17 +793,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                     }
                         }  // fin colonne scrollable du champ de bataille
-                        // ── Main de commandement (façon Pokémon TCG) : barre réservée en bas, ne recouvre jamais les unités ──
-                        CommandHand(
-                            hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
-                            roundCommand = roundCommand,
-                            highlight = turn == "own" && playPhase == "command",
-                            onSelect = { card ->
-                                roundCommand = card.id
-                                playPhase = "activation"
-                                logEvent("Carte de commandement : ${card.name}")
-                            }
-                        )
+                        // (main de commandement : dépliée en sheet depuis le bas au clic sur l'emplacement CMD)
                     }  // fin colonne plein écran jeu
                     }  // fin phase GAME
                 }
@@ -992,6 +990,35 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text("${l.factionId} • ${l.pointsLimit} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
                         }
                     }
+                }
+            }
+        }
+    }
+    // Main de commandement : dépliée depuis le bas quand on choisit la carte du round.
+    if (showCommandHandSheet) {
+        CommandHandSheet(
+            hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
+            roundCommand = roundCommand,
+            onSelect = { card ->
+                roundCommand = card.id
+                playPhase = "activation"
+                logEvent("Carte de commandement : ${card.name}")
+                showCommandHandSheet = false
+            },
+            onClose = { showCommandHandSheet = false }
+        )
+    }
+    // Carte mission en grand (long-press sur un emplacement mission).
+    missionZoom?.let { (zname, zimg) ->
+        Dialog(onDismissRequest = { missionZoom = null }) {
+            Surface(shape = RoundedCornerShape(16.dp), color = Color(0xFF111827), border = BorderStroke(2.dp, Color(0xFFFFC857))) {
+                Column(Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(zname, color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 2, textAlign = TextAlign.Center)
+                    if (zimg != null) {
+                        AsyncImage(model = "file:///android_asset/$zimg", contentDescription = zname,
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(10.dp)), contentScale = ContentScale.Fit)
+                    }
+                    TextButton(onClick = { missionZoom = null }) { Text("Fermer", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -1489,16 +1516,18 @@ internal fun MissionBuilderSheet(
 
 // ── Emplacement de carte du Mission Dashboard (slots Iron Squadron) ──
 @Composable
-internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier, imagePath: String? = null) {
+internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier, imagePath: String? = null, onClick: (() -> Unit)? = null, onLongClick: (() -> Unit)? = null) {
     Surface(modifier, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
         Column(Modifier.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(title, color = color, fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center)
+            val clickMod = if (onLongClick != null) Modifier.combinedClickable(onClick = { onClick?.invoke() }, onLongClick = onLongClick) else if (onClick != null) Modifier.clickable { onClick() } else Modifier
             if (imagePath != null) {
                 AsyncImage(model = "file:///android_asset/$imagePath", contentDescription = name,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Fit)
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(4.dp)).then(clickMod), contentScale = ContentScale.Fit)
             } else {
-                Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().then(clickMod))
             }
+            Text(name, color = Color(0xFFE2E8F0), fontSize = 7.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
         }
     }
 }
@@ -1519,6 +1548,8 @@ internal fun MissionDashboard(
     onRoundChange: (Int) -> Unit = {},
     onToggleTurn: () -> Unit = {},
     onOpenMission: () -> Unit = {},
+    onOpenCommandHand: () -> Unit = {},
+    onZoomMission: (String, String?) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }  // replié : barre compacte, mission dépliable
@@ -1557,11 +1588,11 @@ internal fun MissionDashboard(
             val secCard = objectives.firstOrNull { it.name == secName }
             val mapCard = objectives.firstOrNull { it.name == mapName }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdMine?.imagePath())
-                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f), imagePath = objCard?.imagePath())
-                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f), imagePath = mapCard?.imagePath())
-                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f), imagePath = secCard?.imagePath())
-                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath())
+                DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdMine?.imagePath(), onClick = onOpenCommandHand, onLongClick = cmdMine?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f), imagePath = objCard?.imagePath(), onLongClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f), imagePath = mapCard?.imagePath(), onLongClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f), imagePath = secCard?.imagePath(), onLongClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } })
+                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath(), onLongClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } })
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -2138,6 +2169,39 @@ internal fun CommandSelectionPanel(
     }
 }
 
+// ── Main de commandement : dépliée depuis le bas pour choisir la carte du round ──
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+internal fun CommandHandSheet(
+    hand: List<LegionCommandCard>,
+    roundCommand: String?,
+    onSelect: (LegionCommandCard) -> Unit,
+    onClose: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF111827)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("CHOISISSEZ VOTRE CARTE DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
+                Text(if (roundCommand != null) "Jouée : ${hand.firstOrNull { it.id == roundCommand }?.name ?: ""}" else "", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            }
+            hand.forEach { card ->
+                val isSel = card.id == roundCommand
+                Surface(onClick = { onSelect(card) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, Color(0xFFF59E0B)) else BorderStroke(1.dp, Color(0xFF2A3A4A))) {
+                    Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(Modifier.size(26.dp).clip(CircleShape).background(if (isSel) Color(0xFFF59E0B) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
+                            Text(card.pip, color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(card.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        Text("PIP ${card.pip}${if (isSel) " ✓ jouée" else ""}", color = if (isSel) Color(0xFFF59E0B) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ── Rangée d'un camp : miniatures d'unités, bordure colorée si camp actif ──
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
@@ -2175,8 +2239,8 @@ internal fun CampRow(
                             else -> campColor
                         }
                         val scale = animateFloatAsState(if (activable) 1.06f else 1f, label = "tileScale")
-                        Column(Modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(Modifier.width(96.dp).aspectRatio(1.4f).clip(RoundedCornerShape(6.dp))
+                        Column(Modifier.width(104.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(6.dp))
                                 .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
                                 .border(2.dp, stateColor, RoundedCornerShape(6.dp))
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
@@ -2188,47 +2252,16 @@ internal fun CampRow(
                                 } else {
                                     Text(unit.card.name, color = Color.White, fontSize = 7.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp))
                                 }
-                                Text(if (activated) "✓" else if (defeated) "✕" else "●", color = stateColor, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0xAA0A0E15), RoundedCornerShape(4.dp)).padding(horizontal = 3.dp, vertical = 1.dp))
                                 if (panicking) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.align(Alignment.TopCenter).padding(2.dp)) {
                                         Text("PANIQUE", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = Color.White, fontSize = 6.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                if (onWound != null && st.wounds != null) {
-                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomCenter).padding(2.dp).clickable { onWound(unit.instanceId, -1) }) {
-                                        Text("${st.wounds}/${st.eliminatedThreshold ?: "?"}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (st.wounds == 0) Color(0xFFFF6B6B) else campColor, fontSize = 7.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                                if (onCover != null) {
-                                    Surface(shape = RoundedCornerShape(4.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF1E3A2A) else Color(0xCC0A0E15), modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp).clickable { onCover(unit.instanceId) }) {
-                                        Text("🛡${st.cover ?: 0}", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if ((st.cover ?: 0) > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 7.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                                if (st.orderReceived == true || onOrder != null) {
-                                    Surface(shape = RoundedCornerShape(4.dp), color = if (st.orderReceived == true) Color(0xFF1E3A2A) else Color(0xCC0A0E15), modifier = Modifier.align(Alignment.TopStart).padding(2.dp).clickable(enabled = onOrder != null) { onOrder?.invoke(unit.instanceId) }) {
-                                        Text(if (st.orderReceived == true) "📨" else "＋", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), fontSize = 7.sp)
-                                    }
-                                }
                             }
-                            Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 7.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(64.dp))
-                            if (onToken != null) {
-                                Row(Modifier.padding(top = 1.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    listOf("aim" to "◎", "dodge" to "◈", "surge" to "⚡", "supp" to "✚", "stdby" to "◉").forEach { (tk, sym) ->
-                                        val count = when (tk) {
-                                            "aim" -> st.tokens.count { it == "aim" }
-                                            "dodge" -> st.tokens.count { it == "dodge" }
-                                            "surge" -> st.tokens.count { it == "surge" }
-                                            "supp" -> st.suppressions ?: 0
-                                            "stdby" -> st.tokens.count { it == "standby" }
-                                            else -> 0
-                                        }
-                                        if (count > 0 || tk == "supp") {
-                                            Surface(shape = RoundedCornerShape(3.dp), color = if (tk == "supp" && count > 0) Color(0xFFB71C1C) else Color(0xFF2A3A4A), modifier = Modifier.combinedClickable(onClick = { onToken(unit.instanceId, tk, 1) }, onLongClick = { onToken(unit.instanceId, tk, -1) })) {
-                                                Text("$sym$count", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = if (tk == "supp" && count > 0) Color.White else Color(0xFF9EACBC), fontSize = 6.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                    }
+                            Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            if (st.wounds != null && st.wounds > 0) {
+                                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.clickable(enabled = onWound != null) { onWound?.invoke(unit.instanceId, -1) }) {
+                                    Text("❤ ${st.wounds}", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -2248,43 +2281,18 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
     val pulse = rememberInfiniteTransition(label = "turnPulse")
     val glowAlpha by pulse.animateFloat(initialValue = 0.25f, targetValue = 0.6f, animationSpec = infiniteRepeatable(animation = tween(900), repeatMode = RepeatMode.Reverse), label = "glow")
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827), border = BorderStroke(1.dp, turnColor.copy(alpha = glowAlpha))) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            // Ma carte (chip, tap → ouvrir le deck)
-            Column(horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Surface(onClick = onCmdClick, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B)) {
-                    Row(Modifier.padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Box(Modifier.size(18.dp).clip(CircleShape).background(if (myCmd != null) Color(0xFFF59E0B) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
-                            Text(if (myCmd != null) "★" else "?", color = Color(0xFF0A0E15), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text(if (myCmd != null) myCmd.name else "—", color = Color(0xFFE2E8F0), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-                Text("PIP ${myCmd?.pip ?: "—"}${if (myCmd != null && oppCmd != null && myPrio) " • ⚑" else ""}", color = Color(0xFFF59E0B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        // Centre compact : qui joue + priorité (les cartes sont dans le dashboard mission + la main).
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("▶ ${if (turn == "own") "VOTRE TOUR" else "TOUR ADVERSE"}", color = turnColor, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            if (myCmd != null && oppCmd != null) {
+                Text("PIP ${myCmd.pip} vs ${oppCmd.pip} — ${if (myPrio) "MOI a la priorité ⚑" else "ADV a la priorité ⚑"}", color = if (myPrio) Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                // Objectifs actifs en jetons (EV4 : zone centrale = no man's land).
-                if (activeObjectives.isNotEmpty()) {
-                    activeObjectives.forEach { name ->
-                        Surface(shape = CircleShape, color = Color(0xFF1E3A2A), border = BorderStroke(1.dp, Color(0xFF77D9A7))) {
-                            Text("●", Modifier.padding(6.dp), color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                        }
+            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                activeObjectives.forEach {
+                    Surface(shape = CircleShape, color = Color(0xFF1E3A2A), border = BorderStroke(1.dp, Color(0xFF77D9A7))) {
+                        Text("●", Modifier.padding(5.dp), color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold)
                     }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(if (turn == "own") "▶ À VOUS" else "⏳ TOUR ADV", color = turnColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            // Carte adverse (dos, tap → suivre la commande adverse)
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Surface(onClick = onCmdClick, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B)) {
-                    Row(Modifier.padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text(if (oppCmd != null) "?" else "—", color = Color(0xFFE2E8F0), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Box(Modifier.size(18.dp).clip(CircleShape).background(if (oppCmd != null) Color(0xFF38BDF8) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
-                            Text(if (oppCmd != null) "★" else "?", color = Color(0xFF0A0E15), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-                Text("PIP ${oppCmd?.pip ?: "—"}${if (oppCmd != null && myCmd != null && !myPrio) " • ⚑" else ""}", color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
