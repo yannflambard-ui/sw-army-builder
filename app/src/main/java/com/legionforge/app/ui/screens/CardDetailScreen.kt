@@ -607,7 +607,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // ── Features de jeu (phase GAME) — écran dédié plein écran ──
                     if (phase == PlayPhase.GAME) {
                     Column(Modifier.fillMaxSize()) {
-                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.weight(1f).statusBarsPadding(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     // Bouton discret pour revenir au setup (seule sortie du plein écran de jeu).
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Surface(onClick = { phase = PlayPhase.PREP }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
@@ -622,6 +622,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         cmdMine = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                         cmdOpp = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id } },
                         missionRevealed = missionRevealed,
+                        onOpenMission = { showMissionSheet = true },
                         turn = turn,
                         onRoundChange = { r ->
                             if (r in 1..5) {
@@ -1477,6 +1478,7 @@ internal fun MissionDashboard(
     turn: String = "own",
     onRoundChange: (Int) -> Unit = {},
     onToggleTurn: () -> Unit = {},
+    onOpenMission: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }  // replié : barre compacte, mission dépliable
@@ -1505,6 +1507,9 @@ internal fun MissionDashboard(
                 }
                 Surface(onClick = { expanded = !expanded }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
                     Text("MISSION ${if (expanded) "▲" else "▼"}", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+                Surface(onClick = onOpenMission, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("⚙", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
             // ── Cartes mission (toujours visibles, compactes) ──
@@ -1562,7 +1567,7 @@ internal fun CommandHand(
     onSelect: (LegionCommandCard) -> Unit
 ) {
     val played = hand.firstOrNull { it.id == roundCommand }
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xEE0F172A), shadowElevation = 8.dp) {
+    Surface(Modifier.fillMaxWidth().navigationBarsPadding(), shape = RoundedCornerShape(14.dp), color = Color(0xEE0F172A), shadowElevation = 8.dp) {
         Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("MAIN DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
@@ -1914,7 +1919,7 @@ internal fun UnitActivationCell(
     val artPath = unit.card.imagePath()
     Card(
         onClick = { if (activable) onActivate(unit.instanceId) else onOpen(unit) },
-        modifier = Modifier.fillMaxWidth().aspectRatio(1f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) Color(0xFFFF6B6B) else if (defeated) Color(0xFF3A3A4A) else Color.Transparent, RoundedCornerShape(10.dp)),
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.7f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) Color(0xFFFF6B6B) else if (defeated) Color(0xFF3A3A4A) else Color.Transparent, RoundedCornerShape(10.dp)),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))
     ) {
@@ -1922,7 +1927,7 @@ internal fun UnitActivationCell(
             if (artPath != null) {
                 AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                     modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
-                    contentScale = ContentScale.Crop)
+                    contentScale = ContentScale.Fit)
             } else {
                 Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(4.dp)) }
             }
@@ -1931,7 +1936,7 @@ internal fun UnitActivationCell(
                 LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
             }
             // Nom en surimpression bas.
-            Text(unit.card.name, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xAA0A0E15)).padding(horizontal = 4.dp, vertical = 2.dp))
+            Text(unit.card.name, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xAA0A0E15)).padding(horizontal = 4.dp, vertical = 2.dp))
             // Badge état en haut-droit (symbole + couleur pour daltonisme).
             if (activated) {
                 Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEF5350), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
@@ -1963,11 +1968,11 @@ internal fun UnitActivationStrip(
                 defeated -> Color(0xFF3A3A4A)
                 else -> Color(0xFF66BB6A)
             }
-            Box(Modifier.width(64.dp).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { onOpen(unit) }) {
+            Box(Modifier.width(64.dp).aspectRatio(0.7f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { onOpen(unit) }) {
                 if (artPath != null) {
                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                         modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
-                        contentScale = ContentScale.Crop)
+                        contentScale = ContentScale.Fit)
                 } else {
                     Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
                 }
@@ -2135,7 +2140,7 @@ internal fun CampRow(
                                 contentAlignment = Alignment.Center) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
-                                        modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                        modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                                 } else {
                                     Text(unit.card.name, color = Color.White, fontSize = 7.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp))
                                 }
