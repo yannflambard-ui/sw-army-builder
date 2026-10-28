@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.alpha
@@ -1516,6 +1517,7 @@ internal fun MissionBuilderSheet(
 
 // ── Emplacement de carte du Mission Dashboard (slots Iron Squadron) ──
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier, imagePath: String? = null, onClick: (() -> Unit)? = null, onLongClick: (() -> Unit)? = null) {
     Surface(modifier, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
         Column(Modifier.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
