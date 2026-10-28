@@ -297,11 +297,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var commandDeck by remember { mutableStateOf(setOf<String>()) }
     var playedCommands by remember { mutableStateOf(setOf<String>()) }
     var roundCommand by remember { mutableStateOf<String?>(null) }  // ma carte de commandement jouée ce round
+    var discardedCommands by remember { mutableStateOf(setOf<String>()) }  // cartes défaussées (non rejouables)
     var playPhase by remember { mutableStateOf("command") }  // "command" | "activation" — flux guidé : choisir la carte du round puis activer
     // Émet la carte de commandement jouée ce round en mode 2 joueurs.
     LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
     // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
     LaunchedEffect(round) { roundCommand = null; playPhase = "command" }
+    // PRIO-1/PRIO-2: la priorité (pips, jet de dé rouge sur égalité) ordonne le premier tour du round.
+    LaunchedEffect(roundCommand, oppRoundCommand) {
+        val myPip = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
+        val oppPip = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
+        if (myPip != null && oppPip != null) {
+            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..8).random() == 1
+            turn = if (myHasPrio) "own" else "opp"
+        }
+    }
     // M6: fin de partie automatique (12 VP ou fin du round 5).
     val victoryOwn = stringResource(R.string.victory_own)
     val victoryOpp = stringResource(R.string.victory_opp)
@@ -310,7 +320,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         if (gameResult == null) {
             if (vp >= 12 && vp > oppVp) gameResult = victoryOwn
             else if (oppVp >= 12 && oppVp > vp) gameResult = victoryOpp
-            else if (round >= 5) gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> victoryDraw }
+            else if (round >= 5) gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> null }
         }
     }
     var showCmdSheet by remember { mutableStateOf(false) }
@@ -373,6 +383,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         e.parentInstanceId == null && (e.card.kind == CardKind.LEGION_UNIT || e.card.kind == CardKind.ARMADA_SHIP || e.card.kind == CardKind.ARMADA_SQUADRON || e.card.kind == CardKind.COMMANDER)
     }
     val oppPagerState = rememberPagerState(pageCount = { oppPlayable.size.coerceAtLeast(1) })
+    // RND-1: départage au round 5 par valeur en points des unités vaincues (le plus faible gagne).
+    LaunchedEffect(vp, oppVp, round, gameResult) {
+        if (gameResult == null && round >= 5 && vp == oppVp) {
+            val myDef = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
+            val oppDef = oppPlayable.filter { (if (twoPlayer) oppStates else soloOppStates)[it.instanceId]?.defeated == true }.sumOf { it.card.points }
+            gameResult = when { myDef < oppDef -> victoryOwn; oppDef < myDef -> victoryOpp; else -> victoryDraw }
+        }
+    }
     // Snackbar pour les confirmations/annulations (EV2).
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -628,6 +646,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             if (r in 1..5) {
                                 playedCommands = emptySet()
                                 orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
+                                if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
+                                roundCommand = null
                                 ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
                                 if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
                                 if (r > round) logEvent("Début du round R$r")
@@ -729,6 +749,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceAtLeast(0) else oppVp = (oppVp + delta).coerceAtLeast(0) },
                             onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name },
                             onNextRound = {
+                                if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
+                                roundCommand = null
                                 round += 1
                                 ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
                                 if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
@@ -979,7 +1001,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             missionRevealed = missionRevealed + (key to opts[(idx + 1) % opts.size])
                         }
                     }
-                    "steal" -> bluePlayer = if (bluePlayer == "own") "opp" else "own"
+                    "steal" -> bluePlayer = p  // MIS-4: le joueur qui vole devient blue
                     "pass" -> {}
                 }
                 modsLeft = modsLeft + (p to ((modsLeft[p] ?: 0) - 1).coerceAtLeast(0))
