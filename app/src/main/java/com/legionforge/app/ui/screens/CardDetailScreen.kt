@@ -302,6 +302,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
     // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
     LaunchedEffect(round) { roundCommand = null; playPhase = "command" }
+    // M6: fin de partie automatique (12 VP ou fin du round 5).
+    val victoryOwn = stringResource(R.string.victory_own)
+    val victoryOpp = stringResource(R.string.victory_opp)
+    val victoryDraw = stringResource(R.string.victory_draw)
+    LaunchedEffect(vp, oppVp, round) {
+        if (gameResult == null) {
+            if (vp >= 12 && vp > oppVp) gameResult = victoryOwn
+            else if (oppVp >= 12 && oppVp > vp) gameResult = victoryOpp
+            else if (round >= 5) gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> victoryDraw }
+        }
+    }
     var showCmdSheet by remember { mutableStateOf(false) }
     // Battle deck (Legion v2) : 9 cartes (3+3+3) + mission (carte révélée par catégorie).
     val battleCards = remember { loadBattleCards(legionContext) }
@@ -613,9 +624,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         missionRevealed = missionRevealed,
                         turn = turn,
                         onRoundChange = { r ->
-                            if (r in 1..6) {
+                            if (r in 1..5) {
                                 playedCommands = emptySet()
                                 orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
+                                ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
+                                if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
                                 if (r > round) logEvent("Début du round R$r")
                                 round = r
                             }
@@ -627,6 +640,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Text(if (turn == "own") "VOTRE TOUR — Activez une unité" else "TOUR ADVERSE", color = if (turn == "own") Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
+                    }
+                    // Passer (règle v2 : le joueur peut passer son activation).
+                    Surface(onClick = { toggleTurn() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
+                        Text("Passer", Modifier.padding(vertical = 6.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
                     if (gameResult != null) {
@@ -705,10 +722,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(cover = ((soloOppStates[id]?.cover ?: 0) + 1) % 3)))
                                 }
                             },
-                            round = round, vpA = vpA, vpB = vpB, activeObjectives = activeObjectives,
+                            round = round, vpA = vp, vpB = oppVp, activeObjectives = activeObjectives,
                             objectives = battleCards.filter { it.category == "objective" },
                             onRound = { r -> round = r },
-                            onVP = { side, delta -> if (side == "A") vpA = (vpA + delta).coerceAtLeast(0) else vpB = (vpB + delta).coerceAtLeast(0) },
+                            onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceAtLeast(0) else oppVp = (oppVp + delta).coerceAtLeast(0) },
                             onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name },
                             onNextRound = {
                                 round += 1
@@ -2098,7 +2115,7 @@ internal fun CampRow(
                         val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
                         val defeated = st.defeated == true
                         val activated = st.activated == true
-                        val activable = !defeated && !activated && onActivate != null
+                        val activable = !defeated && !activated && onActivate != null && isActive
                         val artPath = unit.card.imagePath()
                         val panicking = (st.suppressions ?: 0) >= (st.panicThreshold ?: Int.MAX_VALUE) && (st.suppressions ?: 0) > 0
                         val campColor = if (label == "MOI") Color(0xFFF59E0B) else Color(0xFF38BDF8)
