@@ -1633,24 +1633,19 @@ internal fun MissionDashboard(
                         }
                     }
                 }
-                // ── VP + piste 1-12 ──
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("MOI", color = Color(0xFFF59E0B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Box(Modifier.size(3.dp).clip(CircleShape).background(Color(0xFF5A6A7A)))
-                        Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text("ADV", color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Text(if (bluePlayer == "own") "Blue : MOI" else if (bluePlayer == "opp") "Blue : ADV" else "Blue : —", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    (1..12).forEach { n ->
-                        val mine = vpOwn >= n; val theirs = vpOpp >= n
-                        Box(Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(2.dp)).background(if (mine && theirs) Color(0xFF8B5CF6) else if (mine) Color(0xFFF59E0B) else if (theirs) Color(0xFF38BDF8) else Color(0xFF2A3A4A)))
+                // ── Piste de victoire 1-12 (suivi visuel; les scores sont éditables dans la barre au-dessus) ──
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("VP", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        (1..12).forEach { n ->
+                            val mine = vpOwn >= n; val theirs = vpOpp >= n
+                            Box(Modifier.weight(1f).height(12.dp).clip(RoundedCornerShape(2.dp)).background(if (mine && theirs) Color(0xFF8B5CF6) else if (mine) Color(0xFFF59E0B) else if (theirs) Color(0xFF38BDF8) else Color(0xFF2A3A4A)))
+                        }
                     }
                 }
-                Text("Victoire à 12 VP ou au plus de VP au round 5", color = Color(0xFF8F9BAD), fontSize = 8.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Text("■ MOI   ■ ADV   ■ les 2", color = Color(0xFF7A828A), fontSize = 8.sp)
+                }
             }
         }
     }
