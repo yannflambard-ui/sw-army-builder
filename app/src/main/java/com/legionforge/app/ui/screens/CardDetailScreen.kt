@@ -77,6 +77,7 @@ import com.legionforge.app.util.rememberNearbyPermissionAction
 import com.legionforge.app.util.NearbyDiagnosticPanel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 // Retrouve la section wiki correspondant à un mot-clé/titre (insensible à la casse).
 internal fun findWikiSection(wikiSections: List<WikiSectionEntity>, keyword: String): WikiSectionEntity? {
@@ -358,6 +359,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Round 0 / Build a Mission (v2.6).
     var showMissionSheet by remember { mutableStateOf(false) }
     var showCommandHandSheet by remember { mutableStateOf(false) }  // main dépliée depuis le bas au clic sur CMD
+    var passArmed by remember { mutableStateOf(false) }  // double confirmation du bouton Passer
     var missionZoom by remember { mutableStateOf<Pair<String, String?>?>(null) }  // (nom, image) carte mission en grand (long-press)
     var bluePlayer by remember { mutableStateOf<String?>(null) }  // "own" | "opp"
     var missionRevealed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }  // "own_objective" -> nom
@@ -682,13 +684,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     val activeColor = if (isMine) mineColor else oppColor
                     val stepText = if (playPhase == "command") "1. Choisissez votre carte de commandement" else "2. Activez une unité"
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Surface(onClick = { toggleTurn() }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp), color = if (isMine) Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                        Surface(Modifier.weight(1f), shape = RoundedCornerShape(10.dp), color = if (isMine) Color(0xFFFFC857) else Color(0xFF3B2224)) {
                             Text("TOUR JOUEUR $activeColor — $stepText", Modifier.padding(vertical = 8.dp).padding(horizontal = 6.dp), color = if (isMine) Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2)
                         }
-                        Surface(onClick = { toggleTurn() }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
-                            Text("Passer", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        // Passer : activation uniquement, double confirmation anti-erreur + désarmement auto.
+                        Surface(onClick = {
+                            if (playPhase != "command") {
+                                if (passArmed) { toggleTurn(); passArmed = false }
+                                else passArmed = true
+                            }
+                        }, shape = RoundedCornerShape(10.dp), color = if (passArmed) Color(0xFFFFC857) else if (playPhase == "command") Color(0xFF1A2330) else Color(0xFF2A3A4A)) {
+                            Text(if (passArmed) "Confirmer ?" else "Passer", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = if (passArmed) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                    // Désarme automatiquement Passer après 3s (anti-erreur).
+                    LaunchedEffect(passArmed) { if (passArmed) { delay(3000); passArmed = false } }
                     // ── Résultat de partie (déclenché via le menu ⋮) ──
                     if (gameResult != null) {
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
@@ -2272,9 +2282,17 @@ internal fun CampRow(
                                 }
                             }
                             Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                            if (st.wounds != null && st.wounds > 0) {
-                                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.clickable(enabled = onWound != null) { onWound?.invoke(unit.instanceId, -1) }) {
-                                    Text("❤ ${st.wounds}", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                            if (onWound != null) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A), modifier = Modifier.clickable { if ((st.wounds ?: 0) > 0) onWound?.invoke(unit.instanceId, -1) }) {
+                                        Text("−", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C)) {
+                                        Text("❤ ${st.wounds ?: 0}", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1E3A2A), modifier = Modifier.clickable { onWound?.invoke(unit.instanceId, 1) }) {
+                                        Text("+", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -2298,7 +2316,12 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text("▶ ${if (turn == "own") "VOTRE TOUR" else "TOUR ADVERSE"}", color = turnColor, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             if (myCmd != null && oppCmd != null) {
-                Text("PIP ${myCmd.pip} vs ${oppCmd.pip} — ${if (myPrio) "MOI a la priorité ⚑" else "ADV a la priorité ⚑"}", color = if (myPrio) Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                val pMy = myCmd.pip?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
+                val pOpp = oppCmd.pip?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull()
+                val tie = pMy != null && pOpp != null && pMy == pOpp
+                val hasPrio = turn == "own"
+                val prioText = if (tie) "PIP $pMy = $pOpp — égalité  →  ${if (hasPrio) "MOI" else "ADV"} (dé)" else "${if (hasPrio) "MOI" else "ADV"} ⚑ priorité"
+                Text(prioText, color = if (hasPrio) Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 activeObjectives.forEach {
