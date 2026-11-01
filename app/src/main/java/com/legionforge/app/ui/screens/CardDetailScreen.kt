@@ -1531,18 +1531,24 @@ internal fun MissionBuilderSheet(
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
 internal fun DashSlot(title: String, name: String, color: Color, modifier: Modifier = Modifier, imagePath: String? = null, onClick: (() -> Unit)? = null, onLongClick: (() -> Unit)? = null) {
-    Surface(modifier, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
-        Column(Modifier.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, color = color, fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center)
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        // Cadre : seule la carte (toute la hauteur), le texte ne réduit plus la carte.
+        Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
             val clickMod = if (onLongClick != null) Modifier.combinedClickable(onClick = { onClick?.invoke() }, onLongClick = onLongClick) else if (onClick != null) Modifier.clickable { onClick() } else Modifier
-            if (imagePath != null) {
-                AsyncImage(model = "file:///android_asset/$imagePath", contentDescription = name,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(4.dp)).then(clickMod), contentScale = ContentScale.Fit)
-            } else {
-                Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().then(clickMod))
+            Box(Modifier.fillMaxWidth().aspectRatio(1.2f).then(clickMod)) {
+                if (imagePath != null) {
+                    AsyncImage(model = "file:///android_asset/$imagePath", contentDescription = name,
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Fit)
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                    }
+                }
             }
-            Text(name, color = Color(0xFFE2E8F0), fontSize = 7.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
         }
+        // Texte SOUS le cadre.
+        Text(title, color = color, fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.padding(top = 2.dp))
+        Text(name, color = Color(0xFFE2E8F0), fontSize = 7.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
 }
 
