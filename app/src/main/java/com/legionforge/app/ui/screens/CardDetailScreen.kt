@@ -2116,7 +2116,7 @@ internal fun UnitActivationStrip(
 }
 
 
-// ── Écran central "champ de bataille" (façon Pokemon TCG) : adversaire haut, commandement centre, moi bas ──
+// ── Écran central "champ de bataille" : MOI (action) haut, commandement centre, adversaire (contexte) bas ──
 @Composable
 internal fun BattlefieldView(
     myUnits: List<ListEntry>, oppUnits: List<ListEntry>,
@@ -2138,10 +2138,12 @@ internal fun BattlefieldView(
     onJournal: () -> Unit = {}
 ) {
     Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B)))).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // (ScoreRoundBar retiré : le MissionDashboard affiche déjà round/VP en tête d'écran de jeu)
-        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
-        CommandCenterRow(myCmd, oppCmd, turn, onCmdClick, activeObjectives = activeObjectives)
+        // P0 (audit experts) : MOI d'abord = la seule surface d'action (activer/blessures/ordres).
+        // L'adversaire est lecture seule / consulté ponctuellement → relégué dessous. Évite qu'il
+        // pousse le camp actif hors écran (le bug 'j'arrive pas à activer mes unités').
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
+        CommandCenterRow(myCmd, oppCmd, turn, onCmdClick, activeObjectives = activeObjectives)
+        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
     }
 }
 
@@ -2300,7 +2302,10 @@ internal fun CampRow(
                                 .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
                                 .border(2.dp, stateColor, RoundedCornerShape(6.dp))
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
-                                .combinedClickable(onClick = { onOpenUnit(unit) }, onLongClick = { onOpenUnit(unit) }),
+                                .combinedClickable(
+                                    onClick = { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) },
+                                    onLongClick = { onOpenUnit(unit) }
+                                ),
                                 contentAlignment = Alignment.Center) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
