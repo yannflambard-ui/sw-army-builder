@@ -260,22 +260,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     LaunchedEffect(round) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRound(round) }
     // Synchro du tour (identité de joueur) : corrige le clignotement "VOTRE TOUR" sur les 2 tablettes.
     val myPlayerId = playSyncVm.playerId
+    // P0.#1: envoie l'état de jeu partagé réel (VP, round, objectifs, tour) à l'adversaire.
+    fun pushGameState() {
+        if (twoPlayer && syncMode == ShareMode.CONNECTED) {
+            playSyncVm.sendGameState(com.legionforge.app.data.nearby.GameStatePayload(
+                round = round, vpA = vp, vpB = oppVp, turnOwner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A"),
+                activeObjectives = activeObjectives.toList(), phase = "game", seq = System.currentTimeMillis()
+            ))
+        }
+    }
     fun toggleTurn() {
         turn = if (turn == "own") "opp" else "own"
         if (twoPlayer && syncMode == ShareMode.CONNECTED) {
             val owner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A")
             playSyncVm.sendTurn(owner)
             pushGameState()
-        }
-    }
-    // P0.#1: envoie l'état de jeu partagé réel (VP, round, objectifs, tour) à l'adversaire.
-    fun pushGameState() {
-        if (twoPlayer && syncMode == ShareMode.CONNECTED) {
-            val owner = turn
-            playSyncVm.sendGameState(com.legionforge.app.data.nearby.GameStatePayload(
-                round = round, vpA = vp, vpB = oppVp, turnOwner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A"),
-                activeObjectives = activeObjectives.toList(), phase = "game", seq = System.currentTimeMillis()
-            ))
         }
     }
     LaunchedEffect(receivedTurn) {
