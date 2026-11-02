@@ -1061,7 +1061,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     Text(zname, color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 2, textAlign = TextAlign.Center)
                     if (zimg != null) {
                         AsyncImage(model = "file:///android_asset/$zimg", contentDescription = zname,
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(10.dp)), contentScale = ContentScale.Fit)
+                            modifier = Modifier.fillMaxWidth().aspectRatio(0.7f).clip(RoundedCornerShape(10.dp)), contentScale = ContentScale.Fit)
                     }
                     TextButton(onClick = { missionZoom = null }) { Text("Fermer", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                 }
@@ -1567,7 +1567,8 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
         // Cadre : seule la carte (toute la hauteur), le texte ne réduit plus la carte.
         Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), border = BorderStroke(1.dp, color)) {
             val clickMod = if (onLongClick != null) Modifier.combinedClickable(onClick = { onClick?.invoke() }, onLongClick = onLongClick) else if (onClick != null) Modifier.clickable { onClick() } else Modifier
-            Box(Modifier.fillMaxWidth().aspectRatio(1.2f).then(clickMod)) {
+            // Carte battle = ratio portrait (~0.70 w/h). 1.2f écrase la carte en paysage -> box portrait pour respecter le format.
+            Box(Modifier.fillMaxWidth().aspectRatio(0.7f).then(clickMod)) {
                 if (imagePath != null) {
                     AsyncImage(model = "file:///android_asset/$imagePath", contentDescription = name,
                         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Fit)
