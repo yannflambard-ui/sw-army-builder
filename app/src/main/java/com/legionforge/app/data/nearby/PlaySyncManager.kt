@@ -46,7 +46,8 @@ data class PlaySyncPayload(
     val listJson: String? = null, // liste de l'armée adverse (sérialisée)
     val deploymentDone: Boolean? = null, // Legion : déploiement terminé (par joueur)
     val roundCard: String? = null, // Legion : id de la carte de commandement jouée ce round
-    val turnOwner: String? = null // Legion : qui active ("A" ou "B")
+    val turnOwner: String? = null, // Legion : qui active ("A" ou "B")
+    val gameState: GameStatePayload? = null // Legion : état de jeu partagé complet (VP/round/objectifs/tour)
 )
 
 /** État de jeu partagé (round, VP, tour, objectifs, phase) — synchronisé entre les 2 joueurs. */
@@ -119,7 +120,7 @@ class PlaySyncManager(context: Context) {
                     "deploydone" -> _receivedDeploymentDone.value = payload.deploymentDone
                     "roundcard" -> _receivedRoundCard.value = payload.roundCard
                     "turn" -> _receivedTurn.value = payload.turnOwner
-                    "game" -> _receivedGameState.value = try { gson.fromJson(json, GameStatePayload::class.java) } catch (_: Exception) { null }
+                    "game" -> _receivedGameState.value = payload.gameState
                 }
             }
         }
@@ -159,7 +160,7 @@ class PlaySyncManager(context: Context) {
 
     /** Envoie l'état de jeu partagé (round, VP, tour, objectifs, phase). */
     fun sendGameState(state: GameStatePayload) {
-        nearby.sendList(gson.toJson(state))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "game", gameState = state)))
     }
 
     /** Demande à l'autre joueur de renvoyer sa liste (synchro manuelle). */

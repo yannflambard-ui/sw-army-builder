@@ -220,6 +220,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Points de victoire + unités vaincues (état global de partie, mode 2 joueurs).
     var vp by remember { mutableIntStateOf(0) }
     var oppVp by remember { mutableIntStateOf(0) }
+    var activeObjectives by remember { mutableStateOf<Set<String>>(emptySet()) }
     var kills by remember { mutableIntStateOf(0) }
     var oppKills by remember { mutableIntStateOf(0) }
     // Priorité (qui active en premier) + jetons de passe (règle v2).
@@ -264,11 +265,34 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         if (twoPlayer && syncMode == ShareMode.CONNECTED) {
             val owner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A")
             playSyncVm.sendTurn(owner)
+            pushGameState()
+        }
+    }
+    // P0.#1: envoie l'état de jeu partagé réel (VP, round, objectifs, tour) à l'adversaire.
+    fun pushGameState() {
+        if (twoPlayer && syncMode == ShareMode.CONNECTED) {
+            val owner = turn
+            playSyncVm.sendGameState(com.legionforge.app.data.nearby.GameStatePayload(
+                round = round, vpA = vp, vpB = oppVp, turnOwner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A"),
+                activeObjectives = activeObjectives.toList(), phase = "game", seq = System.currentTimeMillis()
+            ))
         }
     }
     LaunchedEffect(receivedTurn) {
         if (twoPlayer && receivedTurn != null) {
             turn = if (receivedTurn == myPlayerId) "own" else "opp"
+        }
+    }
+    val receivedGameState by playSyncVm.receivedGameState.collectAsState()
+    // P0.#1: applique l'état de jeu partagé reçu de l'autre téléphone (VP, round, objectifs, tour).
+    LaunchedEffect(receivedGameState) {
+        val gs = receivedGameState ?: return@LaunchedEffect
+        if (twoPlayer) {
+            if (gs.round in 1..6) round = gs.round
+            if (gs.vpA >= 0) vp = gs.vpA
+            if (gs.vpB >= 0) oppVp = gs.vpB
+            if (gs.turnOwner != null && gs.turnOwner != myPlayerId) { if (gs.vpA >= 0 || gs.round >= 1) turn = "opp" } else if (gs.turnOwner == myPlayerId) turn = "own"
+            if (gs.activeObjectives.isNotEmpty()) activeObjectives = gs.activeObjectives.toSet()
         }
     }
     // Envoie la liste dès qu'elle est chargée ET qu'on est connecté. openList est async :
@@ -326,6 +350,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             turn = if (myHasPrio) "own" else "opp"
         }
     }
+    // P0.#2: dès que l'adversaire a joué SA carte (2 joueurs), on passe automatiquement en activation.
+    LaunchedEffect(oppRoundCommand, roundCommand) {
+        if (twoPlayer && playPhase == "command" && roundCommand != null && oppRoundCommand != null) playPhase = "activation"
+    }
     // M6: fin de partie automatique (12 VP ou fin du round 5).
     val victoryOwn = stringResource(R.string.victory_own)
     val victoryOpp = stringResource(R.string.victory_opp)
@@ -354,7 +382,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var panicRoll by remember { mutableStateOf<Int?>(null) }
     var vpA by remember { mutableStateOf(0) }
     var vpB by remember { mutableStateOf(0) }
-    var activeObjectives by remember { mutableStateOf<Set<String>>(emptySet()) }
     var soloOppStates by remember { mutableStateOf<Map<String, SyncedUnitState>>(emptyMap()) }
     // Round 0 / Build a Mission (v2.6).
     var showMissionSheet by remember { mutableStateOf(false) }
@@ -660,7 +687,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         onOpenMission = { showMissionSheet = true },
                         onOpenCommandHand = { showCommandHandSheet = true },
                         onZoomMission = { n, img -> missionZoom = n to img },
-                        onVPChange = { side, d -> if (side == 1) vp = (vp + d).coerceIn(0, 12) else oppVp = (oppVp + d).coerceIn(0, 12) },
+                        onVPChange = { side, d -> if (side == 1) vp = (vp + d).coerceIn(0, 12) else oppVp = (oppVp + d).coerceIn(0, 12); pushGameState() },
                         onJournal = { showLogSheet = true },
                         turn = turn,
                         onRoundChange = { r ->
@@ -673,6 +700,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
                                 if (r > round) logEvent("Début du round R$r")
                                 round = r
+                                pushGameState()
                             }
                         },
                         onToggleTurn = { toggleTurn() }
@@ -739,7 +767,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
                                 selected = roundCommand,
                                 onSelect = { id -> roundCommand = id },
-                                onConfirm = { playPhase = "activation"; roundCommand?.let { id -> cmdCards.firstOrNull { c -> c.id == id }?.let { c -> logEvent("Carte de commandement : ${c.name}") } } }
+                                onConfirm = {
+                                    // P0.#2: en 2 joueurs, on ne passe en activation que si l'adversaire a joué SA carte (sinon attente).
+                                    roundCommand?.let { id -> cmdCards.firstOrNull { c -> c.id == id }?.let { c -> logEvent("Carte de commandement : ${c.name}") } }
+                                    if (!twoPlayer || oppRoundCommand != null) playPhase = "activation"
+                                }
                             )
                         } else {
                         BattlefieldView(
@@ -779,12 +811,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             round = round, vpA = vp, vpB = oppVp, activeObjectives = activeObjectives,
                             objectives = battleCards.filter { it.category == "objective" },
                             onRound = { r -> round = r },
-                            onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceAtLeast(0) else oppVp = (oppVp + delta).coerceAtLeast(0) },
-                            onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name },
+                            onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceAtLeast(0) else oppVp = (oppVp + delta).coerceAtLeast(0); pushGameState() },
+                            onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name; pushGameState() },
                             onNextRound = {
                                 if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
                                 roundCommand = null
                                 round += 1
+                                pushGameState()
                                 ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
                                 if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
                             },
@@ -2268,7 +2301,7 @@ internal fun CampRow(
                                 .background(if (defeated) Color(0xFF1A2330) else Color(0xFF1E293B))
                                 .border(2.dp, stateColor, RoundedCornerShape(6.dp))
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
-                                .combinedClickable(onClick = { if (activable) onActivate?.invoke(unit.instanceId) else onOpenUnit(unit) }, onLongClick = { onOpenUnit(unit) }),
+                                .combinedClickable(onClick = { onOpenUnit(unit) }, onLongClick = { onOpenUnit(unit) }),
                                 contentAlignment = Alignment.Center) {
                                 if (artPath != null) {
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
@@ -2283,6 +2316,11 @@ internal fun CampRow(
                                 }
                             }
                             Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            if (activable) {
+                                Surface(onClick = { onActivate?.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = Color(0xFF1E3A2A)) {
+                                    Text("▶ Activer", Modifier.padding(vertical = 3.dp), color = Color(0xFF77D9A7), fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                }
+                            }
                             if (onWound != null) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A), modifier = Modifier.clickable { if ((st.wounds ?: 0) > 0) onWound?.invoke(unit.instanceId, -1) }) {
