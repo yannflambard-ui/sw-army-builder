@@ -848,7 +848,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
                                             Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
                                         }
-                                        Button(onClick = { playSyncVm.resync() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
+                                        Button(onClick = { pushGameState(); playSyncVm.sendState(playSyncVm.ownStates.value.values.toList()) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
                                             Text("Resync", color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
                                         }
                                     }
