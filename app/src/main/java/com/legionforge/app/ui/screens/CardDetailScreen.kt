@@ -1182,8 +1182,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         ModalBottomSheet(onDismissRequest = { showOppPicker = false }, containerColor = Color(0xFF111827)) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Choisir l'armée adverse", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                if (allLists.isEmpty()) Text("Aucune liste enregistrée", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
-                allLists.forEach { l ->
+                // Ne propose que des listes du MÊME jeu (une flotte Armada ne peut pas avoir une armée Legion en face, et vice-versa).
+                val curSystem = vm.currentList.value?.gameSystem
+                val sameSystem = allLists.filter { it.gameSystem == curSystem }
+                if (sameSystem.isEmpty()) Text(
+                    if (curSystem == "ARMADA_V15") "Aucune flotte Armada adverse enregistrée" else "Aucune armée adverse de ce jeu enregistrée",
+                    color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                sameSystem.forEach { l ->
                     Surface(onClick = { vm.loadOpponentList(l.id); showOppPicker = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(l.name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
