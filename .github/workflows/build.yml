@@ -31,16 +31,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Inject the persistent fine-grained PAT (issues:write, repo legion-forge-ci seul)
-      # into BuildConfig.GITHUB_TOKEN. Stored as repo secret LEGIONFORGE_GH_TOKEN.
-      # The GITHUB_TOKEN natif de workflow expiré à la fin du run CI, on utilise donc
-      # le PAT persistant pour que le reporting marche depuis le téléphone.
-      - name: Inject GitHub token
-        run: |
-          printf 'legionforge_github_token=%s\n' "$GHTV" > app/github_token.properties
-        env:
-          GHTV: ${{ secrets.LEGIONFORGE_GH_TOKEN }}
-
       # Décoder le keystore stable (base64) pour signer le debug APK avec une clé
       # CONSTANTE -> l'utilisateur peut mettre à jour l'app sans désinstaller.
       - name: Decode stable signing keystore

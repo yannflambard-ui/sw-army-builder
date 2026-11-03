@@ -1,21 +1,16 @@
 package com.legionforge.app.util
 
 import android.content.Context
-import com.legionforge.app.BuildConfig
-import java.io.StringWriter
-import java.io.PrintWriter
-import java.net.HttpURLConnection
-import java.net.URL
+import android.util.Log
 
 /**
- * Catches uncaught exceptions, reports them, and continues to default handler.
+ * Intercepte les exceptions non capturées et les journal localement.
+ * Plus AUCUN appel réseau, AUCUN token GitHub embarqué dans l'APK (sécurité / vie privée).
  */
 object CrashReporter {
-    private const val REPO = "yannflambard-ui/legion-forge-ci"
-    private var context: Context? = null
+    private const val TAG = "SWArmyBuilder"
 
     fun init(ctx: Context) {
-        context = ctx
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             report(throwable)
@@ -24,62 +19,15 @@ object CrashReporter {
     }
 
     private fun report(error: Throwable) {
-        val msg = error.message?.take(80) ?: error.javaClass.simpleName
-        android.util.Log.i("CrashReporter", "report crash: $msg")
-        reportEvent("LegionForge crash: $msg", "Crash: $msg\n${error.javaClass.name}")
+        val msg = error.message?.take(120) ?: error.javaClass.simpleName
+        Log.e(TAG, "Crash: $msg\n${error.stackTraceToString()}")
     }
 
     /**
-     * Publie un rapport d'événement sur GitHub, même quand ce n'est pas une
-     * exception (ex: "Catalogue vide"). Utilisé pour le diagnostic remote.
-     * Déduplique : si le titre identique a déjà été créé, on l'ignore.
+     * Journal local d'un événement de diagnostic (ex: "Catalogue vide").
+     * Anciennement posté en issue GitHub via un token embarqué — retiré pour sécurité.
      */
     fun reportEvent(title: String, body: String) {
-        // Le POST réseau est exécuté sur un thread de fond dédié : reportEvent(x) peut
-        // être appelé depuis le main thread UI, et un HttpURLConnection bloquant dessus
-        // lèverait NetworkOnMainThreadException. On ne bloque jamais l'UI.
-        Thread {
-            try {
-                val cleanTitle = title.take(80)
-                // Recherche d'un issue existant avec le même title (ouvrir seulement, max 5)
-                val searchUrl = URL("https://api.github.com/search/issues?q=repo:$REPO+in:title+${urlencode(cleanTitle)}+state:open")
-                val searchConn = searchUrl.openConnection() as HttpURLConnection
-                searchConn.setRequestProperty("Accept", "application/vnd.github+json")
-                searchConn.setRequestProperty("User-Agent", "LegionForge")
-                if (searchConn.responseCode == 200) {
-                    val bodySearch = searchConn.inputStream.bufferedReader().use { it.readText() }
-                    if (bodySearch.contains("\"total_count\":") && regexTotalCount(bodySearch) > 0) {
-                        android.util.Log.i("CrashReporter", "issue déjà ouverte pour: $cleanTitle")
-                        return@Thread
-                    }
-                }
-
-                val jsonPayload = buildJson(mapOf("title" to cleanTitle, "body" to body))
-                val url = URL("https://api.github.com/repos/$REPO/issues")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("User-Agent", "LegionForge")
-                conn.setRequestProperty("Accept", "application/vnd.github+json")
-                conn.setRequestProperty("Authorization", "Bearer ${BuildConfig.GITHUB_TOKEN}")
-                conn.doOutput = true
-                conn.connectTimeout = 7000
-                conn.readTimeout = 7000
-                conn.outputStream.write(jsonPayload.toByteArray())
-                val code = conn.responseCode
-                android.util.Log.i("CrashReporter", "rapport $cleanTitle posted code=$code")
-            } catch (t: Throwable) {
-                android.util.Log.w("CrashReporter", "impossible d'envoyer", t)
-            }
-        }.start()
-    }
-
-    private fun regexTotalCount(s: String): Int =
-        Regex("\"total_count\":(\\d+)").find(s)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-    private fun urlencode(s: String): String =
-        java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
-    private fun buildJson(m: Map<String, String>): String {
-        fun esc(v: String) = v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
-        return "{" + m.entries.joinToString(",") { "\"${it.key}\":\"${esc(it.value)}\"" } + "}"
+        Log.w(TAG, "$title — $body")
     }
 }
