@@ -13,7 +13,6 @@ import com.legionforge.app.R
 import com.legionforge.app.data.model.GameSystem
 import com.legionforge.app.data.model.CardKind
 import com.legionforge.app.ui.screens.ArmyBuilderScreen
-import com.legionforge.app.ui.screens.BattlefieldVetoScreen
 import com.legionforge.app.ui.screens.CardDetailScreen
 import com.legionforge.app.ui.screens.CollectionScreen
 import com.legionforge.app.ui.screens.FactionPickerScreen
@@ -35,7 +34,6 @@ object Routes {
     const val COLLECTION = "collection"
     const val WIKI = "wiki"
     const val CARD_DETAIL = "card_detail/{listId}/{entryInstanceId}"
-        const val BATTLEFIELD_VETO = "battlefield_veto"
         const val SHARE = "share/{listId}"
         fun factionPicker(system: GameSystem) = "faction_picker/${system.name}"
         fun armyBuilder(listId: String) = "army_builder/$listId"
@@ -117,12 +115,6 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     val idx = allEntries.indexOfFirst { it.instanceId == eid }.coerceAtLeast(0)
                     CardDetailScreen(entries = allEntries, initialIndex = idx, listId = lid, onBack = { navController.popBackStack() })
                 }
-        composable(Routes.BATTLEFIELD_VETO) {
-            BattlefieldVetoScreen(
-                onBack = { navController.popBackStack() },
-                onValidate = { banned -> navController.popBackStack() }
-            )
-        }
         composable(Routes.SHARE, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
             val list = vm.currentList.value
