@@ -459,6 +459,58 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // distinctBy protège contre un doublon d'ID (clé LazyRow) si SO était déjà dans le deck.
     val playCmdHand = (commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } } + listOfNotNull(cmdCards.firstOrNull { it.pip == "4" })).distinctBy { it.id }
 
+    // ── Persistance d'une partie solo (reprise après rotation / fermeture) ──
+    // table `game_sessions` (Room), snapshot Gson idiome. Restaure UNIQUEMENT une partie en
+    // cours (phase GAME) d'une liste solo ; retour au setup = purge (pas de reprise fantôme).
+    val sessionDb = remember { com.legionforge.app.data.local.LegionForgeDatabase.getInstance(legionContext) }
+    LaunchedEffect(listId) {
+        if (listId != null && !twoPlayer) {
+            val ent = sessionDb.gameSessionDao().getByList(listId)
+            if (ent != null) {
+                val snap = try { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(ent.snapshot) } catch (_: Exception) { null }
+                if (snap != null && snap.phase == "GAME" && snap.listId == listId) {
+                    round = snap.round; vp = snap.vp; oppVp = snap.oppVp
+                    kills = snap.kills; oppKills = snap.oppKills
+                    priority = snap.priority; passes = snap.passes; oppPasses = snap.oppPasses
+                    orderPool = snap.orderPool; gameResult = snap.gameResult; gameLog = snap.gameLog; turn = snap.turn
+                    phase = PlayPhase.GAME; playPhase = snap.playPhase
+                    activeObjectives = snap.activeObjectives.toSet(); battleDeck = snap.battleDeck.toSet()
+                    battleRevealed = snap.battleRevealed; missionRevealed = snap.missionRevealed
+                    bluePlayer = snap.bluePlayer; modsLeft = snap.modsLeft
+                    commandDeck = snap.commandDeck.toSet(); playedCommands = snap.playedCommands.toSet()
+                    roundCommand = snap.roundCommand; discardedCommands = snap.discardedCommands.toSet()
+                    soloOppRoundCommand = snap.soloOppRoundCommand; soloOppCommandDeck = snap.soloOppCommandDeck.toSet()
+                    playSyncVm.restoreOwnStates(snap.ownStates)
+                    soloOppStates = snap.soloOppStates
+                }
+            }
+        }
+    }
+    // Retour au setup ou nouvelle partie → supprime la session sauvegardée (pas de reprise fantôme).
+    LaunchedEffect(phase) {
+        if (phase == PlayPhase.PREP && listId != null) {
+            sessionDb.gameSessionDao().delete(listId)
+        }
+    }
+    // Auto-save débounced (solo, en GAME) dès qu'un état de partie change.
+    LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority) {
+        if (phase == PlayPhase.GAME && !twoPlayer && listId != null) {
+            kotlinx.coroutines.delay(350)
+            val snap = com.legionforge.app.data.model.PlaySessionSnapshot(
+                listId = listId, gameSystem = vm.currentList.value?.gameSystem, phase = phase.name, playPhase = playPhase,
+                round = round, vp = vp, oppVp = oppVp, kills = kills, oppKills = oppKills, priority = priority,
+                passes = passes, oppPasses = oppPasses, orderPool = orderPool, gameResult = gameResult, gameLog = gameLog,
+                turn = turn, activeObjectives = activeObjectives.toList(), battleDeck = battleDeck.toList(),
+                battleRevealed = battleRevealed, missionRevealed = missionRevealed, bluePlayer = bluePlayer, modsLeft = modsLeft,
+                commandDeck = commandDeck.toList(), playedCommands = playedCommands.toList(), roundCommand = roundCommand,
+                discardedCommands = discardedCommands.toList(), soloOppRoundCommand = soloOppRoundCommand,
+                soloOppCommandDeck = soloOppCommandDeck.toList(), soloOppListId = vm.soloOppList.value?.id,
+                ownStates = ownStates, soloOppStates = soloOppStates
+            )
+            sessionDb.gameSessionDao().upsert(com.legionforge.app.data.model.GameSessionEntity(listId, vm.currentList.value?.gameSystem ?: "LEGION_V2", snap.toJson(), System.currentTimeMillis()))
+        }
+    }
+
     Scaffold(topBar = {
         if (!(phase == PlayPhase.GAME && viewingArmy == null)) {
         TopAppBar(title = { Text(stringResource(R.string.play_mode), style = MaterialTheme.typography.titleMedium) },

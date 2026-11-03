@@ -116,6 +116,11 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendState(listOf(next))
     }
 
+    /** Restaure MES états d'unités depuis une partie sauvegardée (aucun broadcast). */
+    fun restoreOwnStates(states: Map<String, SyncedUnitState>) {
+        _ownStates.value = states
+    }
+
     /** Marque mon déploiement terminé (ou non) et le diffuse à l'adversaire. */
     fun setDeploymentDone(done: Boolean) {
         _deploymentDone.value = done
