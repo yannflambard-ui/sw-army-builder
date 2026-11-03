@@ -1,4 +1,4 @@
-# Legion Forge — SW Legion v2 Army Builder (MVP)
+# SW Army Builder — SW Legion v2 + Armada v1.5
 
 App Android (Kotlin + Jetpack Compose + Room) pour construire des listes
 d'armée Star Wars Legion v2. Voir specs complètes dans le skill

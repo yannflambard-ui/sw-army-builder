@@ -1,4 +1,4 @@
-# Legion Forge — Notes de développement
+# SW Army Builder — Notes de développement
 
 ## 🔍 Détection des cartes FR hors-format (2026-10-24)
 - **`detect_bad_cards.py` est INVALIDE — supprimé.** Il jugeait une carte par la LUMINOSITÉ

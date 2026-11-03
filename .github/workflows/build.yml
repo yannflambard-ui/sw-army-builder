@@ -78,13 +78,13 @@ jobs:
           if [ -n "$PREV_TAG" ]; then
             NOTES="$(gh api "/repos/$REPO/compare/$PREV_TAG...$TAG" --jq '.commits[] | "- " + (.commit.message | split("\n")[0])' 2>/dev/null || echo "Changements non listes.")"
           else
-            NOTES="- Premiere version publique de Legion Forge v${VERSION}."
+            NOTES="- Premiere version publique de SW Army Builder v${VERSION}."
           fi
-          printf 'Legion Forge v%s\n\n%s\n\nAPK : legion-forge-debug.apk ci-joint.\n' "$VERSION" "$NOTES" > /tmp/release_notes.txt
+          printf 'SW Army Builder v%s\n\n%s\n\nAPK : legion-forge-debug.apk ci-joint.\n' "$VERSION" "$NOTES" > /tmp/release_notes.txt
           gh release create "$TAG" \
             app/build/outputs/apk/debug/app-debug.apk \
             --repo "$REPO" \
-            --title "Legion Forge $VERSION" \
+            --title "SW Army Builder $VERSION" \
             --notes-file /tmp/release_notes.txt
         env:
           GH_TOKEN: ${{ github.token }}

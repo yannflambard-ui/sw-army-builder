@@ -1,10 +1,10 @@
-# Legion Forge — Roadmap produit
+# SW Army Builder — Roadmap produit
 
 Application compagnon pour **Star Wars: Legion V2** et **Star Wars: Armada**.
 Objectif : devenir indispensable **à côté de la table** (trouver une info en 2 secondes, construire une liste honnête, suivre une partie sans PDF ni mémorisation).
 
 > Double filtre appliqué à chaque feature : **utilité réelle pour un joueur** PUIS **intégration propre** dans l'architecture existante (Compose, Room, catalogue JSON v2, mode partie par pager).
-> Principe : **faire évoluer Legion Forge, pas reconstruire Legion Forge.**
+> Principe : **faire évoluer SW Army Builder, pas reconstruire.**
 
 ---
 

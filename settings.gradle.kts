@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "LegionForge"
+rootProject.name = "SWArmyBuilder"
 include(":app")
