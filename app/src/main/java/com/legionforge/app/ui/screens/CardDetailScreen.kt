@@ -2289,7 +2289,10 @@ internal fun CampRow(
                         val activated = st.activated == true
                         val activable = !defeated && !activated && onActivate != null && isActive
                         val artPath = unit.card.imagePath()
-                        val panicking = (st.suppressions ?: 0) >= (st.panicThreshold ?: Int.MAX_VALUE) && (st.suppressions ?: 0) > 0
+                        val _stats = parse(unit.card.legionStats)
+                        val _courage = _stats?.courage?.takeIf { it > 0 } ?: 1
+                        val _suppres = st.suppressions ?: 0
+                        val panicking = _suppres >= _courage * 2 && _suppres > 0
                         val campColor = if (label == "MOI") Color(0xFFF59E0B) else Color(0xFF38BDF8)
                         val stateColor = when {
                             panicking -> Color(0xFFFF5252)

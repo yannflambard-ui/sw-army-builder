@@ -69,13 +69,13 @@ class ArmadaV15Validator : RuleValidator {
         val violations = mutableListOf<RuleViolation>()
         val total = list.entries.sumOf { it.card.points * it.quantity }
         if (list.gameSystem != gameSystem) violations += violation("wrong_game", "La liste n'est pas une flotte Armada V1.5.")
+        if (total > list.pointsLimit) violations += violation("points_limit", "Total $total pts supérieur à la limite ${list.pointsLimit} pts.")
         val fleetEntries = list.entries.filter { it.card.gameSystem == gameSystem }
         val commanderEntries = fleetEntries.filter { it.card.kind == CardKind.COMMANDER || (it.card.kind == CardKind.ARMADA_UPGRADE && ArmadaSlot.COMMANDER in it.card.upgradeSlots) }
         val commanderCount = commanderEntries.sumOf { it.quantity }
         if (commanderCount != 1) violations += violation("commander_count", "Une flotte doit contenir exactement un Commandant (actuellement $commanderCount).")
         val fleetFactionIds = fleetEntries.map { it.card.factionId }.filter { it != "neutral" && it != "mercenary" }.distinct()
         if (fleetFactionIds.size > 1) violations += violation("mixed_factions", "Une flotte ne peut pas mélanger les factions principales.")
-        if (fleetEntries.filter { it.card.kind == CardKind.ARMADA_SHIP }.groupBy { it.card.name.substringBeforeLast(' ') }.any { (_, same) -> same.sumOf { it.quantity } > 1 }) violations += violation("ship_duplicate", "Une flotte ne peut sélectionner deux exemplaires d'un même type de vaisseau.")
         if (fleetEntries.filter { it.card.kind == CardKind.ARMADA_SQUADRON && it.card.unique }.groupBy { it.card.id }.any { (_, same) -> same.sumOf { it.quantity } > 1 }) violations += violation("squadron_unique", "Un escadron nommé ne peut être sélectionné qu'une fois.")
         val commanderUpgradeCount = commanderEntries.filter { it.card.kind == CardKind.ARMADA_UPGRADE }.sumOf { it.quantity }
         if (commanderUpgradeCount > 1) violations += violation("commander_limit", "Maximum un slot Commandant dans la flotte.")

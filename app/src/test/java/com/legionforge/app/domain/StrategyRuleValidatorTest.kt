@@ -35,4 +35,20 @@ class StrategyRuleValidatorTest {
         val badChassis = list(GameSystem.ARMADA_V15, 400, entry("cmd", commander), entry("ship", ship), entry("up", wrongUpgrade, "ship"))
         assertTrue(ArmadaV15Validator().validate(badChassis).violations.any { it.code == "invalid_upgrade_slot" })
     }
+
+    @Test fun armadaPointsLimitEnforced() {
+        val commander = card("commander", GameSystem.ARMADA_V15, CardKind.COMMANDER, 0, commander = true)
+        val ship = card("ship", GameSystem.ARMADA_V15, CardKind.ARMADA_SHIP, 500)
+        val over = list(GameSystem.ARMADA_V15, 400, entry("cmd", commander), entry("s1", ship))
+        val r = ArmadaV15Validator().validate(over)
+        assertFalse(r.valid)
+        assertEquals("points_limit", r.violations.first().code)
+    }
+
+    @Test fun armadaDuplicateNonUniqueShipsAllowed() {
+        val commander = card("commander", GameSystem.ARMADA_V15, CardKind.COMMANDER, 0, commander = true)
+        val ship = card("obt", GameSystem.ARMADA_V15, CardKind.ARMADA_SHIP, 100)
+        val two = list(GameSystem.ARMADA_V15, 400, entry("c", commander), entry("a", ship), entry("b", ship))
+        assertTrue("deux vaisseaux indentiques non-uniques sont LEGAUX (jetons d'ID)", ArmadaV15Validator().validate(two).valid)
+    }
 }
