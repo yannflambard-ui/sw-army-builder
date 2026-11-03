@@ -105,4 +105,18 @@ class StrategyRuleValidatorTest {
         assertTrue("7 vaisseaux légal : le RRG 1.6 n'impose pas de limite de 6 vaisseaux", r.valid)
         assertFalse("aucun violation ship_limit", r.violations.any { it.code == "ship_limit" })
     }
+
+    @Test fun legionUniqueUnitCannotBeDuplicated() {
+        val commander = card("cmd", GameSystem.LEGION_V2, CardKind.LEGION_UNIT, 100, LegionRank.COMMANDER)
+        val corps = card("corps", GameSystem.LEGION_V2, CardKind.LEGION_UNIT, 90, LegionRank.CORPS)
+        val uni = card("uni", GameSystem.LEGION_V2, CardKind.LEGION_UNIT, 80, LegionRank.CORPS, unique = true)
+        // Sans doublon : la carte unique apparaît une seule fois -> aucune violation unique_duplicate.
+        val ok = list(GameSystem.LEGION_V2, 1000, entry("c", commander), entry("a", corps), entry("b", corps), entry("u", uni))
+        assertFalse("carte unique unique sélectionnée une fois = aucune violation unique_duplicate",
+            LegionV2Validator().validate(ok).violations.any { it.code == "unique_duplicate" })
+        // Doublon : la même carte unique en 2 exemplaires -> violation unique_duplicate.
+        val dup = list(GameSystem.LEGION_V2, 1000, entry("c", commander), entry("a", corps), entry("b", corps), entry("u1", uni), entry("u2", uni))
+        assertTrue("deux exemplaires d'une unité unique = violation unique_duplicate",
+            LegionV2Validator().validate(dup).violations.any { it.code == "unique_duplicate" })
+    }
 }
