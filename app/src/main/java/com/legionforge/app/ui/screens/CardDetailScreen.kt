@@ -425,6 +425,23 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val oppPlayable = oppEntries.filter { e ->
         e.parentInstanceId == null && (e.card.kind == CardKind.LEGION_UNIT || e.card.kind == CardKind.ARMADA_SHIP || e.card.kind == CardKind.ARMADA_SQUADRON || e.card.kind == CardKind.COMMANDER)
     }
+    // ── Règle v2 : Pass Pool + verrou de fin de round (solo) ──
+    // Au début de partie, le joueur dont l'armée a le MOINS d'unités reçoit (différence − 1)
+    // jetons de passe ; passer une unité coûte 1 jeton. Armées de taille égale → 0 jeton.
+    fun grantPassPool() {
+        if (passes != 0 || oppPasses != 0) return  // déjà initialisé (ne pas écraser en cours de partie)
+        val myUnits = playable.size
+        val oppUnits = oppPlayable.size
+        val diff = if (myUnits > oppUnits) myUnits - oppUnits else oppUnits - myUnits
+        val tokens = (diff - 1).coerceAtLeast(0)
+        if (myUnits < oppUnits) { passes = tokens; oppPasses = 0 }
+        else if (oppUnits < myUnits) { oppPasses = tokens; passes = 0 }
+        else { passes = 0; oppPasses = 0 }
+    }
+    // Verrou de fin de round : toutes les unités non vaincues des 2 armées doivent avoir activé.
+    fun soloRoundDone(): Boolean =
+        playable.all { ownStates[it.instanceId]?.defeated == true || ownStates[it.instanceId]?.activated == true } &&
+            oppPlayable.all { soloOppStates[it.instanceId]?.defeated == true || soloOppStates[it.instanceId]?.activated == true }
     val oppPagerState = rememberPagerState(pageCount = { oppPlayable.size.coerceAtLeast(1) })
     // RND-1: départage au round 5 par valeur en points des unités vaincues (le plus faible gagne).
     LaunchedEffect(vp, oppVp, round, gameResult) {
@@ -437,6 +454,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Snackbar pour les confirmations/annulations (EV2).
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    // Main de commandement jouable pendant la partie : les cartes piochées (commandDeck) +
+    // Standing Orders (4-pip) qui est TOUJOURS dans la main (7e carte, jouable chaque round).
+    // distinctBy protège contre un doublon d'ID (clé LazyRow) si SO était déjà dans le deck.
+    val playCmdHand = (commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } } + listOfNotNull(cmdCards.firstOrNull { it.pip == "4" })).distinctBy { it.id }
 
     Scaffold(topBar = {
         if (!(phase == PlayPhase.GAME && viewingArmy == null)) {
@@ -643,7 +664,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Lancer la partie (garde-fou : battle deck 3+3+3 complet + main de 7).
                                 val battleComplete = listOf("objective", "secondary", "advantage").all { cat -> battleCards.count { it.category == cat && it.name in battleDeck } >= 3 }
                                 val cmdComplete = commandDeck.size + 1 >= 7 // +1 = Standing Orders auto-ajouté (7e carte de la main)
-                                Button(onClick = { phase = PlayPhase.GAME }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) Color(0xFF77D9A7) else Color(0xFF2A3A4A))) {
+                                Button(onClick = { if (!twoPlayer) grantPassPool(); phase = PlayPhase.GAME }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) Color(0xFF77D9A7) else Color(0xFF2A3A4A))) {
                                     Text(if (battleComplete && cmdComplete) stringResource(R.string.start_game) else stringResource(R.string.setup_incomplete), color = if (battleComplete && cmdComplete) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontWeight = FontWeight.Bold)
                                 }
                                 }
@@ -691,15 +712,23 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         turn = turn,
                         onRoundChange = { r ->
                             if (r in 1..5) {
-                                playedCommands = emptySet()
-                                orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
-                                if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
-                                roundCommand = null
-                                ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
-                                if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
-                                if (r > round) logEvent("Début du round R$r")
-                                round = r
-                                pushGameState()
+                                val advancing = r > round
+                                // Verrou fin de round (règle v2) : en solo, on n'avance au round suivant QUE si
+                                // toutes les unités non vaincues des 2 armées ont activé (le bouton "+" du dashboard,
+                                // chemin réel d'avancement de round). Désactivé en 2 joueurs (évite désync).
+                                if (!twoPlayer && advancing && !soloRoundDone()) {
+                                    scope.launch { snackbarHostState.showSnackbar("Fin de round refusée : il reste des unités à activer") }
+                                } else {
+                                    playedCommands = emptySet()
+                                    orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
+                                    if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
+                                    roundCommand = null
+                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
+                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
+                                    if (r > round) logEvent("Début du round R$r")
+                                    round = r
+                                    pushGameState()
+                                }
                             }
                         },
                         onToggleTurn = { toggleTurn() }
@@ -717,7 +746,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         // Passer : activation uniquement, double confirmation anti-erreur + désarmement auto.
                         Surface(onClick = {
                             if (playPhase != "command") {
-                                if (passArmed) { toggleTurn(); passArmed = false }
+                                if (passArmed) {
+                                    if (!twoPlayer) {
+                                        // Règle v2 : passer coûte 1 jeton de passe. On décompte celui du camp actif.
+                                        val mySide = turn == "own"
+                                        if ((if (mySide) passes else oppPasses) > 0) {
+                                            if (mySide) passes -= 1 else oppPasses -= 1
+                                            toggleTurn(); passArmed = false
+                                        } else {
+                                            passArmed = false
+                                            scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
+                                        }
+                                    } else {
+                                        toggleTurn(); passArmed = false
+                                    }
+                                }
                                 else passArmed = true
                             }
                         }, shape = RoundedCornerShape(10.dp), color = if (passArmed) Color(0xFFFFC857) else if (playPhase == "command") Color(0xFF1A2330) else Color(0xFF2A3A4A)) {
@@ -763,7 +806,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     } else {
                         if (playPhase == "command") {
                             CommandSelectionPanel(
-                                hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
+                                hand = playCmdHand,
                                 selected = roundCommand,
                                 onSelect = { id -> roundCommand = id },
                                 onConfirm = {
@@ -813,12 +856,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceAtLeast(0) else oppVp = (oppVp + delta).coerceAtLeast(0); pushGameState() },
                             onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name; pushGameState() },
                             onNextRound = {
-                                if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
-                                roundCommand = null
-                                round += 1
-                                pushGameState()
-                                ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
-                                if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
+                                // Verrou fin de round (règle v2) : en solo, on n'avance que si toutes les unités
+                                // non vaincues ont activé (même garde que le bouton "+" du dashboard).
+                                if (!twoPlayer && !soloRoundDone()) {
+                                    scope.launch { snackbarHostState.showSnackbar("Fin de round refusée : il reste des unités à activer") }
+                                } else {
+                                    if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
+                                    roundCommand = null
+                                    round += 1
+                                    pushGameState()
+                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
+                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
+                                }
                             },
                             onJournal = { showLogSheet = true },
                             onToken = { id, tk, delta ->
@@ -1042,7 +1091,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Main de commandement : dépliée depuis le bas quand on choisit la carte du round.
     if (showCommandHandSheet) {
         CommandHandSheet(
-            hand = commandDeck.mapNotNull { id -> cmdCards.firstOrNull { it.id == id } },
+            hand = playCmdHand,
             roundCommand = roundCommand,
             onSelect = { card ->
                 roundCommand = card.id

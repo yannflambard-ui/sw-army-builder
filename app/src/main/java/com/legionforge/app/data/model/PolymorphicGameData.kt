@@ -80,7 +80,10 @@ data class CardDefinition(
         val title: String? = null,
         val forceAffinity: String? = null,
         val affiliation: String? = null,
-        val mercenaryFactions: List<String> = emptyList()
+        val mercenaryFactions: List<String> = emptyList(),
+        /** Drapeau « flottille » (Armada) : présent dans catalog.json quand une coque est une flottille.
+         * Aucune carte du catalogue actuel ne le pose → le garde-fou D6 reste inactif sur les données réelles. */
+        val flotilla: Boolean = false
             ) {
     fun displayName(locale: String = java.util.Locale.getDefault().language): String {
         return names[locale] ?: name
