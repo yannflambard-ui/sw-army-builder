@@ -542,16 +542,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     }
                                 }
                                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                                    val victoryOwn = stringResource(R.string.victory_own)
-                                    val victoryOpp = stringResource(R.string.victory_opp)
-                                    val victoryDraw = stringResource(R.string.victory_draw)
-                                    DropdownMenuItem(text = { Text("Fin de partie", color = Color(0xFFFFC7B7)) }, onClick = {
-                                        showMenu = false
-                                        gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> victoryDraw }
-                                    })
-                                    DropdownMenuItem(text = { Text("Pool d'ordres", color = Color.White) }, onClick = { showMenu = false; showPoolSheet = true })
-                                    DropdownMenuItem(text = { Text("Battle deck", color = Color.White) }, onClick = { showMenu = false; showBattleSheet = true })
-                                    DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else Color(0xFF5A6A7A)) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
+                                val victoryOwn = stringResource(R.string.victory_own)
+                                val victoryOpp = stringResource(R.string.victory_opp)
+                                val victoryDraw = stringResource(R.string.victory_draw)
+                                if (isLegion) {
+                                DropdownMenuItem(text = { Text("Fin de partie", color = Color(0xFFFFC7B7)) }, onClick = {
+                                    showMenu = false
+                                    gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> victoryDraw }
+                                })
+                                DropdownMenuItem(text = { Text("Pool d'ordres", color = Color.White) }, onClick = { showMenu = false; showPoolSheet = true })
+                                DropdownMenuItem(text = { Text("Battle deck", color = Color.White) }, onClick = { showMenu = false; showBattleSheet = true })
+                                }
+                                DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else Color(0xFF5A6A7A)) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
                                     DropdownMenuItem(text = { Text("Journal", color = Color.White) }, onClick = { showMenu = false; showLogSheet = true })
                                 }
                             }
@@ -627,7 +629,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                     }
                     // ── Bascule Setup / Partie ──
-                    if (phase == PlayPhase.PREP) {
+                    if (isLegion) {
                         // Écran Setup : features préparatoires isolées (battle deck, command deck, déploiement, priorité, pool d'ordres).
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -732,9 +734,22 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         }
                     } else {
-                        // ── Bouton retour Setup ──
-                        Button(onClick = { phase = PlayPhase.PREP }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
-                            Text(stringResource(R.string.back_to_setup), color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
+                        // ── ARMADA : setup minimal (pas de battle deck / main 7 / pool d'ordres Legion) ──
+                        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text("Déploiement de la flotte", color = Color(0xFF77D9A7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("Déployez vos vaisseaux (Zone 1 / Zone 2), puis lancez la partie.", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+                                Surface(onClick = { showDeployment = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
+                                    Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("Déployer les armées", color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text("Marquez la Zone 1 / Zone 2 de chaque vaisseau", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                                    }
+                                }
+                                // Lancer la partie : aucun battle/command deck requis pour Armada.
+                                Button(onClick = { phase = PlayPhase.GAME }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
+                                    Text(stringResource(R.string.start_game), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                     }  // fin bloc setup (masqué en écran dédié plein écran phase GAME)
@@ -748,6 +763,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             Text("✕ Retour setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                    if (isLegion) {
                     // ── Barre compacte : MissionDashboard (ROUND/VP/TOUR + mission dépliable) ──
                     MissionDashboard(
                         round = round, vpOwn = vp, vpOpp = oppVp, killsOwn = kills, killsOpp = oppKills,
@@ -938,6 +954,30 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         )
                         }
                     }
+                    } else {
+                        // ── ARMADA : vue simple de flotte (pas de round/VP/mission/command/activation Legion) ──
+                        // Chaque tuile ouvre la page unité Armada (coque/cadrans/def-tokens/escadron) via UnitDetailSheet.
+                        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            item {
+                                Text("MA FLOTTE", color = Color(0xFFF59E0B), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                            items(playable, key = { it.instanceId }) { unit ->
+                                ArmadaFleetTile(unit, ownStates[unit.instanceId], onClick = { selectedUnit = unit })
+                            }
+                            if (oppPlayable.isNotEmpty()) {
+                                item {
+                                    Text("FLOTTE ADVERSE", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 10.dp))
+                                }
+                                items(oppPlayable, key = { it.instanceId }) { unit ->
+                                    ArmadaFleetTile(unit, (if (twoPlayer) oppStates else soloOppStates)[unit.instanceId], onClick = { selectedUnit = unit })
+                                }
+                            } else {
+                                item {
+                                    Text(if (twoPlayer) "En attente de la flotte adverse..." else "Aucune armée adverse (choisissez-la dans le setup)", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
+                                }
+                            }
+                        }
+                    }
                         }  // fin colonne scrollable du champ de bataille
                         // (main de commandement : dépliée en sheet depuis le bas au clic sur l'emplacement CMD)
                     }  // fin colonne plein écran jeu
@@ -974,7 +1014,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             )
                         }
                     }
-                } else {
+                } else if (isLegion) {
                     // En jeu : bandeau d'aperçu (état) + grille de miniatures (action).
                     Column(Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1010,6 +1050,20 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onOpen = { selectedUnit = it },
                             modifier = Modifier.weight(1f)
                         )
+                    }
+                } else {
+                    // ARMADA : liste simple de la flotte (pas d'activation Legion) — chaque tuile ouvre la page unité.
+                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(listEntries, key = { it.instanceId }) { unit ->
+                            val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
+                            UnitListRow(
+                                unit = unit, state = st, children = listAll.filter { it.parentInstanceId == unit.instanceId },
+                                isPrep = false, readOnly = readOnly,
+                                onOpen = { selectedUnit = unit },
+                                onCycleDeploy = null,
+                                onCompare = {}
+                            )
+                        }
                     }
                 }
             }
@@ -1215,6 +1269,20 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val compareReadOnly = isOppCompare
         val compareOnChange: (String, SyncedUnitState) -> Unit = if (compareReadOnly) { _, _ -> } else { id, next -> playSyncVm.setOwnState(id, next) }
         UnitCompareSheet(compareSel[0], compareSel[1], compareAll, compareStates, wikiSections, onRuleClick, compareOnChange, compareReadOnly, onClose = { showCompare = false; compareSel = emptyList() })
+    }
+}
+
+// ── Tuile de flotte Armada : ouvre la page unité (coque/cadrans/def-tokens/escadron) via UnitDetailSheet ──
+@Composable
+internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: () -> Unit) {
+    Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("${unit.card.points} pts${state?.hull?.let { " • Coque $it" } ?: ""}", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+            }
+            Text("▸", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
