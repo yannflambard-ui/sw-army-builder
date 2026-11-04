@@ -1011,8 +1011,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 val crossing = armadaPhase == ArmadaPhase.STATUS
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
-                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), defTokens = emptyMap()) } }
-                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), defTokens = emptyMap()) }
+                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), commandDialRevealed = false, defTokens = emptyMap()) } }
+                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), commandDialRevealed = false, defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1 else scope.launch { snackbarHostState.showSnackbar("Fin de partie (manche 6 atteinte)") }
                                                 }
                                                 armadaPhase = when (armadaPhase) {
@@ -3239,11 +3239,12 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         stack = state.commandDialStack,
                         capacity = maxOrderStock,
                         orderTokens = orderTokens,
+                        revealAllowed = !state.commandDialRevealed,
                         onUnset = { set(state.copy(commandOrder = null)) },
                         onPush = { name -> set(state.copy(commandDialStack = com.legionforge.app.data.model.ArmadaCommandStack.push(state.commandDialStack, name, maxOrderStock))) },
                         onReveal = {
                             val (h, rest) = com.legionforge.app.data.model.ArmadaCommandStack.reveal(state.commandDialStack)
-                            if (h != null) set(state.copy(commandDialStack = rest, commandOrder = h, orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.credit(orderTokens, h)))
+                            if (h != null && !state.commandDialRevealed) set(state.copy(commandDialStack = rest, commandOrder = h, orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.credit(orderTokens, h), commandDialRevealed = true))
                         },
                         onSpend = { if (commandOrder != null) set(state.copy(orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.spend(orderTokens, commandOrder.name))) }
                     )
@@ -3815,6 +3816,7 @@ internal fun CommandWheelPanel(
     stack: List<String>,
     capacity: Int,
     orderTokens: Map<String, Int>,
+    revealAllowed: Boolean,
     onUnset: () -> Unit,
     onPush: (String) -> Unit,
     onReveal: () -> Unit,
@@ -3828,7 +3830,7 @@ internal fun CommandWheelPanel(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ActiveDialCompact(active, activeTokens, onSpend, onUnset)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    DialQueueRow(stack, capacity, onReveal)
+                    DialQueueRow(stack, capacity, onReveal, revealAllowed)
                     Text("File ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Medium)
                 }
             }
@@ -3842,8 +3844,10 @@ internal fun CommandWheelPanel(
             }
             if (stack.isEmpty()) {
                 Text("File vide : choisis un ordre ci-dessus", color = Color(0xFF8F9BAD), fontSize = 10.sp)
-            } else {
+            } else if (revealAllowed) {
                 Text("Touchez le 1er cadran de la file pour le révéler (FIFO) · +1 pion", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+            } else {
+                Text("Cadran déjà révélé cette manche", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -3886,13 +3890,13 @@ private fun ActiveDialCompact(active: ArmadaCommandOrder?, activeTokens: Int, on
 
 // File de cadrans : rangée compacte, TÊTE (prochain à révéler) la plus visible, à gauche près du cadran actif.
 @Composable
-private fun DialQueueRow(stack: List<String>, capacity: Int, onReveal: () -> Unit) {
+private fun DialQueueRow(stack: List<String>, capacity: Int, onReveal: () -> Unit, revealAllowed: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         stack.forEachIndexed { i, name ->
             ArmadaCommandOrder.entries.firstOrNull { it.name == name }?.let { order ->
                 val isHead = i == 0
                 // Le 1er cadran (tête) est cliquable : tap = révéler (FIFO) — pas de bouton séparé.
-                DialDisc(order, if (isHead) 36.dp else 30.dp, isHead, Modifier.alpha(if (isHead) 1f else 0.6f), onClick = if (isHead) onReveal else null)
+                DialDisc(order, if (isHead) 36.dp else 30.dp, isHead, Modifier.alpha(if (isHead) 1f else 0.6f), onClick = if (isHead && revealAllowed) onReveal else null)
             }
         }
         if (stack.isEmpty()) {

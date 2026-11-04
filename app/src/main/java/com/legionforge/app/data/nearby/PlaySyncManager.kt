@@ -22,6 +22,7 @@ data class SyncedUnitState(
     val orderTokens: Map<String, Int> = emptyMap(),    // Armada pions d'ordre (clé = nom commande)
     val commandOrder: String? = null,  // Armada roue de commandement (nom de l'ordre) — cadran révélé (tête de pile)
     val commandDialStack: List<String> = emptyList(),   // Armada pile FIFO de cadrans face cachée (capacité = valeur de commande)
+    val commandDialRevealed: Boolean = false,  // Armada : cadran déjà révélé cette manche (1 révélation/vaisseau/manche)
     val activeCrits: List<String> = emptyList(),  // noms des dégâts critiques actifs
     val usedUpgrades: Set<String> = emptySet(),   // ids des upgrades marqués utilisés
     val activated: Boolean? = null,  // Armada squadron (activé/désactivé)
