@@ -246,6 +246,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Suivi de manche Armada : manche courante (1..6) + phase de la manche. Isolé de `round` Legion.
     var armadaRound by remember { mutableIntStateOf(1) }
     var armadaPhase by remember { mutableStateOf(ArmadaPhase.COMMAND) }
+    var showBlockers by remember { mutableStateOf(false) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
     var turn by remember { mutableStateOf("own") }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
@@ -1010,7 +1011,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 }
                                                 logEvent("Armada: manche R$armadaRound -> phase ${armadaPhase.name}")
                                             } else {
-                                                scope.launch { snackbarHostState.showSnackbar("Il reste des vaisseaux non vaincus à activer avant la fin de la manche.") }
+                                                val blocked = playable.filter { ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
+                                                    oppPlayable.filter { soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
+                                                scope.launch { snackbarHostState.showSnackbar("${blocked.size} vaisseau(x) à activer avant de passer la phase") }
+                                                showBlockers = true
                                             }
                                         }
                                     }
@@ -1324,6 +1328,12 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val detailOnChange: (SyncedUnitState) -> Unit = if (detailReadOnly) { _ -> } else { next -> playSyncVm.setOwnState(unit.instanceId, next) }
         UnitDetailSheet(unit, detailChildren, detailAll, detailWiki, onRuleClick, detailState, detailOnChange, detailReadOnly, onDice = { showDiceSheet = true }, onCompare = { val next = (compareSel + unit).distinctBy { it.instanceId }; compareSel = next; if (next.size >= 2) showCompare = true }, onClose = { selectedUnit = null })
     }
+    // Diagnostic des vaisseaux qui bloquent la fin de manche -> feuille listant ceux à activer (tap = ouvrir).
+    if (showBlockers) {
+        val blocked = playable.filter { ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
+            oppPlayable.filter { soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
+        BlockedShipsSheet(blocked, { showBlockers = false }, { it -> showBlockers = false; selectedUnit = it })
+    }
     // Vue comparée 2 unités (A2).
     if (showCompare && compareSel.size >= 2) {
         val isOppCompare = twoPlayer && viewingArmy == "opp"
@@ -1348,7 +1358,7 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            listOf(ArmadaPhase.COMMAND to "Voile", ArmadaPhase.SHIP to "Navires", ArmadaPhase.SQUADRON to "Escadr.", ArmadaPhase.STATUS to "Fin").forEach { (ph, lbl) ->
+            listOf(ArmadaPhase.COMMAND to "Ordres", ArmadaPhase.SHIP to "Vaisseaux", ArmadaPhase.SQUADRON to "Escadrons", ArmadaPhase.STATUS to "Statut").forEach { (ph, lbl) ->
                 Surface(shape = RoundedCornerShape(6.dp), modifier = Modifier.weight(1f),
                     color = if (ph == armadaPhase) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
@@ -1360,20 +1370,73 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
     }
 }
 
-// ── Tuile de flotte Armada : ouvre la page unité (coque/cadrans/def-tokens/escadron) via UnitDetailSheet ──
+// ── Tuile de flotte Armada : ouvre la page unité (coque/cadrans/def-tokens/escadron) via UnitDetailSheet.
+// Affiche l'état d'un coup d'œil : ordres reçus pour la roue de commandement (⌖ ambre/vert), ordre
+// révélé (bleu), activé (✓ vert), vaincu (✕ rouge + dim) et coque dégradée (♥).
 @Composable
 internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: () -> Unit) {
+    val isShip = unit.card.kind == CardKind.ARMADA_SHIP
+    val stats = remember(unit.instanceId) { if (isShip) ArmadaStatsParser.parse(unit.card.shipStats, CardKind.ARMADA_SHIP) else null }
+    val maxStock = stats?.command?.takeIf { it > 0 } ?: 0
+    val dialCount = state?.commandDialStack?.size ?: 0
+    val ordersReady = maxStock > 0 && (dialCount >= maxStock || state?.commandOrder != null)
+    val revealed = state?.commandOrder != null
+    val defeated = state?.defeated == true
+    val activated = state?.activated == true
+    val hull = state?.hull
     Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).alpha(if (defeated) 0.45f else 1f), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text("${unit.card.points} pts${state?.hull?.let { " • Coque $it" } ?: ""}", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (isShip && maxStock > 0) ArmadaChip(if (ordersReady) Color(0xFF77D9A7) else Color(0xFFF59E0B), glyph = "⌖", text = "$dialCount/$maxStock")
+                    if (revealed) ArmadaChip(Color(0xFF38BDF8), glyph = revealGlyph(state?.commandOrder), text = "")
+                    if (activated) ArmadaChip(Color(0xFF77D9A7), glyph = "✓", text = "")
+                    if (defeated) ArmadaChip(Color(0xFFEF5350), glyph = "✕", text = "Vainc.")
+                    if (hull != null) ArmadaChip(Color(0xFFFF6B6B), glyph = "♥", text = "$hull")
+                }
+                Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
             }
-            if (state?.activated == true) {
-                Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFF77D9A7)) { Text("✓", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF0A0E15), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                Spacer(Modifier.width(4.dp))
-            }
+            Spacer(Modifier.width(8.dp))
             Text("▸", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun ArmadaChip(color: Color, glyph: String = "", text: String = "") {
+    Surface(shape = RoundedCornerShape(6.dp), color = color) {
+        Row(Modifier.padding(horizontal = 5.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            if (glyph.isNotEmpty()) Text(glyph, color = Color(0xFF0A0E15), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            if (text.isNotEmpty()) Text(text, color = Color(0xFF0A0E15), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+private fun revealGlyph(name: String?): String = when (name) {
+    "NAVIGATE" -> "↻"; "CONCENTRATE" -> "✦"; "SQUADRON" -> "✈"; "REPAIR" -> "✚"; "FIRE_POWER" -> "⚡"; else -> "?"
+}
+
+// Diagnostic des vaisseaux qui bloquent le passage de phase : feuille listant ceux à activer.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BlockedShipsSheet(ships: List<ListEntry>, onClose: () -> Unit, onSelect: (ListEntry) -> Unit) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF141B26)) {
+        Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+            Text("Vaisseaux à activer", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            if (ships.isEmpty()) {
+                Text("Aucun — manche prête", color = Color(0xFF8F9BAD), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            } else {
+                ships.forEach { unit ->
+                    Surface(onClick = { onSelect(unit) }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E293B)) {
+                        Row(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(unit.card.displayName(), color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Spacer(Modifier.width(6.dp))
+                            Text("▸", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -3748,95 +3811,102 @@ internal fun CommandWheelPanel(
     val active = commandOrder
     val activeTokens = active?.let { orderTokens[it.name] ?: 0 } ?: 0
     val head = stack.firstOrNull()?.let { n -> ArmadaCommandOrder.entries.firstOrNull { it.name == n } }
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            // Ligne haute : pile (gauche) face cachée + cadran actif (droite).
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) { CommandDialStackVu(stack, capacity) }
-                ActiveCommandDial(active, activeTokens, onSpend, onUnset)
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Ligne 1 (compacte) : cadran actif (gauche) + file de cadrans (droite).
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ActiveDialCompact(active, activeTokens, onSpend, onUnset)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    DialQueueRow(stack, capacity)
+                    Text("File ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Medium)
+                }
             }
             Divider(color = Color(0xFF2A3A4A))
-            Text("Poser un cadran (face cachée)", color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            // Pose : les 5 ordres, désactivés quand la pile est pleine.
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            // Pose : 5 icônes compactes, désactivées quand la pile est pleine.
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 ArmadaCommandOrder.entries.forEach { o ->
                     val ok = com.legionforge.app.data.model.ArmadaCommandStack.canPush(stack, capacity)
-                    CommandDialButton(order = o, selected = false, onClick = { onPush(o.name) }, size = 56.dp, enabled = ok)
+                    DialPoseButton(o, enabled = ok, onClick = { onPush(o.name) })
                 }
             }
-            Text("Capacité : ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 10.sp)
-            Divider(color = Color(0xFF2A3A4A))
             if (stack.isNotEmpty() && head != null) {
-                Surface(onClick = onReveal, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A)) {
-                    Text("Révéler ▷ ${head.label} · crédite 1 pion d'ordre", Modifier.padding(horizontal = 12.dp, vertical = 10.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Surface(onClick = onReveal, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("Révéler ▷ ${head.label} · +1 pion", Modifier.padding(horizontal = 10.dp, vertical = 8.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             } else {
-                Text("Pile vide : posez un cadran ci-dessus (ou révélerez-le quand prêt).", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                Text("File vide : choisis un ordre ci-dessous", color = Color(0xFF8F9BAD), fontSize = 10.sp)
             }
         }
     }
 }
 
-// Cadran actif : pastille sombre avec les vraies icônes, halo ROUGE quand une commande révélée (référence X-Wing).
+// Cadran actif (compact) : pastille 56dp, halo rouge si une commande révélée, pions + dépense à côté.
 @Composable
-private fun ActiveCommandDial(active: ArmadaCommandOrder?, activeTokens: Int, onSpend: () -> Unit, onUnset: () -> Unit) {
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+private fun ActiveDialCompact(active: ArmadaCommandOrder?, activeTokens: Int, onSpend: () -> Unit, onUnset: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Surface(
             onClick = { if (active != null) onUnset() },
             shape = CircleShape, color = Color(0xFF2A3A4A),
-            modifier = Modifier.size(96.dp),
-            border = BorderStroke(if (active != null) 4.dp else 2.dp, if (active != null) Color(0xFFFF4D4D) else Color(0xFF4A5A6A))
+            modifier = Modifier.size(56.dp),
+            border = BorderStroke(if (active != null) 3.dp else 1.dp, if (active != null) Color(0xFFFF4D4D) else Color(0xFF4A5A6A))
         ) {
-            Box(contentAlignment = Alignment.Center) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(4.dp)) {
                 when {
-                    active == null -> Text("?", color = Color(0xFF6A7A8A), fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                    active.hasIcon() -> AsyncImage(
-                        model = "file:///android_asset/tokens/${active.iconFile}",
-                        contentDescription = active.label,
-                        modifier = Modifier.fillMaxSize().padding(4.dp),
-                        contentScale = ContentScale.Fit
-                    )
-                    else -> Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    active == null -> Text("?", color = Color(0xFF6A7A8A), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    active.hasIcon() -> AsyncImage(model = "file:///android_asset/tokens/${active.iconFile}", contentDescription = active.label, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                    else -> Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
-        Text(active?.label ?: "Aucun cadran", color = if (active != null) Color.White else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-        if (active != null) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Pions : $activeTokens", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                Surface(onClick = { if (activeTokens > 0) onSpend() }, shape = CircleShape,
-                    color = if (activeTokens > 0) Color(0xFF1E3A2A) else Color(0xFF2A3A4A),
-                    modifier = Modifier.size(44.dp).alpha(if (activeTokens > 0) 1f else 0.45f),
-                    border = BorderStroke(1.dp, Color(0xFF77D9A7))) {
-                    Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(active?.label ?: "Aucun ordre", color = if (active != null) Color.White else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2)
+            if (active != null) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("$activeTokens ●", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Surface(onClick = { if (activeTokens > 0) onSpend() }, shape = CircleShape,
+                        color = if (activeTokens > 0) Color(0xFF1E3A2A) else Color(0xFF2A3A4A),
+                        modifier = Modifier.size(26.dp).alpha(if (activeTokens > 0) 1f else 0.45f),
+                        border = BorderStroke(1.dp, Color(0xFF77D9A7))) {
+                        Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    }
                 }
             }
         }
     }
 }
 
-// Pile de cadrans face cachée : empilement décalé, TÊTE (prochain à révéler) la plus visible, à droite vers le cadran actif.
+// File de cadrans : rangée compacte, TÊTE (prochain à révéler) la plus visible, à gauche près du cadran actif.
 @Composable
-private fun CommandDialStackVu(stack: List<String>, capacity: Int) {
-    val step = 14.dp
-    Box(Modifier.height(52.dp).fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-        // Fantômes = capacité inutilisée (fonds cliquables vides).
-        repeat((capacity - stack.size).coerceAtLeast(0)) { k ->
-            GhostDisc(40.dp, Modifier.offset(x = (k * 22).dp).zIndex(-1f).alpha(0.30f))
-        }
+private fun DialQueueRow(stack: List<String>, capacity: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         stack.forEachIndexed { i, name ->
             ArmadaCommandOrder.entries.firstOrNull { it.name == name }?.let { order ->
                 val isHead = i == 0
-                DialDisc(order, if (isHead) 48.dp else 40.dp, isHead = isHead,
-                    Modifier.offset(x = step * (capacity - 1 - i)).zIndex(if (isHead) 100f else (95 - i).toFloat()).alpha(if (isHead) 1f else 0.55f))
+                DialDisc(order, if (isHead) 36.dp else 30.dp, isHead, Modifier.alpha(if (isHead) 1f else 0.6f))
+            }
+        }
+        if (stack.isEmpty()) {
+            repeat(capacity) { k ->
+                Box(Modifier.size(28.dp).clip(CircleShape).background(Color(0xFF2A3A4A)).alpha(0.5f))
             }
         }
     }
 }
 
+// Bouton de pose : icône seule compacte (40dp), désactivé/grisé quand la file est pleine.
 @Composable
-private fun GhostDisc(size: Dp, modifier: Modifier = Modifier) {
-    Box(modifier.size(size).clip(CircleShape).background(Color(0xFF2A3A4A)))
+private fun DialPoseButton(order: ArmadaCommandOrder, enabled: Boolean, onClick: () -> Unit) {
+    Surface(onClick = onClick, shape = CircleShape, color = if (enabled) Color(0xFF1E3A2A) else Color(0xFF192330),
+        modifier = Modifier.size(40.dp).alpha(if (enabled) 1f else 0.4f),
+        border = BorderStroke(1.dp, Color(0xFF3A4A5A))) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(3.dp)) {
+            if (order.hasIcon()) {
+                AsyncImage(model = "file:///android_asset/tokens/${order.iconFile}", contentDescription = order.label, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+            } else {
+                Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 @Composable
