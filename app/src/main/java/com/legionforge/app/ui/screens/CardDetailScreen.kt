@@ -777,7 +777,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     }
                                 }
                                 // Lancer la partie : aucun battle/command deck requis pour Armada.
-                                Button(onClick = { phase = PlayPhase.GAME; armadaRound = 1; armadaPhase = ArmadaPhase.COMMAND }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
+                                Button(onClick = {
+                                    if (!twoPlayer && soloOppList == null) showOppPicker = true
+                                    else { phase = PlayPhase.GAME; armadaRound = 1; armadaPhase = ArmadaPhase.COMMAND }
+                                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
                                     Text(stringResource(R.string.start_game), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
                                 }
                             }
@@ -989,6 +992,16 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         // ── ARMADA : vue simple de flotte (pas de round/VP/mission/command/activation Legion) ──
                         // Chaque tuile ouvre la page unité Armada (coque/cadrans/def-tokens/escadron) via UnitDetailSheet.
                         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (!twoPlayer && soloOppList == null) {
+                                item {
+                                    Surface(onClick = { showOppPicker = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFFFFC857)) {
+                                        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Text("⚠ Choisir l'armée adverse avant de lancer la partie", color = Color(0xFF0A0E15), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                            Text("Choisir", color = Color(0xFF0A0E15), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
                             item {
                                 ArmadaRoundBar(
                                     armadaRound = armadaRound, armadaPhase = armadaPhase,
@@ -3810,31 +3823,28 @@ internal fun CommandWheelPanel(
 ) {
     val active = commandOrder
     val activeTokens = active?.let { orderTokens[it.name] ?: 0 } ?: 0
-    val head = stack.firstOrNull()?.let { n -> ArmadaCommandOrder.entries.firstOrNull { it.name == n } }
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Ligne 1 (compacte) : cadran actif (gauche) + file de cadrans (droite).
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ActiveDialCompact(active, activeTokens, onSpend, onUnset)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    DialQueueRow(stack, capacity)
+                    DialQueueRow(stack, capacity, onReveal)
                     Text("File ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Medium)
                 }
             }
             Divider(color = Color(0xFF2A3A4A))
-            // Pose : 5 icônes compactes, désactivées quand la pile est pleine.
+            // Pose : les 4 cadrans standards (Fire Power n'est pas un cadran de commandement officiel).
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                ArmadaCommandOrder.entries.forEach { o ->
+                ArmadaCommandOrder.entries.filterNot { it == ArmadaCommandOrder.FIRE_POWER }.forEach { o ->
                     val ok = com.legionforge.app.data.model.ArmadaCommandStack.canPush(stack, capacity)
                     DialPoseButton(o, enabled = ok, onClick = { onPush(o.name) })
                 }
             }
-            if (stack.isNotEmpty() && head != null) {
-                Surface(onClick = onReveal, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
-                    Text("Révéler ▷ ${head.label} · +1 pion", Modifier.padding(horizontal = 10.dp, vertical = 8.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
+            if (stack.isEmpty()) {
+                Text("File vide : choisis un ordre ci-dessus", color = Color(0xFF8F9BAD), fontSize = 10.sp)
             } else {
-                Text("File vide : choisis un ordre ci-dessous", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                Text("Touchez le 1er cadran de la file pour le révéler (FIFO) · +1 pion", color = Color(0xFF8F9BAD), fontSize = 10.sp)
             }
         }
     }
@@ -3877,12 +3887,13 @@ private fun ActiveDialCompact(active: ArmadaCommandOrder?, activeTokens: Int, on
 
 // File de cadrans : rangée compacte, TÊTE (prochain à révéler) la plus visible, à gauche près du cadran actif.
 @Composable
-private fun DialQueueRow(stack: List<String>, capacity: Int) {
+private fun DialQueueRow(stack: List<String>, capacity: Int, onReveal: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         stack.forEachIndexed { i, name ->
             ArmadaCommandOrder.entries.firstOrNull { it.name == name }?.let { order ->
                 val isHead = i == 0
-                DialDisc(order, if (isHead) 36.dp else 30.dp, isHead, Modifier.alpha(if (isHead) 1f else 0.6f))
+                // Le 1er cadran (tête) est cliquable : tap = révéler (FIFO) — pas de bouton séparé.
+                DialDisc(order, if (isHead) 36.dp else 30.dp, isHead, Modifier.alpha(if (isHead) 1f else 0.6f), onClick = if (isHead) onReveal else null)
             }
         }
         if (stack.isEmpty()) {
@@ -3910,8 +3921,9 @@ private fun DialPoseButton(order: ArmadaCommandOrder, enabled: Boolean, onClick:
 }
 
 @Composable
-private fun DialDisc(order: ArmadaCommandOrder, size: Dp, isHead: Boolean, modifier: Modifier = Modifier) {
-    Surface(shape = CircleShape, color = Color(0xFF192330), modifier = modifier.size(size),
+private fun DialDisc(order: ArmadaCommandOrder, size: Dp, isHead: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+    Surface(shape = CircleShape, color = Color(0xFF192330),
+        modifier = (if (onClick != null) modifier.clickable(enabled = true, onClick = onClick) else modifier).size(size),
         border = BorderStroke(if (isHead) 3.dp else 1.dp, if (isHead) Color(0xFFFFC857) else Color(0xFF3A4A5A))) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(3.dp)) {
             if (order.hasIcon()) {
