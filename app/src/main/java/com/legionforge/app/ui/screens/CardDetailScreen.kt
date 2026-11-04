@@ -245,6 +245,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Suivi de manche Armada : manche courante (1..6) + phase de la manche. Isolé de `round` Legion.
     var armadaRound by remember { mutableIntStateOf(1) }
     var armadaPhase by remember { mutableStateOf(ArmadaPhase.COMMAND) }
+    var armadaTurn by remember { mutableStateOf(0) }   // 0 = moi (1er joueur), 1 = adversaire — activation alternée
     var showBlockers by remember { mutableStateOf(false) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
     var turn by remember { mutableStateOf("own") }
@@ -1004,6 +1005,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             item {
                                 ArmadaRoundBar(
                                     armadaRound = armadaRound, armadaPhase = armadaPhase,
+                                    armadaTurn = armadaTurn,
                                     twoPlayer = twoPlayer,
                                     onAdvance = {
                                         if (!twoPlayer && !isLegion) {
@@ -1020,7 +1022,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                     ArmadaPhase.SHIP -> ArmadaPhase.SQUADRON
                                                     ArmadaPhase.SQUADRON -> ArmadaPhase.STATUS
                                                     ArmadaPhase.STATUS -> ArmadaPhase.COMMAND
-                                                }
+                                                }.also { np -> if (np == ArmadaPhase.SHIP || np == ArmadaPhase.SQUADRON) armadaTurn = 0 }
                                                 logEvent("Armada: manche R$armadaRound -> phase ${armadaPhase.name}")
                                             } else {
                                                 val blocked = playable.filter { ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
@@ -1331,13 +1333,34 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Détail d'unité (refonte A1/A8) : sheet réutilisant la page unité.
     selectedUnit?.let { unit ->
         val isOppDetail = twoPlayer && viewingArmy == "opp"
+        // En solo, l'adversaire est joué par le même écran : routage vers soloOppStates + gate de tour.
+        val isOppUnit = if (twoPlayer) isOppDetail else oppPlayable.any { it.instanceId == unit.instanceId }
         val detailAll = if (isOppDetail) oppEntries else entries
-        val detailStates = if (isOppDetail) oppStates else ownStates
+        val detailStates = if (isOppDetail) oppStates else if (isOppUnit) soloOppStates else ownStates
         val detailState = detailStates[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
         val detailChildren = detailAll.filter { it.parentInstanceId == unit.instanceId }
         val detailWiki = remember(unit, wikiSections) { wikiSections.filter { it.gameSystem == unit.card.gameSystem.name } }
-        val detailReadOnly = isOppDetail
-        val detailOnChange: (SyncedUnitState) -> Unit = if (detailReadOnly) { _ -> } else { next -> playSyncVm.setOwnState(unit.instanceId, next) }
+        val detailReadOnly = isOppDetail  // en 2J l'adversaire est en lecture seule; en solo je le joue
+        val detailOnChange: (SyncedUnitState) -> Unit = if (detailReadOnly) { _ -> } else { next ->
+            // Activation alternée : seule la bonne flotte active, puis le tour passe à l'autre joueur.
+            val curAct = detailState.activated == true
+            val activationRequested = !curAct && next.activated == true
+            var proceed = true
+            if (activationRequested) {
+                val myTurn = armadaTurn == 0
+                val allowed = if (!isOppUnit) myTurn else !myTurn
+                if (!allowed) {
+                    proceed = false
+                    scope.launch { snackbarHostState.showSnackbar("Au tour de ${if (!isOppUnit) "l'adversaire" else "vous"}") }
+                } else {
+                    armadaTurn = if (!isOppUnit) 1 else 0
+                }
+            }
+            if (proceed) {
+                if (isOppUnit && !twoPlayer) soloOppStates = soloOppStates + (unit.instanceId to next)
+                else playSyncVm.setOwnState(unit.instanceId, next)
+            }
+        }
         UnitDetailSheet(unit, detailChildren, detailAll, detailWiki, onRuleClick, detailState, detailOnChange, detailReadOnly, onDice = { showDiceSheet = true }, onCompare = { val next = (compareSel + unit).distinctBy { it.instanceId }; compareSel = next; if (next.size >= 2) showCompare = true }, onClose = { selectedUnit = null })
     }
     // Diagnostic des vaisseaux qui bloquent la fin de manche -> feuille listant ceux à activer (tap = ouvrir).
@@ -1359,7 +1382,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
 
 // ── Bannière de manche Armada : suivi du round + phase (Commande / Navires / Escadrons / Fin) ──
 @Composable
-internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlayer: Boolean, onAdvance: () -> Unit) {
+internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlayer: Boolean, armadaTurn: Int = 0, onAdvance: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text("MANCHE $armadaRound", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -1378,6 +1401,10 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
                     }
                 }
             }
+        }
+        if (!twoPlayer && (armadaPhase == ArmadaPhase.SHIP || armadaPhase == ArmadaPhase.SQUADRON)) {
+            Text("Au tour de : ${if (armadaTurn == 1) "ADVERSAIRE" else "VOUS"}",
+                color = if (armadaTurn == 1) Color(0xFF38BDF8) else Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
