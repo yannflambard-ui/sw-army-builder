@@ -246,6 +246,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var armadaRound by remember { mutableIntStateOf(1) }
     var armadaPhase by remember { mutableStateOf(ArmadaPhase.COMMAND) }
     var armadaTurn by remember { mutableStateOf(0) }   // 0 = moi (1er joueur), 1 = adversaire — activation alternée
+    var armadaWinner by remember { mutableStateOf<Int?>(null) }  // 0 = VOUS, 1 = ADVERSAIRE (score & fin de partie) ; null = en cours
     var showBlockers by remember { mutableStateOf(false) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
     var turn by remember { mutableStateOf("own") }
@@ -1028,7 +1029,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
                                                     ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), commandDialRevealed = false, defTokens = emptyMap()) } }
                                                     soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), commandDialRevealed = false, defTokens = emptyMap()) }
-                                                    if (armadaRound < 6) armadaRound += 1 else scope.launch { snackbarHostState.showSnackbar("Fin de partie (manche 6 atteinte)") }
+                                                    if (armadaRound < 6) armadaRound += 1
+                                                    else {
+                                                        val myScore = oppPlayable.filter { soloOppStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
+                                                        val oppScore = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
+                                                        armadaWinner = if (myScore >= oppScore) 1 else 0  // égalité → 2e joueur (règle Armada)
+                                                        logEvent("Armada: fin de partie — VOUS $myScore pts / ADVERSAIRE $oppScore pts (gagnant ${if (myScore >= oppScore) "adversaire" else "vous"})")
+                                                    }
                                                 }
                                                 armadaPhase = when (armadaPhase) {
                                                     ArmadaPhase.COMMAND -> ArmadaPhase.SHIP
@@ -1065,8 +1072,40 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     Text(if (twoPlayer) "En attente de la flotte adverse..." else "Aucune armée adverse (choisissez-la dans le setup)", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
                                 }
                             }
+                            }
                         }
-                    }
+                        // Fin immédiate : une flotte sans vaisseaux survivants → partie finie (solo).
+                        LaunchedEffect(ownStates, soloOppStates, armadaWinner) {
+                            if (phase == PlayPhase.GAME && !isLegion && !twoPlayer && armadaWinner == null) {
+                                if (playable.isNotEmpty() && playable.all { ownStates[it.instanceId]?.defeated == true }) armadaWinner = 1
+                                else if (oppPlayable.isNotEmpty() && oppPlayable.all { soloOppStates[it.instanceId]?.defeated == true }) armadaWinner = 0
+                            }
+                        }
+                        // Overlay de fin de partie (score officiel : points de flotte adverse détruits).
+                        if (armadaWinner != null) {
+                            val myScore = oppPlayable.filter { (if (twoPlayer) oppStates else soloOppStates)[it.instanceId]?.defeated == true }.sumOf { it.card.points }.toString()
+                            val oppScore = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }.toString()
+                            val winner = if (armadaWinner == 0) "VOUS" else "ADVERSAIRE"
+                            Box(Modifier.fillMaxSize().background(Color(0xE60A0E15))) {
+                                Column(Modifier.align(Alignment.Center).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    Text("FIN DE PARTIE", color = Color(0xFFFFC857), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                    Text("Vainqueur : $winner", color = if (armadaWinner == 0) Color(0xFF77D9A7) else Color(0xFF38BDF8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("VOUS : $myScore pts     ADVERSAIRE : $oppScore pts", color = Color.White, fontSize = 14.sp)
+                                    Surface(onClick = {
+                                        // Rejouer = nouvelle partie fraiche (même reset que le bouton Lancer).
+                                        ownStates.keys.forEach { id -> playSyncVm.setOwnState(id, SyncedUnitState(id)) }
+                                        soloOppStates = soloOppStates.mapValues { (_, st) -> SyncedUnitState(st.instanceId) }
+                                        armadaWinner = null; armadaRound = 1; armadaPhase = ArmadaPhase.COMMAND; armadaTurn = 0
+                                        if (listId != null) scope.launch { sessionDb.gameSessionDao().delete(listId) }
+                                    }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp), shape = RoundedCornerShape(10.dp), color = Color(0xFF77D9A7)) {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) { Text("Rejouer (nouvelle partie)", color = Color(0xFF0A0E15), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                                    }
+                                    Surface(onClick = { armadaWinner = null; phase = PlayPhase.PREP }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A)) {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) { Text("Retour au setup", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                                    }
+                                }
+                            }
+                        }
                         }  // fin colonne scrollable du champ de bataille
                         // (main de commandement : dépliée en sheet depuis le bas au clic sur l'emplacement CMD)
                     }  // fin colonne plein écran jeu
@@ -3826,19 +3865,20 @@ internal fun DiceRect(dice: List<Int>?, vertical: Boolean = false) {
 @Composable
 internal fun CircleShield(value: Int, onInc: () -> Unit, onDec: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            // +/- compacts rectangulaires (pas ronds) pour que la cadre de boucliers tienne en largeur.
+            Surface(onClick = onDec, shape = RoundedCornerShape(5.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(width = 22.dp, height = 40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
             Surface(
                 shape = CircleShape,
                 color = Color.White,
-                modifier = Modifier.size(44.dp),
+                modifier = Modifier.size(36.dp),
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4FC3F7))
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("$value", color = Color(0xFF1B2B4B), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("$value", color = Color(0xFF1B2B4B), fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onInc, shape = RoundedCornerShape(5.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(width = 22.dp, height = 40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
         }
     }
 }
