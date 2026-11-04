@@ -749,7 +749,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Lancer la partie (garde-fou : battle deck 3+3+3 complet + main de 7).
                                 val battleComplete = listOf("objective", "secondary", "advantage").all { cat -> battleCards.count { it.category == cat && it.name in battleDeck } >= 3 }
                                 val cmdComplete = commandDeck.size + 1 >= 7 // +1 = Standing Orders auto-ajouté (7e carte de la main)
-                                Button(onClick = { if (!twoPlayer) grantPassPool(); phase = PlayPhase.GAME }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) Color(0xFF77D9A7) else Color(0xFF2A3A4A))) {
+                                Button(onClick = {
+                                    if (!twoPlayer) grantPassPool()
+                                    // Nouvelle partie = état frais : reset des unités + purge de la session (pas d'ordres/états de la partie précédente).
+                                    ownStates.keys.forEach { id -> playSyncVm.setOwnState(id, SyncedUnitState(id)) }
+                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> SyncedUnitState(st.instanceId) }
+                                    if (listId != null) scope.launch { sessionDb.gameSessionDao().delete(listId) }
+                                    phase = PlayPhase.GAME
+                                }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) Color(0xFF77D9A7) else Color(0xFF2A3A4A))) {
                                     Text(if (battleComplete && cmdComplete) stringResource(R.string.start_game) else stringResource(R.string.setup_incomplete), color = if (battleComplete && cmdComplete) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontWeight = FontWeight.Bold)
                                 }
                                 }
@@ -779,7 +786,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Lancer la partie : aucun battle/command deck requis pour Armada.
                                 Button(onClick = {
                                     if (!twoPlayer && soloOppList == null) showOppPicker = true
-                                    else { phase = PlayPhase.GAME; armadaRound = 1; armadaPhase = ArmadaPhase.COMMAND }
+                                    else {
+                                        // Nouvelle partie = état frais : reset vaisseaux (cadrans/ordres/activation/def-tokens/coque) + purge session.
+                                        ownStates.keys.forEach { id -> playSyncVm.setOwnState(id, SyncedUnitState(id)) }
+                                        if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> SyncedUnitState(st.instanceId) }
+                                        if (listId != null) scope.launch { sessionDb.gameSessionDao().delete(listId) }
+                                        phase = PlayPhase.GAME; armadaRound = 1; armadaPhase = ArmadaPhase.COMMAND; armadaTurn = 0
+                                    }
                                 }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
                                     Text(stringResource(R.string.start_game), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
                                 }
