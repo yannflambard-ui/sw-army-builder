@@ -3620,48 +3620,55 @@ internal fun EffectsPanel(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                     Column(Modifier.padding(8.dp)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(24.dp).clip(CircleShape).background(if (eff.used) Color(0xFF3A3A4A) else Color(0xFF1E2A3A)), contentAlignment = Alignment.Center) {
-                                    val iconPath = when {
-                                        eff.type == EffectType.UPGRADE && eff.slot != null -> slotIconPath(eff.slot)
-                                        eff.type == EffectType.COMMANDER -> "icons/upg_commander.webp"
-                                        else -> null
-                                    }
-                                    if (iconPath != null) {
-                                        AsyncImage(
-                                            model = "file:///android_asset/$iconPath",
-                                            contentDescription = eff.label,
-                                            modifier = Modifier.size(18.dp),
-                                            colorFilter = ColorFilter.tint(if (eff.used) Color(0xFF5A6A7A) else iconColor)
-                                        )
-                                    } else {
-                                        val fallbackIcon = when (eff.type) {
-                                            EffectType.UPGRADE -> Icons.Filled.Build
-                                            EffectType.COMMANDER -> Icons.Filled.Star
-                                            EffectType.CRIT -> Icons.Filled.Warning
-                                            else -> Icons.Filled.Info
-                                        }
-                                        Icon(fallbackIcon, contentDescription = eff.label, tint = if (eff.used) Color(0xFF5A6A7A) else iconColor, modifier = Modifier.size(16.dp))
-                                    }
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(24.dp).clip(CircleShape).background(if (eff.used) Color(0xFF3A3A4A) else Color(0xFF1E2A3A)), contentAlignment = Alignment.Center) {
+                                val iconPath = when {
+                                    eff.type == EffectType.UPGRADE && eff.slot != null -> slotIconPath(eff.slot)
+                                    eff.type == EffectType.COMMANDER -> "icons/upg_commander.webp"
+                                    else -> null
                                 }
-                                Spacer(Modifier.width(8.dp))
-                                Column {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(eff.label, color = if (eff.used) Color(0xFF5A6A7A) else Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = if (eff.type == EffectType.CRIT) FontWeight.Bold else FontWeight.Normal)
-                                        if (eff.used) { Spacer(Modifier.width(6.dp)); Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A)) { Text(stringResource(R.string.activated), Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF5A6A7A), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
-                                    }
-                                    Text(
-                                        when (eff.type) { EffectType.COMMANDER -> stringResource(R.string.effect_commander); EffectType.UPGRADE -> stringResource(R.string.effect_upgrade); EffectType.CRIT -> stringResource(R.string.effect_crit); EffectType.ABILITY -> stringResource(R.string.effect_ability) },
-                                        color = (if (eff.used) Color(0xFF5A6A7A) else iconColor).copy(alpha = 0.6f), fontSize = 10.sp
+                                if (iconPath != null) {
+                                    AsyncImage(
+                                        model = "file:///android_asset/$iconPath",
+                                        contentDescription = eff.label,
+                                        modifier = Modifier.size(18.dp),
+                                        colorFilter = ColorFilter.tint(if (eff.used) Color(0xFF5A6A7A) else iconColor)
                                     )
+                                } else {
+                                    val fallbackIcon = when (eff.type) {
+                                        EffectType.UPGRADE -> Icons.Filled.Build
+                                        EffectType.COMMANDER -> Icons.Filled.Star
+                                        EffectType.CRIT -> Icons.Filled.Warning
+                                        else -> Icons.Filled.Info
+                                    }
+                                    Icon(fallbackIcon, contentDescription = eff.label, tint = if (eff.used) Color(0xFF5A6A7A) else iconColor, modifier = Modifier.size(16.dp))
                                 }
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Spacer(Modifier.width(8.dp))
+                            // Texte en weight(1f)+maxLines : ne peut plus écraser la colonne droite -> les pts restent horizontaux.
+                            Column(Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(eff.label, color = if (eff.used) Color(0xFF5A6A7A) else Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = if (eff.type == EffectType.CRIT) FontWeight.Bold else FontWeight.Normal, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    if (eff.used) { Spacer(Modifier.width(6.dp)); Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A)) { Text(stringResource(R.string.activated), Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF5A6A7A), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                                }
+                                Text(
+                                    when (eff.type) { EffectType.COMMANDER -> stringResource(R.string.effect_commander); EffectType.UPGRADE -> stringResource(R.string.effect_upgrade); EffectType.CRIT -> stringResource(R.string.effect_crit); EffectType.ABILITY -> stringResource(R.string.effect_ability) },
+                                    color = (if (eff.used) Color(0xFF5A6A7A) else iconColor).copy(alpha = 0.6f), fontSize = 10.sp
+                                )
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            // Carte (image) à droite, PLUS GRANDE : ContentScale.Fit gère cartes portrait ET paysage.
+                            if (eff.imageAssetPath != null) {
+                                Box(Modifier.size(width = 62.dp, height = 74.dp).clip(RoundedCornerShape(6.dp)).border(1.dp, Color(0xFF2A3A4A), RoundedCornerShape(6.dp)).background(Color(0xFF0A0E15))) {
+                                    AsyncImage(model = "file:///android_asset/${eff.imageAssetPath}", contentDescription = eff.label, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                                }
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                                 if (eff.pts > 0) Text("${eff.pts} pts", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                                                Surface(onClick = { selectedEffect = if (selectedEffect == eff) null else eff }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) {
-                                                                    Icon(if (selectedEffect == eff) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF9EACBC), modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
-                                                                }
+                                Surface(onClick = { selectedEffect = if (selectedEffect == eff) null else eff }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) {
+                                    Icon(if (selectedEffect == eff) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = Color(0xFF9EACBC), modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
+                                }
                             }
                         }
                         // Expanded description
