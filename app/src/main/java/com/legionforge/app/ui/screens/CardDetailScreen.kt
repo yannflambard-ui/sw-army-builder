@@ -1467,7 +1467,10 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
 @Composable
 internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: () -> Unit) {
     val isShip = unit.card.kind == CardKind.ARMADA_SHIP
-    val stats = remember(unit.instanceId) { if (isShip) ArmadaStatsParser.parse(unit.card.shipStats, CardKind.ARMADA_SHIP) else null }
+    val stats = remember(unit.instanceId) {
+        if (isShip) ArmadaStatsParser.parse(unit.card.shipStats, CardKind.ARMADA_SHIP)
+        else ArmadaStatsParser.parse(unit.card.shipStats, CardKind.ARMADA_SQUADRON)
+    }
     val maxStock = stats?.command?.takeIf { it > 0 } ?: 0
     val dialCount = state?.commandDialStack?.size ?: 0
     val ordersReady = maxStock > 0 && (dialCount >= maxStock || state?.commandOrder != null)
@@ -1486,7 +1489,18 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(8.dp))
-                Text("▸", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                // Silhouette du vaisseau : on n'affiche que le coin BAS-GAUCHE de la carte (où se trouve la petite
+                // silhouette). Cadrage Fit dans une grande boîte ancrée bas-gauche -> on montre cette zone quelle que
+                // soit la taille de la carte (normale / huge / escadron).
+                Box(Modifier.size(32.dp).clip(RoundedCornerShape(6.dp)).border(1.dp, Color(0xFF2A3A4A), RoundedCornerShape(6.dp)).background(Color(0xFF0A0E15))) {
+                    val tImg = unit.card.imagePath()?.let { "file:///android_asset/$it" }
+                    if (tImg != null) {
+                        AsyncImage(model = tImg, contentDescription = "", contentScale = ContentScale.Fit,
+                            modifier = Modifier.align(Alignment.BottomStart).size(width = 220.dp, height = 340.dp))
+                    } else {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("▸", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    }
+                }
             }
             // Rangée STATS : pastilles neutres, icônes universelles (commande / vitesse / coque / boucliers).
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1497,6 +1511,7 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
                     if (shieldTotal > 0) StatBadge("🛡", "$shieldTotal", Color(0xFF2DD4BF))
                 } else {
                     StatBadge("⚡", "$squadSpeed", Color(0xFF38BDF8))
+                    if (maxHull > 0) StatBadge("♥", "$curHull/$maxHull", Color(0xFFFF6B6B))
                 }
             }
             // Rangée ÉTAT : pastilles colorées (ordre révélé / activé / vaincu).
@@ -3477,26 +3492,10 @@ internal fun ArmadaSquadronPage(unit: ListEntry, wikiSections: List<WikiSectionE
                 // Jeton d'activation/désactivation de l'escadron (à la place du coût, redondant avec le cadre du haut).
                 SquadronActivationToken(
                     activated = activated,
-                    onToggle = { set(state.copy(activated = !activated)) },
-                    onWikiClick = { findWikiSection(wikiSections, "activation")?.let(onRuleClick) }
+                    onToggle = { set(state.copy(activated = !activated)) }
                 )
             }
             if (hull < maxHp) HealthBar(hull.toFloat() / maxHp, hull, maxHp)
-            if (stats?.keywords?.isNotEmpty() == true) {
-                HorizontalDivider(color = Color(0xFF2A3A4A))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    stats.keywords.forEach { kw ->
-                        val section = findWikiSection(wikiSections, kw)
-                        Surface(
-                            onClick = { if (section != null) onRuleClick(section) },
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF2A3A4A)
-                        ) {
-                            Text(kw, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = if (section != null) Color(0xFFFFC857) else Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
         }
         if (defTokenStates.isNotEmpty()) {
             CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = false) {
@@ -4137,7 +4136,7 @@ internal fun OrderTokenDisc(order: ArmadaCommandOrder, count: Int, onWikiClick: 
 // Jeton d'activation d'escadron : disque pleine-face bleu (ACTIF) / rouge (INACTIF) comme le jeton du socle de chasseur.
 // Tap sur le disque = retourner (activer/désactiver). Petit "i" à côté = définition wiki.
 @Composable
-internal fun SquadronActivationToken(activated: Boolean, onToggle: () -> Unit, onWikiClick: () -> Unit) {
+internal fun SquadronActivationToken(activated: Boolean, onToggle: () -> Unit) {
     val face = if (activated) Color(0xFF2E7DD1) else Color(0xFFC0392B)   // bleu actif / rouge inactif
     val faceLight = if (activated) Color(0xFF4FC3F7) else Color(0xFFE57373)
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -4170,13 +4169,13 @@ internal fun SquadronActivationToken(activated: Boolean, onToggle: () -> Unit, o
                 }
             }
         }
-        // Le texte ACTIF/INACTIF est cliquable vers le wiki (plus de bouton "i").
+        // Le texte ACTIF/INACTIF bascule aussi l'activation (taper partout sur le jeton = toggle).
         Text(
             if (activated) "ACTIF" else "INACTIF",
             color = faceLight,
             fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.clickable { onWikiClick() }
+            modifier = Modifier.clickable { onToggle() }
         )
     }
 }
