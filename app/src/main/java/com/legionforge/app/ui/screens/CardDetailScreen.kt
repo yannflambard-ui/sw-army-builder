@@ -192,8 +192,7 @@ enum class ArmadaCommandOrder(val label: String, val iconFile: String, val order
     NAVIGATE("Navigation", "cmd_navigate.webp", "order_navigate.webp"),
     CONCENTRATE("Concentrate Fire", "cmd_concentrate.webp", "order_concentrate.webp"),
     SQUADRON("Squadron", "cmd_squadron.webp", "order_squadron.webp"),
-    REPAIR("Repair", "cmd_repair.webp", "order_repair.webp"),
-    FIRE_POWER("Fire Power", "cmd_firepower.webp", "order_firepower.webp")
+    REPAIR("Repair", "cmd_repair.webp", "order_repair.webp")
 }
 
 // ── active effect model ─────────────────────────────────
@@ -1012,8 +1011,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 val crossing = armadaPhase == ArmadaPhase.STATUS
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
-                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList()) } }
-                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList()) }
+                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), defTokens = emptyMap()) } }
+                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1 else scope.launch { snackbarHostState.showSnackbar("Fin de partie (manche 6 atteinte)") }
                                                 }
                                                 armadaPhase = when (armadaPhase) {
@@ -1427,7 +1426,7 @@ private fun ArmadaChip(color: Color, glyph: String = "", text: String = "") {
 }
 
 private fun revealGlyph(name: String?): String = when (name) {
-    "NAVIGATE" -> "↻"; "CONCENTRATE" -> "✦"; "SQUADRON" -> "✈"; "REPAIR" -> "✚"; "FIRE_POWER" -> "⚡"; else -> "?"
+    "NAVIGATE" -> "↻"; "CONCENTRATE" -> "✦"; "SQUADRON" -> "✈"; "REPAIR" -> "✚"; else -> "?"
 }
 
 // Diagnostic des vaisseaux qui bloquent le passage de phase : feuille listant ceux à activer.
@@ -3834,9 +3833,9 @@ internal fun CommandWheelPanel(
                 }
             }
             Divider(color = Color(0xFF2A3A4A))
-            // Pose : les 4 cadrans standards (Fire Power n'est pas un cadran de commandement officiel).
+            // Pose : les 4 cadrans de commandement standards (Navigate/Concentrate/Repair/Squadrons).
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                ArmadaCommandOrder.entries.filterNot { it == ArmadaCommandOrder.FIRE_POWER }.forEach { o ->
+                ArmadaCommandOrder.entries.forEach { o ->
                     val ok = com.legionforge.app.data.model.ArmadaCommandStack.canPush(stack, capacity)
                     DialPoseButton(o, enabled = ok, onClick = { onPush(o.name) })
                 }
