@@ -20,7 +20,8 @@ data class SyncedUnitState(
     val speed: Int? = null,         // Armada ship (vitesse courante)
     val defTokens: Map<String, Boolean> = emptyMap(),  // Armada defense tokens (clé "name_i")
     val orderTokens: Map<String, Int> = emptyMap(),    // Armada pions d'ordre (clé = nom commande)
-    val commandOrder: String? = null,  // Armada roue de commandement (nom de l'ordre)
+    val commandOrder: String? = null,  // Armada roue de commandement (nom de l'ordre) — cadran révélé (tête de pile)
+    val commandDialStack: List<String> = emptyList(),   // Armada pile FIFO de cadrans face cachée (capacité = valeur de commande)
     val activeCrits: List<String> = emptyList(),  // noms des dégâts critiques actifs
     val usedUpgrades: Set<String> = emptySet(),   // ids des upgrades marqués utilisés
     val activated: Boolean? = null,  // Armada squadron (activé/désactivé)
@@ -57,8 +58,10 @@ data class GameStatePayload(
     val vpB: Int = 0,
     val turnOwner: String? = null,   // "A" ou "B"
     val activeObjectives: List<String> = emptyList(),
-    val phase: String = "game",      // "setup" | "game" | "end"
-    val seq: Long = 0                // horodatage/ordre pour last-write-wins
+    val phase: String = "game",      // "setup" | "game" | "end" (Legion)
+    val seq: Long = 0,               // horodatage/ordre pour last-write-wins
+    val armadaRound: Int? = null,    // Armada : manche en cours (1..6)
+    val armadaPhase: String? = null  // Armada : phase ("COMMAND"/"SHIP"/"SQUADRON"/"STATUS")
 )
 
 /**

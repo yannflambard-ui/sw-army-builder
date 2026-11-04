@@ -190,7 +190,8 @@ enum class ArmadaCommandOrder(val label: String, val iconFile: String, val order
     NAVIGATE("Navigation", "cmd_navigate.webp", "order_navigate.webp"),
     CONCENTRATE("Concentrate Fire", "cmd_concentrate.webp", "order_concentrate.webp"),
     SQUADRON("Squadron", "cmd_squadron.webp", "order_squadron.webp"),
-    REPAIR("Repair", "cmd_repair.webp", "order_repair.webp")
+    REPAIR("Repair", "cmd_repair.webp", "order_repair.webp"),
+    FIRE_POWER("Fire Power", "cmd_firepower.webp", "order_firepower.webp")
 }
 
 // ── active effect model ─────────────────────────────────
@@ -198,6 +199,9 @@ internal enum class EffectType { COMMANDER, UPGRADE, CRIT, ABILITY }
 internal data class ActiveEffect(val type: EffectType, val label: String, val desc: String, val id: String, val used: Boolean = false, val slot: ArmadaSlot? = null, val pts: Int = 0, val imageAssetPath: String? = null)
 
 enum class PlayPhase { PREP, GAME }
+
+// ── Phases d'une manche Armada (boucle: commandement -> activation vaisseaux -> escadrons -> statut) ──
+enum class ArmadaPhase { COMMAND, SHIP, SQUADRON, STATUS }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -237,6 +241,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     fun logEvent(msg: String) { gameLog = gameLog + "[R$round] $msg" }
     // Phase de jeu (Setup vs partie) : les features préparatoires sont isolées dans l'écran Setup.
     var phase by remember { mutableStateOf(PlayPhase.PREP) }
+    // Suivi de manche Armada : manche courante (1..6) + phase de la manche. Isolé de `round` Legion.
+    var armadaRound by remember { mutableIntStateOf(1) }
+    var armadaPhase by remember { mutableStateOf(ArmadaPhase.COMMAND) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
     var turn by remember { mutableStateOf("own") }
     // Mode 2 joueurs : viewingArmy = null (liste des armées) | "own" (mon armée) | "opp" (armée adverse).
@@ -254,10 +261,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var ruleSection by remember { mutableStateOf<WikiSectionEntity?>(null) }
     val onRuleClick: (WikiSectionEntity) -> Unit = { ruleSection = it }
     LaunchedEffect(Unit) { vm.loadAllWiki() }
-    // Applique le round reçu de l'autre téléphone.
-    LaunchedEffect(syncRound) { if (twoPlayer && syncRound != null && syncRound != round) round = syncRound!! }
-    // Émet le round quand il change en mode 2 joueurs.
-    LaunchedEffect(round) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRound(round) }
+    // Le mode play est cloisonné par jeu : toutes les sync ci-dessous sont conditionnées à isLegion
+    // (le round/VP/tour sont des états Legion ; Armada a sa propre manche/phase dans GameStatePayload).
+    val isLegion = vm.currentList.value?.gameSystem == "LEGION_V2"
+    // Applique le round reçu de l'autre téléphone (Legion uniquement).
+    LaunchedEffect(syncRound) { if (isLegion && twoPlayer && syncRound != null && syncRound != round) round = syncRound!! }
+    // Émet le round quand il change en mode 2 joueurs (Legion uniquement).
+    LaunchedEffect(round) { if (isLegion && twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRound(round) }
     // Synchro du tour (identité de joueur) : corrige le clignotement "VOTRE TOUR" sur les 2 tablettes.
     val myPlayerId = playSyncVm.playerId
     // P0.#1: envoie l'état de jeu partagé réel (VP, round, objectifs, tour) à l'adversaire.
@@ -287,13 +297,28 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     LaunchedEffect(receivedGameState) {
         val gs = receivedGameState ?: return@LaunchedEffect
         if (twoPlayer) {
-            if (gs.round in 1..6) round = gs.round
-            if (gs.vpA >= 0) vp = gs.vpA
-            if (gs.vpB >= 0) oppVp = gs.vpB
-            if (gs.turnOwner != null && gs.turnOwner != myPlayerId) { if (gs.vpA >= 0 || gs.round >= 1) turn = "opp" } else if (gs.turnOwner == myPlayerId) turn = "own"
-            if (gs.activeObjectives.isNotEmpty()) activeObjectives = gs.activeObjectives.toSet()
+            if (isLegion) {
+                if (gs.round in 1..6) round = gs.round
+                if (gs.vpA >= 0) vp = gs.vpA
+                if (gs.vpB >= 0) oppVp = gs.vpB
+                if (gs.turnOwner != null && gs.turnOwner != myPlayerId) { if (gs.vpA >= 0 || gs.round >= 1) turn = "opp" } else if (gs.turnOwner == myPlayerId) turn = "own"
+                if (gs.activeObjectives.isNotEmpty()) activeObjectives = gs.activeObjectives.toSet()
+            } else {
+                // Armada : manche + phase de manche (jamais d'écriture sur les états Legion).
+                gs.armadaRound?.let { if (it in 1..6) armadaRound = it }
+                gs.armadaPhase?.let { ph -> ArmadaPhase.entries.firstOrNull { it.name == ph }?.let { armadaPhase = it } }
+            }
         }
     }
+    // Émet l'état Armada (manche/phase) à l'adversaire en 2 joueurs.
+    fun pushArmadaState() {
+        if (twoPlayer && !isLegion && syncMode == ShareMode.CONNECTED) {
+            playSyncVm.sendGameState(com.legionforge.app.data.nearby.GameStatePayload(
+                armadaRound = armadaRound, armadaPhase = armadaPhase.name, seq = System.currentTimeMillis()
+            ))
+        }
+    }
+    LaunchedEffect(armadaRound, armadaPhase) { if (twoPlayer && !isLegion && syncMode == ShareMode.CONNECTED) pushArmadaState() }
     // Envoie la liste dès qu'elle est chargée ET qu'on est connecté. openList est async :
     // currentList ET entries se remplissent en arrière-plan, donc on réessaie à chaque
     // changement des deux (sinon on peut envoyer une liste VIDE si entries n'est pas encore chargé).
@@ -317,7 +342,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Cartes de commandement Legion : chargement + deck (ajout/marquage jouée).
     val legionContext = androidx.compose.ui.platform.LocalContext.current
     val cmdFaction = vm.currentList.value?.factionId ?: ""
-    val isLegion = vm.currentList.value?.gameSystem == "LEGION_V2"
+    // (isLegion déclaré plus haut, avant les effets de synchronisation)
     val cmdCards = remember { loadCommandCards(legionContext) }
     var commandDeck by remember { mutableStateOf(setOf<String>()) }
     var playedCommands by remember { mutableStateOf(setOf<String>()) }
@@ -482,6 +507,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     soloOppRoundCommand = snap.soloOppRoundCommand; soloOppCommandDeck = snap.soloOppCommandDeck.toSet()
                     playSyncVm.restoreOwnStates(snap.ownStates)
                     soloOppStates = snap.soloOppStates
+                    armadaRound = snap.armadaRound
+                    armadaPhase = ArmadaPhase.entries.firstOrNull { it.name == snap.armadaPhase } ?: ArmadaPhase.COMMAND
                 }
             }
         }
@@ -493,7 +520,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         }
     }
     // Auto-save débounced (solo, en GAME) dès qu'un état de partie change.
-    LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority) {
+    LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority, armadaRound, armadaPhase) {
         if (phase == PlayPhase.GAME && !twoPlayer && listId != null) {
             kotlinx.coroutines.delay(350)
             val snap = com.legionforge.app.data.model.PlaySessionSnapshot(
@@ -505,7 +532,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 commandDeck = commandDeck.toList(), playedCommands = playedCommands.toList(), roundCommand = roundCommand,
                 discardedCommands = discardedCommands.toList(), soloOppRoundCommand = soloOppRoundCommand,
                 soloOppCommandDeck = soloOppCommandDeck.toList(), soloOppListId = vm.soloOppList.value?.id,
-                ownStates = ownStates, soloOppStates = soloOppStates
+                ownStates = ownStates, soloOppStates = soloOppStates,
+                armadaRound = armadaRound, armadaPhase = armadaPhase.name
             )
             sessionDb.gameSessionDao().upsert(com.legionforge.app.data.model.GameSessionEntity(listId, vm.currentList.value?.gameSystem ?: "LEGION_V2", snap.toJson(), System.currentTimeMillis()))
         }
@@ -746,7 +774,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     }
                                 }
                                 // Lancer la partie : aucun battle/command deck requis pour Armada.
-                                Button(onClick = { phase = PlayPhase.GAME }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
+                                Button(onClick = { phase = PlayPhase.GAME; armadaRound = 1; armadaPhase = ArmadaPhase.COMMAND }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
                                     Text(stringResource(R.string.start_game), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
                                 }
                             }
@@ -864,7 +892,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A3A4A))) {
                                             Text("Renvoyer la synchro", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)
                                         }
-                                        Button(onClick = { pushGameState(); playSyncVm.sendState(playSyncVm.ownStates.value.values.toList()) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
+                                        Button(onClick = { if (isLegion) pushGameState() else pushArmadaState(); playSyncVm.sendState(playSyncVm.ownStates.value.values.toList()) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A2A))) {
                                             Text("Resync", color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
                                         }
                                     }
@@ -958,6 +986,34 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         // ── ARMADA : vue simple de flotte (pas de round/VP/mission/command/activation Legion) ──
                         // Chaque tuile ouvre la page unité Armada (coque/cadrans/def-tokens/escadron) via UnitDetailSheet.
                         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            item {
+                                ArmadaRoundBar(
+                                    armadaRound = armadaRound, armadaPhase = armadaPhase,
+                                    twoPlayer = twoPlayer,
+                                    onAdvance = {
+                                        if (!twoPlayer && !isLegion) {
+                                            if (soloRoundDone()) {
+                                                val crossing = armadaPhase == ArmadaPhase.STATUS
+                                                if (crossing) {
+                                                    // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
+                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList()) } }
+                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList()) }
+                                                    if (armadaRound < 6) armadaRound += 1 else scope.launch { snackbarHostState.showSnackbar("Fin de partie (manche 6 atteinte)") }
+                                                }
+                                                armadaPhase = when (armadaPhase) {
+                                                    ArmadaPhase.COMMAND -> ArmadaPhase.SHIP
+                                                    ArmadaPhase.SHIP -> ArmadaPhase.SQUADRON
+                                                    ArmadaPhase.SQUADRON -> ArmadaPhase.STATUS
+                                                    ArmadaPhase.STATUS -> ArmadaPhase.COMMAND
+                                                }
+                                                logEvent("Armada: manche R$armadaRound -> phase ${armadaPhase.name}")
+                                            } else {
+                                                scope.launch { snackbarHostState.showSnackbar("Il reste des vaisseaux non vaincus à activer avant la fin de la manche.") }
+                                            }
+                                        }
+                                    }
+                                )
+                            }
                             item {
                                 Text("MA FLOTTE", color = Color(0xFFF59E0B), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
@@ -1277,6 +1333,31 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
 }
 
+// ── Bannière de manche Armada : suivi du round + phase (Commande / Navires / Escadrons / Fin) ──
+@Composable
+internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlayer: Boolean, onAdvance: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("MANCHE $armadaRound", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            if (!twoPlayer) {
+                Surface(onClick = onAdvance, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
+                    Text("Passer la phase", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(ArmadaPhase.COMMAND to "Voile", ArmadaPhase.SHIP to "Navires", ArmadaPhase.SQUADRON to "Escadr.", ArmadaPhase.STATUS to "Fin").forEach { (ph, lbl) ->
+                Surface(shape = RoundedCornerShape(6.dp), modifier = Modifier.weight(1f),
+                    color = if (ph == armadaPhase) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
+                    Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
+                        Text(lbl, color = if (ph == armadaPhase) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ── Tuile de flotte Armada : ouvre la page unité (coque/cadrans/def-tokens/escadron) via UnitDetailSheet ──
 @Composable
 internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: () -> Unit) {
@@ -1285,6 +1366,10 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
             Column(Modifier.weight(1f)) {
                 Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text("${unit.card.points} pts${state?.hull?.let { " • Coque $it" } ?: ""}", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+            }
+            if (state?.activated == true) {
+                Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFF77D9A7)) { Text("✓", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF0A0E15), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                Spacer(Modifier.width(4.dp))
             }
             Text("▸", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
@@ -3090,6 +3175,63 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         wikiSections = wikiSections,
                         onRuleClick = onRuleClick
                     )
+                }
+                // ── activation (vaisseau : une seule fois par manche) ──
+                CollapsibleSection("Activation", initiallyExpanded = false) {
+                    val isOn = state.activated == true
+                    Surface(onClick = { set(state.copy(activated = !isOn)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
+                        color = if (isOn) Color(0xFF77D9A7) else Color(0xFF2A3A4A)) {
+                        Text(if (isOn) "✓ Activé ce round" else "Activer ce vaisseau", Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            color = if (isOn) Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Text("Une seule activation par manche (reset automatique en fin de manche).", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                }
+                // ── roues de commandement en FILE (FIFO) : pile de cadrans face cachée, révélés une par manche ──
+                CollapsibleSection("Roues de commandement (pile FIFO)", initiallyExpanded = false) {
+                    val capacity = maxOrderStock
+                    val stack = state.commandDialStack
+                    Text("Capacité : $capacity · ${stack.size} cadran${if (stack.size > 1) "s" else ""} en file", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    if (stack.isNotEmpty()) {
+                        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            stack.forEach { name ->
+                                val ord = ArmadaCommandOrder.entries.firstOrNull { it.name == name } ?: return@forEach
+                                Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
+                                    Text("❓ ${ord.label}", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFFB4BFCE), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                    // Poser un cadran face cachée (nécessite de la capacité).
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        ArmadaCommandOrder.entries.forEach { o ->
+                            val ok = com.legionforge.app.data.model.ArmadaCommandStack.canPush(stack, capacity)
+                            Surface(onClick = { if (ok) set(state.copy(commandDialStack = com.legionforge.app.data.model.ArmadaCommandStack.push(stack, o.name, capacity))) },
+                                shape = RoundedCornerShape(6.dp), color = Color(0xFF1E3A2A)) {
+                                Text("+${o.label}", Modifier.padding(horizontal = 6.dp, vertical = 4.dp), color = if (ok) Color(0xFF77D9A7) else Color(0xFF5A2020), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                    // Révéler le prochain cadran (FIFO) → devient l'ordre courant + crédite 1 pion.
+                    if (stack.isNotEmpty()) {
+                        Surface(onClick = {
+                            val (head, rest) = com.legionforge.app.data.model.ArmadaCommandStack.reveal(stack)
+                            if (head != null) set(state.copy(commandDialStack = rest, commandOrder = head, orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.credit(orderTokens, head)))
+                        }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
+                            Text("Révéler le prochain cadran (FIFO)", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    // Dépenser un pion d'ordre de l'ordre courant (activation).
+                    if (commandOrder != null) {
+                        val cur = orderTokens[commandOrder.name] ?: 0
+                        Surface(onClick = { set(state.copy(orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.spend(orderTokens, commandOrder.name))) },
+                            shape = RoundedCornerShape(8.dp), color = if (cur > 0) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
+                            Text("Dépenser 1 pion « ${commandOrder.label} » (en stock : $cur)", Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                color = if (cur > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        if (stack.isEmpty()) {
+                            Text("Pile vide : posez un nouveau cadran ci-dessus ou finissez la manche (reset en manche suivante).", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                        }
+                    }
                 }
                 // ── defense tokens (repliable) ──
                 CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = false) {

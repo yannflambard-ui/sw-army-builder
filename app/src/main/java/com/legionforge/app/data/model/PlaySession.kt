@@ -39,7 +39,9 @@ data class PlaySessionSnapshot(
     val soloOppCommandDeck: List<String> = emptyList(),
     val soloOppListId: String? = null,
     val ownStates: Map<String, SyncedUnitState> = emptyMap(),
-    val soloOppStates: Map<String, SyncedUnitState> = emptyMap()
+    val soloOppStates: Map<String, SyncedUnitState> = emptyMap(),
+    val armadaRound: Int = 1,          // Armada : manche en cours
+    val armadaPhase: String = "command" // Armada : phase (command/ship/squadron/status)
 ) {
     fun toJson(): String = GSON.toJson(this)
 

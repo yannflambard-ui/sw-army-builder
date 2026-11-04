@@ -45,4 +45,30 @@ class PlaySessionCoreTest {
         assertEquals("PREP", restored.phase)
         assertEquals(null, restored.listId)
     }
+
+    @Test fun armadaFieldsPersistThroughJson() {
+        // Manche + phase Armada + pile FIFO de cadrans survivent au round-trip (reprise solo).
+        val snap = PlaySessionSnapshot(
+            listId = "flotte1", gameSystem = "ARMADA_V15", phase = "GAME", armadaRound = 5, armadaPhase = "ship",
+            ownStates = mapOf(
+                "S1" to SyncedUnitState("S1", activated = true, commandOrder = "NAVIGATE",
+                    commandDialStack = listOf("COMMANDER_CLONE", "SQUADRON", "REPAIR"),
+                    orderTokens = mapOf("NAVIGATE" to 1))
+            )
+        )
+        val restored = PlaySessionSnapshot.fromJson(snap.toJson())
+        assertEquals(5, restored.armadaRound)
+        assertEquals("ship", restored.armadaPhase)
+        assertEquals(listOf("COMMANDER_CLONE", "SQUADRON", "REPAIR"), restored.ownStates["S1"]?.commandDialStack)
+        assertEquals("NAVIGATE", restored.ownStates["S1"]?.commandOrder)
+        assertEquals(1, restored.ownStates["S1"]?.orderTokens?.get("NAVIGATE"))
+    }
+
+    @Test fun legacyLegionSnapshotWithoutArmadaFieldsIsSafe() {
+        // Un snapshot Legion ancien (sans champs Armada) se désérialise sans crash (Gson -> défauts).
+        val json = """{"schemaVersion":1,"listId":"l","gameSystem":"LEGION_V2","phase":"GAME","round":3}"""
+        val restored = PlaySessionSnapshot.fromJson(json)
+        assertEquals(1, restored.armadaRound)
+        assertEquals("command", restored.armadaPhase)
+    }
 }
