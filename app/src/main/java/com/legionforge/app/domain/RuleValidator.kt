@@ -11,7 +11,7 @@ import com.legionforge.app.data.model.canonicalShipFamily
 import com.legionforge.app.data.model.upgradeFitsShip
 import com.google.gson.JsonParser
 
-data class RuleViolation(val code: String, val message: String)
+data class RuleViolation(val code: String, val message: String, val blocking: Boolean = true)
 data class RuleValidationResult(val valid: Boolean, val totalPoints: Int, val violations: List<RuleViolation>)
 
 interface RuleValidator {
@@ -112,7 +112,8 @@ class ArmadaV15Validator : RuleValidator {
         val violations = mutableListOf<RuleViolation>()
         val total = list.entries.sumOf { it.card.points * it.quantity }
         if (list.gameSystem != gameSystem) violations += violation("wrong_game", "La liste n'est pas une flotte Armada V1.5.")
-        if (total > list.pointsLimit) violations += violation("points_limit", "Total $total pts supérieur à la limite ${list.pointsLimit} pts.")
+        // Limite de pts NON-BLOQUANTE pour Armada (warning) : partie libre possible au-dessus de 400 pts.
+        if (total > list.pointsLimit) violations += violation("points_limit", "Total $total pts supérieur à la limite ${list.pointsLimit} pts (partie non officielle).", blocking = false)
         val fleetEntries = list.entries.filter { it.card.gameSystem == gameSystem }
         val commanderEntries = fleetEntries.filter { it.card.kind == CardKind.COMMANDER || (it.card.kind == CardKind.ARMADA_UPGRADE && ArmadaSlot.COMMANDER in it.card.upgradeSlots) }
         val commanderCount = commanderEntries.sumOf { it.quantity }
@@ -177,7 +178,8 @@ class ArmadaV15Validator : RuleValidator {
             it.parentInstanceId in flotillaIds &&
                 (it.card.kind == CardKind.COMMANDER || (it.card.kind == CardKind.ARMADA_UPGRADE && ArmadaSlot.COMMANDER in it.card.upgradeSlots))
         }.forEach { violations += violation("commander_on_flotilla", "${it.card.name} est un Commandant équipé sur une flottille (interdit).") }
-        return RuleValidationResult(violations.isEmpty(), total, violations.distinctBy { it.code + it.message })
+        // valid = aucune violation BLOQUANTE (points_limit Armada non-bloquant -> simple warning).
+        return RuleValidationResult(violations.none { it.blocking }, total, violations.distinctBy { it.code + it.message })
     }
 
     /** Nombre de jetons de défense d'une carte (escadron/vaisseau Armada), lus dans shipStats.
@@ -201,4 +203,4 @@ private fun LegionRank.toDisplay() = when (this) {
 }
 
 private fun ArmadaSlot.toDisplay() = name.lowercase().replace('_', ' ')
-private fun violation(code: String, message: String) = RuleViolation(code, message)
+private fun violation(code: String, message: String, blocking: Boolean = true) = RuleViolation(code, message, blocking)

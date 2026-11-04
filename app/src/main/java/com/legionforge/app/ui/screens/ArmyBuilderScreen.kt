@@ -98,12 +98,13 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                     else -> false
                 }
             }
-        } else cards.filter { it.kind in allowedKinds && matchesFaction(it) && it.kind != CardKind.LEGION_UPGRADE && it.kind != CardKind.ARMADA_UPGRADE && it.kind != CardKind.COMMANDER }
+        } else cards.filter { it.kind in allowedKinds && matchesFaction(it) && it.kind != CardKind.LEGION_UPGRADE && it.kind != CardKind.ARMADA_UPGRADE && (it.kind != CardKind.COMMANDER || filterRank == "COMMANDER") }
     val additions = filteredAdditions
                 .filter { it.name.contains(search, ignoreCase = true) || it.factionId.contains(search, ignoreCase = true) }
                 .let { list ->
                     val rk = filterRank; val mp = filterMaxPts; val kw = filterKeyword
-                    var out = list.filter { rk == null || it.legionRank?.name == rk }
+                    // FILTRE RANG: Legion -> legionRank; Armada -> kind (les cartes Armada n'ont PAS de legionRank).
+                    var out = list.filter { rk == null || (if (game == GameSystem.LEGION_V2) it.legionRank?.name == rk else it.kind.name == rk) }
                         .filter { mp == null || it.points <= mp }
                         .filter { kw == null || it.name.contains(kw, ignoreCase = true) || (it.rulesText ?: "").contains(kw, ignoreCase = true) || (it.legionStats ?: "").contains(kw, ignoreCase = true) || (it.shipStats ?: "").contains(kw, ignoreCase = true) }
                     // Filtre "Ma collection" : n'affiche que les cartes possédées. Les UPGRADES
@@ -178,6 +179,10 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                     // Indicateur de validité dans l'encadré des points
                     if (entries.isNotEmpty()) {
                         Text(if (listValid) stringResource(R.string.list_valid) else stringResource(R.string.list_invalid), color = if (listValid) Color(0xFF77D9A7) else Color(0xFFFF927F), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    }
+                    // Armada : l'over-limit n'invalide pas la liste, c'est un simple avertissement (partie libre).
+                    if (game == GameSystem.ARMADA_V15 && total > limit) {
+                        Text("⚠ Limite dépassée ($limit pts) — partie non officielle", color = Color(0xFFFFB74D), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     }
                 }
             }

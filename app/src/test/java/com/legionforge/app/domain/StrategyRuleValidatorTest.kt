@@ -37,13 +37,15 @@ class StrategyRuleValidatorTest {
         assertTrue(ArmadaV15Validator().validate(badChassis).violations.any { it.code == "invalid_upgrade_slot" })
     }
 
-    @Test fun armadaPointsLimitEnforced() {
+    @Test fun armadaPointsLimitIsWarningNotEnforced() {
         val commander = card("commander", GameSystem.ARMADA_V15, CardKind.COMMANDER, 0, commander = true)
         val ship = card("ship", GameSystem.ARMADA_V15, CardKind.ARMADA_SHIP, 500)
         val over = list(GameSystem.ARMADA_V15, 400, entry("cmd", commander), entry("s1", ship))
         val r = ArmadaV15Validator().validate(over)
-        assertFalse(r.valid)
+        // Au-dessus de la limite : SIMPLE WARNING (partie libre), la liste reste valide.
+        assertTrue("dépassement de limite = warning non-bloquant", r.valid)
         assertEquals("points_limit", r.violations.first().code)
+        assertFalse("la violation points_limit est non-bloquante", r.violations.first().blocking)
     }
 
     @Test fun armadaDuplicateNonUniqueShipsAllowed() {
