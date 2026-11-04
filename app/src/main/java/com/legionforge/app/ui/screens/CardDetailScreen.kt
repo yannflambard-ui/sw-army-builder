@@ -1474,22 +1474,49 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
     val revealed = state?.commandOrder != null
     val defeated = state?.defeated == true
     val activated = state?.activated == true
-    val hull = state?.hull
+    // Stats (valeurs par défaut = état neuf/full)
+    val curHull = state?.hull ?: (stats?.hull ?: 0)
+    val maxHull = stats?.hull ?: 0
+    val maxSpeed = stats?.maxSpeed ?: 1
+    val curSpeed = state?.speed ?: 2
+    val shieldTotal = stats?.let { (it.shieldFront + it.shieldRear + it.shieldPort + it.shieldStarboard + it.shieldPortAux + it.shieldStarboardAux) } ?: 0
+    val squadSpeed = stats?.speed ?: 3
     Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).alpha(if (defeated) 0.45f else 1f), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (isShip && maxStock > 0) ArmadaChip(if (ordersReady) Color(0xFF77D9A7) else Color(0xFFF59E0B), glyph = "⌖", text = "$dialCount/$maxStock")
-                    if (revealed) ArmadaChip(Color(0xFF38BDF8), glyph = revealGlyph(state?.commandOrder), text = "")
-                    if (activated) ArmadaChip(Color(0xFF77D9A7), glyph = "✓", text = "")
-                    if (defeated) ArmadaChip(Color(0xFFEF5350), glyph = "✕", text = "Vainc.")
-                    if (hull != null) ArmadaChip(Color(0xFFFF6B6B), glyph = "♥", text = "$hull")
-                }
-                Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).alpha(if (defeated) 0.45f else 1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+                Text("▸", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.width(8.dp))
-            Text("▸", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            // Rangée STATS : pastilles neutres, icônes universelles (commande / vitesse / coque / boucliers).
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (isShip) {
+                    if (maxStock > 0) StatBadge("⌖", "$dialCount/$maxStock", if (ordersReady) Color(0xFF77D9A7) else Color(0xFFFFC857))
+                    StatBadge("⚡", "$curSpeed/$maxSpeed", Color(0xFF38BDF8))
+                    if (maxHull > 0) StatBadge("♥", "$curHull/$maxHull", Color(0xFFFF6B6B))
+                    if (shieldTotal > 0) StatBadge("🛡", "$shieldTotal", Color(0xFF2DD4BF))
+                } else {
+                    StatBadge("⚡", "$squadSpeed", Color(0xFF38BDF8))
+                }
+            }
+            // Rangée ÉTAT : pastilles colorées (ordre révélé / activé / vaincu).
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (revealed) ArmadaChip(Color(0xFF38BDF8), glyph = revealGlyph(state?.commandOrder), text = "")
+                if (activated) ArmadaChip(Color(0xFF77D9A7), glyph = "✓", text = "")
+                if (defeated) ArmadaChip(Color(0xFFEF5350), glyph = "✕", text = "Vainc.")
+            }
+            Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+        }
+    }
+}
+
+@Composable
+private fun StatBadge(glyph: String, value: String, tint: Color) {
+    Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFF0F1720),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2A3A4A))) {
+        Row(Modifier.padding(horizontal = 6.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(glyph, color = tint, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(value, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -3294,7 +3321,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
             }
         }
                 // ── matrice de manœuvres (repliable, repliée par défaut) ; pilote la vitesse ──
-                CollapsibleSection(stringResource(R.string.maneuver_matrix), initiallyExpanded = false) {
+                CollapsibleSection(stringResource(R.string.maneuver_matrix), initiallyExpanded = true) {
                     if (stats?.speedChart?.isNotEmpty() == true) {
                         ManeuverMatrix(stats, selectedSpeed, { v ->
                             set(state.copy(speed = if (speed == v) 0 else v))
@@ -3311,7 +3338,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     }
                 }
                 // ── command dial (roue de commandement) (en haut, repliable) ──
-                CollapsibleSection(stringResource(R.string.command_wheel), initiallyExpanded = false) {
+                CollapsibleSection(stringResource(R.string.command_wheel), initiallyExpanded = true) {
                     // Panneau FUSIONNÉ : pile FIFO avec vraies icônes + cadran actif (halo), sans doublon.
                     CommandWheelPanel(
                         commandOrder = commandOrder,
@@ -3329,7 +3356,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     )
                 }
                 // ── pions d'ordre (stock) (repliable) ──
-                CollapsibleSection(stringResource(R.string.order_tokens), initiallyExpanded = false) {
+                CollapsibleSection(stringResource(R.string.order_tokens), initiallyExpanded = true) {
                     OrderTokensCard(
                         orderTokens = orderTokens,
                         maxStock = maxOrderStock,
