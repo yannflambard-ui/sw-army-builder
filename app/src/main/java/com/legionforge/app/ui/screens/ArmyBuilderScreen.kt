@@ -472,6 +472,19 @@ private fun CatalogCard(card: CardDefinition, entries: List<ListEntry>, preselec
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(card.displayName(), color = Color.White, style = MaterialTheme.typography.titleSmall)
                 Text("${card.points} pts • ${kindLabel(card.kind)}", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall)
+                // Icônes officielles des types d'amélioration Armada (slot) sur la fiche catalogue.
+                if (card.kind == CardKind.ARMADA_UPGRADE && card.upgradeSlots.isNotEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        card.upgradeSlots.forEach { slot ->
+                            val iconPath = slotIconPath(slot)
+                            if (iconPath != null) {
+                                AsyncImage(model = "file:///android_asset/$iconPath", contentDescription = slot.name, modifier = Modifier.size(14.dp))
+                            } else {
+                                Text(slot.name.lowercase().replace('_', ' '), color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
                 if (card.kind == CardKind.LEGION_UNIT && card.legionRank != null) {
                     Text(rankLabel(card.legionRank), color = rankColor(card.legionRank), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
