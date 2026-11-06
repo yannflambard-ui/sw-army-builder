@@ -39,7 +39,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WikiSectionEntity::class,
         GameSessionEntity::class
     ],
-    version = 31,
+    version = 32,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -13577,7 +13577,8 @@
       "names": {
         "en": "Imperial I-class Star Destroyer",
         "de": "Imperialer Sternenzerstörer",
-        "es": "Destructor Estelar Imperial clase I"
+        "es": "Destructor Estelar Imperial clase I",
+        "fr": "Destroyer Stellaire de Classe Impérial"
       }
     },
     {
@@ -13654,7 +13655,8 @@
       "names": {
         "en": "Imperial Star Destroyer Cymoon 1 Refit",
         "de": "Imperium-Klasse",
-        "es": "D.E. clase Imperial"
+        "es": "D.E. clase Imperial",
+        "fr": "Destroyer Stellaire Impérial – Refonte Cymoon 1"
       }
     },
     {
@@ -13692,7 +13694,8 @@
       "names": {
         "en": "Imperial Star Destroyer Kuat Refit",
         "de": "Imperium-Klasse",
-        "es": "D.E. clase Imperial"
+        "es": "D.E. clase Imperial",
+        "fr": "Destroyer Stellaire Impérial – Refonte Kuat"
       }
     },
     {
@@ -13874,7 +13877,8 @@
       "shipStats": "{\"hull\":6,\"shield\":{\"front\":2,\"right\":2,\"left\":2,\"rear\":1},\"maxSpeed\":3,\"size\":\"small\",\"command\":2,\"squadron\":4,\"engineering\":2,\"defenseTokens\":[\"Brace\",\"Redirect\"],\"attack\":{\"front\":[0,3,0],\"right\":[0,2,0],\"left\":[0,2,0],\"rear\":[0,1,0]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":2,\"2\":1,\"3\":0}},{\"position\":2,\"values\":{\"2\":1,\"3\":1}},{\"position\":3,\"values\":{\"3\":1}},{\"position\":4,\"values\":{}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Quasar Fire I-class Cruiser-Carrier",
-        "de": "Quasarfeuer I-Klasse"
+        "de": "Quasarfeuer I-Klasse",
+        "fr": "Croiseur de Transport de classe Quasar Fire I"
       }
     },
     {
@@ -13907,7 +13911,7 @@
       "shipStats": "{\"hull\":6,\"shield\":{\"front\":2,\"right\":2,\"left\":2,\"rear\":1},\"maxSpeed\":3,\"size\":\"small\",\"command\":2,\"squadron\":4,\"engineering\":2,\"defenseTokens\":[\"Brace\",\"Redirect\"],\"attack\":{\"front\":[2,1,0],\"right\":[1,1,0],\"left\":[1,1,0],\"rear\":[0,1,0]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":2,\"2\":1,\"3\":0}},{\"position\":2,\"values\":{\"2\":1,\"3\":1}},{\"position\":3,\"values\":{\"3\":1}},{\"position\":4,\"values\":{}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Quasar Fire II-class Cruiser-Carrier",
-        "fr": "Croiseur de Transport de classe Quasar Fire I",
+        "fr": "Croiseur de Transport de classe Quasar Fire II",
         "de": "Quasarfeuer II-Klasse",
         "es": "Quasar II"
       }
@@ -14180,7 +14184,7 @@
       "shipStats": "{\"hull\":6,\"shield\":{\"front\":4,\"right\":3,\"left\":3,\"rear\":2},\"maxSpeed\":3,\"size\":\"small\",\"command\":3,\"squadron\":2,\"engineering\":4,\"defenseTokens\":[\"Evade\",\"Brace\",\"Redirect\"],\"attack\":{\"front\":[2,1,0],\"right\":[3,1,0],\"left\":[3,1,0],\"rear\":[2,1,0]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":1,\"2\":1,\"3\":0}},{\"position\":2,\"values\":{\"2\":1,\"3\":1}},{\"position\":3,\"values\":{\"3\":1}},{\"position\":4,\"values\":{}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Assault Frigate Mark II A",
-        "fr": "Frégate d'Assault Mark II",
+        "fr": "Frégate d'Assaut Mark II A",
         "de": "Angriffsfregatte Typ II",
         "es": "Fragata de Asalto Modelo II"
       }
@@ -14217,7 +14221,7 @@
       "shipStats": "{\"hull\":6,\"shield\":{\"front\":4,\"right\":3,\"left\":3,\"rear\":2},\"maxSpeed\":3,\"size\":\"small\",\"command\":3,\"squadron\":3,\"engineering\":4,\"defenseTokens\":[\"Evade\",\"Brace\",\"Redirect\"],\"attack\":{\"front\":[2,0,0],\"right\":[3,1,0],\"left\":[3,1,0],\"rear\":[2,0,0]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":1,\"2\":1,\"3\":0}},{\"position\":2,\"values\":{\"2\":1,\"3\":1}},{\"position\":3,\"values\":{\"3\":1}},{\"position\":4,\"values\":{}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Assault Frigate Mark II B",
-        "fr": "Frégate d'Assault Mark II",
+        "fr": "Frégate d'Assaut Mark II B",
         "de": "Angriffsfregatte Typ II",
         "es": "Fragata de Asalto Modelo II"
       }
@@ -14388,7 +14392,7 @@
       "shipStats": "{\"hull\":5,\"shield\":{\"front\":2,\"right\":1,\"left\":1,\"rear\":1},\"maxSpeed\":3,\"size\":\"small\",\"command\":1,\"squadron\":1,\"engineering\":2,\"defenseTokens\":[\"Evade\",\"Redirect\",\"Contain\"],\"attack\":{\"front\":[2,1,0],\"right\":[0,1,0],\"left\":[0,1,0],\"rear\":[0,0,0]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":2,\"2\":2,\"3\":1}},{\"position\":2,\"values\":{\"2\":1,\"3\":1}},{\"position\":3,\"values\":{\"3\":0}},{\"position\":4,\"values\":{}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Hammerhead Scout Corvette",
-        "fr": " Corvette de Reconnaissance Hammerhead Scout",
+        "fr": "Corvette de Reconnaissance Hammerhead",
         "de": "Aufklärungskorvette",
         "es": "Corbeta Exploradora Cabeza de Martillo"
       }
@@ -15020,7 +15024,8 @@
       "shipStats": "{\"hull\":6,\"speed\":3,\"antiSquadron\":[4,0,0],\"battery\":[1,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\",\"Rogue\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Boba Fett",
-        "es": "Boba Fett"
+        "es": "Boba Fett",
+        "fr": "Boba Fett"
       }
     },
     {
@@ -15064,7 +15069,8 @@
       "shipStats": "{\"hull\":5,\"speed\":4,\"antiSquadron\":[0,0,1],\"battery\":[0,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\",\"Grit\",\"Heavy\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Captain Jonus",
-        "es": "Capitán Jonus"
+        "es": "Capitán Jonus",
+        "fr": "Capitaine Jonus"
       }
     },
     {
@@ -15108,7 +15114,8 @@
       "shipStats": "{\"hull\":6,\"speed\":3,\"antiSquadron\":[0,0,2],\"battery\":[1,0,0],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Heavy\",\"Relay\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Colonel Jendon",
-        "es": "Coronel Jendon"
+        "es": "Coronel Jendon",
+        "fr": "Colonel Jendon"
       }
     },
     {
@@ -15243,7 +15250,8 @@
       "shipStats": "{\"hull\":6,\"speed\":3,\"antiSquadron\":[4,0,0],\"battery\":[2,0,0],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\",\"Grit\",\"Rogue\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Hondo Ohnaka",
-        "es": "Hondo Ohnaka"
+        "es": "Hondo Ohnaka",
+        "fr": "Hondo Ohnaka"
       }
     },
     {
@@ -15265,7 +15273,8 @@
       "names": {
         "en": "\"Howlrunner\"",
         "de": "Kreischläufer",
-        "es": "Aullador Veloz"
+        "es": "Aullador Veloz",
+        "fr": "Hurlement"
       }
     },
     {
@@ -15332,7 +15341,8 @@
       "shipStats": "{\"hull\":4,\"speed\":4,\"antiSquadron\":[2,0,0],\"battery\":[1,0,0],\"defenseTokens\":[],\"keywords\":[\"Intel\",\"Swarm\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "JumpMaster 5000",
-        "es": "Saltador Maestro 5000"
+        "es": "Saltador Maestro 5000",
+        "fr": "JumpMaster 5000"
       }
     },
     {
@@ -15399,7 +15409,8 @@
       "shipStats": "{\"hull\":5,\"speed\":4,\"antiSquadron\":[1,0,1],\"battery\":[0,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\",\"Heavy\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Major Rhymer",
-        "es": "Mayor Rhymer"
+        "es": "Mayor Rhymer",
+        "fr": "Major Rhymer"
       }
     },
     {
@@ -15443,7 +15454,8 @@
       "shipStats": "{\"hull\":3,\"speed\":4,\"antiSquadron\":[3,0,0],\"battery\":[1,0,0],\"defenseTokens\":[\"BRACE\",\"SCATTER\"],\"keywords\":[\"Swarm\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "\"Mauler\" Mithel",
-        "es": "Mutilador Mithel"
+        "es": "Mutilador Mithel",
+        "fr": "'Marteau' Mithel"
       }
     },
     {
@@ -15603,7 +15615,8 @@
       "names": {
         "en": "TIE Advanced Squadron",
         "de": "TIE-Turbojäger",
-        "es": "Escuadrón de TIE Avanzados"
+        "es": "Escuadrón de TIE Avanzados",
+        "fr": "Escadron de chasseurs TIE Avancés"
       }
     },
     {
@@ -15625,7 +15638,8 @@
       "names": {
         "en": "TIE Bomber Squadron",
         "de": "TIE-Bomber",
-        "es": "Escuadrón de TIE Bombarderos"
+        "es": "Escuadrón de TIE Bombarderos",
+        "fr": "Escadron de bombardiers TIE"
       }
     },
     {
@@ -15693,7 +15707,8 @@
       "names": {
         "en": "TIE Interceptor Squadron",
         "de": "TIE-Abfangjäger",
-        "es": "Escuadrón de Interceptores TIE"
+        "es": "Escuadrón de Interceptores TIE",
+        "fr": "Escadron d'intercepteurs TIE"
       }
     },
     {
@@ -15760,7 +15775,8 @@
       "shipStats": "{\"hull\":8,\"speed\":3,\"antiSquadron\":[0,0,3],\"battery\":[3,0,0],\"defenseTokens\":[],\"keywords\":[\"Counter\",\"Heavy\",\"Rogue\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "VT-49 Decimator",
-        "es": "VT-49 Diezmador"
+        "es": "VT-49 Diezmador",
+        "fr": "Décimateur VT-49"
       }
     },
     {
@@ -15781,7 +15797,8 @@
       "shipStats": "{\"hull\":4,\"speed\":4,\"antiSquadron\":[4,0,0],\"battery\":[0,2,0],\"defenseTokens\":[\"BRACE\",\"SCATTER\"],\"keywords\":[\"Cloak\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "\"Whisper\"",
-        "es": "Susurro"
+        "es": "Susurro",
+        "fr": "Chuchotement"
       }
     },
     {
@@ -16078,7 +16095,8 @@
       "shipStats": "{\"hull\":7,\"speed\":3,\"antiSquadron\":[2,0,2],\"battery\":[1,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Grit\",\"Rogue\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Han Solo",
-        "es": "Han Solo"
+        "es": "Han Solo",
+        "fr": "Han Solo"
       }
     },
     {
@@ -16099,7 +16117,8 @@
       "shipStats": "{\"hull\":5,\"speed\":3,\"antiSquadron\":[2,1,1],\"battery\":[0,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\",\"Dodge\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Hera Syndulla",
-        "es": "Hera Syndulla"
+        "es": "Hera Syndulla",
+        "fr": "Hera Syndulla"
       }
     },
     {
@@ -16281,7 +16300,8 @@
       "shipStats": "{\"hull\":3,\"speed\":3,\"antiSquadron\":[0,3,0],\"battery\":[0,1,0],\"defenseTokens\":[\"BRACE\",\"SCATTER\"],\"keywords\":[\"Swarm\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Lieutenant Blount",
-        "es": "Teniente Blount"
+        "es": "Teniente Blount",
+        "fr": "Lieutenant Blount"
       }
     },
     {
@@ -16485,7 +16505,8 @@
       "shipStats": "{\"hull\":5,\"speed\":2,\"antiSquadron\":[2,0,1],\"battery\":[1,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Ten Numb",
-        "es": "Ten Numb"
+        "es": "Ten Numb",
+        "fr": "Ten Numb"
       }
     },
     {
@@ -16552,7 +16573,8 @@
       "shipStats": "{\"hull\":5,\"speed\":3,\"antiSquadron\":[4,0,0],\"battery\":[0,0,1],\"defenseTokens\":[\"BRACE\",\"BRACE\"],\"keywords\":[\"Bomber\",\"Escort\"],\"kind\":\"SQUADRON\"}",
       "names": {
         "en": "Wedge Antilles",
-        "de": "Wedge Antilles"
+        "de": "Wedge Antilles",
+        "fr": "Wedge Antilles"
       }
     },
     {
@@ -17126,7 +17148,8 @@
       "names": {
         "en": "Grand Moff Tarkin",
         "de": "Grossmoff Tarkin",
-        "es": "Gran Moff Tarkin"
+        "es": "Gran Moff Tarkin",
+        "fr": "Grand Moff Tarkin"
       }
     },
     {
@@ -17148,7 +17171,8 @@
       "rulesText": "[Kyrsta Agate]\nCommander Ability: After you deploy, gain 1 non-[Scatter] defense token.\nDuring your Spend Defense Tokens step, if your speed is not 0, you may discard 1 defense token to resolve the effect of that defense token.  You cannot resolve the effect of each type of defense token more than once per attack.\n→ Flagship",
       "names": {
         "en": "Kyrsta Agate",
-        "de": "Kyrsta Agate"
+        "de": "Kyrsta Agate",
+        "fr": "Kyrsta Agate"
       }
     },
     {
@@ -17170,7 +17194,8 @@
       "rulesText": "[Leia Organa]\nCommander Ability: When a friendly ship resolves a command by spending a command dial, if it has not resolved another command this round, it may resolve that command as if it also spent a matching command token.  If it does, that ship cannot resolve additional commands this round.\n→ Flagship",
       "names": {
         "en": "Leia Organa",
-        "de": "Leia Organa"
+        "de": "Leia Organa",
+        "fr": "Leia Organa"
       }
     },
     {
@@ -17192,7 +17217,8 @@
       "rulesText": "[Moff Jerjerrod]\nCommander Ability: During a friendly ship's Determine Course step, it may suffer 1 damage to change the first yaw value of its current speed to \"II\" until the end of its activation.",
       "names": {
         "en": "Moff Jerjerrod",
-        "es": "Moff Jerjerrod"
+        "es": "Moff Jerjerrod",
+        "fr": "Moff Jerjerrod"
       }
     },
     {
@@ -17214,7 +17240,8 @@
       "rulesText": "[Mon Mothma]\nCommander Ability: When a friendly ship resolves the [Evade] token effect, it can cancel 1 die at medium range or reroll 1 additional die at close range or distance 1.",
       "names": {
         "en": "Mon Mothma",
-        "es": "Mon Mothma"
+        "es": "Mon Mothma",
+        "fr": "Mon Mothma"
       }
     },
     {
@@ -18872,7 +18899,8 @@
       "rulesText": "[Hondo Ohnaka]\nOfficer Ability: At the start of the Ship Phase, you may discard this card to choose 2 different command tokens and place them on 2 different ships.  Then your opponent chooses 2 different command tokens you did not choose and places them on 2 different ships.",
       "names": {
         "en": "Hondo Ohnaka",
-        "es": "Hondo Ohnaka"
+        "es": "Hondo Ohnaka",
+        "fr": "Hondo Ohnaka"
       }
     },
     {
@@ -18963,7 +18991,8 @@
       "rulesText": "[Kyrsta Agate]\nOfficer Ability: Red or Blue [Crit]:  You may exhaust this card to ready 1 of your exhausted defense tokens.  \nYou can resolve this critical effect during a Salvo attack.\nRecur: Recur",
       "names": {
         "en": "Kyrsta Agate",
-        "de": "Kyrsta Agate"
+        "de": "Kyrsta Agate",
+        "fr": "Kyrsta Agate"
       }
     },
     {
@@ -19009,7 +19038,8 @@
       "rulesText": "[Leia Organa]\nOfficer Ability: When you reveal a command, you may choose another friendly ship at distance 1-5 and change that ship's top command to your revealed  command.",
       "names": {
         "en": "Leia Organa",
-        "de": "Leia Organa"
+        "de": "Leia Organa",
+        "fr": "Leia Organa"
       }
     },
     {
@@ -19433,7 +19463,8 @@
       "rulesText": "[Wedge Antilles]\nOfficer Ability: Before the end of the Squadron Phase, you may spend 1 [squadron] token to choose up to 3 friendly, non-unique squadrons without Strategic at distance 1-5.  Those squadrons gain Cloak until the end of the round.",
       "names": {
         "en": "Wedge Antilles",
-        "de": "Wedge Antilles"
+        "de": "Wedge Antilles",
+        "fr": "Wedge Antilles"
       }
     },
     {
@@ -22090,7 +22121,8 @@
       "names": {
         "en": "Delta-7 Aethersprite Squadron",
         "de": "Delta-7-Aethersprite",
-        "es": "Delta-7"
+        "es": "Delta-7",
+        "fr": "Escadron d'Aethersprite Delta-7"
       }
     },
     {
@@ -22236,7 +22268,8 @@
       "names": {
         "en": "Acclamator I-class Assault Ship",
         "de": "Acclamator-Klasse",
-        "es": "Acclamator"
+        "es": "Acclamator",
+        "fr": "Vaisseau d'Assaut de classe Acclamator I"
       }
     },
     {
@@ -22266,7 +22299,8 @@
       "names": {
         "en": "Acclamator II-class Assault Ship",
         "de": "Acclamator-Klasse",
-        "es": "Acclamator"
+        "es": "Acclamator",
+        "fr": "Vaisseau d'Assaut de classe Acclamator II"
       }
     },
     {
@@ -22455,7 +22489,8 @@
       "shipStats": "{\"hull\":4,\"shield\":{\"front\":2,\"right\":2,\"left\":2,\"rear\":1},\"maxSpeed\":4,\"size\":\"small\",\"command\":1,\"squadron\":1,\"engineering\":2,\"defenseTokens\":[\"Evade\",\"Redirect\",\"Contain\"],\"attack\":{\"front\":[2,1,0],\"right\":[2,0,0],\"left\":[2,0,0],\"rear\":[1,1,0]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":2,\"2\":2,\"3\":1,\"4\":1}},{\"position\":2,\"values\":{\"2\":1,\"3\":1,\"4\":0}},{\"position\":3,\"values\":{\"3\":1,\"4\":1}},{\"position\":4,\"values\":{\"4\":1}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Consular-class Charger c70",
-        "es": "Cargero C70 Consular"
+        "es": "Cargero C70 Consular",
+        "fr": "Charger c70 de classe Consulaire"
       }
     },
     {
@@ -22546,7 +22581,7 @@
       "shipStats": "{\"hull\":9,\"shield\":{\"front\":4,\"right\":3,\"left\":3,\"rear\":2},\"maxSpeed\":3,\"size\":\"small\",\"command\":3,\"squadron\":5,\"engineering\":4,\"defenseTokens\":[\"Brace\",\"Redirect\",\"Contain\",\"Salvo\"],\"attack\":{\"front\":[2,2,2],\"right\":[2,2,0],\"left\":[2,2,0],\"rear\":[1,1,1]},\"speedChart\":[{\"position\":1,\"values\":{\"1\":1,\"2\":1,\"3\":0}},{\"position\":2,\"values\":{\"2\":1,\"3\":1}},{\"position\":3,\"values\":{\"3\":0}},{\"position\":4,\"values\":{}}],\"kind\":\"SHIP\"}",
       "names": {
         "en": "Venator II-class Star Destroyer",
-        "fr": "Destroyer Stellaire de Classe Venator I",
+        "fr": "Destroyer Stellaire de Classe Venator II",
         "de": "Venator II",
         "es": "Venator II"
       }
@@ -22791,7 +22826,8 @@
       "names": {
         "en": "Belbullab-22 Starfighter Squadron",
         "de": "Belbullab-22",
-        "es": "Escuadrón de Belbullab-22"
+        "es": "Escuadrón de Belbullab-22",
+        "fr": "Escadron de chasseurs Belbullab-22"
       }
     },
     {
@@ -22857,7 +22893,8 @@
       "names": {
         "en": "Hyena-class Droid Bomber Squadron",
         "de": "Hyänen-Droidenbomber",
-        "es": "Escuadrón bombarderos Hiena"
+        "es": "Escuadrón bombarderos Hiena",
+        "fr": "Escadron de bombardiers droïdes de classe Hyena"
       }
     },
     {
@@ -22925,7 +22962,8 @@
       "names": {
         "en": "Vulture-class Droid Fighter Squadron",
         "de": "Vulture-Droidenjäger",
-        "es": "Caza Buitre"
+        "es": "Caza Buitre",
+        "fr": "Escadron de chasseurs droïdes de classe Vautour"
       }
     },
     {
@@ -23000,7 +23038,8 @@
       "names": {
         "en": "Hardcell-class Transport",
         "de": "Hardcell-Klasse",
-        "es": "Trans. Hardcell"
+        "es": "Trans. Hardcell",
+        "fr": "Transport de classe Hardcell"
       }
     },
     {
@@ -23428,7 +23467,8 @@
       "shipStats": null,
       "names": {
         "en": "Count Dooku",
-        "es": "Conde Dooku"
+        "es": "Conde Dooku",
+        "fr": "Comte Dooku"
       }
     },
     {
