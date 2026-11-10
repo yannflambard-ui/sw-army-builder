@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 
 private val LegionDarkBg = Color(0xFF0D0D1A)
 private val LegionSurface = Color(0xFF16162B)
+// Tokens partagés : voir Tokens.kt (LegionColors)
 private val LegionAccent = Color(0xFFFFB800)
 private val LegionAccentSecondary = Color(0xFFB08D57)
 
