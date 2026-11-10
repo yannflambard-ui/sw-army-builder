@@ -41,7 +41,11 @@ data class PlaySessionSnapshot(
     val ownStates: Map<String, SyncedUnitState> = emptyMap(),
     val soloOppStates: Map<String, SyncedUnitState> = emptyMap(),
     val armadaRound: Int = 1,          // Armada : manche en cours
-    val armadaPhase: String = "command" // Armada : phase (command/ship/squadron/status)
+    val armadaPhase: String = "command", // Armada : phase (command/ship/squadron/status)
+    // Mode 2 joueurs : état adverse (lecture seule), mode actif et identité, pour reprendre la partie.
+    val twoPlayer: Boolean = false,
+    val oppStates: Map<String, com.legionforge.app.data.nearby.SyncedUnitState> = emptyMap(),
+    val playerId: String = "A"
 ) {
     fun toJson(): String = GSON.toJson(this)
 

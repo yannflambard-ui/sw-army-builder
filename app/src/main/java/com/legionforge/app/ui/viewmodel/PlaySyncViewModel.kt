@@ -18,6 +18,11 @@ import kotlinx.coroutines.launch
 class PlaySyncViewModel(application: Application) : AndroidViewModel(application) {
     private val gson = Gson()
     private val sync = PlaySyncManager(application)
+    private val journalDao by lazy { com.legionforge.app.data.local.LegionForgeDatabase.getInstance(application).playJournalDao() }
+    // Partie en cours (clé du journal). Posée par l'écran de jeu.
+    @Volatile var journalListId: String? = null
+    // Compteur monotone du journal (un seq unique par entrée, même si deux mutations tombent dans la même milliseconde).
+    private val journalSeq = java.util.concurrent.atomic.AtomicLong(0)
 
     val mode: StateFlow<ShareMode> = sync.mode
     val endpoints: StateFlow<List<com.legionforge.app.data.nearby.DiscoveredEndpoint>> = sync.endpoints
@@ -102,7 +107,38 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
         val cur = _ownStates.value[id] ?: SyncedUnitState(id)
         val next = transform(cur)
         _ownStates.value = _ownStates.value + (id to next)
+        journalAppend("state", gson.toJson(listOf(next)))
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendState(listOf(next))
+    }
+
+    /** Journal append-only : chaque mutation sortante est écrite avant envoi (rejouée à la reconnexion). */
+    private fun journalAppend(kind: String, payload: String) {
+        val lid = journalListId ?: return
+        viewModelScope.launch {
+            journalDao.append(com.legionforge.app.data.model.PlayJournalEntity(
+                listId = lid, seq = journalSeq.incrementAndGet(), kind = kind, payload = payload, createdAt = System.currentTimeMillis()))
+        }
+    }
+
+    /** Reconnexion : rejoue le journal non acquitté, puis renvoie l'état complet (filet de sécurité). */
+    suspend fun replayJournal() {
+        val lid = journalListId ?: return
+        val pending = journalDao.pending(lid)
+        pending.forEach { e ->
+            when (e.kind) {
+                "state" -> {
+                    val units = gson.fromJson(e.payload, Array<SyncedUnitState>::class.java).toList()
+                    sync.sendState(units)
+                }
+            }
+        }
+        if (pending.isNotEmpty()) journalDao.ack(lid, pending.last().seq)
+    }
+
+    /** Fin de partie / retour setup : purge le journal de la partie. */
+    fun clearJournal() {
+        val lid = journalListId ?: return
+        viewModelScope.launch { journalDao.clear(lid) }
     }
 
     /** Met à jour l'état d'une unité ADVERSE (reçue) — lecture seule, pas de broadcast. */
@@ -114,8 +150,12 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     /** Remplace l'état complet d'une de MES unités et diffuse le changement à l'adversaire. */
     fun setOwnState(id: String, next: SyncedUnitState) {
         _ownStates.value = _ownStates.value + (id to next)
+        journalAppend("state", gson.toJson(listOf(next)))
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendState(listOf(next))
     }
+
+    /** Restaure les états ADVERSES depuis une partie sauvegardée (lecture seule). */
+    fun restoreOppStates(states: Map<String, SyncedUnitState>) { _oppStates.value = states }
 
     /** Restaure MES états d'unités depuis une partie sauvegardée (aucun broadcast). */
     fun restoreOwnStates(states: Map<String, SyncedUnitState>) {

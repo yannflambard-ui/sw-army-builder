@@ -49,7 +49,8 @@ data class PlaySyncPayload(
     val deploymentDone: Boolean? = null, // Legion : déploiement terminé (par joueur)
     val roundCard: String? = null, // Legion : id de la carte de commandement jouée ce round
     val turnOwner: String? = null, // Legion : qui active ("A" ou "B")
-    val gameState: GameStatePayload? = null // Legion : état de jeu partagé complet (VP/round/objectifs/tour)
+    val gameState: GameStatePayload? = null, // Legion : état de jeu partagé complet (VP/round/objectifs/tour)
+    val seq: Long = 0                       // numéro d'émission monotone (last-write-wins côté réception)
 )
 
 /** État de jeu partagé (round, VP, tour, objectifs, phase) — synchronisé entre les 2 joueurs. */
@@ -107,6 +108,18 @@ class PlaySyncManager(context: Context) {
     private val _receivedGameState = MutableStateFlow<GameStatePayload?>(null)
     val receivedGameState: StateFlow<GameStatePayload?> = _receivedGameState.asStateFlow()
 
+    // Numéro d'émission monotone : tout envoi porte un seq croissant (horodatage + compteur, jamais en arrière).
+    private var outSeq: Long = 0
+    private fun nextSeq(): Long { outSeq = maxOf(outSeq + 1, System.currentTimeMillis()); return outSeq }
+    // Dernier seq appliqué par type de payload : un payload plus ancien que le dernier appliqué est ignoré.
+    private val lastApplied = mutableMapOf<String, Long>()
+    private fun fresh(type: String, seq: Long): Boolean {
+        val last = lastApplied[type] ?: 0L
+        if (seq != 0L && seq < last) return false
+        if (seq != 0L) lastApplied[type] = seq
+        return true
+    }
+
     // Identité de joueur : hôte = "A", client = "B".
     var playerId: String = "A"
         private set
@@ -117,6 +130,7 @@ class PlaySyncManager(context: Context) {
             nearby.receivedPayload.collect { json ->
                 if (json == null) return@collect
                 val payload = try { gson.fromJson(json, PlaySyncPayload::class.java) } catch (_: Exception) { null } ?: return@collect
+                if (!fresh(payload.type, payload.seq)) return@collect  // payload obsolète (last-write-wins)
                 when (payload.type) {
                     "round" -> _receivedRound.value = payload.round
                     "state" -> _receivedUnits.value = payload.units
@@ -137,39 +151,39 @@ class PlaySyncManager(context: Context) {
     fun stop() = nearby.stop()
 
     fun sendRound(round: Int) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "round", round = round)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "round", round = round, seq = nextSeq())))
     }
 
     fun sendState(units: List<SyncedUnitState>) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "state", units = units)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "state", units = units, seq = nextSeq())))
     }
 
     fun sendList(json: String) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "list", listJson = json)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "list", listJson = json, seq = nextSeq())))
     }
 
     /** Envoie l'état "déploiement terminé" (Legion setup). */
     fun sendDeploymentDone(done: Boolean) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "deploydone", deploymentDone = done)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "deploydone", deploymentDone = done, seq = nextSeq())))
     }
 
     /** Envoie la carte de commandement jouée ce round (id). */
     fun sendRoundCard(cardId: String?) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "roundcard", roundCard = cardId)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "roundcard", roundCard = cardId, seq = nextSeq())))
     }
 
     /** Envoie qui active ("A" ou "B"). */
     fun sendTurn(turnOwner: String) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "turn", turnOwner = turnOwner)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "turn", turnOwner = turnOwner, seq = nextSeq())))
     }
 
     /** Envoie l'état de jeu partagé (round, VP, tour, objectifs, phase). */
     fun sendGameState(state: GameStatePayload) {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "game", gameState = state)))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "game", gameState = state, seq = nextSeq())))
     }
 
     /** Demande à l'autre joueur de renvoyer sa liste (synchro manuelle). */
     fun requestList() {
-        nearby.sendList(gson.toJson(PlaySyncPayload(type = "request")))
+        nearby.sendList(gson.toJson(PlaySyncPayload(type = "request", seq = nextSeq())))
     }
 }

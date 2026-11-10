@@ -379,10 +379,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // pour rattraper les changements faits pendant une coupure (les mutations hors ligne ne sont pas rejouées).
     LaunchedEffect(syncMode) {
         if (twoPlayer && syncMode == ShareMode.CONNECTED) {
+            // 1) rejoue le journal des mutations faites hors ligne, 2) filet de sécurité : état complet.
+            playSyncVm.replayJournal()
             playSyncVm.resyncOwnState()
             pushGameState()
         }
     }
+    // Clé du journal = la partie en cours (pour que les mutations soient tracées).
+    LaunchedEffect(listId) { playSyncVm.journalListId = listId }
 
     // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
     LaunchedEffect(round) {
@@ -528,7 +532,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // cours (phase GAME) d'une liste solo ; retour au setup = purge (pas de reprise fantôme).
     val sessionDb = remember { com.legionforge.app.data.local.LegionForgeDatabase.getInstance(legionContext) }
     LaunchedEffect(listId) {
-        if (listId != null && !twoPlayer) {
+        if (listId != null) {
             val ent = sessionDb.gameSessionDao().getByList(listId)
             if (ent != null) {
                 val snap = try { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(ent.snapshot) } catch (_: Exception) { null }
@@ -545,6 +549,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     roundCommand = snap.roundCommand; discardedCommands = snap.discardedCommands.toSet()
                     soloOppRoundCommand = snap.soloOppRoundCommand; soloOppCommandDeck = snap.soloOppCommandDeck.toSet()
                     playSyncVm.restoreOwnStates(snap.ownStates)
+                    if (snap.twoPlayer) { twoPlayer = true; playSyncVm.restoreOppStates(snap.oppStates) }
                     soloOppStates = snap.soloOppStates
                     armadaRound = snap.armadaRound
                     armadaPhase = ArmadaPhase.entries.firstOrNull { it.name == snap.armadaPhase } ?: ArmadaPhase.COMMAND
@@ -564,7 +569,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     // Auto-save débounced (solo, en GAME) dès qu'un état de partie change.
     LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority, armadaRound, armadaPhase) {
-        if (phase == PlayPhase.GAME && !twoPlayer && listId != null) {
+        if (phase == PlayPhase.GAME && listId != null) {
             kotlinx.coroutines.delay(350)
             val snap = com.legionforge.app.data.model.PlaySessionSnapshot(
                 listId = listId, gameSystem = vm.currentList.value?.gameSystem, phase = phase.name, playPhase = playPhase,
@@ -576,7 +581,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 discardedCommands = discardedCommands.toList(), soloOppRoundCommand = soloOppRoundCommand,
                 soloOppCommandDeck = soloOppCommandDeck.toList(), soloOppListId = vm.soloOppList.value?.id,
                 ownStates = ownStates, soloOppStates = soloOppStates,
-                armadaRound = armadaRound, armadaPhase = armadaPhase.name
+                armadaRound = armadaRound, armadaPhase = armadaPhase.name,
+                twoPlayer = twoPlayer, oppStates = oppStates, playerId = myPlayerId
             )
             sessionDb.gameSessionDao().upsert(com.legionforge.app.data.model.GameSessionEntity(listId, vm.currentList.value?.gameSystem ?: "LEGION_V2", snap.toJson(), System.currentTimeMillis()))
         }

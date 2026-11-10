@@ -37,9 +37,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BuilderListEntity::class,
         BuilderEntryEntity::class,
         WikiSectionEntity::class,
-        GameSessionEntity::class
+        GameSessionEntity::class,
+        PlayJournalEntity::class
     ],
-    version = 32,
+    version = 33,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -49,6 +50,7 @@ abstract class LegionForgeDatabase : RoomDatabase() {
     abstract fun polymorphicGameDao(): PolymorphicGameDao
     abstract fun wikiDao(): WikiDao
     abstract fun gameSessionDao(): GameSessionDao
+    abstract fun playJournalDao(): PlayJournalDao
 
     companion object {
         @Volatile
@@ -60,7 +62,7 @@ abstract class LegionForgeDatabase : RoomDatabase() {
                     context.applicationContext,
                     LegionForgeDatabase::class.java,
                     "legionforge.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32).fallbackToDestructiveMigration().build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33).fallbackToDestructiveMigration().build().also { INSTANCE = it }
             }
         }
 
@@ -128,6 +130,13 @@ abstract class LegionForgeDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Vide catalog_cards : force le re-seed (ajout images FR upgrades faction).
                 db.execSQL("DELETE FROM catalog_cards")
+            }
+        }
+        private val MIGRATION_32_33 = object : Migration(32, 33) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Nouvelle table append-only pour le journal de sync 2 joueurs. Données existantes intactes.
+                db.execSQL("CREATE TABLE IF NOT EXISTS play_journal (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, listId TEXT NOT NULL, seq INTEGER NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL, createdAt INTEGER NOT NULL, acked INTEGER NOT NULL DEFAULT 0)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_play_journal_listId_seq ON play_journal(listId, seq)")
             }
         }
         private val MIGRATION_31_32 = object : Migration(31, 32) {
