@@ -1197,10 +1197,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("Activation", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Surface(onClick = {
-                                // Simule le tirage du pool d'ordres : unité avec ordre d'abord, sinon au hasard.
-                                val candidates = listEntries.filter { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }
-                                val next = candidates.filter { u -> states[u.instanceId]?.orderReceived == true }.shuffled().firstOrNull() ?: candidates.shuffled().firstOrNull()
-                                if (next != null) onUnitChange(next.instanceId, (states[next.instanceId] ?: SyncedUnitState(next.instanceId)).copy(activated = true, orderReceived = false))
+                                // Règle v2 : on tire un jeton du pool d'ordres (rang), puis on active une unité
+                                // de ce rang SANS ordre. Pool dérivé des unités : 1 jeton par unité non vaincue sans ordre.
+                                val actable = listEntries.filter { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }
+                                val tokens = actable.filter { u -> states[u.instanceId]?.orderReceived != true }
+                                    .map { u -> u.card.rank }
+                                val rank = tokens.shuffled().firstOrNull()
+                                val pick = if (rank != null) actable.firstOrNull { u -> u.card.rank == rank && states[u.instanceId]?.orderReceived != true }
+                                    else actable.firstOrNull()
+                                if (pick != null) onUnitChange(pick.instanceId, (states[pick.instanceId] ?: SyncedUnitState(pick.instanceId)).copy(activated = true, orderReceived = false))
                             }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                                 Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
@@ -1209,7 +1214,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Spacer(Modifier.height(4.dp))
                         UnitActivationGrid(
                             units = listEntries, allEntries = listAll, states = states, readOnly = readOnly,
-                            onActivate = { id -> onUnitChange(id, (states[id] ?: SyncedUnitState(id)).copy(activated = true, orderReceived = false)) },
+                            onActivate = { id -> onUnitChange(id, rallyState(states[id] ?: SyncedUnitState(id))) },
                             onOpen = { selectedUnit = it },
                             modifier = Modifier.weight(1f)
                         )
@@ -2486,6 +2491,17 @@ internal fun DeploymentSheet(
             }
         }
     }
+}
+
+// ── Ralliement (règle v2, RALLY STEP) : 1 dé blanc défense par suppression ; 1 suppression retirée par d ou e.
+// Retourne l'état après ralliement ET activation (activated=true, ordre consommé).
+// Faces du dé blanc de défense (même table que rollDie, mode défense). Résultat d/e = block ou surge.
+private val WHITE_DEFENSE_FACES = listOf("block", "surge", "blank", "blank", "blank", "blank", "blank", "blank")
+internal fun rallyState(st: SyncedUnitState): SyncedUnitState {
+    val n = st.suppressions ?: 0
+    if (n <= 0) return st.copy(activated = true, orderReceived = false)
+    val removed = (1..n).count { WHITE_DEFENSE_FACES.random() in setOf("block", "surge") }
+    return st.copy(activated = true, orderReceived = false, suppressions = (n - removed).coerceAtLeast(0))
 }
 
 // ── Grille d'activation (P1) : miniatures d'unités pour choisir une activation ──
