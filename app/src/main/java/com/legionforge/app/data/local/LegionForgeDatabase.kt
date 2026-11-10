@@ -60,7 +60,7 @@ abstract class LegionForgeDatabase : RoomDatabase() {
                     context.applicationContext,
                     LegionForgeDatabase::class.java,
                     "legionforge.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31).fallbackToDestructiveMigration().build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32).fallbackToDestructiveMigration().build().also { INSTANCE = it }
             }
         }
 
@@ -127,6 +127,13 @@ abstract class LegionForgeDatabase : RoomDatabase() {
         private val MIGRATION_29_30 = object : Migration(29, 30) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Vide catalog_cards : force le re-seed (ajout images FR upgrades faction).
+                db.execSQL("DELETE FROM catalog_cards")
+            }
+        }
+        private val MIGRATION_31_32 = object : Migration(31, 32) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Aucun changement de schéma. Vide seulement le catalogue pour forcer le re-seed
+                // (noms FR Armada). Armées, collection et parties sont conservées.
                 db.execSQL("DELETE FROM catalog_cards")
             }
         }

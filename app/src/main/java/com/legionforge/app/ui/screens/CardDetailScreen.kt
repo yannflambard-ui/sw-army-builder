@@ -278,7 +278,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     fun pushGameState() {
         if (twoPlayer && syncMode == ShareMode.CONNECTED) {
             playSyncVm.sendGameState(com.legionforge.app.data.nearby.GameStatePayload(
-                round = round, vpA = vp, vpB = oppVp, turnOwner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A"),
+                round = round, vpA = if (myPlayerId == "A") vp else oppVp, vpB = if (myPlayerId == "A") oppVp else vp, turnOwner = if (turn == "own") myPlayerId else (if (myPlayerId == "A") "B" else "A"),
                 activeObjectives = activeObjectives.toList(), phase = "game", seq = System.currentTimeMillis()
             ))
         }
@@ -303,8 +303,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         if (twoPlayer) {
             if (isLegion) {
                 if (gs.round in 1..6) round = gs.round
-                if (gs.vpA >= 0) vp = gs.vpA
-                if (gs.vpB >= 0) oppVp = gs.vpB
+                // Payload indexé par joueur (A/B) : je lis MES VP dans la case de mon identité.
+                val myVp = if (myPlayerId == "A") gs.vpA else gs.vpB
+                val theirVp = if (myPlayerId == "A") gs.vpB else gs.vpA
+                if (myVp >= 0) vp = myVp
+                if (theirVp >= 0) oppVp = theirVp
                 if (gs.turnOwner != null && gs.turnOwner != myPlayerId) { if (gs.vpA >= 0 || gs.round >= 1) turn = "opp" } else if (gs.turnOwner == myPlayerId) turn = "own"
                 if (gs.activeObjectives.isNotEmpty()) activeObjectives = gs.activeObjectives.toSet()
             } else {
@@ -357,6 +360,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var playPhase by remember { mutableStateOf("command") }  // "command" | "activation" — flux guidé : choisir la carte du round puis activer
     // Émet la carte de commandement jouée ce round en mode 2 joueurs.
     LaunchedEffect(roundCommand) { if (twoPlayer && syncMode == ShareMode.CONNECTED) playSyncVm.sendRoundCard(roundCommand) }
+    // Resync automatique à chaque (re)connexion : renvoie mon armée complète et l'état de jeu,
+    // pour rattraper les changements faits pendant une coupure (les mutations hors ligne ne sont pas rejouées).
+    LaunchedEffect(syncMode) {
+        if (twoPlayer && syncMode == ShareMode.CONNECTED) {
+            playSyncVm.resyncOwnState()
+            pushGameState()
+        }
+    }
+
     // Nouveau round → réinitialise la carte jouée + revient au flux guidé (on re-pique une carte).
     LaunchedEffect(round) {
         roundCommand = null; playPhase = "command"

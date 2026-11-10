@@ -137,12 +137,9 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
         if (sync.mode.value == ShareMode.CONNECTED) sync.sendGameState(state)
     }
 
-    /** Renvoie l'état complet de mon armée à l'adversaire (resync après coupure). */
-    fun resync() {
-        if (sync.mode.value == ShareMode.CONNECTED) {
-            sync.sendState(_ownStates.value.values.toList())
-            sync.sendGameState(com.legionforge.app.data.nearby.GameStatePayload())
-        }
+    /** Renvoie uniquement mon armée (états d'unités) à l'adversaire. Utilisé au resync auto. */
+    fun resyncOwnState() {
+        if (sync.mode.value == ShareMode.CONNECTED) sync.sendState(_ownStates.value.values.toList())
     }
 
     /** Envoie qui active ("A" ou "B"). */
