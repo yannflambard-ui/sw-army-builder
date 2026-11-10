@@ -316,7 +316,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             if (isLegion) {
                 if (gs.round in 1..6 && gs.round != round) {
                     round = gs.round
-                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
+                    playSyncVm.ownStates.value.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
                 }
                 // Payload indexé par joueur (A/B) : je lis MES VP dans la case de mon identité.
                 val myVp = if (myPlayerId == "A") gs.vpA else gs.vpB
