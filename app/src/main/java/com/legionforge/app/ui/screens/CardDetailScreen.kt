@@ -225,6 +225,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Points de victoire + unités vaincues (état global de partie, mode 2 joueurs).
     var vp by remember { mutableIntStateOf(0) }
     var oppVp by remember { mutableIntStateOf(0) }
+    val tokAim = stringResource(R.string.legion_token_aim)
+    val tokDodge = stringResource(R.string.legion_token_dodge)
+    val tokSurge = stringResource(R.string.legion_token_surge)
+    val tokStandby = stringResource(R.string.legion_token_standby)
+    val tokObs = stringResource(R.string.legion_token_observation)
+    // Nettoyage de fin de round (règle v2) : retire les jetons temporaires et 1 suppression par unité.
+    fun roundCleanup(st: SyncedUnitState): SyncedUnitState {
+        val drop = setOf(tokAim, tokDodge, tokSurge, tokStandby, tokObs)
+        return st.copy(activated = false, orderReceived = false,
+            tokens = st.tokens.filterNot { it in drop },
+            suppressions = ((st.suppressions ?: 0) - 1).coerceAtLeast(0))
+    }
     var activeObjectives by remember { mutableStateOf<Set<String>>(emptySet()) }
     var kills by remember { mutableIntStateOf(0) }
     var oppKills by remember { mutableIntStateOf(0) }
@@ -302,14 +314,17 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val gs = receivedGameState ?: return@LaunchedEffect
         if (twoPlayer) {
             if (isLegion) {
-                if (gs.round in 1..6) round = gs.round
+                if (gs.round in 1..6 && gs.round != round) {
+                    round = gs.round
+                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
+                }
                 // Payload indexé par joueur (A/B) : je lis MES VP dans la case de mon identité.
                 val myVp = if (myPlayerId == "A") gs.vpA else gs.vpB
                 val theirVp = if (myPlayerId == "A") gs.vpB else gs.vpA
                 if (myVp >= 0) vp = myVp
                 if (theirVp >= 0) oppVp = theirVp
                 if (gs.turnOwner != null && gs.turnOwner != myPlayerId) { if (gs.vpA >= 0 || gs.round >= 1) turn = "opp" } else if (gs.turnOwner == myPlayerId) turn = "own"
-                if (gs.activeObjectives.isNotEmpty()) activeObjectives = gs.activeObjectives.toSet()
+                activeObjectives = gs.activeObjectives.toSet()
             } else {
                 // Armada : manche + phase de manche (jamais d'écriture sur les états Legion).
                 gs.armadaRound?.let { if (it in 1..6) armadaRound = it }
@@ -386,7 +401,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val myPip = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
         val oppPip = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
         if (myPip != null && oppPip != null) {
-            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..8).random() == 1
+            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..8).random() <= 2
             turn = if (myHasPrio) "own" else "opp"
         }
     }
@@ -402,7 +417,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         if (gameResult == null) {
             if (vp >= 12 && vp > oppVp) gameResult = victoryOwn
             else if (oppVp >= 12 && oppVp > vp) gameResult = victoryOpp
-            else if (round >= 5) gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> null }
+            else if (round > 5) gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> null }
         }
     }
     var showCmdSheet by remember { mutableStateOf(false) }
@@ -419,7 +434,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var setupStep by remember { mutableIntStateOf(1) }
     var showPoolSheet by remember { mutableStateOf(false) }
     var showOppPicker by remember { mutableStateOf(false) }
-    var panicRoll by remember { mutableStateOf<Int?>(null) }
     var vpA by remember { mutableStateOf(0) }
     var vpB by remember { mutableStateOf(0) }
     var soloOppStates by remember { mutableStateOf<Map<String, SyncedUnitState>>(emptyMap()) }
@@ -470,7 +484,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Au début de partie, le joueur dont l'armée a le MOINS d'unités reçoit (différence − 1)
     // jetons de passe ; passer une unité coûte 1 jeton. Armées de taille égale → 0 jeton.
     fun grantPassPool() {
-        if (passes != 0 || oppPasses != 0) return  // déjà initialisé (ne pas écraser en cours de partie)
         val myUnits = playable.size
         val oppUnits = oppPlayable.size
         val diff = if (myUnits > oppUnits) myUnits - oppUnits else oppUnits - myUnits
@@ -482,11 +495,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Verrou de fin de round : toutes les unités non vaincues des 2 armées doivent avoir activé.
     fun soloRoundDone(): Boolean =
         playable.all { ownStates[it.instanceId]?.defeated == true || ownStates[it.instanceId]?.activated == true } &&
-            oppPlayable.all { soloOppStates[it.instanceId]?.defeated == true || soloOppStates[it.instanceId]?.activated == true }
+            oppPlayable.all { val os = if (twoPlayer) oppStates else soloOppStates; os[it.instanceId]?.defeated == true || os[it.instanceId]?.activated == true }
     val oppPagerState = rememberPagerState(pageCount = { oppPlayable.size.coerceAtLeast(1) })
+    // Victoire immédiate : une armée sans unité non vaincue perd (règle v2).
+    LaunchedEffect(ownStates, soloOppStates, oppStates, playable.size, oppPlayable.size, gameResult) {
+        if (gameResult == null) {
+            val oppSt = if (twoPlayer) oppStates else soloOppStates
+            val mineDown = playable.isNotEmpty() && playable.all { ownStates[it.instanceId]?.defeated == true }
+            val oppDown = oppPlayable.isNotEmpty() && oppPlayable.all { oppSt[it.instanceId]?.defeated == true }
+            if (mineDown && !oppDown) gameResult = victoryOpp
+            else if (oppDown && !mineDown) gameResult = victoryOwn
+        }
+    }
     // RND-1: départage au round 5 par valeur en points des unités vaincues (le plus faible gagne).
     LaunchedEffect(vp, oppVp, round, gameResult) {
-        if (gameResult == null && round >= 5 && vp == oppVp) {
+        if (gameResult == null && round > 5 && vp == oppVp) {
             val myDef = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
             val oppDef = oppPlayable.filter { (if (twoPlayer) oppStates else soloOppStates)[it.instanceId]?.defeated == true }.sumOf { it.card.points }
             gameResult = when { myDef < oppDef -> victoryOwn; oppDef < myDef -> victoryOpp; else -> victoryDraw }
@@ -530,8 +553,12 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         }
     }
     // Retour au setup ou nouvelle partie → supprime la session sauvegardée (pas de reprise fantôme).
+    var prevPhase by remember { mutableStateOf<PlayPhase?>(null) }
     LaunchedEffect(phase) {
-        if (phase == PlayPhase.PREP && listId != null) {
+        val was = prevPhase
+        prevPhase = phase
+        // Suppression uniquement sur retour réel au setup (pas au premier passage, qui peut précéder la restauration).
+        if (was != null && phase == PlayPhase.PREP && listId != null) {
             sessionDb.gameSessionDao().delete(listId)
         }
     }
@@ -763,7 +790,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 val battleComplete = listOf("objective", "secondary", "advantage").all { cat -> battleCards.count { it.category == cat && it.name in battleDeck } >= 3 }
                                 val cmdComplete = commandDeck.size + 1 >= 7 // +1 = Standing Orders auto-ajouté (7e carte de la main)
                                 Button(onClick = {
-                                    if (!twoPlayer) grantPassPool()
+                                    grantPassPool()
                                     // Nouvelle partie = état frais : reset des unités + purge de la session (pas d'ordres/états de la partie précédente).
                                     ownStates.keys.forEach { id -> playSyncVm.setOwnState(id, SyncedUnitState(id)) }
                                     if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> SyncedUnitState(st.instanceId) }
@@ -844,17 +871,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Verrou fin de round (règle v2) : en solo, on n'avance au round suivant QUE si
                                 // toutes les unités non vaincues des 2 armées ont activé (le bouton "+" du dashboard,
                                 // chemin réel d'avancement de round). Désactivé en 2 joueurs (évite désync).
-                                if (!twoPlayer && advancing && !soloRoundDone()) {
+                                if (advancing && !soloRoundDone()) {
                                     scope.launch { snackbarHostState.showSnackbar("Fin de round refusée : il reste des unités à activer") }
                                 } else {
                                     playedCommands = emptySet()
                                     orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
                                     if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
                                     roundCommand = null
-                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
-                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
+                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
+                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> roundCleanup(st) }
                                     if (r > round) logEvent("Début du round R$r")
                                     round = r
+                                    grantPassPool()  // Pass Pool recalculé à chaque Command Phase (règle v2)
                                     pushGameState()
                                 }
                             }
@@ -886,7 +914,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                             scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
                                         }
                                     } else {
-                                        toggleTurn(); passArmed = false
+                                        val mySide = turn == "own"
+                                        if ((if (mySide) passes else oppPasses) > 0) {
+                                            if (mySide) passes -= 1 else oppPasses -= 1
+                                            toggleTurn(); passArmed = false
+                                        } else {
+                                            passArmed = false
+                                            scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
+                                        }
                                     }
                                 }
                                 else passArmed = true
@@ -951,10 +986,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             oppCmd = (if (twoPlayer) oppRoundCommand else soloOppRoundCommand)?.let { id -> cmdCards.firstOrNull { it.id == id } },
                             turn = turn,
                             onOpenUnit = { selectedUnit = it },
-                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true)); playable.firstOrNull { it.instanceId == id }?.let { logEvent("${it.card.name} activée") } },
+                            onActivate = { id -> playSyncVm.setOwnState(id, (ownStates[id] ?: SyncedUnitState(id)).copy(activated = true, orderReceived = false)); playable.firstOrNull { it.instanceId == id }?.let { logEvent("${it.card.name} activée") } },
                             onCmdClick = { showCmdSheet = true },
                             showOpponent = true,
-                            onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                            oppReadOnly = twoPlayer,
+                            onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true, orderReceived = false)) },
                             onWound = { id, delta ->
                                 if (id in ownStates) {
                                     playSyncVm.updateOwnState(id) { st -> st.copy(wounds = ((st.wounds ?: 0) + delta).coerceAtLeast(0)) }
@@ -981,20 +1017,21 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             round = round, vpA = vp, vpB = oppVp, activeObjectives = activeObjectives,
                             objectives = battleCards.filter { it.category == "objective" },
                             onRound = { r -> round = r },
-                            onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceAtLeast(0) else oppVp = (oppVp + delta).coerceAtLeast(0); pushGameState() },
+                            onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceIn(0, 12) else oppVp = (oppVp + delta).coerceIn(0, 12); pushGameState() },
                             onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name; pushGameState() },
                             onNextRound = {
                                 // Verrou fin de round (règle v2) : en solo, on n'avance que si toutes les unités
                                 // non vaincues ont activé (même garde que le bouton "+" du dashboard).
-                                if (!twoPlayer && !soloRoundDone()) {
+                                if (!soloRoundDone()) {
                                     scope.launch { snackbarHostState.showSnackbar("Fin de round refusée : il reste des unités à activer") }
                                 } else {
                                     if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
                                     roundCommand = null
                                     round += 1
+                                    grantPassPool()  // Pass Pool recalculé à chaque Command Phase (règle v2)
                                     pushGameState()
-                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, orderReceived = false) } }
-                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, orderReceived = false) }
+                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
+                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> roundCleanup(st) }
                                 }
                             },
                             onJournal = { showLogSheet = true },
@@ -1168,25 +1205,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Text("⚡ Auto", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Surface(onClick = { panicRoll = (1..6).random() }, shape = RoundedCornerShape(8.dp), color = Color(0xFF3B2224)) {
-                                Text("⚡ Jet de panique", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Surface(onClick = {
-                                listEntries.forEach { u -> if (states[u.instanceId]?.panicking == true) onUnitChange(u.instanceId, (states[u.instanceId] ?: SyncedUnitState(u.instanceId)).copy(panicking = false)) }
-                                panicRoll = null
-                            }, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) {
-                                Text("Lever la panique", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                            if (panicRoll != null) {
-                                Text("Résultat : $panicRoll", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
                         UnitActivationStrip(units = listEntries, states = states, onOpen = { selectedUnit = it })
                         Spacer(Modifier.height(4.dp))
                         UnitActivationGrid(
                             units = listEntries, allEntries = listAll, states = states, readOnly = readOnly,
-                            onActivate = { id -> onUnitChange(id, (states[id] ?: SyncedUnitState(id)).copy(activated = true)) },
+                            onActivate = { id -> onUnitChange(id, (states[id] ?: SyncedUnitState(id)).copy(activated = true, orderReceived = false)) },
                             onOpen = { selectedUnit = it },
                             modifier = Modifier.weight(1f)
                         )
@@ -2476,17 +2499,7 @@ internal fun UnitActivationGrid(
     onOpen: (ListEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Tri : activables en tête, activées puis vaincues en queue.
-    val sorted = remember(units, states) {
-        units.sortedBy { u ->
-            val st = states[u.instanceId]
-            when {
-                st?.defeated == true -> 2
-                st?.activated == true -> 1
-                else -> 0
-            }
-        }
-    }
+    val sorted = units  // ordre stable (pas de réordonnancement sous le doigt)
     LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(sorted, key = { it.instanceId }) { unit ->
             val st = states[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
@@ -2597,6 +2610,7 @@ internal fun BattlefieldView(
     onActivate: (String) -> Unit,
     onCmdClick: () -> Unit,
     showOpponent: Boolean = true,
+    oppReadOnly: Boolean = false,
     onOppActivate: ((String) -> Unit)? = null,
     onWound: ((String, Int) -> Unit)? = null,
     onToken: ((String, String, Int) -> Unit)? = null,
@@ -2613,7 +2627,7 @@ internal fun BattlefieldView(
         // pousse le camp actif hors écran (le bug 'j'arrive pas à activer mes unités').
         CampRow("MOI", myUnits, myStates, isActive = turn == "own", onOpenUnit, onActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
         CommandCenterRow(myCmd, oppCmd, turn, onCmdClick, activeObjectives = activeObjectives)
-        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = onWound, onToken = onToken, onOrder = onOrder, onCover = onCover)
+        if (showOpponent) CampRow("ADVERSAIRE", oppUnits, oppStates, isActive = turn == "opp", onOpenUnit, onActivate = onOppActivate, onWound = if (oppReadOnly) null else onWound, onToken = if (oppReadOnly) null else onToken, onOrder = if (oppReadOnly) null else onOrder, onCover = if (oppReadOnly) null else onCover)
     }
 }
 
@@ -2793,6 +2807,12 @@ internal fun CampRow(
                                 }
                             }
                             Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            if (onOrder != null && !defeated) {
+                                val ordered = st.orderReceived == true
+                                Surface(onClick = { onOrder.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = if (ordered) Color(0xFF3A3320) else Color(0xFF1E293B)) {
+                                    Text(if (ordered) "📨 Ordre reçu" else "📨 Ordre", Modifier.padding(vertical = 3.dp), color = if (ordered) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                }
+                            }
                             if (activable) {
                                 Surface(onClick = { onActivate?.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = Color(0xFF1E3A2A)) {
                                     Text("▶ Activer", Modifier.padding(vertical = 3.dp), color = Color(0xFF77D9A7), fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -2825,8 +2845,7 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
     val myPrio = (myCmd?.pip?.toIntOrNull() ?: 9) <= (oppCmd?.pip?.toIntOrNull() ?: 9)
     val turnColor = if (turn == "own") Color(0xFFF59E0B) else Color(0xFF38BDF8)
     // EV3 : halo pulsant sur la zone centrale pour montrer qui joue (100% présentation, aucun état).
-    val pulse = rememberInfiniteTransition(label = "turnPulse")
-    val glowAlpha by pulse.animateFloat(initialValue = 0.25f, targetValue = 0.6f, animationSpec = infiniteRepeatable(animation = tween(900), repeatMode = RepeatMode.Reverse), label = "glow")
+    val glowAlpha = 0.5f  // statique : pas de clignotement
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827), border = BorderStroke(1.dp, turnColor.copy(alpha = glowAlpha))) {
         // Centre compact : qui joue + priorité (les cartes sont dans le dashboard mission + la main).
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {

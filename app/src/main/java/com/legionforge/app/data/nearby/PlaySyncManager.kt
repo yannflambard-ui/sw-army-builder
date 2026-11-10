@@ -93,6 +93,7 @@ class PlaySyncManager(context: Context) {
     // Signal reçu : l'autre joueur demande qu'on lui renvoie notre liste (synchro manuelle).
     private val _listRequested = MutableStateFlow(false)
     val listRequested: StateFlow<Boolean> = _listRequested.asStateFlow()
+    fun consumeListRequest() { _listRequested.value = false }
 
     private val _receivedDeploymentDone = MutableStateFlow<Boolean?>(null)
     val receivedDeploymentDone: StateFlow<Boolean?> = _receivedDeploymentDone.asStateFlow()

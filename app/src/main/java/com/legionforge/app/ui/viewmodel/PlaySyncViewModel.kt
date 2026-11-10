@@ -56,6 +56,7 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
                 if (requested) {
                     val l = lastList
                     if (l != null) sendList(l, lastEntries)
+                    sync.consumeListRequest()
                 }
             }
         }
