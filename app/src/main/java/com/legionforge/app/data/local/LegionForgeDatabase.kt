@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.legionforge.app.data.model.ArmyList
 import com.legionforge.app.data.model.GameSessionEntity
+import com.legionforge.app.data.model.PlayJournalEntity
 import com.legionforge.app.data.model.ArmyUnit
 import com.legionforge.app.data.model.Faction
 import com.legionforge.app.data.model.Keyword
