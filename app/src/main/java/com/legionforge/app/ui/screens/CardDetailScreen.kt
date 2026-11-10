@@ -1200,10 +1200,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Règle v2 : on tire un jeton du pool d'ordres (rang), puis on active une unité
                                 // de ce rang SANS ordre. Pool dérivé des unités : 1 jeton par unité non vaincue sans ordre.
                                 val actable = listEntries.filter { u -> val st = states[u.instanceId]; st?.defeated != true && st?.activated != true }
-                                val tokens = actable.filter { u -> states[u.instanceId]?.orderReceived != true }
-                                    .map { u -> u.card.rank }
+                                // Clé de pool = rang (commander/corps/special/support/heavy), alignée sur orderPool.
+                                fun poolKey(u: ListEntry): String? = when (u.card.legionRank) {
+                                    com.legionforge.app.data.model.LegionRank.COMMANDER -> "commander"
+                                    com.legionforge.app.data.model.LegionRank.CORPS -> "corps"
+                                    com.legionforge.app.data.model.LegionRank.SPECIAL_FORCES -> "special"
+                                    com.legionforge.app.data.model.LegionRank.SUPPORT -> "support"
+                                    com.legionforge.app.data.model.LegionRank.HEAVY -> "heavy"
+                                    else -> null
+                                }
+                                val tokens = actable.filter { u -> states[u.instanceId]?.orderReceived != true }.mapNotNull { poolKey(it) }
                                 val rank = tokens.shuffled().firstOrNull()
-                                val pick = if (rank != null) actable.firstOrNull { u -> u.card.rank == rank && states[u.instanceId]?.orderReceived != true }
+                                val pick = if (rank != null) actable.firstOrNull { u -> poolKey(u) == rank && states[u.instanceId]?.orderReceived != true }
                                     else actable.firstOrNull()
                                 if (pick != null) onUnitChange(pick.instanceId, (states[pick.instanceId] ?: SyncedUnitState(pick.instanceId)).copy(activated = true, orderReceived = false))
                             }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
