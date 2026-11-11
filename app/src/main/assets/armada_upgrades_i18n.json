@@ -1,6 +1,45 @@
 {
  "schemaVersion": 1,
  "upgrades": {
+  "armada-v15:bsdata:galactic-empire:790c-15d1-07ba-dd4e": {
+   "fr": "Grand Moff Tarkin\nCommander Ability : au début de chaque phase de vaisseau, vous pouvez choisir 1 ordre. Chaque vaisseau allié gagne un jeton de commandement correspondant à cet ordre."
+  },
+  "armada-v15:bsdata:galactic-empire:90a7-5012-33cb-9bcd": {
+   "fr": "Amiral Motti\nCommander Ability : la valeur de coque de chaque vaisseau allié est augmentée selon sa catégorie de taille :\nPetit vaisseau : 1.\nVaisseau moyen : 2.\nGrand vaisseau : 3."
+  },
+  "armada-v15:bsdata:galactic-empire:081d-8d94-cff5-d544": {
+   "fr": "Amiral Screed\nCommander Ability : une fois par activation, en attaquant, un vaisseau allié peut dépenser 1 dé pour changer un dé en une face avec une icône [Critique]."
+  },
+  "armada-v15:bsdata:galactic-empire:98a2-742a-a35c-61f0": {
+   "fr": "Dark Vador\nCommander Ability : en attaquant un vaisseau, un vaisseau allié peut dépenser 1 pion de défense pour relancer autant de dés de sa réserve d'attaque que vous voulez."
+  },
+  "armada-v15:bsdata:galactic-empire:73b4-30e9-d231-0e91": {
+   "fr": "Amiral Ozzel\nCommander Ability : pendant l'étape de détermination du cap de chaque vaisseau allié, il peut modifier sa vitesse de 1."
+  },
+  "armada-v15:bsdata:galactic-empire:c6ff-db88-74f8-bbb7": {
+   "fr": "Amiral Konstantine\nCommander Ability : au début de chaque phase de statut, vous pouvez choisir un nombre quelconque de vaisseaux ennemis à distance 1-5 d'au moins 2 vaisseaux alliés non-flottilles, dont 1 doit être de catégorie moyenne ou plus grande. Pour chaque vaisseau choisi, vous pouvez défausser 1 jeton [Navigation] de celui-ci, ou augmenter ou diminuer sa vitesse de 1 (minimum vitesse 1)."
+  },
+  "armada-v15:bsdata:galactic-empire:dc93-d6db-d932-097d": {
+   "fr": "Moff Jerjerrod\nCommander Ability : pendant l'étape de détermination du cap d'un vaisseau allié, il peut subir 1 dégât pour changer la première valeur d'embardée de sa vitesse actuelle en « II » jusqu'à la fin de son activation."
+  },
+  "armada-v15:bsdata:galactic-empire:589e-874d-5873-99a3": {
+   "fr": "Amiral Sloane\nCommander Ability : en attaquant, un escadron allié sans Renégat peut dépenser 1 dé avec une icône [Précision] pour choisir et dépenser 1 pion de défense du défenseur. En attaquant un vaisseau, il peut aussi relancer 1 dé avec une icône [Critique]."
+  },
+  "armada-v15:bsdata:galactic-empire:cfc6-f1ca-9a11-78ee": {
+   "fr": "Grand Amiral Thrawn\nCommander Ability : choisissez les cadrans de commandement de cette carte après le déploiement des flottes.\nAu début de chaque phase de vaisseau, vous pouvez révéler et défausser 1 cadran de cette carte. Si vous le faites, jusqu'à la fin du round, quand chaque vaisseau allié s'active, il gagne 1 cadran supplémentaire correspondant au cadran défaussé.\nMise en place : 3 cadrans [Tout commandement]"
+  },
+  "armada-v15:bsdata:galactic-empire:e7d1-a0d2-a9f5-f97d": {
+   "fr": "Amiral Piett\nCommander Ability : quand un vaisseau allié dépense uniquement un jeton de commandement pour résoudre un ordre, vous pouvez épuiser cette carte. Si vous le faites, ce vaisseau résout cet ordre comme s'il avait dépensé un cadran du même type à la place.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:890a-9090-7ec1-fa9c": {
+   "fr": "Empereur Palpatine\nCommander Ability : après le déploiement des flottes, placez 1 pion de défense de chaque type sur cette carte. Au début de chaque phase de vaisseau, vous pouvez défausser 1 de ces pions. Si vous le faites, jusqu'à la fin du round, si un vaisseau ou escadron ennemi dépense un pion correspondant pendant son étape de dépense des pions de défense, défaussez ce pion."
+  },
+  "armada-v15:bsdata:galactic-empire:ddb8-6a03-eb9c-4ab1": {
+   "fr": "Général Tagge\nCommander Ability : après le déploiement des flottes, placez 2 jetons de round non consécutifs sur cette carte. Au début de la phase de vaisseau pendant chaque round correspondant à 1 de ces jetons, chaque vaisseau allié peut restaurer 1 de ses pions de défense défaussés."
+  },
+  "armada-v15:bsdata:galactic-empire:fd97-23ed-bfa6-f5b3": {
+   "fr": "Général Romodi\nCommander Ability : en attaquant un vaisseau, si l'attaque est obstruée par un vaisseau ou un obstacle, l'attaquant ne retire pas de dé (même si l'attaque est aussi obstruée par un effet de carte), et peut ajouter 1 dé rouge à sa réserve d'attaque."
+  },
   "armada-v15:bsdata:neutral:electronic-countermeasures:3d7832de44bb12": {
    "fr": "Contremesures électroniques\nDefensive Retrofit Ability : en défense, vous pouvez épuiser cette carte pour dépenser 1 jeton de défense visé par un résultat [Précision] de l'attaquant.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation]"
   },
@@ -505,6 +544,42 @@
   "armada-v15:bsdata:galactic-empire:8e48-7551-18f8-ae7e": {
    "fr": "Sunder\nTitle Ability : [Critique] bleu ou noir : vous pouvez défausser cette carte pour choisir et défausser 1 carte d'amélioration [Retrofit offensif], [Remise en état défensive], [Lanceurs], [Canons ioniques] ou [Turbolaser] équipée sur le défenseur."
   },
+  "armada-v15:bsdata:rebel-alliance:790c-15d1-07ba-dd4e": {
+   "fr": "Général Dodonna\nCommander Ability : avant qu'un vaisseau ennemi ne reçoive une carte de dégâts face visible, regardez les 4 cartes du dessus de la pile de dégâts, placez-en 1 au-dessus de la pile et défaussez les autres."
+  },
+  "armada-v15:bsdata:rebel-alliance:89dc-f6d0-3639-5f16": {
+   "fr": "Garm Bel Iblis\nCommander Ability : après le déploiement des flottes, placez 2 jetons de round non consécutifs sur cette carte. Au début de la phase de vaisseau pendant chaque round correspondant à 1 de ces jetons, chaque vaisseau allié peut gagner un nombre de jetons de commandement égal à sa valeur de commandement."
+  },
+  "armada-v15:bsdata:rebel-alliance:3c10-05fe-a559-4cd6": {
+   "fr": "Mon Mothma\nCommander Ability : quand un vaisseau allié résout l'effet du jeton [Évasion], il peut annuler 1 dé à moyenne portée ou relancer 1 dé supplémentaire à courte portée ou à distance 1."
+  },
+  "armada-v15:bsdata:rebel-alliance:6fa0-0ec3-5352-cb5d": {
+   "fr": "Amiral Ackbar\nCommander Ability : avant l'étape d'attaque d'un vaisseau allié, il peut choisir de n'attaquer que depuis ses sections de coque latérales gauche et droite pendant ce round. Si c'est le cas, il peut ajouter 2 dés rouges à sa réserve d'attaque en attaquant un vaisseau."
+  },
+  "armada-v15:bsdata:rebel-alliance:635d-2b2c-1504-7890": {
+   "fr": "Général Rieekan\nCommander Ability : une fois par round, quand un vaisseau allié ou un escadron allié unique est détruit, il reste dans la zone de jeu et est traité comme s'il n'avait pas été détruit jusqu'à la fin de la phase de statut."
+  },
+  "armada-v15:bsdata:rebel-alliance:8ea2-b1c3-b00d-acdc": {
+   "fr": "Général Cracken\nCommander Ability : en défense contre un vaisseau, si le défenseur est un petit ou moyen vaisseau allié à vitesse 3 ou plus, l'attaque est considérée comme obstruée."
+  },
+  "armada-v15:bsdata:rebel-alliance:944e-a5c0-0bee-fd2d": {
+   "fr": "Général Madine\nCommander Ability : pendant que vaisseau allié exécute sa première manœuvre pendant son activation, pendant l'étape de détermination du cap, il peut augmenter 1 valeur d'embardée de 1."
+  },
+  "armada-v15:bsdata:rebel-alliance:798a-e5f1-3a0c-0527": {
+   "fr": "Commandant Sato\nCommander Ability : en attaquant un vaisseau à distance 1 d'un escadron allié, avant de lancer les dés d'attaque, l'attaquant peut remplacer jusqu'à 2 dés de sa réserve d'attaque par un nombre égal de dés de n'importe quelle couleur."
+  },
+  "armada-v15:bsdata:rebel-alliance:4b19-9f41-6ff6-578b": {
+   "fr": "Leia Organa\nCommander Ability : quand un vaisseau allié résout un ordre en dépensant un cadran de commandement, s'il n'a pas résolu un autre ordre pendant ce round, il peut résoudre cet ordre comme s'il avait aussi dépensé un jeton de commandement correspondant. Si c'est le cas, ce vaisseau ne peut pas résoudre d'autres ordres pendant ce round."
+  },
+  "armada-v15:bsdata:rebel-alliance:c8aa-725d-8c28-bf35": {
+   "fr": "Amiral Raddus\nCommander Ability : avant le déploiement des flottes, vous pouvez mettre de côté 1 autre vaisseau allié ayant une valeur de commandement de 3 ou moins. Au début de n'importe quel round, vous pouvez déployer ce vaisseau à distance 1-2 de vous. Ce vaisseau ne peut pas être déployé en chevauchant des escadrons et ne peut pas être le premier vaisseau à s'activer ce round."
+  },
+  "armada-v15:bsdata:rebel-alliance:e075-495c-a97a-5c07": {
+   "fr": "Kyrsta Agate\nCommander Ability : après votre déploiement, gagnez 1 pion de défense non [Dispersion].\nPendant votre étape de dépense des pions de défense, si votre vitesse n'est pas 0, vous pouvez défausser 1 pion de défense pour résoudre l'effet de ce pion de défense. Vous ne pouvez pas résoudre l'effet de chaque type de pion de défense plus d'une fois par attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:b538-2f48-7e51-830f": {
+   "fr": "Général Draven\nCommander Ability : à la fin de chaque phase de commandement, vous pouvez regarder tous les cadrans de commandement assignés à 1 vaisseau ennemi. Puis vous pouvez placer 2 jetons de commandement, chacun d'un type différent, sur cette carte.\nAprès qu'un vaisseau ennemi a résolu un ordre, vous pouvez défausser un jeton de commandement correspondant de cette carte. Si vous le faites, ce vaisseau ennemi gagne 1 jeton de perturbation correspondant."
+  },
   "armada-v15:bsdata:rebel-alliance:ed4a-5188-cd47-0a59": {
    "fr": "Réapprovisionnement en pièces\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Réparation] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Réparation].\nMise en place : 5 jetons [Réparation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation], [Navigation] ou [Escadron]"
   },
@@ -658,6 +733,27 @@
   "armada-v15:bsdata:rebel-alliance:df66-c2d4-93c7-7dcb": {
    "fr": "Unity\nTitle Ability : après votre déploiement, gagnez 1 pion de défense [Redirection]. En attaquant un escadron, si le défenseur est engagé avec un escadron allié sans le mot-clé Lourd imprimé, vous pouvez relancer 1 dé."
   },
+  "armada-v15:bsdata:galactic-republic:c6ff-db88-74f8-bbb7": {
+   "fr": "Obi-Wan Kenobi\nCommander Ability : en défense, quand un vaisseau allié dépense un pion de défense [Redirection] prêt, il peut réduire le total des dégâts de 1 avant de subir des dégâts."
+  },
+  "armada-v15:bsdata:galactic-republic:dc93-d6db-d932-097d": {
+   "fr": "Bail Organa\nCommander Ability : quand un vaisseau allié révèle un ordre, vous pouvez défausser jusqu'à 1 jeton de chaque type de cette carte. Pour chaque jeton défaussé, ce vaisseau gagne 1 cadran de commandement supplémentaire correspondant au type de ce jeton.\nMise en place : 5 jetons [Navigation] ou [Réparation]"
+  },
+  "armada-v15:bsdata:galactic-republic:fb6a-33fa-c3e0-2201": {
+   "fr": "Amiral Tarkin\nCommander Ability : au début de chaque phase de vaisseau, vous pouvez défausser 1 jeton de commandement de cette carte. Si vous le faites, soit vous gagnez 1 cadran de commandement correspondant, soit chaque vaisseau allié gagne 1 jeton de commandement correspondant.\nMise en place : 6 jetons [Tout commandement]"
+  },
+  "armada-v15:bsdata:galactic-republic:d68f-4f24-d179-bf54": {
+   "fr": "Luminara Unduli\nCommander Ability : en défense, un vaisseau ou escadron unique allié, après l'étape de dépense des pions de défense, s'il a dépensé moins de 2 pions de défense, peut soit restaurer 1 de ses pions de défense non dépensés, soit choisir un autre vaisseau allié à distance 1-5 et restaurer 1 de ses pions de défense."
+  },
+  "armada-v15:bsdata:galactic-republic:e679-4ba7-6c1e-0a4a": {
+   "fr": "Plo Koon\nCommander Ability : en attaquant un vaisseau à distance 1-3 d'un vaisseau allié, un escadron allié peut ajouter 1 dé bleu réglé sur une icône [Précision] à sa réserve d'attaque. Ce dé ne peut pas être relancé ni modifié.\nLes escadrons alliés sans Adepte gagnent Pugnacité quand ils sont à distance 1 d'un escadron allié avec Adepte."
+  },
+  "armada-v15:bsdata:galactic-republic:c42e-d89e-9d06-0a30": {
+   "fr": "Amiral Yularen\nCommander Ability : quand un vaisseau allié résout un ordre [Escadron], s'il a dépensé un jeton [Escadron], il peut activer 1 escadron supplémentaire.\nQuand un vaisseau allié résout un ordre [Réparation], il peut dépenser des points d'ingénierie pour l'effet de réparation suivant :\nRéparer un escadron : dépensez 2 points pour choisir un escadron allié à distance 1-3. Cet escadron restaure 1 point de coque."
+  },
+  "armada-v15:bsdata:galactic-republic:697d-e63b-e6eb-7a98": {
+   "fr": "Anakin Skywalker\nCommander Ability : en attaquant un vaisseau, si le défenseur est à distance 1-5 d'au moins 2 autres vaisseaux alliés, 1 autre vaisseau allié à distance 1-5 du défenseur peut dépenser 1 pion de défense. Si c'est le cas, l'attaquant peut relancer jusqu'à 3 dés."
+  },
   "armada-v15:bsdata:galactic-republic:5187-2bdf-bf83-75ce": {
    "fr": "Boucliers thermiques\nDefensive Retrofit Ability : uniquement vaisseau moyen ou grand.\nEn défense, après que l'attaquant a rassemblé les dés, vous pouvez dépenser 1 jeton [Soutien]. Si vous le faites, choisissez et retirez la moitié des dés de la réserve d'attaque, arrondie à l'inférieur."
   },
@@ -753,6 +849,24 @@
   },
   "armada-v15:bsdata:galactic-republic:c99d-ed39-182a-742d": {
    "fr": "TB-73\nTitle Ability : après votre déploiement, gagnez 1 pion de défense [Évasion] supplémentaire."
+  },
+  "armada-v15:bsdata:separatist-alliance:c6ff-db88-74f8-bbb7": {
+   "fr": "Kraken\nCommander Ability : une fois par activation, en attaquant un vaisseau, si un autre vaisseau allié est à courte-moyenne portée du défenseur, l'attaquant peut changer 1 dé en une face avec une icône quelconque (et aucune autre icône)."
+  },
+  "armada-v15:bsdata:separatist-alliance:dc93-d6db-d932-097d": {
+   "fr": "Comte Dooku\nCommander Ability : vous devez choisir au moins 2 types de jetons de commandement pour cette carte.\nAu début de chaque phase de vaisseau, vous pouvez défausser 1 jeton de commandement de cette carte. Si vous le faites, chaque vaisseau ennemi gagne 1 jeton de perturbation correspondant à ce jeton de commandement.\nMise en place : 3 jetons de commandement de votre choix"
+  },
+  "armada-v15:bsdata:separatist-alliance:0234-3f9d-e956-6105": {
+   "fr": "Général Grievous\nCommander Ability : quand un vaisseau ou escadron allié est détruit, vous pouvez choisir 1 vaisseau allié ou escadron unique allié à distance 1-5 du vaisseau ou escadron détruit. Si vous le faites, le vaisseau ou escadron unique choisi peut soit restaurer 1 de ses pions de défense, soit récupérer 1 de ses pions de défense défaussés, puis épuiser ce pion."
+  },
+  "armada-v15:bsdata:separatist-alliance:0236-1299-663d-7fe7": {
+   "fr": "Amiral Trench\nCommander Ability : au début de chaque phase de vaisseau, vous pouvez révéler et défausser 1 cadran de commandement de cette carte. Si vous le faites, jusqu'à la fin du round, quand un vaisseau allié ne dépense qu'un jeton de commandement correspondant pour résoudre un ordre, ce vaisseau résout cet ordre comme s'il avait dépensé un cadran et un jeton du même type.\nMise en place : 4 cadrans [Tout]"
+  },
+  "armada-v15:bsdata:separatist-alliance:35ab-9360-4935-a8d0": {
+   "fr": "TF-1726\nCommander Ability : une fois par activation, en attaquant un vaisseau, l'attaquant ajoute 1 dé noir à sa réserve d'attaque pour chaque jeton de perturbation du défenseur, jusqu'à un maximum de 2 dés supplémentaires."
+  },
+  "armada-v15:bsdata:separatist-alliance:be24-c569-2137-4f0e": {
+   "fr": "Mar Tuuk\nCommander Ability : en attaquant, si la section de coque défendue a au moins 1 bouclier restant, l'attaquant peut ajouter 1 dé rouge à sa réserve d'attaque.\nEn attaquant un vaisseau qui n'a plus aucun bouclier, après avoir lancé les dés d'attaque, l'attaquant doit annuler 1 dé d'attaque."
   },
   "armada-v15:bsdata:separatist-alliance:9792-ef9e-f9f1-8bfc": {
    "fr": "Amplification du signal hyperespace\nOffensive Retrofit Ability : pendant la phase d'escadron, quand c'est le tour de votre flotte d'activer des escadrons, vous pouvez épuiser cette carte pour choisir un nombre d'escadrons alliés non activés, à courte-longue portée, jusqu'à votre valeur d'escadron. Ce tour, activez chacun de ces escadrons. En attaquant, chacun de ces escadrons ayant [IA] est traité comme s'il avait été activé par un ordre [Escadron].\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation] ou [Escadron]"
