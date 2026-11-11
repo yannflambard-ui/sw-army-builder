@@ -2065,14 +2065,14 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
 }
 
 // ── MISSION DASHBOARD (style officiel AMG) : repliable, à déployer pour visualiser la mission ──
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
 /** Capacité de blessures d'une unité Legion : santé × figurines (pool de PV). */
 internal fun woundCapacity(unit: ListEntry): Int {
     val st = LegionStatsParser.parse(unit.card.legionStats)
     return (st?.health?.takeIf { it > 0 } ?: 1) * (st?.miniCount?.takeIf { it > 0 } ?: 1)
 }
 
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
 internal fun MissionDashboard(
     online: Boolean = true, reconnecting: Boolean = false,
     round: Int,
