@@ -4254,7 +4254,7 @@
       "id": "armada-v15:bsdata:neutral:defense-liason:c3e72737736a1e",
       "gameSystem": "ARMADA_V15",
       "kind": "ARMADA_UPGRADE",
-      "name": "Defense Liason",
+      "name": "Defense Liaison",
       "points": 3,
       "factionId": "neutral",
       "legionRank": null,
