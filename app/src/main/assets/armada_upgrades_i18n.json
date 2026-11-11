@@ -939,6 +939,9 @@
   },
   "armada-v15:bsdata:separatist-alliance:18d8-c65f-cd4a-0423": {
    "fr": "Voix lucide\nTitle Ability : considérez l'armement en batterie imprimé de votre section de coque arrière comme 3 dés rouges.\nL'armement en batterie de vos sections de coque gauche et droite est augmenté de 1 dé noir et diminué de 1 dé bleu."
+  },
+  "armada-v15:bsdata:neutral:fire-control-team:3d953332a3f74b": {
+   "fr": "Équipe de contrôle de tir\nCapacité d'équipe d'armes : pendant l'étape de résolution des dégâts, vous pouvez épuiser cette carte pour résoudre 1 effet critique supplémentaire. Vous ne pouvez pas résoudre deux fois le même effet critique."
   }
  }
 }

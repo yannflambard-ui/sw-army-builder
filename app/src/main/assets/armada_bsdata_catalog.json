@@ -8767,6 +8767,24 @@
       "imageUrl": null,
       "imageAssetPath": null,
       "rulesText": "{\"slotCategory\":\"Title - Providence-class\",\"profiles\":[{\"name\":\"Lucid Voice\",\"type\":\"2.1 Title\",\"characteristics\":{\"Title Ability\":\"Treat your rear hull zone's printed battery armament as 3 red dice.\\nThe battery armament of your left and right hull zones are each increased by 1 black die and decreased by 1 blue die.\"}}],\"infoLinks\":[],\"constraints\":[{\"type\":\"max\",\"field\":\"selections\",\"value\":\"1.0\",\"scope\":\"roster\"},{\"type\":\"max\",\"field\":\"selections\",\"value\":\"1.0\",\"scope\":\"parent\"}]}"
+    },
+    {
+      "id": "armada-v15:bsdata:neutral:fire-control-team:3d953332a3f74b",
+      "gameSystem": "ARMADA_V15",
+      "kind": "ARMADA_UPGRADE",
+      "name": "Fire Control Team",
+      "points": 2,
+      "factionId": "neutral",
+      "legionRank": null,
+      "upgradeSlots": [
+        "WEAPONS_TEAM"
+      ],
+      "allowedUpgradeSlots": [],
+      "commander": false,
+      "unique": false,
+      "imageUrl": null,
+      "imageAssetPath": null,
+      "rulesText": "{\"slotCategory\": \"Weapons Team\", \"profiles\": [{\"name\": \"Fire Control Team\", \"type\": \"3.2 Weapons Team\", \"characteristics\": {\"Weapons Team Ability\": \"During the Resolve Damage Step, you may exhaust this card to resolve 1 additional critical effect. You cannot resolve the same critical effect twice.\"}}], \"infoLinks\": [], \"constraints\": [{\"type\": \"max\", \"field\": \"selections\", \"value\": \"1.0\", \"scope\": \"parent\"}]}"
     }
   ]
 }
