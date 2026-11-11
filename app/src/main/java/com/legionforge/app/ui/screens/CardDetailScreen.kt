@@ -3375,6 +3375,19 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     )
                 }
                 // ── activation (vaisseau : une seule fois par manche) ──
+                // ── pions d'ordre (stock Armada) : à garder, affichés dépliés ──
+                CollapsibleSection(stringResource(R.string.order_tokens), initiallyExpanded = true) {
+                    OrderTokensCard(
+                        orderTokens = orderTokens,
+                        maxStock = maxOrderStock,
+                        onIncOrder = { name ->
+                            if (orderTokens.values.sum() < maxOrderStock) set(state.copy(orderTokens = orderTokens + (name to (orderTokens[name] ?: 0) + 1)))
+                        },
+                        onDecOrder = { name -> set(state.copy(orderTokens = orderTokens + (name to ((orderTokens[name] ?: 0) - 1).coerceAtLeast(0)))) },
+                        wikiSections = wikiSections,
+                        onRuleClick = onRuleClick
+                    )
+                }
                 // Activation : action clé de la manche, bouton direct (pas de section repliée).
                 run {
                     val isOn = state.activated == true
