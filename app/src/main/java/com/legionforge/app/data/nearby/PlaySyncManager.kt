@@ -31,13 +31,7 @@ data class SyncedUnitState(
     val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
     val promoted: Boolean? = null,    // Legion unité promue commandant
     val deployZone: Int? = null,       // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
-    val detachedThreshold: Int? = null,  // Legion : blessures avant détachée
-    val eliminatedThreshold: Int? = null, // Legion : blessures avant éliminée
-    val detached: Boolean? = null,       // Legion : unité détachée (perte de cohésion)
-    val eliminated: Boolean? = null,     // Legion : unité éliminée
     val orderReceived: Boolean? = null,  // Legion : a reçu un ordre ce round
-    val panicThreshold: Int? = null,     // Legion : suppressions avant panique
-    val panicking: Boolean? = null       // Legion : unité paniquée
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */

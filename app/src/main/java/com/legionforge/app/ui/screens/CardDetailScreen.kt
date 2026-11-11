@@ -714,9 +714,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Text(stringResource(R.string.setup_desc), color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall)
                                 // Indicateur d'étape (wizard).
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Étape $setupStep / 3", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("Étape $setupStep / 2", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        repeat(3) { i -> Box(Modifier.size(8.dp).clip(CircleShape).background(if (i + 1 == setupStep) Color(0xFFFFC857) else Color(0xFF2A3A4A))) }
+                                        repeat(2) { i -> Box(Modifier.size(8.dp).clip(CircleShape).background(if (i + 1 == setupStep) Color(0xFFFFC857) else Color(0xFF2A3A4A))) }
                                     }
                                 }
                                 if (setupStep == 1) {
@@ -742,47 +742,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 }
                                 }
                                 if (setupStep == 2) {
-                                // Déploiement.
-                                Surface(onClick = { showDeploySheet = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
-                                    Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Filled.Place, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(stringResource(R.string.deploy), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                                // Déployer : ouvrir le panneau des 2 armées pour marquer Zone 1/2 (plus de vue "une seule armée").
-                                Surface(onClick = { showDeployment = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
-                                    Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Déployer les armées", color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        Text("Marquez la Zone 1 / Zone 2 de chaque unité des 2 armées", color = Color(0xFF8F9BAD), fontSize = 10.sp)
-                                    }
-                                }
-                                // Priorité initiale.
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(stringResource(R.string.priority), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Surface(onClick = { priority = "own" }, shape = RoundedCornerShape(8.dp), color = if (priority == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_my_army), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "own") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                                        Surface(onClick = { priority = "opp" }, shape = RoundedCornerShape(8.dp), color = if (priority == "opp") Color(0xFFFFC857) else Color(0xFF2A3A4A)) { Text(stringResource(R.string.play_opponent), Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (priority == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                                    }
-                                }
-                                // Déploiement terminé (A3) : signal qui détermine qui finit en premier.
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("Déploiement terminé", color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Surface(onClick = { playSyncVm.setDeploymentDone(!myDeployDone) }, shape = RoundedCornerShape(8.dp), color = if (myDeployDone) Color(0xFF77D9A7) else Color(0xFF2A3A4A)) { Text("Moi", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (myDeployDone) Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                                        Text(if (oppDeployDone == true) "Adversaire ✓" else "Adversaire", color = if (oppDeployDone == true) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                                }
-                                if (setupStep == 3) {
-                                // Pool d'ordres initial.
-                                Text(stringResource(R.string.order_pool), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                listOf("commander" to stringResource(R.string.rank_commander), "corps" to stringResource(R.string.rank_corps), "special" to stringResource(R.string.rank_special), "support" to stringResource(R.string.rank_support), "heavy" to stringResource(R.string.rank_heavy)).forEach { (rank, label) ->
-                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                        Stepper("${orderPool[rank] ?: 0}", { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) - 1).coerceAtLeast(0)) }, { orderPool = orderPool + (rank to ((orderPool[rank] ?: 0) + 1).coerceAtMost(9)) }, size = 34.dp, valueWidth = 26.dp)
-                                    }
-                                }
                                 // Round 0 / Build a Mission (v2.6) : détermination blue + révélation + modifications.
                                 Surface(onClick = { showMissionSheet = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A)) {
                                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -811,7 +770,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     if (setupStep > 1) {
                                         Surface(onClick = { setupStep-- }, shape = RoundedCornerShape(8.dp), color = Color(0xFF2A3A4A)) { Text("Précédent", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                                     }
-                                    if (setupStep < 3) {
+                                    if (setupStep < 2) {
                                         Surface(onClick = { setupStep++ }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) { Text("Suivant", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                                     }
                                 }
@@ -1492,14 +1451,19 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
     Column(Modifier.fillMaxWidth().padding(bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Text("MANCHE $armadaRound", color = Color(0xFFFFC857), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            if (!twoPlayer) {
+            run {
                 Surface(onClick = onAdvance, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                     Text("Passer la phase", Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
+        // Qui joue, dans la même ligne que les phases (pas de ligne séparée).
+        if (!twoPlayer && (armadaPhase == ArmadaPhase.SHIP || armadaPhase == ArmadaPhase.SQUADRON)) {
+            Text("Tour : ${if (armadaTurn == 1) "ADVERSAIRE" else "VOUS"}",
+                color = if (armadaTurn == 1) Color(0xFF38BDF8) else Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            listOf(ArmadaPhase.COMMAND to "Ordres", ArmadaPhase.SHIP to "Vaisseaux", ArmadaPhase.SQUADRON to "Escadrons", ArmadaPhase.STATUS to "Statut").forEach { (ph, lbl) ->
+            listOf(ArmadaPhase.COMMAND to "Commande", ArmadaPhase.SHIP to "Vaisseaux", ArmadaPhase.SQUADRON to "Escadrons", ArmadaPhase.STATUS to "Fin de manche").forEach { (ph, lbl) ->
                 Surface(shape = RoundedCornerShape(6.dp), modifier = Modifier.weight(1f),
                     color = if (ph == armadaPhase) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
@@ -1507,10 +1471,6 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
                     }
                 }
             }
-        }
-        if (!twoPlayer && (armadaPhase == ArmadaPhase.SHIP || armadaPhase == ArmadaPhase.SQUADRON)) {
-            Text("Au tour de : ${if (armadaTurn == 1) "ADVERSAIRE" else "VOUS"}",
-                color = if (armadaTurn == 1) Color(0xFF38BDF8) else Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -2118,14 +2078,13 @@ internal fun MissionDashboard(
     onJournal: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }  // replié : barre compacte, mission dépliable
     // Mission en jeu (règles v2) : 1 Objectif + 1 Secondaire + 1 Avantage/joueur + les 2 cartes de commandement. La Map est appariée à l'Objectif.
     val objName = missionRevealed["own_objective"] ?: missionRevealed["opp_objective"]
     val secName = missionRevealed["own_secondary"] ?: missionRevealed["opp_secondary"]
     val advOwn = missionRevealed["own_advantage"]
     val advOpp = missionRevealed["opp_advantage"]
     val mapName = objName
-    Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, if (expanded) Color(0xFFF59E0B) else Color(0xFF2A3A4A))) {
+    Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, Color(0xFFF59E0B))) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Barre compacte : ROUND -/+ | VP | TOUR | MISSION (dépliable)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -2145,9 +2104,6 @@ internal fun MissionDashboard(
                 }
                 Surface(onClick = onToggleTurn, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
                     Text(if (turn == "own") "VOTRE TOUR" else "Tour adv →", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                }
-                Surface(onClick = { expanded = !expanded }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
-                    Text("MISSION ${if (expanded) "▲" else "▼"}", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                 }
                 Surface(onClick = onOpenMission, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
                     Text("⚙", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -2171,18 +2127,7 @@ internal fun MissionDashboard(
                 Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (expanded) {
-                // ── Traqueur de rounds (5 slots) ──
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("ROUND", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(end = 8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        (1..5).forEach { r ->
-                            Box(Modifier.size(26.dp).clip(RoundedCornerShape(6.dp)).background(if (r == round.coerceAtMost(5)) Color(0xFFFFC857) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) {
-                                Text("$r", color = if (r == round.coerceAtMost(5)) Color(0xFF0A0E15) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
+            run {
                 // ── Piste de victoire 1-12 (suivi visuel; les scores sont éditables dans la barre au-dessus) ──
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("VP", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
@@ -3125,7 +3070,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             }
             TokenSection(tokens, { set(state.copy(tokens = tokens + it)) }, { set(state.copy(tokens = tokens - it)) }, isVehicle = unit.card.cardSubtype?.contains("vehicle") == true)
         }
-        CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = false) {
+        CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = true) {
             EffectsPanel(
                 effects = buildList {
                     children.forEach { c -> add(ActiveEffect(EffectType.UPGRADE, c.card.displayName(), upgradeEffectText(c.card) ?: stringResource(R.string.upgrade_installed), c.instanceId, slot = c.card.upgradeSlots.firstOrNull(), pts = c.card.points, imageAssetPath = c.card.imagePath()).copy(used = usedUpgrades.contains(c.instanceId))) }
@@ -3397,7 +3342,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
             }
         }
                 // ── matrice de manœuvres (repliable, repliée par défaut) ; pilote la vitesse ──
-                CollapsibleSection(stringResource(R.string.maneuver_matrix), initiallyExpanded = true) {
+                CollapsibleSection(stringResource(R.string.maneuver_matrix), initiallyExpanded = false) {
                     if (stats?.speedChart?.isNotEmpty() == true) {
                         ManeuverMatrix(stats, selectedSpeed, { v ->
                             set(state.copy(speed = if (speed == v) 0 else v))
@@ -3431,31 +3376,18 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         onSpend = { if (commandOrder != null) set(state.copy(orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.spend(orderTokens, commandOrder.name))) }
                     )
                 }
-                // ── pions d'ordre (stock) (repliable) ──
-                CollapsibleSection(stringResource(R.string.order_tokens), initiallyExpanded = true) {
-                    OrderTokensCard(
-                        orderTokens = orderTokens,
-                        maxStock = maxOrderStock,
-                        onIncOrder = { name ->
-                            if (orderTokens.values.sum() < maxOrderStock) set(state.copy(orderTokens = orderTokens + (name to (orderTokens[name] ?: 0) + 1)))
-                        },
-                        onDecOrder = { name -> set(state.copy(orderTokens = orderTokens + (name to ((orderTokens[name] ?: 0) - 1).coerceAtLeast(0)))) },
-                        wikiSections = wikiSections,
-                        onRuleClick = onRuleClick
-                    )
-                }
                 // ── activation (vaisseau : une seule fois par manche) ──
-                CollapsibleSection("Activation", initiallyExpanded = false) {
+                // Activation : action clé de la manche, bouton direct (pas de section repliée).
+                run {
                     val isOn = state.activated == true
                     Surface(onClick = { set(state.copy(activated = !isOn)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
                         color = if (isOn) Color(0xFF77D9A7) else Color(0xFF2A3A4A)) {
                         Text(if (isOn) "✓ Activé ce round" else "Activer ce vaisseau", Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                             color = if (isOn) Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                    Text("Une seule activation par manche (reset automatique en fin de manche).", color = Color(0xFF8F9BAD), fontSize = 10.sp)
                 }
                 // ── defense tokens (repliable) ──
-                CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = false) {
+                CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = true) {
                     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         defTokenStates.forEachIndexed { i, (def, _) ->
                             val key = "${def.name}_$i"
@@ -3465,7 +3397,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     }
                 }
         // ── effects panel (améliorations remontées au-dessus de la roue de commandement) (repliable) ──
-        CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = false) {
+        CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = true) {
             EffectsPanel(
                 effects = buildList {
                     if (commander != null) add(ActiveEffect(EffectType.COMMANDER, commander.card.displayName(), stripBracketName(commander.card.rulesText ?: stringResource(R.string.fleet_commander)), "cmd_${commander.instanceId}", pts = commander.card.points, imageAssetPath = commander.card.imagePath())
@@ -3546,7 +3478,7 @@ internal fun ArmadaSquadronPage(unit: ListEntry, wikiSections: List<WikiSectionE
     val set: (SyncedUnitState) -> Unit = { if (!readOnly) onChange(it) }
     Column(Modifier.fillMaxSize().background(Color(0xFF0A0E15)).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         CardBlock(unit, emptyList(), unit.card.points, wikiSections, onRuleClick, onCardClick = { showCard = true })
-        CollapsibleSection(stringResource(R.string.squadron_tracking), initiallyExpanded = false) {
+        CollapsibleSection(stringResource(R.string.squadron_tracking), initiallyExpanded = true) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 BigCounter(stringResource(R.string.hull), hull, maxHp, Color(0xFFFF6B6B), { if (hull < maxHp) set(state.copy(hull = hull + 1)) }, { if (hull > 0) set(state.copy(hull = hull - 1)) })
                 Spacer(Modifier.width(20.dp))
@@ -3559,7 +3491,7 @@ internal fun ArmadaSquadronPage(unit: ListEntry, wikiSections: List<WikiSectionE
             if (hull < maxHp) HealthBar(hull.toFloat() / maxHp, hull, maxHp)
         }
         if (defTokenStates.isNotEmpty()) {
-            CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = false) {
+            CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = true) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     defTokenStates.forEachIndexed { i, (def, _) ->
                         val key = "${def.name}_$i"
@@ -3635,7 +3567,7 @@ internal fun CollapsibleSection(
     initiallyExpanded: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    var expanded by remember { mutableStateOf(initiallyExpanded) }
+    var expanded by remember(title) { mutableStateOf(initiallyExpanded) }
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
         Column {
             Row(
