@@ -894,7 +894,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 else passArmed = true
                             }
                         }, shape = RoundedCornerShape(10.dp), color = if (passArmed) Color(0xFFFFC857) else if (playPhase == "command") Color(0xFF1A2330) else Color(0xFF2A3A4A)) {
-                            Text(if (passArmed) "Confirmer ?" else "Passer", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = if (passArmed) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(if (passArmed) "Confirmer ?" else "Passer", Modifier.defaultMinSize(minHeight = 48.dp).padding(horizontal = 14.dp, vertical = 8.dp), color = if (passArmed) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // Désarme automatiquement Passer après 3s (anti-erreur).
@@ -2730,7 +2730,7 @@ internal fun CampRow(
                 Text(label, color = if (isActive) campColor else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 val nonDefeated = units.count { u -> states[u.instanceId]?.defeated != true }
                 val activated = units.count { u -> states[u.instanceId]?.activated == true }
-                Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             if (units.isEmpty()) {
                 Text("Aucune unité", color = Color(0xFF5A6A7A), fontSize = 10.sp)
