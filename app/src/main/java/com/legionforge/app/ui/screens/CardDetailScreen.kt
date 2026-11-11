@@ -862,39 +862,41 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     val oppColor = if (bluePlayer == "own") "ROUGE" else "BLEU"
                     val activeColor = if (isMine) mineColor else oppColor
                     val stepText = if (playPhase == "command") "1. Choisissez votre carte de commandement" else "2. Activez une unité"
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Surface(Modifier.weight(1f), shape = RoundedCornerShape(10.dp), color = if (isMine) Color(0xFFFFC857) else Color(0xFF3B2224)) {
+                    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (isMine) Color(0xFFFFC857) else Color(0xFF3B2224)) {
                             Text("TOUR JOUEUR $activeColor — $stepText", Modifier.padding(vertical = 8.dp).padding(horizontal = 6.dp), color = if (isMine) Color(0xFF0A0E15) else Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2)
                         }
-                        // Passer : activation uniquement, double confirmation anti-erreur + désarmement auto.
-                        Surface(onClick = {
-                            if (playPhase != "command") {
-                                if (passArmed) {
-                                    if (!twoPlayer) {
-                                        // Règle v2 : passer coûte 1 jeton de passe. On décompte celui du camp actif.
-                                        val mySide = turn == "own"
-                                        if ((if (mySide) passes else oppPasses) > 0) {
-                                            if (mySide) passes -= 1 else oppPasses -= 1
-                                            toggleTurn(); passArmed = false
+                    if (isMine) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                            // Passer : activation uniquement, double confirmation anti-erreur + désarmement auto.
+                            Surface(onClick = {
+                                if (playPhase != "command") {
+                                    if (passArmed) {
+                                        if (!twoPlayer) {
+                                            // Règle v2 : passer coûte 1 jeton de passe. On décompte celui du camp actif.
+                                            val mySide = turn == "own"
+                                            if ((if (mySide) passes else oppPasses) > 0) {
+                                                if (mySide) passes -= 1 else oppPasses -= 1
+                                                toggleTurn(); passArmed = false
+                                            } else {
+                                                passArmed = false
+                                                scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
+                                            }
                                         } else {
-                                            passArmed = false
-                                            scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
-                                        }
-                                    } else {
-                                        val mySide = turn == "own"
-                                        if ((if (mySide) passes else oppPasses) > 0) {
-                                            if (mySide) passes -= 1 else oppPasses -= 1
-                                            toggleTurn(); passArmed = false
-                                        } else {
-                                            passArmed = false
-                                            scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
+                                            val mySide = turn == "own"
+                                            if ((if (mySide) passes else oppPasses) > 0) {
+                                                if (mySide) passes -= 1 else oppPasses -= 1
+                                                toggleTurn(); passArmed = false
+                                            } else {
+                                                passArmed = false
+                                                scope.launch { snackbarHostState.showSnackbar("Passe refusée : 0 jeton de passe") }
+                                            }
                                         }
                                     }
+                                    else passArmed = true
                                 }
-                                else passArmed = true
+                            }, shape = RoundedCornerShape(10.dp), color = if (passArmed) Color(0xFFFFC857) else if (playPhase == "command") Color(0xFF1A2330) else Color(0xFF2A3A4A)) {
+                                Text(if (passArmed) "Confirmer ?" else "Passer", Modifier.defaultMinSize(minHeight = 48.dp).padding(horizontal = 14.dp, vertical = 8.dp), color = if (passArmed) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
-                        }, shape = RoundedCornerShape(10.dp), color = if (passArmed) Color(0xFFFFC857) else if (playPhase == "command") Color(0xFF1A2330) else Color(0xFF2A3A4A)) {
-                            Text(if (passArmed) "Confirmer ?" else "Passer", Modifier.defaultMinSize(minHeight = 48.dp).padding(horizontal = 14.dp, vertical = 8.dp), color = if (passArmed) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // Désarme automatiquement Passer après 3s (anti-erreur).
