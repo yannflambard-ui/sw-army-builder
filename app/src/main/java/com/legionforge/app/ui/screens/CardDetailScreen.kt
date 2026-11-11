@@ -359,6 +359,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         }
     }
     val isConnected = syncMode == ShareMode.CONNECTED
+    val reconnectingNow by playSyncVm.reconnecting.collectAsState()
     // Gain de permission runtime avant toute action Nearby (mode 2 joueurs).
     val runWithPermission = rememberNearbyPermissionAction()
     // Cartes de commandement Legion : chargement + deck (ajout/marquage jouée).
@@ -570,7 +571,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Auto-save débounced (solo, en GAME) dès qu'un état de partie change.
     LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority, armadaRound, armadaPhase) {
         if (phase == PlayPhase.GAME && listId != null) {
-            kotlinx.coroutines.delay(350)
+            kotlinx.coroutines.delay(120)
             val snap = com.legionforge.app.data.model.PlaySessionSnapshot(
                 listId = listId, gameSystem = vm.currentList.value?.gameSystem, phase = phase.name, playPhase = playPhase,
                 round = round, vp = vp, oppVp = oppVp, kills = kills, oppKills = oppKills, priority = priority,
@@ -818,6 +819,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     if (isLegion) {
                     // ── Barre compacte : MissionDashboard (ROUND/VP/TOUR + mission dépliable) ──
                     MissionDashboard(
+                        online = !twoPlayer || isConnected, reconnecting = twoPlayer && reconnectingNow,
                         round = round, vpOwn = vp, vpOpp = oppVp, killsOwn = kills, killsOpp = oppKills,
                         objectives = battleCards.filter { it.name in battleDeck },
                         bluePlayer = bluePlayer,
@@ -1160,7 +1162,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // En jeu : bandeau d'aperçu (état) + grille de miniatures (action).
                     Column(Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("Activation", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.activation), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Surface(onClick = {
                                 // Règle v2 : on tire un jeton du pool d'ordres (rang), puis on active une unité
                                 // de ce rang SANS ordre. Pool dérivé des unités : 1 jeton par unité non vaincue sans ordre.
@@ -2043,7 +2045,7 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
                         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Fit)
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(name, color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                        Text(name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                     }
                 }
             }
@@ -2058,6 +2060,7 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun MissionDashboard(
+    online: Boolean = true, reconnecting: Boolean = false,
     round: Int,
     vpOwn: Int, vpOpp: Int,
     killsOwn: Int, killsOpp: Int,
@@ -2087,18 +2090,24 @@ internal fun MissionDashboard(
             // Barre compacte : ROUND -/+ | VP | TOUR | MISSION (dépliable)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (online || reconnecting) {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(if (online) Color(0xFF77D9A7) else Color(0xFFFFC857)))
+                    } else {
+                        Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEF5350)))
+                    }
+                    Text(if (online) "EN LIGNE" else if (reconnecting) "RECONNEXION…" else "HORS LIGNE", color = Color(0xFF9EACBC), fontSize = 8.sp, fontWeight = FontWeight.Bold)
                     Surface(onClick = { onRoundChange(round - 1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
                     Text("R$round", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Surface(onClick = { onRoundChange(round + 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Surface(onClick = { onVPChange(1, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                    Surface(onClick = { onVPChange(1, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                     Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVPChange(1, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                    Surface(onClick = { onVPChange(1, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                     Text("—", color = Color(0xFF5A6A7A), fontSize = 11.sp)
-                    Surface(onClick = { onVPChange(2, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                    Surface(onClick = { onVPChange(2, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                     Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVPChange(2, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(18.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                    Surface(onClick = { onVPChange(2, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
                 }
                 Surface(onClick = onToggleTurn, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
                     Text(if (turn == "own") "VOTRE TOUR" else "Tour adv →", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
@@ -2551,7 +2560,7 @@ internal fun UnitActivationStrip(
             val activated = st.activated == true
             val artPath = unit.card.imagePath()
             val borderColor = when {
-                activated -> Color(0xFFEF5350)
+                activated -> Color(0xFF77D9A7)
                 defeated -> Color(0xFF3A3A4A)
                 else -> Color(0xFF66BB6A)
             }
@@ -2606,12 +2615,7 @@ internal fun BattlefieldView(
 
 
 // ── Bandeau score/round/objectifs (F5) ──
-@Composable
-internal fun ScoreRoundBar(
-    round: Int, vpA: Int, vpB: Int, activeObjectives: Set<String>,
-    objectives: List<LegionBattleCard>,
-    onRound: (Int) -> Unit, onVP: (String, Int) -> Unit, onToggleObjective: (String) -> Unit,
-    onNextRound: () -> Unit, onJournal: () -> Unit = {}
+
 ) {
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -2752,7 +2756,7 @@ internal fun CampRow(
                         val campColor = if (label == "MOI") Color(0xFFF59E0B) else Color(0xFF38BDF8)
                         val stateColor = when {
                             panicking -> Color(0xFFFF5252)
-                            activated -> Color(0xFFEF5350)
+                            activated -> Color(0xFF77D9A7)
                             defeated -> Color(0xFF3A3A4A)
                             else -> campColor
                         }
@@ -2990,7 +2994,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             // ── état de l'unité (auto-calculé depuis blessures + suppression / courage) ──
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 StateChip(stringResource(R.string.legion_state_wounded), isWounded, Color(0xFFFFC857))
-                StateChip(stringResource(R.string.legion_state_suppressed), isSuppressed, Color(0xFFFFB74D))
+                StateChip(if (isSuppressed) "${stringResource(R.string.legion_state_suppressed)} (−1 action)" else stringResource(R.string.legion_state_suppressed), isSuppressed, Color(0xFFFFB74D))
                 StateChip(stringResource(R.string.legion_state_panicked), isPanicked, Color(0xFFFF6B6B))
             }
             // Activation de l'unité (drapeau 'activée' dans le round courant).

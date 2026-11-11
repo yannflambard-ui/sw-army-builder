@@ -72,6 +72,7 @@ class PlaySyncManager(context: Context) {
     private val gson = Gson()
 
     val mode: StateFlow<ShareMode> = nearby.mode
+    val reconnecting: StateFlow<Boolean> = nearby.reconnecting
     val endpoints: StateFlow<List<DiscoveredEndpoint>> = nearby.endpoints
     val connectedEndpoint: StateFlow<String?> = nearby.connectedEndpoint
     val error: StateFlow<String?> = nearby.error

@@ -56,6 +56,13 @@ object NearbyShareManager {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    // Reconnexion automatique : dernier endpoint connecté, et tentatives restantes (bornées).
+    @Volatile private var lastEndpoint: String? = null
+    @Volatile private var retriesLeft = 0
+    private val _reconnecting = MutableStateFlow(false)
+    val reconnecting: StateFlow<Boolean> = _reconnecting.asStateFlow()
+    private val reconnectHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     private val lifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
             // Accepter automatiquement la connexion (pas de code d'appairage).
@@ -67,6 +74,9 @@ object NearbyShareManager {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     _connectedEndpoint.value = endpointId
                     _mode.value = ShareMode.CONNECTED
+                    lastEndpoint = endpointId
+                    retriesLeft = 5
+                    _reconnecting.value = false
                 }
                 else -> {
                     val c = result.status.statusCode
@@ -79,6 +89,7 @@ object NearbyShareManager {
             if (_connectedEndpoint.value == endpointId) {
                 _connectedEndpoint.value = null
                 _mode.value = ShareMode.IDLE
+                scheduleReconnect()
             }
         }
     }
@@ -128,6 +139,21 @@ object NearbyShareManager {
     }
 
     /** Client : se connecte à un hôte découvert. */
+    /** Relance la connexion au dernier endpoint (backoff 2s→32s, 5 tentatives max). */
+    private fun scheduleReconnect() {
+        val target = lastEndpoint ?: return
+        if (retriesLeft <= 0) { _reconnecting.value = false; _error.value = "Connexion perdue : relancez le mode 2 joueurs"; return }
+        _reconnecting.value = true
+        val delayMs = 2000L shl (5 - retriesLeft).coerceIn(0, 4)
+        retriesLeft -= 1
+        reconnectHandler.postDelayed({
+            if (_mode.value != ShareMode.CONNECTED) {
+                connectionsClient.requestConnection(android.os.Build.MODEL, target, lifecycleCallback)
+                    .addOnFailureListener { scheduleReconnect() }
+            }
+        }, delayMs)
+    }
+
     fun connectTo(endpointId: String) {
         connectionsClient.requestConnection(android.os.Build.MODEL, endpointId, lifecycleCallback)
             .addOnFailureListener { e -> _error.value = "Connexion impossible: ${e.message}" }
@@ -140,6 +166,8 @@ object NearbyShareManager {
     }
 
     fun stop() {
+        reconnectHandler.removeCallbacksAndMessages(null)
+        lastEndpoint = null; retriesLeft = 0; _reconnecting.value = false
         if (::appContext.isInitialized) {
             connectionsClient.stopAdvertising()
             connectionsClient.stopDiscovery()

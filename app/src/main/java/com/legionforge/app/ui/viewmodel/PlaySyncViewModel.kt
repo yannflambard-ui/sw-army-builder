@@ -28,6 +28,7 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
     val endpoints: StateFlow<List<com.legionforge.app.data.nearby.DiscoveredEndpoint>> = sync.endpoints
     val connectedEndpoint: StateFlow<String?> = sync.connectedEndpoint
     val error: StateFlow<String?> = sync.error
+    val reconnecting: StateFlow<Boolean> = sync.reconnecting
     val receivedRound: StateFlow<Int?> = sync.receivedRound
     val receivedUnits: StateFlow<List<SyncedUnitState>> = sync.receivedUnits
     val receivedDeploymentDone: StateFlow<Boolean?> = sync.receivedDeploymentDone
