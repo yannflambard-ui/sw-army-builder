@@ -2614,46 +2614,7 @@ internal fun BattlefieldView(
 }
 
 
-// ── Bandeau score/round/objectifs (F5) ──
 
-) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = Color(0xFF111827)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("ROUND", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                Surface(onClick = { onRound(round + 1) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF1E293B)) { Text("$round", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), color = Color(0xFFF59E0B), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text("VP", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                Surface(onClick = { onVP("A", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("−", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                Text("$vpA", color = Color(0xFFF59E0B), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Surface(onClick = { onVP("A", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("+", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                Text("—", color = Color(0xFF5A6A7A), fontSize = 12.sp)
-                Surface(onClick = { onVP("B", -1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("−", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                Text("$vpB", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Surface(onClick = { onVP("B", 1) }, shape = RoundedCornerShape(4.dp), color = Color(0xFF1E293B)) { Text("+", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Surface(onClick = onJournal, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B)) {
-                    Text("📓", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), fontSize = 11.sp)
-                }
-                Surface(onClick = onNextRound, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
-                    Text("⚡ Round+", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-        if (objectives.isNotEmpty()) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 10.dp, end = 10.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                objectives.forEach { obj ->
-                    val active = obj.name in activeObjectives
-                    Surface(onClick = { onToggleObjective(obj.name) }, shape = RoundedCornerShape(6.dp), color = if (active) Color(0xFF1E3A2A) else Color(0xFF1A2330)) {
-                        Text(if (active) "● ${obj.name}" else "○ ${obj.name}", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (active) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 // ── Panneau guidé : choisir la carte de commandement du round ──
