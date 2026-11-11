@@ -1499,9 +1499,10 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
     val shieldTotal = stats?.let { (it.shieldFront + it.shieldRear + it.shieldPort + it.shieldStarboard + it.shieldPortAux + it.shieldStarboardAux) } ?: 0
     val squadSpeed = stats?.speed ?: 3
     Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp).alpha(if (defeated) 0.45f else 1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(unit.card.displayName(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text(unit.card.displayName(), color = if (defeated) Color(0xFF5A6A7A) else Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).alpha(if (defeated) 0.6f else 1f))
+                Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(start = 6.dp))
                 Spacer(Modifier.width(8.dp))
                 // Silhouette du vaisseau : on n'affiche que le coin BAS-GAUCHE de la carte (où se trouve la petite
                 // silhouette). Cadrage Fit dans une grande boîte ancrée bas-gauche -> on montre cette zone quelle que
@@ -1517,24 +1518,21 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
                 }
             }
             // Rangée STATS : pastilles neutres, icônes universelles (commande / vitesse / coque / boucliers).
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Rangée unique : stats (libellés explicites) + état (ordre révélé / activé / vaincu).
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (isShip) {
-                    if (maxStock > 0) StatBadge("⌖", "$dialCount/$maxStock", if (ordersReady) Color(0xFF77D9A7) else Color(0xFFFFC857))
-                    StatBadge("⚡", "$curSpeed/$maxSpeed", Color(0xFF38BDF8))
-                    if (maxHull > 0) StatBadge("♥", "$curHull/$maxHull", Color(0xFFFF6B6B))
-                    if (shieldTotal > 0) StatBadge("🛡", "$shieldTotal", Color(0xFF2DD4BF))
+                    if (maxStock > 0) StatBadge("ORD", "$dialCount/$maxStock", if (ordersReady) Color(0xFF77D9A7) else Color(0xFFFFC857))
+                    StatBadge("VIT", "$curSpeed/$maxSpeed", Color(0xFF38BDF8))
+                    if (maxHull > 0) StatBadge("COQUE", "$curHull/$maxHull", Color(0xFFFF6B6B))
+                    if (shieldTotal > 0) StatBadge("BOUCL", "$shieldTotal", Color(0xFF2DD4BF))
                 } else {
-                    StatBadge("⚡", "$squadSpeed", Color(0xFF38BDF8))
-                    if (maxHull > 0) StatBadge("♥", "$curHull/$maxHull", Color(0xFFFF6B6B))
+                    StatBadge("VIT", "$squadSpeed", Color(0xFF38BDF8))
+                    if (maxHull > 0) StatBadge("COQUE", "$curHull/$maxHull", Color(0xFFFF6B6B))
                 }
-            }
-            // Rangée ÉTAT : pastilles colorées (ordre révélé / activé / vaincu).
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (revealed) ArmadaChip(Color(0xFF38BDF8), glyph = revealGlyph(state?.commandOrder), text = "")
                 if (activated) ArmadaChip(Color(0xFF77D9A7), glyph = "✓", text = "")
                 if (defeated) ArmadaChip(Color(0xFFEF5350), glyph = "✕", text = "Vainc.")
             }
-            Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
         }
     }
 }
@@ -3070,7 +3068,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             }
             TokenSection(tokens, { set(state.copy(tokens = tokens + it)) }, { set(state.copy(tokens = tokens - it)) }, isVehicle = unit.card.cardSubtype?.contains("vehicle") == true)
         }
-        CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = true) {
+        if (children.isNotEmpty() || activeCrits.isNotEmpty()) CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = true) {
             EffectsPanel(
                 effects = buildList {
                     children.forEach { c -> add(ActiveEffect(EffectType.UPGRADE, c.card.displayName(), upgradeEffectText(c.card) ?: stringResource(R.string.upgrade_installed), c.instanceId, slot = c.card.upgradeSlots.firstOrNull(), pts = c.card.points, imageAssetPath = c.card.imagePath()).copy(used = usedUpgrades.contains(c.instanceId))) }
@@ -3397,7 +3395,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     }
                 }
         // ── effects panel (améliorations remontées au-dessus de la roue de commandement) (repliable) ──
-        CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = true) {
+        if (children.isNotEmpty() || activeCrits.isNotEmpty()) CollapsibleSection(stringResource(R.string.active_effects), initiallyExpanded = true) {
             EffectsPanel(
                 effects = buildList {
                     if (commander != null) add(ActiveEffect(EffectType.COMMANDER, commander.card.displayName(), stripBracketName(commander.card.rulesText ?: stringResource(R.string.fleet_commander)), "cmd_${commander.instanceId}", pts = commander.card.points, imageAssetPath = commander.card.imagePath())
