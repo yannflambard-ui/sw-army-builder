@@ -813,7 +813,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // Bouton discret pour revenir au setup (seule sortie du plein écran de jeu).
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Surface(onClick = { phase = PlayPhase.PREP }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
-                            Text("← Setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                            Text("← Setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                         }
                     }
                     if (isLegion) {
@@ -2053,14 +2053,14 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
                         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Fit)
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                        Text(name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                     }
                 }
             }
         }
         // Texte SOUS le cadre.
-        Text(title, color = color, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.padding(top = 2.dp))
-        Text(name, color = Color(0xFFE2E8F0), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        Text(title, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false, modifier = Modifier.padding(top = 2.dp))
+        Text(name, color = Color(0xFFE2E8F0), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = 13.sp, modifier = Modifier.heightIn(min = 26.dp))
     }
 }
 
@@ -2099,9 +2099,10 @@ internal fun MissionDashboard(
     val advOwn = missionRevealed["own_advantage"]
     val advOpp = missionRevealed["opp_advantage"]
     val mapName = objName
+    var menuOpen by remember { mutableStateOf(false) }
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, Color(0xFFF59E0B))) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Barre compacte : ROUND -/+ | VP | TOUR | MISSION (dépliable)
+            // Rangée 1 : statut EN LIGNE, ROUND -/+, indicateur de tour
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (online || reconnecting) {
@@ -2109,49 +2110,66 @@ internal fun MissionDashboard(
                     } else {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEF5350)))
                     }
-                    Text(if (online) "EN LIGNE" else if (reconnecting) "RECONNEXION…" else "HORS LIGNE", color = Color(0xFF9EACBC), fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onRoundChange(round - 1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
-                    Text("R$round", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onRoundChange(round + 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold) } }
+                    Text(if (online) "EN LIGNE" else if (reconnecting) "RECONNEXION…" else "HORS LIGNE", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                    Surface(onClick = { onRoundChange(round - 1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+                    Text("R$round", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                    Surface(onClick = { onRoundChange(round + 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Surface(onClick = { onVPChange(1, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
-                    Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVPChange(1, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
-                    Text("—", color = Color(0xFF5A6A7A), fontSize = 11.sp)
-                    Surface(onClick = { onVPChange(2, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
-                    Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Surface(onClick = { onVPChange(2, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(24.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                Surface(onClick = onToggleTurn, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.wrapContentWidth()) {
+                    Text(if (turn == "own") "VOTRE TOUR" else "Tour adv →", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 }
-                Surface(onClick = onToggleTurn, shape = RoundedCornerShape(8.dp), color = if (turn == "own") Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
-                    Text(if (turn == "own") "VOTRE TOUR" else "Tour adv →", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = if (turn == "own") Color(0xFF0A0E15) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+            // Rangée 2 : scores VP des deux joueurs, menu secondaire (tiroir)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("MOI", color = Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                    Surface(onClick = { onVPChange(1, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+                    Text("$vpOwn", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Surface(onClick = { onVPChange(1, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
                 }
-                Surface(onClick = onOpenMission, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E3A2A)) {
-                    Text("⚙", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("ADV", color = Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                    Surface(onClick = { onVPChange(2, -1) }, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("−", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+                    Text("$vpOpp", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Surface(onClick = { onVPChange(2, 1) }, shape = CircleShape, color = Color(0xFF1E3A2A), modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color(0xFF77D9A7), fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
                 }
-                Surface(onClick = onJournal, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
-                    Text("🗒", Modifier.padding(horizontal = 8.dp, vertical = 5.dp), color = Color(0xFF9EACBC), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                // Menus secondaires (réglages mission, journal) regroupés dans un tiroir du bas.
+                Surface(onClick = { menuOpen = true }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B), modifier = Modifier.defaultMinSize(32.dp)) {
+                    Text("☰ Menu", Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                }
+            }
+            if (menuOpen) {
+                ModalBottomSheet(onDismissRequest = { menuOpen = false }, containerColor = Color(0xFF0A0E15)) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("Menu de partie", color = Color(0xFFFFC857), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Surface(onClick = { menuOpen = false; onOpenMission() }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp)) {
+                            Text("⚙  Réglages de la mission", Modifier.padding(horizontal = 14.dp, vertical = 12.dp), color = Color(0xFF77D9A7), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Surface(onClick = { menuOpen = false; onJournal() }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330), modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp)) {
+                            Text("🗒  Journal de partie", Modifier.padding(horizontal = 14.dp, vertical = 12.dp), color = Color(0xFF9EACBC), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
             // ── Cartes mission (toujours visibles, en miniatures) ──
             val objCard = objectives.firstOrNull { it.name == objName }
             val secCard = objectives.firstOrNull { it.name == secName }
             val mapCard = objectives.firstOrNull { it.name == mapName }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdMine?.imagePath(), onClick = onOpenCommandHand, onLongClick = cmdMine?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.weight(1f), imagePath = objCard?.imagePath(), onClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.weight(1f), imagePath = mapCard?.imagePath(), onClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.weight(1f), imagePath = secCard?.imagePath(), onClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } })
-                DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath(), onClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } })
+            LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                item { DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.width(72.dp), imagePath = cmdMine?.imagePath(), onClick = onOpenCommandHand, onLongClick = cmdMine?.let { { onZoomMission(it.name, it.imagePath()) } }) }
+                item { DashSlot("OBJECTIF", objName ?: "—", Color(0xFFFF6B6B), Modifier.width(72.dp), imagePath = objCard?.imagePath(), onClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } }) }
+                item { DashSlot("CARTE", mapName ?: "MAP", Color(0xFF38BDF8), Modifier.width(72.dp), imagePath = mapCard?.imagePath(), onClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = mapCard?.let { { onZoomMission(it.name, it.imagePath()) } }) }
+                item { DashSlot("SECONDAIRE", secName ?: "—", Color(0xFFF59E0B), Modifier.width(72.dp), imagePath = secCard?.imagePath(), onClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = secCard?.let { { onZoomMission(it.name, it.imagePath()) } }) }
+                item { DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.width(72.dp), imagePath = cmdOpp?.imagePath(), onClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } }) }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             run {
                 // ── Piste de victoire 1-12 (suivi visuel; les scores sont éditables dans la barre au-dessus) ──
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("VP", color = Color(0xFF94A3B8), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text("VP", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         (1..12).forEach { n ->
                             val mine = vpOwn >= n; val theirs = vpOpp >= n
@@ -2160,7 +2178,7 @@ internal fun MissionDashboard(
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Text("■ MOI   ■ ADV   ■ les 2", color = Color(0xFF7A828A), fontSize = 10.sp)
+                    Text("■ MOI   ■ ADV   ■ les 2", color = Color(0xFF7A828A), fontSize = 11.sp, maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -2584,7 +2602,7 @@ internal fun UnitActivationStrip(
                         modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
                         contentScale = ContentScale.Fit)
                 } else {
-                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 8.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp)) }
+                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(2.dp)) }
                 }
                 // Symbole d'état (daltonisme) : ✓ activée, ✕ vaincue, ● activable.
                 Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 12.sp, fontWeight = FontWeight.Bold,
@@ -2868,7 +2886,9 @@ internal fun UnitDetailSheet(
                 }
             }
             Box(Modifier.fillMaxWidth().heightIn(max = 900.dp)) {
-                UnitPageContent(unit, children, allEntries, wikiSections, onRuleClick, state, onChange, readOnly)
+                CompositionLocalProvider(LocalSectionsCollapsible provides false) {
+                    UnitPageContent(unit, children, allEntries, wikiSections, onRuleClick, state, onChange, readOnly)
+                }
             }
         }
     }
@@ -3551,24 +3571,31 @@ internal fun CardBlock(unit: ListEntry, children: List<ListEntry>, totalPts: Int
 // Section repliable : en-tete cliquable (titre + chevron) + contenu masque/deplie.
 // Permet de compacter le mode partie sur un ecran de telephone : les infos secondaires
 // (roue de commandement, effets, profil) sont repliees par defaut, le suivi principal reste visible.
+// Quand true, les sections sont repliables (défaut). Mis à false dans le détail d'unité ouvert depuis la zone basse :
+// le contenu est alors affiché directement (règle utilisateur, pas de section repliable).
+internal val LocalSectionsCollapsible = compositionLocalOf { true }
+
 @Composable
 internal fun CollapsibleSection(
     title: String,
     initiallyExpanded: Boolean = false,
+    collapsible: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val canCollapse = collapsible && LocalSectionsCollapsible.current
     var expanded by remember(title) { mutableStateOf(initiallyExpanded) }
+    val open = !canCollapse || expanded
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
         Column {
             Row(
-                Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(horizontal = 16.dp, vertical = 14.dp),
+                Modifier.fillMaxWidth().then(if (canCollapse) Modifier.clickable { expanded = !expanded } else Modifier).padding(horizontal = 16.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(title, color = Color(0xFFFFC857), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Icon(if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand), tint = Color(0xFF9EACBC), modifier = Modifier.size(18.dp))
+                if (canCollapse) Icon(if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = if (expanded) stringResource(R.string.collapse) else stringResource(R.string.expand), tint = Color(0xFF9EACBC), modifier = Modifier.size(18.dp))
             }
-            if (expanded) {
+            if (open) {
                 HorizontalDivider(color = Color(0xFF2A3A4A))
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
             }
