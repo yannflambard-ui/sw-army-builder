@@ -3394,7 +3394,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         .copy(used = usedUpgrades.contains("cmd")))
                     children.forEach { c ->
                         if (c.card.kind == CardKind.COMMANDER || (c.card.kind == CardKind.ARMADA_UPGRADE && ArmadaSlot.COMMANDER in c.card.upgradeSlots)) return@forEach
-                        add(ActiveEffect(EffectType.UPGRADE, c.card.displayName(), stripBracketName(c.card.rulesText ?: stringResource(R.string.upgrade_installed)), c.instanceId, slot = c.card.upgradeSlots.firstOrNull(), pts = c.card.points, imageAssetPath = c.card.imagePath())
+                        add(ActiveEffect(EffectType.UPGRADE, c.card.displayName(), com.legionforge.app.data.i18n.I18n.upgradeText(c.card.id, stripBracketName(c.card.rulesText ?: stringResource(R.string.upgrade_installed))), c.instanceId, slot = c.card.upgradeSlots.firstOrNull(), pts = c.card.points, imageAssetPath = c.card.imagePath())
                             .copy(used = usedUpgrades.contains(c.instanceId)))
                     }
                     activeCrits.forEach { c -> add(ActiveEffect(EffectType.CRIT, c.name, c.effect, "crit_${c.name}")) }

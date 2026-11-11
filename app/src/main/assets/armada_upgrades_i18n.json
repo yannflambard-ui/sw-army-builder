@@ -1,0 +1,830 @@
+{
+ "schemaVersion": 1,
+ "upgrades": {
+  "armada-v15:bsdata:neutral:electronic-countermeasures:3d7832de44bb12": {
+   "fr": "Contremesures électroniques\nDefensive Retrofit Ability : en défense, vous pouvez épuiser cette carte pour dépenser 1 jeton de défense visé par un résultat [Précision] de l'attaquant.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation]"
+  },
+  "armada-v15:bsdata:neutral:advanced-projectors:06c20afa34be27": {
+   "fr": "Projecteurs avancés\nDefensive Retrofit Ability : lorsque vous résolvez l'effet du jeton [Redirection], vous pouvez choisir plus d'une section de coque à subir des dégâts, y compris une section non adjacente."
+  },
+  "armada-v15:bsdata:neutral:cluster-bombs:4fbd3901ea5b46": {
+   "fr": "Bombes en grappe\nDefensive Retrofit Ability : après qu'un escadron a attaqué, même si vous êtes détruit, vous pouvez défausser cette carte pour lancer 4 dés bleus. Cet escadron subit 1 dégât par icône [Touche] ou [Critique] obtenue."
+  },
+  "armada-v15:bsdata:neutral:reinforced-blast-doors:08edbdfc11fb63": {
+   "fr": "Portes blindées renforcées\nDefensive Retrofit Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte pour défausser jusqu'à 3 de vos cartes de dégâts face cachée."
+  },
+  "armada-v15:bsdata:neutral:redundant-shields:70dd1b16d541af": {
+   "fr": "Boucliers redondants\nDefensive Retrofit Ability : Modification.\nAu début de chaque phase de statut, vous pouvez récupérer 1 bouclier."
+  },
+  "armada-v15:bsdata:neutral:early-warning-system:1095c165864b15": {
+   "fr": "Système d'alerte précoce\nDefensive Retrofit Ability : au début de chaque phase de vaisseau, vous pouvez choisir 1 de vos sections de coque et la marquer d'un jeton de leurre. Jusqu'à la fin du round, tout vaisseau ou escadron attaquant cette section voit son attaque obstruée. Après la phase de statut, retirez ce jeton de leurre."
+  },
+  "armada-v15:bsdata:neutral:reactive-gunnery:9586f6d0afc4d1": {
+   "fr": "Tir réactif\nDefensive Retrofit Ability : en défense, vous pouvez épuiser cette carte et dépenser un jeton de défense prêt pour résoudre l'effet de défense [Salve] au lieu de l'effet de ce jeton. Vous ne pouvez pas résoudre l'effet de défense [Salve] plus d'une fois par attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:8aa2-6167-255a-48e6": {
+   "fr": "Projecteur expérimental G-8\nExperimental Retrofit Ability : avant qu'un vaisseau ennemi à distance 1-5 ne résolve l'étape de détermination du cap, vous pouvez épuiser cette carte pour réduire temporairement sa vitesse de 1 (minimum vitesse 0) jusqu'à la fin de la manœuvre.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:separatist-alliance:8aa2-6167-255a-48e6": {
+   "fr": "Projecteur expérimental G-8\nExperimental Retrofit Ability : avant qu'un vaisseau ennemi à distance 1-5 ne résolve l'étape de détermination du cap, vous pouvez épuiser cette carte pour réduire temporairement sa vitesse de 1 (minimum vitesse 0) jusqu'à la fin de la manœuvre.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:4fdb-8b13-f61b-7c30": {
+   "fr": "Projecteur de puits gravitationnel G7-X\nExperimental Retrofit Ability : avant de déployer les flottes, placez 1 jeton de puits gravitationnel n'importe où dans la zone de jeu. Lorsqu'un vaisseau se déploie à distance 1-3 d'un jeton de puits gravitationnel, sa vitesse doit être fixée à 0."
+  },
+  "armada-v15:bsdata:galactic-republic:4fdb-8b13-f61b-7c30": {
+   "fr": "Projecteur de puits gravitationnel G7-X\nExperimental Retrofit Ability : avant de déployer les flottes, placez 1 jeton de puits gravitationnel n'importe où dans la zone de jeu. Lorsqu'un vaisseau se déploie à distance 1-3 d'un jeton de puits gravitationnel, sa vitesse doit être fixée à 0."
+  },
+  "armada-v15:bsdata:separatist-alliance:4fdb-8b13-f61b-7c30": {
+   "fr": "Projecteur de puits gravitationnel G7-X\nExperimental Retrofit Ability : avant de déployer les flottes, placez 1 jeton de puits gravitationnel n'importe où dans la zone de jeu. Lorsqu'un vaisseau se déploie à distance 1-3 d'un jeton de puits gravitationnel, sa vitesse doit être fixée à 0."
+  },
+  "armada-v15:bsdata:galactic-empire:4866-b10e-86b2-c206": {
+   "fr": "Brouilleur de visée\nExperimental Retrofit Ability : lorsqu'un vaisseau allié à distance 1-3 défend à courte portée, pendant l'étape de dépense des jetons de défense, vous pouvez épuiser cette carte pour forcer l'attaquant à relancer jusqu'à 4 dés de votre choix."
+  },
+  "armada-v15:bsdata:galactic-empire:2b24-3434-8fa3-fdec": {
+   "fr": "Réacheminement de décalage gravitationnel\nExperimental Retrofit Ability : avant de déployer les flottes, placez 1 jeton de décalage gravitationnel n'importe où dans la zone de jeu. Après avoir déployé les flottes, vous pouvez déplacer chaque obstacle à distance 1-3 de ce jeton à une distance 2 maximum de sa position actuelle. Les obstacles ne peuvent pas chevaucher de jetons, d'obstacles ou de vaisseaux."
+  },
+  "armada-v15:bsdata:separatist-alliance:2b24-3434-8fa3-fdec": {
+   "fr": "Réacheminement de décalage gravitationnel\nExperimental Retrofit Ability : avant de déployer les flottes, placez 1 jeton de décalage gravitationnel n'importe où dans la zone de jeu. Après avoir déployé les flottes, vous pouvez déplacer chaque obstacle à distance 1-3 de ce jeton à une distance 2 maximum de sa position actuelle. Les obstacles ne peuvent pas chevaucher de jetons, d'obstacles ou de vaisseaux."
+  },
+  "armada-v15:bsdata:neutral:bomber-command-center:43a4b17fe38745": {
+   "fr": "Centre de commandement de bombardement\nFleet Support Ability : un escadron allié avec Bombardier à distance 1-5 qui attaque un vaisseau peut relancer 1 dé.\nUn escadron ne peut résoudre plus d'une carte « Centre de commandement de bombardement » par attaque."
+  },
+  "armada-v15:bsdata:neutral:slicer-tools:5f6628791ae9d5": {
+   "fr": "Outils de piratage\nFleet Support Ability : après avoir exécuté une manœuvre, vous pouvez épuiser cette carte pour choisir un vaisseau ennemi à distance 1-3. Regardez le cadran de commandement du dessus qui lui est assigné. Puis vous pouvez soit choisir un nouvel ordre sur ce cadran, soit ce vaisseau reçoit 1 jeton de perturbation de votre choix qui ne correspond pas à son cadran du dessus. Si le vaisseau choisi n'a pas de cadran du dessus, il reçoit 1 jeton de perturbation de votre choix.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation]"
+  },
+  "armada-v15:bsdata:neutral:comms-net:0c8846c383bdd1": {
+   "fr": "Réseau de communication (amélioration de flottille)\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez défausser 1 jeton de commandement de ce vaisseau pour assigner un jeton correspondant à un autre vaisseau allié à distance 1-5."
+  },
+  "armada-v15:bsdata:neutral:jamming-field:224f704e82ded0": {
+   "fr": "Champ de Brouillage\nFleet Support Ability : lorsqu'un escadron à distance 1-2 attaque un escadron ou se défend contre un escadron, l'attaque est considérée comme obstruée."
+  },
+  "armada-v15:bsdata:neutral:repair-crews:b3cb56c78b1dff": {
+   "fr": "Équipes de réparation\nFleet Support Ability : [Réparation] : au lieu de dépenser des points d'ingénierie, vous pouvez défausser 1 carte de dégâts d'un vaisseau allié à distance 1-2."
+  },
+  "armada-v15:bsdata:galactic-empire:42da-8ec6-e992-c2f8": {
+   "fr": "Réapprovisionnement en munitions\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Tir concentré] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Tir concentré].\nMise en place : 5 jetons [Tir concentré]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré], [Réparation] ou [Navigation]"
+  },
+  "armada-v15:bsdata:rebel-alliance:30fa-731c-e431-522b": {
+   "fr": "Réapprovisionnement en munitions\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Tir concentré] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Tir concentré].\nMise en place : 5 jetons [Tir concentré]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré], [Réparation] ou [Navigation]"
+  },
+  "armada-v15:bsdata:separatist-alliance:1b48-64e4-25bc-bdad": {
+   "fr": "Réapprovisionnement en munitions\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Tir concentré] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Tir concentré].\nMise en place : 5 jetons [Tir concentré]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré], [Réparation] ou [Navigation]"
+  },
+  "armada-v15:bsdata:galactic-empire:aa9d-51dd-ac01-2b77": {
+   "fr": "Réapprovisionnement en pièces\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Réparation] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Réparation].\nMise en place : 5 jetons [Réparation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation], [Navigation] ou [Escadron]"
+  },
+  "armada-v15:bsdata:galactic-republic:663c-9a95-7751-9afc": {
+   "fr": "Réapprovisionnement en pièces\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Réparation] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Réparation].\nMise en place : 5 jetons [Réparation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation], [Navigation] ou [Escadron]"
+  },
+  "armada-v15:bsdata:separatist-alliance:02ef-0aaa-e564-d362": {
+   "fr": "Réapprovisionnement en pièces\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Réparation] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Réparation].\nMise en place : 5 jetons [Réparation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation], [Navigation] ou [Escadron]"
+  },
+  "armada-v15:bsdata:neutral:overload-pulse:bf11413c67e4e6": {
+   "fr": "Surcharge à impulsion\nIon Cannons Ability : [Critique] bleu : épuisez tous les pions de défense du défenseur."
+  },
+  "armada-v15:bsdata:neutral:ion-cannon-batteries:17fe58e0a26f07": {
+   "fr": "Batteries à canons ioniques\nIon Cannons Ability : [Critique] bleu : choisissez et défaussez 1 jeton de commandement du défenseur. Si le défenseur n'a aucun jeton de commandement, la section de coque défendue perd 1 bouclier à la place."
+  },
+  "armada-v15:bsdata:neutral:leading-shots:ea64a74859e691": {
+   "fr": "Tirs de précision\nIon Cannons Ability : en attaque, vous pouvez dépenser 1 dé bleu pour relancer autant de dés de votre réserve d'attaque que vous voulez."
+  },
+  "armada-v15:bsdata:neutral:sw-7-ion-batteries:8544bf33f53809": {
+   "fr": "Batteries ioniques SW-7\nIon Cannons Ability : en attaquant un vaisseau, chacune de vos icônes [Précision] bleues non dépensées ajoute 1 dégât au total des dégâts."
+  },
+  "armada-v15:bsdata:neutral:nk-7-ion-cannons:d79927d6ad5ae6": {
+   "fr": "Canons ioniques NK-7\nIon Cannons Ability : [Critique] bleu : épuisez cette carte pour forcer le défenseur à choisir et défausser 1 de ses pions de défense.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:ms-1-ion-cannons:d85419c8ea950a": {
+   "fr": "Canons ioniques MS-1\nIon Cannons Ability : [Critique] bleu : choisissez et épuisez 1 des cartes d'amélioration du défenseur."
+  },
+  "armada-v15:bsdata:neutral:high-capacity-ion-turbines:3286f81b5b15ba": {
+   "fr": "Turbines ioniques haute capacité\nIon Cannons Ability : Modification.\nL'armement en batterie de vos sections de coque gauche et droite est augmenté de 1 dé bleu."
+  },
+  "armada-v15:bsdata:neutral:heavy-ion-emplacements:78fd09003d10cf": {
+   "fr": "Emplacements ioniques lourds\nIon Cannons Ability : [Critique] bleu : épuisez cette carte. La section de coque défendue et chaque section adjacente perdent 1 bouclier.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:point-defense-ion-cannons:cb32408757cfcf": {
+   "fr": "Canons ioniques de défense ponctuelle\nIon Cannons Ability : uniquement vaisseau non immense.\nEn défense à courte portée ou à distance 1, pendant l'étape de dépense des pions de défense, vous pouvez forcer l'attaquant à relancer 1 dé de votre choix."
+  },
+  "armada-v15:bsdata:neutral:expanded-hangar-bay:05b5951335d7ff": {
+   "fr": "Baie d'accueil élargie\nOffensive Retrofit Ability : votre valeur d'escadron est augmentée de 1."
+  },
+  "armada-v15:bsdata:neutral:point-defense-reroute:e903c2f814aa5d": {
+   "fr": "Réacheminement de défense ponctuelle\nOffensive Retrofit Ability : en attaquant un escadron à courte portée, vous pouvez relancer vos icônes [Critique]."
+  },
+  "armada-v15:bsdata:neutral:flag-bridge:71e9396d056cdf": {
+   "fr": "Pont amiral\nOffensive Retrofit Ability : uniquement vaisseau moyen ou grand.\nUniquement vaisseau amiral.\nModification.\nVous gagnez 1 icône [Commandement de flotte] dans votre barre d'amélioration.\nVous ne pouvez pas dépenser un jeton de commandement pour résoudre l'effet d'une carte [Commandement de flotte]."
+  },
+  "armada-v15:bsdata:neutral:quad-laser-turrets:3a577b45020904": {
+   "fr": "Tourelles quadrilasers\nOffensive Retrofit Ability : en défense à distance 1, si l'attaquant est un escadron, vous avez contre 1."
+  },
+  "armada-v15:bsdata:neutral:boosted-comms:b7d717657b3ec2": {
+   "fr": "Communications amplifiées\nOffensive Retrofit Ability : [Escadron] : vous pouvez activer des escadrons alliés à courte-longue portée (au lieu de courte-moyenne)."
+  },
+  "armada-v15:bsdata:neutral:rapid-launch-bays:c30757e3ddd688": {
+   "fr": "Baies de lancement rapide\nOffensive Retrofit Ability : avant de déployer les flottes, vous pouvez mettre de côté un nombre d'escadrons alliés, jusqu'à votre valeur d'escadron, à côté de la carte de votre vaisseau.\nLorsque vous révélez un ordre, vous pouvez défausser cette carte. Si vous le faites, placez chaque escadron mis de côté avec cette carte à distance 1-2 de vous. Ces escadrons ne peuvent pas se déplacer pendant votre activation."
+  },
+  "armada-v15:bsdata:neutral:disposable-capacitors:bf1f03e279fd94": {
+   "fr": "Condensateurs jetables\nOffensive Retrofit Ability : uniquement vaisseau petit ou moyen.\nQuand vous vous activez, vous pouvez défausser cette carte. Si vous le faites, les dés bleus de votre armement en batterie peuvent être utilisés en attaquant des vaisseaux à courte-longue portée jusqu'à la fin du round."
+  },
+  "armada-v15:bsdata:neutral:hardened-bulkheads:54093682693482": {
+   "fr": "Cloisons renforcées\nOffensive Retrofit Ability : uniquement grand vaisseau.\nQuand vous chevauchez un vaisseau de plus petite catégorie (ou êtes chevauché par un vaisseau de plus petite catégorie), infligez 1 carte de dégâts face cachée de moins à votre vaisseau."
+  },
+  "armada-v15:bsdata:neutral:advanced-transponder-net:1ca84db8b6ab0c": {
+   "fr": "Réseau transpondeur avancé\nOffensive Retrofit Ability : Modification.\nLes escadrons lourds alliés à distance 1-2 empêchent les escadrons engagés d'attaquer des vaisseaux."
+  },
+  "armada-v15:bsdata:neutral:proximity-mines:ec55ae18107b2c": {
+   "fr": "Mines de proximité\nOffensive Retrofit Ability : avant de déployer les flottes, vous pouvez défausser cette carte pour placer un nombre de jetons de mine de proximité égal à la moitié de votre valeur d'ingénierie, arrondie à l'inférieur. Vous pouvez placer ces jetons n'importe où dans la zone de jeu à distance supérieure à 5 des vaisseaux ennemis (et à distance 1 les uns des autres)."
+  },
+  "armada-v15:bsdata:neutral:reserve-hangar-deck:8e84955acc83ec": {
+   "fr": "Pont de hangar de réserve\nOffensive Retrofit Ability : quand un escadron non unique avec Nuée à distance 1-5 est détruit, vous pouvez défausser cette carte. Si vous le faites, vous pouvez fixer les points de coque de cet escadron à « 2 » et placer cet escadron, non engagé, à distance 1 avec son curseur d'activation sur le côté activé."
+  },
+  "armada-v15:bsdata:neutral:phylon-q7-tractor-beams:6c99f6bd912fb2": {
+   "fr": "Rayons tracteurs Phylon Q7\nOffensive Retrofit Ability : Modification.\nQuand vous vous activez, vous pouvez épuiser cette carte pour choisir 1 vaisseau ennemi de votre catégorie de taille ou inférieure à distance 1-5. Ce vaisseau doit dépenser un jeton [Navigation] ou réduire sa vitesse de 1 (minimum 1).\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:9634-bcb8-34d9-8c48": {
+   "fr": "Canons antiaériens\nOffensive Retrofit Ability : traitez chaque dé de votre armement anti-escadron comme noir.\nEn réalisant une attaque [Salve], les dés noirs de votre armement en batterie peuvent être utilisés à moyenne portée et les dés bleus de votre armement en batterie peuvent être utilisés à longue portée."
+  },
+  "armada-v15:bsdata:separatist-alliance:2378-0d1c-16dc-f973": {
+   "fr": "Canons antiaériens\nOffensive Retrofit Ability : traitez chaque dé de votre armement anti-escadron comme noir.\nEn réalisant une attaque [Salve], les dés noirs de votre armement en batterie peuvent être utilisés à moyenne portée et les dés bleus de votre armement en batterie peuvent être utilisés à longue portée."
+  },
+  "armada-v15:bsdata:neutral:defense-liason:c3e72737736a1e": {
+   "fr": "Liaison défensive\nOfficer Ability : avant de révéler un ordre, vous pouvez dépenser 1 jeton de commandement pour changer cet ordre en ordre [Navigation] ou [Réparation]."
+  },
+  "armada-v15:bsdata:neutral:weapons-liaison:1e97543fc9f73d": {
+   "fr": "Liaison armement\nOfficer Ability : avant de révéler un ordre, vous pouvez dépenser 1 jeton de commandement pour changer cet ordre en ordre [Tir concentré] ou [Escadron]."
+  },
+  "armada-v15:bsdata:galactic-empire:6084-3234-a6d4-db56": {
+   "fr": "Wulff Yularen\nOfficer Ability : quand vous dépensez un jeton de commandement, vous pouvez épuiser cette carte pour gagner 1 jeton de commandement du même type.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:intel-officer:d85679030bdbd9": {
+   "fr": "Officier de renseignement\nOfficer Ability : en attaquant, après avoir lancé votre réserve d'attaque, vous pouvez épuiser cette carte pour choisir 1 pion de défense. Si ce pion de défense est dépensé pendant cette attaque, défaussez-le.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:veteran-captain:9bf5566526b730": {
+   "fr": "Capitaine vétéran\nOfficer Ability : quand vous révélez un ordre, vous pouvez défausser cette carte pour gagner 1 jeton de commandement de votre choix."
+  },
+  "armada-v15:bsdata:galactic-empire:2a26-519a-fe53-850e": {
+   "fr": "Amiral Chiraneau\nOfficer Ability : [Escadron] : les escadrons que vous activez peuvent se déplacer même s'ils sont engagés. Quand un escadron engagé se déplace ainsi, traitez-le comme ayant une vitesse imprimée de « 2 »."
+  },
+  "armada-v15:bsdata:galactic-empire:6b4a-4bbc-9dfd-5820": {
+   "fr": "Directrice Isard\nOfficer Ability : quand vous révélez un ordre, vous pouvez regarder tous les cadrans de commandement assignés à 1 vaisseau ennemi."
+  },
+  "armada-v15:bsdata:galactic-empire:8d38-593b-50e6-930a": {
+   "fr": "Capitaine Needa\nOfficer Ability : au début du premier round, vous pouvez remplacer 1 de vos pions de défense par un pion de défense [Évasion]."
+  },
+  "armada-v15:bsdata:neutral:support-officer:dae73cc2d0979a": {
+   "fr": "Officier de soutien\nOfficer Ability : au début de la phase de commandement, vous pouvez défausser cette carte pour défausser tous vos cadrans de commandement."
+  },
+  "armada-v15:bsdata:galactic-empire:63f5-80b1-7cb0-fbbd": {
+   "fr": "Amiral Montferrat\nOfficer Ability : en défense contre un vaisseau, si votre vitesse est de 3 ou plus, l'attaque est considérée comme obstruée.\nAprès avoir exécuté une manœuvre, si vous avez chevauché un vaisseau, défaussez cette carte."
+  },
+  "armada-v15:bsdata:neutral:engineering-captain:8c48c2df06e097": {
+   "fr": "Capitaine ingénieur\nOfficer Ability : avant de révéler un ordre, vous pouvez changer cet ordre en ordre [Réparation]."
+  },
+  "armada-v15:bsdata:neutral:wing-commander:db0b3277e437a2": {
+   "fr": "Commandant d'escadrille\nOfficer Ability : avant de révéler un ordre, vous pouvez changer cet ordre en ordre [Escadron]."
+  },
+  "armada-v15:bsdata:neutral:navigation-officer:c19d211fc4d75e": {
+   "fr": "Officier de navigation\nOfficer Ability : avant de révéler un ordre, vous pouvez changer cet ordre en ordre [Navigation]."
+  },
+  "armada-v15:bsdata:neutral:tactical-expert:e2fe924c57ddb4": {
+   "fr": "Expert tactique\nOfficer Ability : avant de révéler un ordre, vous pouvez changer cet ordre en ordre [Tir concentré]."
+  },
+  "armada-v15:bsdata:galactic-empire:8a79-1a04-c989-5ab9": {
+   "fr": "Agent Kallus\nOfficer Ability : en attaquant un escadron unique, ajoutez 1 dé de n'importe quelle couleur à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:galactic-empire:39f1-e74c-aa79-1717": {
+   "fr": "Amiral Titus\nOfficer Ability : au début du premier round, vous pouvez modifier de 1 la vitesse d'un vaisseau ennemi."
+  },
+  "armada-v15:bsdata:galactic-empire:bab4-7b06-b6bd-e1b4": {
+   "fr": "Commandant Aresko\nOfficer Ability : quand un autre vaisseau allié à distance 1-3 révèle un ordre, vous pouvez épuiser cette carte pour gagner 1 jeton de commandement du même type.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:chart-officer:0bac0e2482f577": {
+   "fr": "Officier cartographe\nOfficer Ability : après avoir exécuté une manœuvre, si vous avez chevauché un obstacle, vous pouvez défausser cette carte au lieu de résoudre les effets du chevauchement de cet obstacle."
+  },
+  "armada-v15:bsdata:neutral:flight-commander:eccba7fb405804": {
+   "fr": "Commandant de chasse\nOfficer Ability : pendant votre activation, vous pouvez résoudre votre ordre [Escadron] après avoir exécuté une manœuvre."
+  },
+  "armada-v15:bsdata:neutral:skilled-first-officer:58853996b74e5b": {
+   "fr": "Second expérimenté\nOfficer Ability : avant de révéler un ordre, vous pouvez défausser cette carte pour défausser votre cadran de commandement du dessus."
+  },
+  "armada-v15:bsdata:neutral:damage-control-officer:5c88139740d94d": {
+   "fr": "Officier de contrôle des dégâts\nOfficer Ability : quand vous résolvez l'effet de défense [Confinement], vous pouvez empêcher l'attaquant de résoudre tout effet critique."
+  },
+  "armada-v15:bsdata:galactic-empire:27f5-aa0d-1fc0-4d4b": {
+   "fr": "Ministre Tua\nOfficer Ability : vous gagnez 1 icône [Remise en état défensive] supplémentaire dans votre barre d'amélioration.\nVous ne pouvez pas équiper cette carte sur un vaisseau moyen ou grand ayant une icône [Remise en état défensive] dans sa barre d'amélioration."
+  },
+  "armada-v15:bsdata:galactic-empire:0832-5ed8-369a-33c3": {
+   "fr": "Grand Inquisiteur\nOfficer Ability : quand un vaisseau ennemi à distance 1-5 change sa vitesse, vous pouvez épuiser cette carte pour augmenter ou diminuer votre vitesse de 1.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:f9ab-847f-4139-d30a": {
+   "fr": "Hondo Ohnaka\nOfficer Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte pour choisir 2 jetons de commandement différents et les placer sur 2 vaisseaux différents. Puis votre adversaire choisit 2 jetons de commandement différents que vous n'avez pas choisis et les place sur 2 vaisseaux différents."
+  },
+  "armada-v15:bsdata:rebel-alliance:85ea-54fe-ed00-3c3c": {
+   "fr": "Hondo Ohnaka\nOfficer Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte pour choisir 2 jetons de commandement différents et les placer sur 2 vaisseaux différents. Puis votre adversaire choisit 2 jetons de commandement différents que vous n'avez pas choisis et les place sur 2 vaisseaux différents."
+  },
+  "armada-v15:bsdata:galactic-empire:dc5f-276b-640c-3cdb": {
+   "fr": "Capitaine Brunson\nOfficer Ability : en défense à distance 1-2 d'un obstacle, pendant l'étape de dépense des pions de défense, vous pouvez épuiser cette carte pour choisir et annuler 1 dé d'attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:7a63-833f-0b90-ae12": {
+   "fr": "Instructeur Goran\nOfficer Ability : tant qu'un escadron allié non lourd est à distance 1-2, il a Contre 1 ou augmente sa valeur de Contre de 1."
+  },
+  "armada-v15:bsdata:galactic-empire:bc42-4933-51ea-cd1b": {
+   "fr": "Chef d'équipe Grint\nOfficer Ability : choisissez le jeton de commandement de cette carte après le déploiement des flottes.\nQuand vous révélez un ordre correspondant au jeton de cette carte, vous pouvez gagner 1 jeton de commandement correspondant sans dépenser le cadran de commandement.\nMise en place : 1 jeton [Tout commandement]"
+  },
+  "armada-v15:bsdata:galactic-empire:6917-2779-22ae-bf18": {
+   "fr": "Empereur Palpatine\nOfficer Ability : quand un vaisseau ennemi ou un escadron unique vous désigne comme cible d'une attaque, il doit dépenser 1 de ses pions de défense (s'il le peut)."
+  },
+  "armada-v15:bsdata:galactic-empire:afd7-4f93-e520-3d80": {
+   "fr": "Dark Vador\nOfficer Ability : tant qu'un vaisseau allié à distance 1-5 attaque un vaisseau, il peut défausser 1 de ses cartes [Commandant] ou [Officier] (autre que Dark Vador) pour relancer autant de dés de sa réserve d'attaque que vous voulez."
+  },
+  "armada-v15:bsdata:galactic-empire:b98e-5485-ef2e-438a": {
+   "fr": "Amiral Ozzel\nOfficer Ability : au début du premier round, vous pouvez exécuter une manœuvre de vitesse 1."
+  },
+  "armada-v15:bsdata:galactic-empire:2e19-3df5-c6ae-95df": {
+   "fr": "Directeur Krennic\nOfficer Ability : [Tir concentré] : en attaquant à moyenne-longue portée, si vous avez dépensé un cadran [Tir concentré], vous pouvez aussi relancer autant de dés rouges de votre réserve d'attaque que vous voulez. Si vous avez dépensé un jeton [Tir concentré], vous pouvez aussi relancer jusqu'à 2 dés rouges de votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:galactic-empire:9f1f-3f6f-e774-11ab": {
+   "fr": "Lira Wessex\nOfficer Ability : quand une carte de dégâts face visible vous est attribuée, vous pouvez dépenser 1 jeton [Réparation] pour retourner cette carte face cachée (sans résoudre son effet)."
+  },
+  "armada-v15:bsdata:galactic-empire:305c-50a8-9eb2-d62c": {
+   "fr": "Commandant Gherant\nOfficer Ability : en défense, l'attaquant ne peut pas résoudre d'effets critiques. Après avoir réalisé une attaque contre un vaisseau, défaussez cette carte."
+  },
+  "armada-v15:bsdata:neutral:expert-shield-tech:335d37a516e6e0": {
+   "fr": "Technicien expert en boucliers\nOfficer Ability : en défense, pendant l'étape de dépense des pions de défense, quand vous dépensez un pion de défense [Redirection], vous pouvez réduire de 1 les dégâts totaux de l'attaque au lieu de résoudre l'effet de ce pion."
+  },
+  "armada-v15:bsdata:galactic-empire:66df-a81e-0fa8-1435": {
+   "fr": "Commandant Vanto\nOfficer Ability : après avoir résolu le premier ordre pendant votre activation, vous pouvez épuiser cette carte pour gagner 1 jeton de commandement de votre choix.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:d95e-e2f6-24df-dfe0": {
+   "fr": "Commandant Woldar\nOfficer Ability : tant qu'un escadron allié non-Nuée à distance 1-3 attaque un escadron, il peut relancer 1 dé de n'importe quelle couleur."
+  },
+  "armada-v15:bsdata:galactic-empire:edbb-422b-fec7-1fdd": {
+   "fr": "Iden Versio\nOfficer Ability : quand vous résolvez l'effet de défense [Évasion], vous pouvez annuler 1 dé à courte portée ou à distance 1.\n[Escadron] : vous pouvez défausser cette carte pour choisir 1 vaisseau ennemi à courte portée. Ce vaisseau gagne 1 jeton de perturbation de votre choix."
+  },
+  "armada-v15:bsdata:galactic-empire:20ba-f7e6-65bb-f4c4": {
+   "fr": "Commandant Beck\nOfficer Ability : pendant votre activation, vous pouvez résoudre un ordre comme si vous aviez dépensé un jeton de commandement. Si vous le faites, gagnez 1 jeton de perturbation du type correspondant. Vous ne pouvez résoudre cet effet que deux fois par activation."
+  },
+  "armada-v15:bsdata:galactic-empire:6c7a-3199-f1ad-7770": {
+   "fr": "Reeva Demesne\nOfficer Ability : après avoir été désignée comme cible d'une attaque, si la section de coque défendue a au moins 1 bouclier restant, vous pouvez épuiser cette carte pour restaurer 1 pion de défense.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:439d-ba29-07fd-86c1": {
+   "fr": "Gouverneur Pryce\nOfficer Ability : une fois par activation, en attaquant un vaisseau, vous pouvez dépenser 1 bouclier de la section de coque attaquante pour changer la face d'1 dé sans icône [Précision]."
+  },
+  "armada-v15:bsdata:neutral:assault-concussion-missiles:93c5505a4a8704": {
+   "fr": "Missiles à commotion d'assaut\nOrdnance Ability : [Critique] noir : épuisez cette carte. Chaque section de coque adjacente à la section de coque défendue subit 1 dégât.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:expanded-launchers:4657694b39c1ee": {
+   "fr": "Lanceurs élargis\nOrdnance Ability : Modification.\nL'armement en batterie de votre section de coque avant est augmenté de 2 dés noirs."
+  },
+  "armada-v15:bsdata:neutral:assault-proton-torpedoes:bd898c800e09cc": {
+   "fr": "Torpilles à proton d'assaut\nOrdnance Ability : [Critique] noir : épuisez cette carte pour infliger 1 carte de dégâts face visible au défenseur.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:flechette-torpedoes:6a0ae4ae9c7695": {
+   "fr": "Torpilles à fléchettes\nOrdnance Ability : en attaquant un escadron, vous pouvez dépenser 1 dé noir avec une icône [Critique] pour basculer son curseur d'activation côté activé."
+  },
+  "armada-v15:bsdata:neutral:rapid-reload:8556cd108af132": {
+   "fr": "Rechargement rapide\nOrdnance Ability : Modification.\nL'armement en batterie de vos sections de coque gauche et droite est augmenté de 1 dé noir."
+  },
+  "armada-v15:bsdata:neutral:external-racks:4a89c32975e2cf": {
+   "fr": "Racks externes\nOrdnance Ability : en attaquant à courte portée, vous pouvez défausser cette carte pour ajouter 2 dés noirs à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:neutral:wide-area-barrage:eb07a44d3086a9": {
+   "fr": "Barrage à zone étendue\nOrdnance Ability : [Critique] noir : si le défenseur est un vaisseau, choisissez 1 autre vaisseau ou escadron à courte portée du défenseur. Ce vaisseau ou escadron subit des dégâts égaux à la moitié du nombre total d'icônes [Touche] noires de votre réserve d'attaque, arrondie au supérieur."
+  },
+  "armada-v15:bsdata:neutral:ordnance-pods:4b8494e4811f50": {
+   "fr": "Nacelles d'artillerie\nOrdnance Ability : uniquement vaisseau moyen ou grand.\nÀ la fin de votre étape d'attaque, vous pouvez épuiser cette carte et choisir 1 de vos sections de coque. Puis, effectuez une attaque depuis cette section de coque avec un armement anti-escadron d'1 dé noir, même si vous avez déjà attaqué depuis cette section pendant ce round.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:engineering-team:c6c0d1fae01fa7": {
+   "fr": "Équipe technique\nSupport Team Ability : [Réparation] : gagnez 1 point d'ingénierie supplémentaire."
+  },
+  "armada-v15:bsdata:neutral:nav-team:4c6c2281e59c30": {
+   "fr": "Équipe de navigation\nSupport Team Ability : [Navigation] : si vous avez dépensé un jeton [Navigation], une fois pendant cette manœuvre, quand vous changeriez votre vitesse, vous pouvez à la place augmenter 1 valeur d'embardée de 1."
+  },
+  "armada-v15:bsdata:neutral:engine-techs:5597879266cc80": {
+   "fr": "Techniciens moteurs\nSupport Team Ability : [Navigation] : après avoir exécuté une manœuvre, vous pouvez épuiser cette carte pour exécuter une manœuvre de vitesse 1.\nAprès avoir exécuté une manœuvre, si vous avez chevauché un vaisseau, épuisez cette carte.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:projection-experts:db721063091666": {
+   "fr": "Experts en projection\nSupport Team Ability : [Réparation] : vous pouvez dépenser jusqu'à 2 points d'ingénierie pour déplacer autant de boucliers de votre vaisseau vers un vaisseau allié à distance 1-5."
+  },
+  "armada-v15:bsdata:neutral:fighter-coordination-team:56a273d90f599e": {
+   "fr": "Équipe de coordination de chasseurs\nSupport Team Ability : après avoir exécuté une manœuvre, vous pouvez sélectionner un nombre d'escadrons alliés non engagés, jusqu'à votre valeur d'escadron, à courte-moyenne portée. Ces escadrons peuvent se déplacer d'au plus 1 de distance."
+  },
+  "armada-v15:bsdata:neutral:medical-team:1419fe2e561395": {
+   "fr": "Équipe médicale\nSupport Team Ability : avant qu'une carte de dégâts face visible avec le trait Équipage ne vous soit attribuée, vous pouvez défausser cette carte pour défausser cette carte de dégâts."
+  },
+  "armada-v15:bsdata:neutral:auxiliary-shields-team:cb210459e79ab6": {
+   "fr": "Équipe de boucliers auxiliaires\nSupport Team Ability : [Réparation] : vous pouvez considérer les valeurs maximales de boucliers de vos sections de coque gauche et droite comme augmentées de 1 quand vous restaurez ou déplacez des boucliers vers ces sections. Si vous le faites, le nombre de boucliers de chacune de ces sections ne peut pas dépasser un maximum de « 4 »."
+  },
+  "armada-v15:bsdata:galactic-empire:7bdc-26cd-28b6-3742": {
+   "fr": "Insidieux\nTitle Ability : les dés noirs de votre armement en batterie peuvent être utilisés à moyenne portée. Cet effet ne s'applique qu'en attaquant la section de coque arrière d'un vaisseau."
+  },
+  "armada-v15:bsdata:galactic-empire:58e9-84d4-02b1-e045": {
+   "fr": "Démolisseur\nTitle Ability : pendant votre étape d'attaque, vous ne pouvez réaliser qu'une seule attaque.\nVous pouvez réaliser 1 de vos attaques après avoir exécuté votre première manœuvre pendant votre activation."
+  },
+  "armada-v15:bsdata:galactic-empire:ec81-446a-6eef-a78b": {
+   "fr": "Suppresseur\nTitle Ability : après qu'un vaisseau ennemi a terminé son activation, s'il est à distance 1-3, vous pouvez choisir et épuiser 1 de ses pions de défense."
+  },
+  "armada-v15:bsdata:galactic-empire:1fa9-f850-0a60-6e4d": {
+   "fr": "Vecteur\nTitle Ability : [Escadron] : la vitesse de chaque escadron sans [Lourd] que vous activez est augmentée de 1 jusqu'à un maximum de 5, jusqu'à la fin de son activation."
+  },
+  "armada-v15:bsdata:galactic-empire:047e-ccc8-4d69-18f0": {
+   "fr": "Dévastateur\nTitle Ability : une fois par round, en attaquant depuis votre section de coque avant, vous pouvez ajouter 1 dé bleu à votre réserve d'attaque pour chaque pion de défense que vous avez défaussé."
+  },
+  "armada-v15:bsdata:galactic-empire:bd4a-4f64-b789-7dd9": {
+   "fr": "Vengeur\nTitle Ability : en attaquant, vous pouvez épuiser cette carte. Si vous le faites, le défenseur ne peut pas dépenser plus d'1 pion de défense épuisé pendant cette attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:885e-85c7-53c5-29d2": {
+   "fr": "Implacable\nTitle Ability : le nombre total de cadrans de commandement qui doivent être assignés à votre vaisseau pendant chaque phase de commandement est réduit de 1."
+  },
+  "armada-v15:bsdata:galactic-empire:63cc-a1a2-1393-ae19": {
+   "fr": "Souverain\nTitle Ability : au début de la phase de vaisseau, vous pouvez épuiser cette carte pour défausser 1 jeton de commandement d'un maximum de 3 vaisseaux alliés à distance 1-5. Si vous le faites, chacun de ces vaisseaux peut gagner 1 jeton de commandement de votre choix."
+  },
+  "armada-v15:bsdata:galactic-empire:a4d5-c816-9b9f-ba85": {
+   "fr": "Chimère\nTitle Ability : vous gagnez 1 icône [Commandement de flotte] dans votre barre d'amélioration. Vous ne pouvez pas équiper cette carte si vous avez une icône [Commandement de flotte] dans votre barre d'amélioration. Au début de la phase de commandement, vous pouvez défausser 1 carte d'amélioration [Commandement de flotte] que vous avez équipée et la remplacer par une autre carte d'amélioration [Commandement de flotte]."
+  },
+  "armada-v15:bsdata:galactic-empire:2c0a-00a7-f3e4-4e0a": {
+   "fr": "Intercepteur\nTitle Ability : quand un vaisseau s'active, vous pouvez épuiser cette carte pour restaurer 1 autre carte d'amélioration équipée sur ce vaisseau.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-empire:efc4-4dd7-57a6-110e": {
+   "fr": "Impétueux\nTitle Ability : à la fin de votre étape d'attaque, choisissez 1 de vos sections de coque. Vous pouvez effectuer une attaque contre 1 escadron ennemi depuis cette section de coque, même si vous avez déjà attaqué depuis cette section pendant ce round."
+  },
+  "armada-v15:bsdata:galactic-empire:f0c2-0776-9b0a-38bd": {
+   "fr": "Instigateur\nTitle Ability : les escadrons ennemis à distance 1 sont traités comme s'ils étaient engagés par 2 escadrons supplémentaires, même s'ils ne sont pas actuellement engagés."
+  },
+  "armada-v15:bsdata:galactic-empire:cc3b-c6d2-6d76-eb55": {
+   "fr": "Corvus\nTitle Ability : après le déploiement des flottes, vous pouvez redéployer ce vaisseau dans votre zone de déploiement."
+  },
+  "armada-v15:bsdata:galactic-empire:90d8-141f-14cc-f59c": {
+   "fr": "Dominateur\nTitle Ability : en attaquant à courte-moyenne portée, vous pouvez dépenser jusqu'à 2 boucliers de n'importe laquelle de vos sections de coque pour ajouter autant de dés bleus à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:galactic-empire:0591-3d4f-b919-7c48": {
+   "fr": "Corrupteur\nTitle Ability : [Escadron] : la vitesse de chaque escadron avec [Bombardier] que vous activez est augmentée de 1 jusqu'à la fin de son activation."
+  },
+  "armada-v15:bsdata:galactic-empire:f9da-27c3-fd46-4fb8": {
+   "fr": "Seigneur de guerre\nTitle Ability : en attaquant, vous pouvez changer la face d'1 dé avec une icône [Précision] en une face avec une icône [Touche]."
+  },
+  "armada-v15:bsdata:galactic-empire:0d4e-f8c0-0b3a-7500": {
+   "fr": "Harrow\nTitle Ability : vous gagnez 1 icône [Équipe de soutien] supplémentaire dans votre barre d'amélioration. Quand vous exécutez une manœuvre de vitesse 1, pendant votre étape de détermination du cap, vous pouvez changer votre première valeur d'embardée en « II » jusqu'à la fin de votre activation."
+  },
+  "armada-v15:bsdata:neutral:enhanced-armament:8bde2fcb89bcdd": {
+   "fr": "Armement renforcé\nTurbolasers Ability : Modification.\nL'armement en batterie de vos sections de coque gauche et droite est augmenté de 1 dé rouge."
+  },
+  "armada-v15:bsdata:neutral:h9-turbolasers:fb772971a3aa87": {
+   "fr": "Turbolasers H9\nTurbolasers Ability : Modification.\nEn attaquant, vous pouvez changer la face d'1 dé avec une icône [Touche] ou [Critique] en une face avec une icône [Précision]."
+  },
+  "armada-v15:bsdata:neutral:xx-9-turbolasers:2de7db95ac3612": {
+   "fr": "Turbolasers XX-9\nTurbolasers Ability : [Critique] : les 2 premières cartes de dégâts infligées au défenseur par cette attaque sont infligées face visible."
+  },
+  "armada-v15:bsdata:neutral:xi7-turbolasers:bac03cacc88d1c": {
+   "fr": "Turbolasers XI7\nTurbolasers Ability : en attaquant, si le défenseur dépense un pion [Redirection], il ne peut pas subir plus de 1 dégât sur chaque section de coque autre que la section de coque défendue lorsqu'il résout le pion de défense [Redirection]."
+  },
+  "armada-v15:bsdata:neutral:heavy-turbolaser-turrets:5660533ecb6b81": {
+   "fr": "Tourelles turbolasers lourdes\nTurbolasers Ability : en attaquant, l'effet de défense [Soutien] ne peut pas réduire le total des dégâts de plus de 1, sauf s'il s'agit du seul pion de défense dépensé par le défenseur pendant l'attaque."
+  },
+  "armada-v15:bsdata:neutral:turbolaser-reroute-circuits:2dab5af38ed695": {
+   "fr": "Circuits de réacheminement turbolaser\nTurbolasers Ability : en attaquant, vous pouvez épuiser cette carte et dépenser 1 pion de défense [Évasion] pour changer 1 dé rouge en une face avec une icône [Critique] ou 2 icônes [Touche].\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:slaved-turrets:5b64d1d73c2e23": {
+   "fr": "Tourelles asservies\nTurbolasers Ability : Modification.\nVous ne pouvez pas attaquer plus d'une fois par round.\nEn attaquant un vaisseau, ajoutez 1 dé rouge à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:neutral:quad-turbolaser-cannons:bfd62b18438897": {
+   "fr": "Quadruple canons turbolasers\nTurbolasers Ability : Modification.\nEn attaquant, si au moins 1 face de dé rouge présente une icône [Précision], ajoutez 1 dé rouge réglé sur l'icône [Précision] à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:neutral:spinal-armament:7af2021e128866": {
+   "fr": "Armement dorsal\nTurbolasers Ability : Modification.\nL'armement en batterie de vos sections de coque avant et arrière est augmenté de 1 dé rouge."
+  },
+  "armada-v15:bsdata:neutral:dual-turbolaser-turrets:d78ec1a8414008": {
+   "fr": "Tourelles turbolasers doubles\nTurbolasers Ability : Modification.\nEn attaquant, vous pouvez épuiser cette carte pour ajouter 1 dé rouge à votre réserve d'attaque. Si vous le faites, choisissez et annulez 1 dé d'attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:quad-battery-turrets:26151f2e55c93f": {
+   "fr": "Tourelles de batterie quadruples\nTurbolasers Ability : Modification.\nEn attaquant un vaisseau ayant une vitesse supérieure à la vôtre, vous pouvez ajouter 1 dé bleu à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:neutral:linked-turbolaser-towers:b7abc4cbadf7ce": {
+   "fr": "Tours turbolasers liées\nTurbolasers Ability : en attaquant un escadron, vous pouvez relancer 1 dé rouge de votre réserve d'attaque. En attaquant un vaisseau, si vous avez le trait bombardement, vous pouvez relancer 1 dé rouge de votre réserve d'attaque. Pendant votre activation, en attaquant le premier escadron d'une attaque, vous pouvez épuiser cette carte pour ajouter 2 dés de n'importe quelle couleur à votre réserve d'attaque. Si vous le faites, vous ne pouvez pas désigner de cibles escadrons supplémentaires pour cette attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:heavy-fire-zone:784d842b64fb7a": {
+   "fr": "Zone de tir lourd\nTurbolasers Ability : en attaquant un escadron, avant de rassembler les dés, si le défenseur n'est pas engagé avec un escadron allié, vous pouvez remplacer tous les dés bleus de votre armement anti-escadron par des dés rouges."
+  },
+  "armada-v15:bsdata:neutral:dby-827-heavy-turbolasers:9eff99113512c1": {
+   "fr": "Turbolasers lourds DBY-827\nTurbolasers Ability : en réalisant une attaque [Salve], vous pouvez changer 1 dé en une face avec une icône [Critique]."
+  },
+  "armada-v15:bsdata:neutral:gunnery-team:52bf1731b3b3b9": {
+   "fr": "Équipe d'artilleurs\nWeapons Team Ability : [Tir concentré] : la prochaine attaque que vous réalisez pendant cette activation peut être réalisée depuis cette section de coque.\nChacune de vos sections de coque ne peut pas cibler le même vaisseau ou escadron plus d'une fois pendant votre activation."
+  },
+  "armada-v15:bsdata:neutral:sensor-team:9b92cea6e3e2de": {
+   "fr": "Équipe de capteurs\nWeapons Team Ability : en attaquant, vous pouvez épuiser cette carte et dépenser 1 dé pour changer 1 de vos dés en une face avec une icône [Précision].\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:flight-controllers:51c590bc470afc": {
+   "fr": "Contrôleurs de chasse\nWeapons Team Ability : [Escadron] : l'armement anti-escadron de chaque escadron que vous activez est augmenté de 1 dé bleu jusqu'à la fin de son activation."
+  },
+  "armada-v15:bsdata:neutral:ruthless-strategists:02187c51bb3bff": {
+   "fr": "Stratèges impitoyables\nWeapons Team Ability : après avoir attaqué un escadron, vous pouvez infliger 1 dégât à un escadron allié engagé avec le défenseur. Si vous le faites, le défenseur subit 1 dégât."
+  },
+  "armada-v15:bsdata:neutral:ordnance-experts:51ddd6c8e52d76": {
+   "fr": "Experts en artillerie\nWeapons Team Ability : en attaquant, vous pouvez relancer jusqu'à 2 dés noirs."
+  },
+  "armada-v15:bsdata:neutral:veteran-gunners:aa25df940ad513": {
+   "fr": "Artilleurs vétérans\nWeapons Team Ability : en attaquant, vous pouvez épuiser cette carte pour relancer tous les dés de votre réserve d'attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:fire-control-team:de502932af7dbe": {
+   "fr": "Équipe de contrôle de tir\nWeapons Team Ability : pendant l'étape de résolution des dégâts, vous pouvez épuiser cette carte pour résoudre 1 effet critique supplémentaire. Vous ne pouvez pas résoudre deux fois le même effet critique.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:neutral:boarding-engineers:086dc0645dadac": {
+   "fr": "Ingénieurs d'abordage\nDual Type Upgrade Ability : quand vous révélez un ordre, vous pouvez défausser un cadran ou un jeton [Escadron] et cette carte pour choisir 1 vaisseau ennemi à courte portée. Regardez ses cartes de dégâts face cachée et retournez-en un nombre face visible, jusqu'à votre valeur d'ingénierie (une à la fois)."
+  },
+  "armada-v15:bsdata:neutral:boarding-troopers:760e2eeef8f865": {
+   "fr": "Troupes d'abordage\nDual Type Upgrade Ability : quand vous révélez un ordre, vous pouvez défausser un cadran ou un jeton [Escadron] et cette carte pour choisir 1 vaisseau ennemi à courte portée. Choisissez et dépensez un nombre de ses pions de défense allant jusqu'à votre valeur d'escadron."
+  },
+  "armada-v15:bsdata:galactic-empire:d6c8-1803-8ce4-574f": {
+   "fr": "Dark Vador\nDual Type Upgrade Ability : quand vous révélez un ordre, vous pouvez défausser un cadran ou un jeton [Escadron] et cette carte pour choisir 1 vaisseau ennemi à courte portée. Choisissez et défaussez 1 carte d'amélioration non [Commandant] équipée sur ce vaisseau."
+  },
+  "armada-v15:bsdata:neutral:weapons-battery-techs:113dc532fb019c": {
+   "fr": "Techniciens de batterie d'armement\nWeapons Team Ability : en attaquant un vaisseau, vous pouvez changer la face d'1 dé avec une icône [Précision] en une face avec une icône [Critique]."
+  },
+  "armada-v15:bsdata:galactic-empire:4ba6-5064-25c4-5030": {
+   "fr": "Chef artilleur Varnillian\nWeapons Team Ability : après votre déploiement, placez 1 dé rouge réglé sur une face vierge sur cette carte. Si vous êtes le second joueur, réglez-le sur n'importe quelle face à la place.\nEn attaquant un vaisseau, vous pouvez dépenser 1 dé de la réserve d'attaque pour l'échanger avec le dé de cette carte. Les deux dés restent réglés sur leurs faces actuelles."
+  },
+  "armada-v15:bsdata:neutral:local-fire-control:ee6607de210bd4": {
+   "fr": "Contrôle de tir local\nWeapons Team Ability : après votre déploiement, vous devez remplacer 1 de vos pions de défense par un pion de défense [Salve]."
+  },
+  "armada-v15:bsdata:galactic-empire:334e-1b3f-5d79-18aa": {
+   "fr": "Centicore\nTitle Ability : quand un autre vaisseau allié a résolu un ordre [Escadron], jusqu'à 2 des escadrons qu'il active peuvent être à courte-moyenne portée de vous."
+  },
+  "armada-v15:bsdata:galactic-empire:da78-246c-0d1c-95a2": {
+   "fr": "Main de la justice\nTitle Ability : avant de révéler un ordre, vous pouvez épuiser cette carte pour choisir un autre vaisseau allié à distance 1-5 et restaurer 1 de ses pions de défense."
+  },
+  "armada-v15:bsdata:galactic-empire:4d17-ab65-dcdc-007e": {
+   "fr": "Conforme\nTitle Ability : quand vous révélez un ordre autre qu'un ordre [Escadron], vous pouvez défausser cette carte pour résoudre un ordre [Escadron]. Traitez cet ordre comme si vous aviez dépensé un cadran [Escadron]."
+  },
+  "armada-v15:bsdata:galactic-empire:0d31-3fc4-9e39-2bcd": {
+   "fr": "Grain\nTitle Ability : quand vous vous activez, vous pouvez choisir jusqu'à 3 escadrons alliés non engagés à courte-moyenne portée. Ces escadrons peuvent se déplacer d'au plus 2. S'ils le font, ils ne peuvent pas terminer leur déplacement engagés."
+  },
+  "armada-v15:bsdata:galactic-empire:9f77-ef37-7f05-0122": {
+   "fr": "Bastion\nTitle Ability : tant qu'un escadron allié avec Nuée à distance 1-2 défend, l'attaque est considérée comme obstruée."
+  },
+  "armada-v15:bsdata:neutral:all-fighters-follow-me:b25b8d1af82856": {
+   "fr": "Tous les chasseurs, suivez-moi !\nFleet Command Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte ou dépenser un jeton [Escadron]. Si vous le faites, jusqu'à la fin du round, la vitesse de chaque escadron qu'un vaisseau allié active est augmentée de 1, jusqu'à un maximum de 5, jusqu'à la fin de l'activation de cet escadron."
+  },
+  "armada-v15:bsdata:neutral:entrapment-formation:f5bf282ea1c4a6": {
+   "fr": "Formation de piégeage !\nFleet Command Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte ou dépenser un jeton [Navigation]. Si vous le faites, jusqu'à la fin du round, chaque vaisseau allié peut modifier sa vitesse de 1 pendant son étape de détermination du cap."
+  },
+  "armada-v15:bsdata:neutral:shields-to-maximum:fb4415cce7dff0": {
+   "fr": "Boucliers au maximum !\nFleet Command Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte ou dépenser un jeton [Réparation]. Si vous le faites, jusqu'à la fin du round, avant qu'un vaisseau allié révèle un ordre, il peut restaurer 1 bouclier."
+  },
+  "armada-v15:bsdata:neutral:intensify-firepower:5dd6ba4558d65b": {
+   "fr": "Intensifier la puissance de feu !\nFleet Command Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte ou dépenser un jeton [Tir concentré]. Si vous le faites, jusqu'à la fin du round, pendant que chaque vaisseau allié attaque un vaisseau, il peut changer 1 dé en une face avec 1 icône [Touche] et aucune autre icône."
+  },
+  "armada-v15:bsdata:neutral:take-evasive-action:50b63ff0e11e26": {
+   "fr": "Manœuvre d'évitement !\nFleet Command Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte ou dépenser un jeton [Navigation]. Si vous le faites, jusqu'à la fin du round, chaque vaisseau allié peut augmenter de 1 la dernière valeur d'embardée de sa vitesse actuelle pendant son étape de détermination du cap."
+  },
+  "armada-v15:bsdata:galactic-empire:232e-a1b6-c53e-2d53": {
+   "fr": "Exécuteur\nTitle Ability : vous pouvez recevoir un nombre quelconque de jetons de commandement de n'importe quel type, au lieu d'un nombre de jetons de commandement égal à votre valeur de commandement."
+  },
+  "armada-v15:bsdata:galactic-empire:9e64-d03d-d9c2-207c": {
+   "fr": "Éclipse\nTitle Ability : quand un vaisseau ennemi vous chevauche, le vaisseau ennemi subit une carte de dégâts face visible au lieu d'une carte de dégâts face cachée."
+  },
+  "armada-v15:bsdata:galactic-empire:4b54-0293-3bc5-e635": {
+   "fr": "Annihilateur\nTitle Ability : en attaquant un escadron, vous pouvez relancer 1 dé d'attaque."
+  },
+  "armada-v15:bsdata:galactic-empire:a132-4dd3-88a4-961c": {
+   "fr": "Ravageur\nTitle Ability : [Tir concentré] : vos jetons [Tir concentré] peuvent soit relancer 1 dé d'attaque, soit ajouter 1 dé à votre réserve d'attaque. Si vous ajoutez un dé, ce dé doit être d'une couleur déjà présente dans votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:galactic-empire:0b80-7e61-57bf-8457": {
+   "fr": "Turbolasers à faisceau composite superlourds\nSuperweapon Ability : Modification.\nAllumage [Moyenne]\nAllumage, [Critique] rouge : le défenseur subit 1 dégât. Ceci se produit une fois pour chaque icône [Critique] rouge ou bleue de la réserve."
+  },
+  "armada-v15:bsdata:galactic-empire:619a-cf47-b35b-28dc": {
+   "fr": "Canons à particules de bombardement orbital\nSuperweapon Ability : Modification.\nAllumage [Longue]\nAllumage, [Critique] rouge : chaque autre vaisseau à distance 1 du défenseur subit 2 dégâts, et chaque escadron à distance 1 du défenseur subit 1 dégât."
+  },
+  "armada-v15:bsdata:galactic-empire:5642-309d-ce8c-f355": {
+   "fr": "Cataclysme\nTitle Ability : après le début de la phase de vaisseau, vous pouvez dépenser 1 jeton [Tir concentré] pour placer un jeton de ciblage dans votre arc de tir spécial, à la portée indiquée par l'un de vos mots-clés Allumage."
+  },
+  "armada-v15:bsdata:galactic-empire:6c02-a694-59ce-06b2": {
+   "fr": "Rakehell\nTitle Ability : [Manœuvre] : en exécutant une manœuvre de vitesse 0, vous pouvez résoudre les crans d'embardée au joint de vitesse 0, et êtes traité comme ayant une valeur d'embardée « I » pour cette manœuvre."
+  },
+  "armada-v15:bsdata:galactic-empire:8e48-7551-18f8-ae7e": {
+   "fr": "Sunder\nTitle Ability : [Critique] bleu ou noir : vous pouvez défausser cette carte pour choisir et défausser 1 carte d'amélioration [Retrofit offensif], [Remise en état défensive], [Lanceurs], [Canons ioniques] ou [Turbolaser] équipée sur le défenseur."
+  },
+  "armada-v15:bsdata:rebel-alliance:ed4a-5188-cd47-0a59": {
+   "fr": "Réapprovisionnement en pièces\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Réparation] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Réparation].\nMise en place : 5 jetons [Réparation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation], [Navigation] ou [Escadron]"
+  },
+  "armada-v15:bsdata:rebel-alliance:0e61-d5fd-f87b-5451": {
+   "fr": "Canons antiaériens\nOffensive Retrofit Ability : traitez chaque dé de votre armement anti-escadron comme noir.\nEn réalisant une attaque [Salve], les dés noirs de votre armement en batterie peuvent être utilisés à moyenne portée et les dés bleus de votre armement en batterie peuvent être utilisés à longue portée."
+  },
+  "armada-v15:bsdata:galactic-republic:da66-d428-b8a4-f624": {
+   "fr": "Canons antiaériens\nOffensive Retrofit Ability : traitez chaque dé de votre armement anti-escadron comme noir.\nEn réalisant une attaque [Salve], les dés noirs de votre armement en batterie peuvent être utilisés à moyenne portée et les dés bleus de votre armement en batterie peuvent être utilisés à longue portée."
+  },
+  "armada-v15:bsdata:rebel-alliance:6084-3234-a6d4-db56": {
+   "fr": "Leia Organa\nOfficer Ability : quand vous révélez un ordre, vous pouvez choisir un autre vaisseau allié à distance 1-5 et changer son ordre du dessus pour l'ordre que vous avez révélé."
+  },
+  "armada-v15:bsdata:rebel-alliance:8b18-ccd4-d8db-064a": {
+   "fr": "Adar Tallon\nOfficer Ability : après avoir résolu un ordre [Escadron], épuisez cette carte pour basculer le curseur d'activation de 1 escadron activé avec cet ordre.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:4ccc-d46d-ade2-db31": {
+   "fr": "Raymus Antilles\nOfficer Ability : quand vous révélez un ordre, vous pouvez gagner 1 jeton de commandement correspondant sans dépenser le cadran de commandement."
+  },
+  "armada-v15:bsdata:rebel-alliance:a3b9-5237-ab53-b8ba": {
+   "fr": "Lando Calrissian\nOfficer Ability : en défense, pendant l'étape de dépense des pions de défense, vous pouvez défausser cette carte pour forcer l'attaquant à relancer 1 dé ou plus de votre choix."
+  },
+  "armada-v15:bsdata:rebel-alliance:e2b4-b27a-1520-22b7": {
+   "fr": "Walex Blissex\nOfficer Ability : quand vous vous activez, vous pouvez défausser cette carte pour restaurer 1 de vos pions de défense défaussés."
+  },
+  "armada-v15:bsdata:rebel-alliance:5cc1-caf1-ad32-aa70": {
+   "fr": "Toryn Farr\nOfficer Ability : tant qu'un autre vaisseau ou escadron allié à distance 1-3 attaque, il peut relancer 1 dé bleu."
+  },
+  "armada-v15:bsdata:rebel-alliance:719a-569f-3b88-e8db": {
+   "fr": "Ahsoka Tano\nOfficer Ability : pendant l'activation d'un vaisseau allié à distance 1-5, vous pouvez épuiser cette carte pour défausser 1 jeton de commandement de ce vaisseau. Si vous le faites, ce vaisseau peut gagner 1 jeton de commandement de son choix.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:9c95-009f-e9f3-86a1": {
+   "fr": "Commandant Derlin\nOfficer Ability : avant de subir des dégâts d'une attaque, vous pouvez épuiser cette carte pour réduire le total des dégâts de 1.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:60fe-b34f-9097-1a4c": {
+   "fr": "Général Draven\nOfficer Ability : en attaquant un escadron avec Contre ou Renseignement, ajoutez 1 dé de n'importe quelle couleur à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:9fd0-3825-9d76-af56": {
+   "fr": "Capitaine Rex\nOfficer Ability : [Escadron] : vous pouvez choisir 1 vaisseau ennemi à courte portée. Ce vaisseau gagne 1 jeton de perturbation de votre choix.\nTant que vous êtes à distance 1-3 d'un vaisseau ennemi, ce vaisseau ne peut défausser qu'1 jeton de perturbation de n'importe quel type quand il défausse un cadran de commandement."
+  },
+  "armada-v15:bsdata:rebel-alliance:d834-979a-7c47-ce33": {
+   "fr": "Ezra Bridger\nOfficer Ability : quand vous révélez un ordre, vous pouvez défausser cette carte pour déplacer 1 obstacle à distance 1-2 de façon à ce qu'il soit à distance 1-2 de sa position actuelle."
+  },
+  "armada-v15:bsdata:rebel-alliance:ed8d-3eb3-50a4-5873": {
+   "fr": "Sabine Wren\nOfficer Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte pour placer 1 jeton de mine de proximité dans la zone de jeu à distance 1-2 d'un obstacle et à plus de distance 3 des vaisseaux ennemis."
+  },
+  "armada-v15:bsdata:rebel-alliance:6ef0-4ac9-c768-afe3": {
+   "fr": "Kyrsta Agate\nOfficer Ability : [Critique] rouge ou bleu : vous pouvez épuiser cette carte pour restaurer 1 de vos pions de défense épuisés.\nVous pouvez résoudre cet effet critique pendant une attaque [Salve].\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:4e13-3751-3427-7c50": {
+   "fr": "Wedge Antilles\nOfficer Ability : avant la fin de la phase d'escadron, vous pouvez dépenser 1 jeton [Escadron] pour choisir jusqu'à 3 escadrons alliés non uniques, sans [Stratégique], à distance 1-5. Ces escadrons gagnent Camouflage jusqu'à la fin du round."
+  },
+  "armada-v15:bsdata:rebel-alliance:6516-9461-a841-7d88": {
+   "fr": "Gallant Haven\nTitle Ability : avant qu'un escadron allié à distance 1 ne subisse des dégâts d'une attaque, réduisez le total des dégâts de 1, avec un minimum de 1."
+  },
+  "armada-v15:bsdata:rebel-alliance:57e9-8e60-0f79-4bbe": {
+   "fr": "Paragon\nTitle Ability : en attaquant un vaisseau que vous avez déjà attaqué pendant ce round, ajoutez 1 dé noir à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:90d8-141f-14cc-f59c": {
+   "fr": "Fierté de Dodonna\nTitle Ability : [Critique] bleu : annulez tous les dés d'attaque pour infliger 1 carte de dégâts face visible au défenseur."
+  },
+  "armada-v15:bsdata:rebel-alliance:f4f0-a7c3-e07b-b4b8": {
+   "fr": "Lumière de Jaina\nTitle Ability : vous pouvez ignorer les effets du chevauchement d'obstacles. Vos attaques ne peuvent pas être obstruées."
+  },
+  "armada-v15:bsdata:rebel-alliance:e9ba-e40c-5fac-7683": {
+   "fr": "Tantive IV\nTitle Ability : avant que vous ne gagniez un jeton de commandement, 1 vaisseau allié à distance 1-5 peut gagner ce jeton à la place."
+  },
+  "armada-v15:bsdata:rebel-alliance:7658-5de3-7bd5-3df5": {
+   "fr": "Libérateur\nTitle Ability : vous gagnez 1 icône [Commandement de flotte] supplémentaire dans votre barre d'amélioration. Vous ne pouvez pas équiper cette carte si vous avez une icône [Commandement de flotte] dans votre barre d'amélioration. Vous ne pouvez pas dépenser un jeton de commandement pour résoudre l'effet d'une carte [Commandement de flotte]."
+  },
+  "armada-v15:bsdata:rebel-alliance:1983-36ff-9add-3dbf": {
+   "fr": "Réprimande\nTitle Ability : en défense, pendant l'étape de dépense des pions de défense, vous pouvez défausser un pion de défense pour annuler 1 dé d'attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:9a8a-2c65-95f0-c9de": {
+   "fr": "Prévoyance\nTitle Ability : quand vous résolvez l'effet de défense [Évasion], vous pouvez affecter 1 dé supplémentaire. Quand vous résolvez l'effet de défense [Redirection], vous pouvez choisir 1 section de coque adjacente supplémentaire pour subir des dégâts."
+  },
+  "armada-v15:bsdata:rebel-alliance:4c28-c84b-2d13-af98": {
+   "fr": "Détermination\nTitle Ability : au début du premier round, gagnez 1 pion de défense [Confinement]."
+  },
+  "armada-v15:bsdata:rebel-alliance:94ba-fc52-8543-4700": {
+   "fr": "Mon Karren\nTitle Ability : [Tir concentré] : en attaquant un vaisseau, le défenseur ne peut pas dépenser plus d'1 pion de défense pendant cette attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:48e5-8967-f430-d28f": {
+   "fr": "Liberté\nTitle Ability : [Escadron] : si vous avez dépensé un jeton [Escadron], vous pouvez activer 1 escadron supplémentaire."
+  },
+  "armada-v15:bsdata:rebel-alliance:818a-7906-03bc-428c": {
+   "fr": "Défi\nTitle Ability : en attaquant un vaisseau qui s'est déjà activé pendant ce round, ajoutez 1 dé de n'importe quelle couleur à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:4972-cd30-7b60-8d6a": {
+   "fr": "Home One\nTitle Ability : tant qu'un autre vaisseau allié à distance 1-5 attaque, il peut changer 1 dé en une face avec une icône [Précision]."
+  },
+  "armada-v15:bsdata:rebel-alliance:2eec-7143-b818-1469": {
+   "fr": "Indépendance\nTitle Ability : [Escadron] : chaque escadron que vous activez peut augmenter sa vitesse à 4 jusqu'à la fin de son activation. Les escadrons qui changent de vitesse de cette façon ne peuvent pas attaquer pendant cette activation."
+  },
+  "armada-v15:bsdata:rebel-alliance:c8fd-afd0-24d0-004d": {
+   "fr": "Rédemption\nTitle Ability : quand un vaisseau allié à distance 1-5 résout un ordre [Réparation], il gagne 1 point d'ingénierie supplémentaire."
+  },
+  "armada-v15:bsdata:rebel-alliance:2088-0dca-8c3b-dc5b": {
+   "fr": "Salvation\nTitle Ability : en attaquant un vaisseau depuis votre section de coque avant, vos icônes [Critique] comptent pour 2 dégâts au lieu de 1."
+  },
+  "armada-v15:bsdata:rebel-alliance:4e48-65de-2476-05f0": {
+   "fr": "Yavaris\nTitle Ability : [Escadron] : chaque escadron que vous activez peut choisir de n'attaquer que pendant votre activation. Si c'est le cas, en attaquant, il peut ajouter 1 dé à sa réserve d'attaque d'une couleur déjà présente dans sa réserve d'attaque."
+  },
+  "armada-v15:bsdata:rebel-alliance:efb2-2cf5-f571-ce17": {
+   "fr": "Avant-garde\nTitle Ability : vous gagnez 1 icône [Équipe d'armement] supplémentaire dans votre barre d'amélioration. Au début du premier round, vous pouvez remplacer 1 de vos pions de défense par un pion de défense [Redirection]."
+  },
+  "armada-v15:bsdata:rebel-alliance:8742-cf79-ca25-6f87": {
+   "fr": "Espoir radieux\nTitle Ability : en défense contre une attaque ne visant pas votre section de coque arrière, avant de subir des dégâts, réduisez le total des dégâts de 1."
+  },
+  "armada-v15:bsdata:rebel-alliance:ffcd-7cc0-e576-e0c0": {
+   "fr": "Tempête quantique\nTitle Ability : [Navigation] : après avoir exécuté une manœuvre, vous pouvez épuiser cette carte pour exécuter une manœuvre de vitesse 1 avec une embardée « - ».\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:8c3a-61c6-2103-5b67": {
+   "fr": "Cham Syndulla\nDual Type Upgrade Ability : quand vous révélez un ordre, vous pouvez défausser un cadran ou un jeton [Escadron] et cette carte pour choisir 1 vaisseau ennemi à courte portée. Si vous le faites, vous pouvez regarder tous les cadrans de commandement assignés à ce vaisseau. Puis vous pouvez choisir un nouvel ordre pour chacun de ces cadrans de commandement."
+  },
+  "armada-v15:bsdata:rebel-alliance:1620-54ad-69db-a241": {
+   "fr": "Caitken et Shollan\nWeapons Team Ability : en attaquant, vous pouvez épuiser cette carte pour relancer autant de dés d'une couleur que vous voulez.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:85c1-97c9-7561-f961": {
+   "fr": "Jyn Erso\nDual Type Upgrade Ability : quand vous révélez un ordre, vous pouvez défausser un cadran ou un jeton [Escadron] et cette carte pour choisir 1 vaisseau ennemi à courte portée. Si ce vaisseau n'a aucun jeton de perturbation, il gagne 2 jetons de perturbation de votre choix. Si ce vaisseau a un jeton d'objectif, vous pouvez aussi gagner 1 jeton de victoire."
+  },
+  "armada-v15:bsdata:rebel-alliance:18eb-b8ca-619f-7623": {
+   "fr": "Shriv Surgaav\nDual Type Upgrade Ability : quand vous révélez un ordre, vous pouvez défausser un cadran ou un jeton [Escadron] et cette carte pour choisir 1 vaisseau ennemi à courte portée. Choisissez et défaussez 1 carte d'amélioration [Équipe d'armement], [Équipe de soutien], [Retrofit offensif], [Remise en état défensive], [Lanceurs], [Canons ioniques] ou [Turbolasers] équipée sur ce vaisseau."
+  },
+  "armada-v15:bsdata:rebel-alliance:ecea-7b1f-1b28-f81a": {
+   "fr": "Phoenix Home\nTitle Ability : vous gagnez 1 icône [Officier] supplémentaire dans votre barre d'amélioration. Vous pouvez recevoir jusqu'à 4 jetons de commandement au lieu d'un nombre de jetons de commandement égal à votre valeur de commandement."
+  },
+  "armada-v15:bsdata:rebel-alliance:d470-9298-429d-dc46": {
+   "fr": "Task Force Organa\nTitle Ability : en attaquant, vous pouvez choisir et épuiser un exemplaire de cette carte sur un autre vaisseau allié à distance 1-3 pour relancer jusqu'à 2 dés d'attaque. Tant que cette carte est épuisée, vous ne pouvez pas attaquer de vaisseaux.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:d78a-1e63-78e6-8c29": {
+   "fr": "Task Force Antilles\nTitle Ability : quand vous subissez des dégâts d'une attaque, vous pouvez choisir et épuiser un exemplaire de cette carte sur un autre vaisseau allié à distance 1-3. Si vous le faites, ce vaisseau subit 1 de vos dégâts à la place. Tant que cette carte est épuisée, vous ne pouvez pas dépenser de points d'ingénierie.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:3fce-597e-3710-77ea": {
+   "fr": "Honneur de Garel\nTitle Ability : quand vous chevauchez un vaisseau ennemi, le vaisseau ennemi subit une carte de dégâts face visible au lieu d'une carte de dégâts face cachée."
+  },
+  "armada-v15:bsdata:rebel-alliance:dbdb-fa3a-2ceb-97cd": {
+   "fr": "Profondeur\nTitle Ability : avant le déploiement des flottes, vous pouvez mettre de côté 1 petit vaisseau ayant une valeur de commandement de 1. Au début de n'importe quel round, vous pouvez déployer le vaisseau mis de côté à distance 1. Vous pouvez désé-quiper jusqu'à 1 carte [Commandant] et 1 carte [Officier] et les équiper sur ce vaisseau (si possible)."
+  },
+  "armada-v15:bsdata:rebel-alliance:ecf4-6fea-961d-eb50": {
+   "fr": "Aspiration\nTitle Ability : quand vous déployez ce vaisseau, vous pouvez déplacer des boucliers vers 2 de vos sections de coque au maximum, depuis vos autres sections de coque. Si vous le faites, le nombre de boucliers d'une section ne peut pas dépasser un maximum de « 6 ». Vous ne pouvez pas restaurer de boucliers tant qu'une section dépasse sa valeur maximale de boucliers."
+  },
+  "armada-v15:bsdata:rebel-alliance:c9fd-5b1a-71fb-0986": {
+   "fr": "Réseau tracteur à cristaux magnite\nSuperweapon Ability : après la fin de votre activation, vous pouvez épuiser cette carte pour choisir 1 vaisseau ennemi à distance 1-5. La vitesse de ce vaisseau est augmentée ou diminuée pour correspondre à la vôtre. Tant que votre vitesse est 0, vous ne pouvez pas restaurer cette carte.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:rebel-alliance:adbe-bdfd-d23e-ea2c": {
+   "fr": "Amity\nTitle Ability : Mark I uniquement. Après votre déploiement, gagnez 1 pion de défense [Évasion]. Quand un vaisseau ennemi vous chevauche, vous pouvez infliger 1 carte de dégâts face cachée supplémentaire aux deux vaisseaux."
+  },
+  "armada-v15:bsdata:rebel-alliance:53ba-3fec-05ea-7055": {
+   "fr": "Concord\nTitle Ability : Mark I uniquement. Après votre déploiement, gagnez 1 pion de défense [Salve]. En défense, si votre vitesse est 0, pendant votre étape de dépense des pions de défense, vous pouvez dépenser 1 pion de défense."
+  },
+  "armada-v15:bsdata:rebel-alliance:df66-c2d4-93c7-7dcb": {
+   "fr": "Unity\nTitle Ability : après votre déploiement, gagnez 1 pion de défense [Redirection]. En attaquant un escadron, si le défenseur est engagé avec un escadron allié sans le mot-clé Lourd imprimé, vous pouvez relancer 1 dé."
+  },
+  "armada-v15:bsdata:galactic-republic:5187-2bdf-bf83-75ce": {
+   "fr": "Boucliers thermiques\nDefensive Retrofit Ability : uniquement vaisseau moyen ou grand.\nEn défense, après que l'attaquant a rassemblé les dés, vous pouvez dépenser 1 jeton [Soutien]. Si vous le faites, choisissez et retirez la moitié des dés de la réserve d'attaque, arrondie à l'inférieur."
+  },
+  "armada-v15:bsdata:separatist-alliance:c19b-eb08-eb97-9c30": {
+   "fr": "Boucliers thermiques\nDefensive Retrofit Ability : uniquement vaisseau moyen ou grand.\nEn défense, après que l'attaquant a rassemblé les dés, vous pouvez dépenser 1 jeton [Soutien]. Si vous le faites, choisissez et retirez la moitié des dés de la réserve d'attaque, arrondie à l'inférieur."
+  },
+  "armada-v15:bsdata:galactic-republic:8aa2-6167-255a-48e6": {
+   "fr": "Projecteur expérimental G-8\nExperimental Retrofit Ability : avant qu'un vaisseau ennemi à distance 1-5 ne résolve l'étape de détermination du cap, vous pouvez épuiser cette carte pour réduire temporairement sa vitesse de 1 (minimum vitesse 0) jusqu'à la fin de la manœuvre.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-republic:4866-b10e-86b2-c206": {
+   "fr": "Brouilleur de visée\nExperimental Retrofit Ability : tant qu'un vaisseau allié à distance 1-3 défend à courte portée, pendant l'étape de dépense des pions de défense, vous pouvez épuiser cette carte pour forcer l'attaquant à relancer jusqu'à 4 dés de votre choix.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:separatist-alliance:4866-b10e-86b2-c206": {
+   "fr": "Brouilleur de visée\nExperimental Retrofit Ability : tant qu'un vaisseau allié à distance 1-3 défend à courte portée, pendant l'étape de dépense des pions de défense, vous pouvez épuiser cette carte pour forcer l'attaquant à relancer jusqu'à 4 dés de votre choix.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-republic:2b24-3434-8fa3-fdec": {
+   "fr": "Réacheminement de décalage gravitationnel\nExperimental Retrofit Ability : avant de déployer les flottes, placez 1 jeton de décalage gravitationnel n'importe où dans la zone de jeu. Après le déploiement des flottes, vous pouvez déplacer chaque obstacle à distance 1-3 de ce jeton à une distance 2 maximum de sa position actuelle. Les obstacles ne peuvent pas chevaucher de jetons, d'obstacles ou de vaisseaux."
+  },
+  "armada-v15:bsdata:galactic-republic:9fa4-78c9-effb-eb11": {
+   "fr": "Réapprovisionnement en munitions\nFleet Support Ability : après votre étape de révélation du cadran de commandement, vous pouvez épuiser cette carte et défausser de celle-ci autant de jetons [Tir concentré] que vous voulez, pour choisir autant de vaisseaux alliés à distance 1-5. Assignez à chacun un jeton [Tir concentré].\nMise en place : 5 jetons [Tir concentré]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré], [Réparation] ou [Navigation]"
+  },
+  "armada-v15:bsdata:galactic-republic:9792-ef9e-f9f1-8bfc": {
+   "fr": "Anneaux hyperespace\nOffensive Retrofit Ability : avant de déployer les flottes, vous pouvez choisir un nombre d'escadrons alliés non-Rogue, jusqu'à votre valeur d'escadron. Ces escadrons gagnent [Éclaireur]."
+  },
+  "armada-v15:bsdata:galactic-republic:773b-89cb-6631-6d7c": {
+   "fr": "SPHA-T\nOffensive Retrofit Ability : Modification. Uniquement « Destroyer stellaire ».\nRéduisez votre valeur d'escadron de 2.\nAllumage [Proche]\nChacune de vos sections de coque avant, gauche ou droite est aussi une zone de tir spéciale. Vous avez un armement en batterie spécial de 5 dés bleus et 1 dé noir.\nAprès avoir placé votre jeton de ciblage, épuisez cette carte. Tant que cette carte est épuisée, vous ne pouvez pas placer de jetons de ciblage.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré]"
+  },
+  "armada-v15:bsdata:galactic-republic:9f12-6037-edb1-6ddf": {
+   "fr": "Capitaine clone Zak\nOfficer Ability : en attaquant depuis votre section de coque latérale ou arrière, vous pouvez épuiser cette carte pour ajouter 1 dé à votre réserve d'attaque d'une couleur déjà présente dans votre réserve d'attaque (vous ne pouvez pas ajouter de dés à une attaque [Salve]). Vous pouvez dépenser des jetons de cette carte pour la restaurer.\nMise en place : 1 jeton [Tir concentré]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré]"
+  },
+  "armada-v15:bsdata:galactic-republic:1755-8a76-7312-0e6d": {
+   "fr": "Officier de navigation clone\nOfficer Ability : quand vous révélez un ordre [Tir concentré], [Navigation] ou [Escadron], vous pouvez épuiser cette carte pour choisir un vaisseau allié à distance 1-5. Ce vaisseau peut gagner 1 jeton de commandement correspondant à votre ordre. Vous pouvez dépenser des jetons de cette carte pour la restaurer.\nMise en place : 1 jeton [Navigation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton de n'importe quel type"
+  },
+  "armada-v15:bsdata:galactic-republic:e55e-cec4-e653-ddc7": {
+   "fr": "Hondo Ohnaka\nOfficer Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte pour choisir 2 jetons de commandement différents et les placer sur 2 vaisseaux différents. Puis votre adversaire choisit 2 jetons de commandement différents que vous n'avez pas choisis et les place sur 2 vaisseaux différents."
+  },
+  "armada-v15:bsdata:galactic-republic:e18a-39fa-af93-120b": {
+   "fr": "Barriss Offee\nOfficer Ability : en défense, après que l'attaquant a déclaré la section de coque défendue, vous pouvez dépenser 1 pion de défense [Redirection]. Si vous le faites, au début de l'étape de résolution des dégâts, choisissez une autre section de coque comme section de coque défendue pour cette attaque."
+  },
+  "armada-v15:bsdata:galactic-republic:516b-2cf9-d9df-d97b": {
+   "fr": "Adi Gallia\nOfficer Ability : en défense, quand vous subissez des dégâts d'une attaque, vous pouvez subir jusqu'à 1 de ces dégâts sur les boucliers d'une section de coque adjacente à la section de coque défendue, pour chaque pion de défense que vous dépensez pendant l'étape de dépense des pions de défense. Si vous le faites, subissez les dégâts restants sur la section de coque défendue."
+  },
+  "armada-v15:bsdata:galactic-republic:be62-0109-962e-5e30": {
+   "fr": "Capitaine clone Silver\nOfficer Ability : quand vous exécutez une manœuvre, pendant votre étape de détermination du cap, si vous n'avez pas résolu d'ordre [Navigation] pendant cette activation, vous pouvez épuiser cette carte pour augmenter ou diminuer votre vitesse jusqu'à 3. Si vous le faites, vous ne pouvez pas résoudre d'ordre [Navigation] pendant cette activation.\nVous pouvez dépenser des jetons de cette carte pour la restaurer.\nMise en place : 1 jeton [Navigation]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Navigation]"
+  },
+  "armada-v15:bsdata:galactic-republic:3ad4-3dd4-32bc-2575": {
+   "fr": "Ahsoka Tano\nOfficer Ability : [Escadron] : chacun d'un maximum de 3 escadrons non uniques que vous activez gagne Tir de précision 1 par dé de son armement anti-escadron, avec un maximum de Tir de précision 3, jusqu'à la fin de son activation."
+  },
+  "armada-v15:bsdata:galactic-republic:1631-cadb-6c26-eb8d": {
+   "fr": "Commandant clone Wolffe\nOfficer Ability : [Escadron] : vous pouvez épuiser cette carte. Si vous le faites :\n• Chacun d'un maximum de 3 escadrons que vous activez sans Adepte gagne Assaut jusqu'à la fin de son activation.\n• Chaque escadron que vous activez avec le mot-clé Assaut peut dépenser un dé avec une icône [Touche] ou [Précision] pour résoudre l'effet d'Assaut.\nVous pouvez dépenser des jetons de cette carte pour la restaurer.\nMise en place : 1 jeton [Escadron]\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Escadron]"
+  },
+  "armada-v15:bsdata:galactic-republic:7bdc-26cd-28b6-3742": {
+   "fr": "Retour rapide\nTitle Ability : pendant votre étape de détermination du cap, si vous êtes à distance 1-2 d'un obstacle, vous pouvez modifier votre vitesse de 1 ou augmenter 1 valeur d'embardée de 1."
+  },
+  "armada-v15:bsdata:galactic-republic:58e9-84d4-02b1-e045": {
+   "fr": "Radiant VII\nTitle Ability : vous gagnez 1 icône [Soutien de flotte] dans votre barre d'amélioration. Vous ne pouvez pas équiper de cartes d'amélioration [Turbolasers] ou [Lanceurs]."
+  },
+  "armada-v15:bsdata:galactic-republic:1ed4-e9c0-ca57-3229": {
+   "fr": "Batteries sur affût pivotant\nTurbolasers Ability : Modification.\nQuand vous révélez un ordre, vous pouvez épuiser cette carte pour choisir 1 de vos sections de coque et la marquer d'un jeton de concentration. En attaquant un vaisseau depuis cette section de coque, ajoutez 1 dé de n'importe quelle couleur de l'armement d'une section de coque adjacente à votre réserve d'attaque. En attaquant depuis des sections de coque adjacentes, retirez 1 dé de votre réserve d'attaque. Quand vous restaurez cette carte, retirez ce jeton de concentration.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré]"
+  },
+  "armada-v15:bsdata:separatist-alliance:1ed4-e9c0-ca57-3229": {
+   "fr": "Batteries sur affût pivotant\nTurbolasers Ability : Modification.\nQuand vous révélez un ordre, vous pouvez épuiser cette carte pour choisir 1 de vos sections de coque et la marquer d'un jeton de concentration. En attaquant un vaisseau depuis cette section de coque, ajoutez 1 dé de n'importe quelle couleur de l'armement d'une section de coque adjacente à votre réserve d'attaque. En attaquant depuis des sections de coque adjacentes, retirez 1 dé de votre réserve d'attaque. Quand vous restaurez cette carte, retirez ce jeton de concentration.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tir concentré]"
+  },
+  "armada-v15:bsdata:galactic-republic:3933-b376-e89a-2b17": {
+   "fr": "Canonniers clones\nWeapons Team Ability : Clone uniquement.\n[Tir concentré] : vous pouvez défausser 1 jeton [Tir concentré] assigné à un autre vaisseau allié à distance 1-5 du défenseur. Si vous le faites, ajoutez 1 dé bleu réglé sur l'icône [Précision] à votre réserve d'attaque."
+  },
+  "armada-v15:bsdata:galactic-republic:334e-1b3f-5d79-18aa": {
+   "fr": "Implacable\nTitle Ability : avant qu'un vaisseau ou escadron allié à distance 1-2 ne subisse des dégâts d'une attaque, vous pouvez épuiser cette carte et dépenser jusqu'à 2 boucliers de votre section de coque avant pour réduire le total des dégâts d'autant.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:galactic-republic:da78-246c-0d1c-95a2": {
+   "fr": "Nevoota Bee\nTitle Ability : [Escadron] : chaque escadron non unique que vous activez gagne Nuée jusqu'à la fin de son activation. Chaque escadron avec Nuée que vous activez peut relancer 1 dé en attaquant un vaisseau."
+  },
+  "armada-v15:bsdata:galactic-republic:d694-7a56-b4df-b356": {
+   "fr": "Mission de secours\nFleet Command Ability : avant de déployer les flottes, retirez cette carte et choisissez 1 petit vaisseau allié qui n'est pas votre vaisseau amiral. Équipez cette carte sur le vaisseau choisi (même s'il n'a pas d'icône [Commandement de flotte] dans sa barre d'amélioration).\nÀ la fin de la partie, si vous êtes dans la zone de déploiement ennemie, augmentez votre score de 40 points ; si vous avez été détruit, augmentez le score de votre adversaire de 15 points."
+  },
+  "armada-v15:bsdata:galactic-republic:aa78-63f1-5aba-f932": {
+   "fr": "Atterrissage à chaud\nFleet Command Ability : au début de la phase d'escadron, les escadrons alliés avec Adepte gagnent Pugnacité jusqu'à la fin de la phase.\nQuand un escadron allié avec Adepte est détruit, vous pouvez choisir 1 vaisseau ennemi à distance 1-2 de cet escadron. Si vous le faites, ce vaisseau gagne 1 jeton de perturbation de votre choix."
+  },
+  "armada-v15:bsdata:separatist-alliance:aaf4-6fa8-dcdd-eb84": {
+   "fr": "Atterrissage à chaud\nFleet Command Ability : au début de la phase d'escadron, les escadrons alliés avec Adepte gagnent Pugnacité jusqu'à la fin de la phase.\nQuand un escadron allié avec Adepte est détruit, vous pouvez choisir 1 vaisseau ennemi à distance 1-2 de cet escadron. Si vous le faites, ce vaisseau gagne 1 jeton de perturbation de votre choix."
+  },
+  "armada-v15:bsdata:galactic-republic:21af-46dc-65c2-2a65": {
+   "fr": "Résolu\nTitle Ability : vous devez choisir au moins 2 types de jetons de commandement pour cette carte.\nAprès avoir résolu un ordre en dépensant un cadran, vous pouvez défausser 1 jeton de commandement correspondant de cette carte pour gagner ce jeton.\nMise en place : 4 jetons [Réparation], [Escadron] ou [Tir concentré]"
+  },
+  "armada-v15:bsdata:galactic-republic:e353-6de6-95f5-7415": {
+   "fr": "Tranquillité\nTitle Ability : en défense, après l'étape de dépense des pions de défense, si vous avez dépensé moins de 2 pions de défense, vous pouvez déplacer jusqu'à 2 boucliers de 1 de vos sections de coque vers la section de coque défendue. Si vous le faites, le nombre de boucliers de cette section ne peut pas dépasser un maximum de « 6 ». Vous ne pouvez pas restaurer de boucliers tant qu'une section dépasse sa valeur maximale de boucliers."
+  },
+  "armada-v15:bsdata:galactic-republic:7b56-b9ca-133a-8daf": {
+   "fr": "Triomphant\nTitle Ability : tant qu'un autre vaisseau allié non-flottille résout un ordre [Escadron], jusqu'à 3 escadrons sans Adepte qu'il active peuvent être à courte portée de vous (même si les escadrons sont au-delà de la portée courte-moyenne de ce vaisseau).\nCet effet n'est pas actif pendant le premier round."
+  },
+  "armada-v15:bsdata:galactic-republic:1172-68da-40d1-876b": {
+   "fr": "FB-88\nTitle Ability : avant de révéler un ordre, vous pouvez défausser votre cadran de commandement du dessus."
+  },
+  "armada-v15:bsdata:galactic-republic:c99d-ed39-182a-742d": {
+   "fr": "TB-73\nTitle Ability : après votre déploiement, gagnez 1 pion de défense [Évasion] supplémentaire."
+  },
+  "armada-v15:bsdata:separatist-alliance:9792-ef9e-f9f1-8bfc": {
+   "fr": "Amplification du signal hyperespace\nOffensive Retrofit Ability : pendant la phase d'escadron, quand c'est le tour de votre flotte d'activer des escadrons, vous pouvez épuiser cette carte pour choisir un nombre d'escadrons alliés non activés, à courte-longue portée, jusqu'à votre valeur d'escadron. Ce tour, activez chacun de ces escadrons. En attaquant, chacun de ces escadrons ayant [IA] est traité comme s'il avait été activé par un ordre [Escadron].\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation] ou [Escadron]"
+  },
+  "armada-v15:bsdata:separatist-alliance:44e0-bc87-df8b-de39": {
+   "fr": "Troopers lance-roquettes B2\nOffensive Retrofit Ability : en réalisant une attaque non [Salve] contre un vaisseau à courte-moyenne portée, vous pouvez épuiser cette carte. Si vous le faites, le défenseur gagne 1 jeton de perturbation de votre choix.\nEn attaquant un escadron, vous pouvez épuiser cette carte. Si vous le faites, ajoutez 1 dé d'une couleur déjà présente dans votre réserve d'attaque à votre réserve d'attaque.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:separatist-alliance:9f12-6037-edb1-6ddf": {
+   "fr": "Hondo Ohnaka\nOfficer Ability : au début de la phase de vaisseau, vous pouvez défausser cette carte pour choisir 2 jetons de commandement différents et les placer sur 2 vaisseaux différents. Puis votre adversaire choisit 2 jetons de commandement différents que vous n'avez pas choisis et les place sur 2 vaisseaux différents.\nMise en place : 2 jetons [Tout commandement]"
+  },
+  "armada-v15:bsdata:separatist-alliance:404d-cfd8-b3a4-aa6e": {
+   "fr": "Droïde tactique série T\nOfficer Ability : quand vous dépensez uniquement un jeton de commandement [Réparation], [Navigation] ou [Escadron] pour résoudre un ordre, vous pouvez épuiser cette carte. Si vous le faites, résolvez cet ordre comme si vous aviez dépensé un cadran du même type à la place.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Tout commandement]"
+  },
+  "armada-v15:bsdata:separatist-alliance:b82c-ff3b-38dd-090e": {
+   "fr": "Shu Mai\nOfficer Ability : après le déploiement des flottes, vous pouvez placer 2 jetons de round non consécutifs sur cette carte.\nPendant chaque round correspondant à 1 de ces jetons, en attaquant un vaisseau, vous pouvez relancer jusqu'à 3 dés."
+  },
+  "armada-v15:bsdata:separatist-alliance:ccb1-a8f5-45f2-ece7": {
+   "fr": "Rune Haako\nOfficer Ability : quand vous révélez un ordre, vous pouvez choisir un autre vaisseau allié à distance 1-5. Si vous le faites, défaussez un nombre quelconque de jetons de commandement de ce vaisseau, de cette carte, ou des deux, pour gagner 1 jeton de commandement correspondant par jeton défaussé.\nMise en place : 2 jetons [Tout commandement]"
+  },
+  "armada-v15:bsdata:separatist-alliance:f947-2100-a63c-6331": {
+   "fr": "Wat Tambor\nOfficer Ability : [Réparation] : vous pouvez dépenser jusqu'à 2 boucliers de n'importe laquelle de vos sections de coque, ou 1 section de coque d'un autre vaisseau allié à distance 1-5, pour gagner le double de ce nombre de points d'ingénierie supplémentaires."
+  },
+  "armada-v15:bsdata:separatist-alliance:cf90-a22f-f712-e5c7": {
+   "fr": "TI-99\nOfficer Ability : tant qu'un escadron allié non activé est à distance 1-3, il gagne Contre 3 ou, s'il a le mot-clé Contre imprimé, gagne Contre 1 supplémentaire. Après qu'il a réalisé une attaque Contre, basculez son curseur d'activation côté activé."
+  },
+  "armada-v15:bsdata:separatist-alliance:4c4a-1af8-12f0-0c0d": {
+   "fr": "Tikkes\nOfficer Ability : quand vous révélez un ordre, vous pouvez placer un jeton de commandement correspondant sur cette carte. Si vous le faites, gagnez un jeton de commandement de votre choix.\nPendant la phase de commandement, si cette carte porte un jeton de commandement, vous devez choisir cet ordre sur chaque cadran de commandement qui doit vous être assigné et montrer ces cadrans à votre adversaire. Puis défaussez ce jeton de commandement."
+  },
+  "armada-v15:bsdata:separatist-alliance:8e12-b3ad-d005-d4c3": {
+   "fr": "Passel Argente\nOfficer Ability : quand vous révélez un ordre, vous pouvez placer un jeton de commandement correspondant sur cette carte. Puis, si cette carte porte au moins 1 jeton [Navigation], 1 jeton [Escadron], 1 jeton [Tir concentré] et 1 jeton [Réparation], vous pouvez gagner 1 cadran de commandement supplémentaire de votre choix."
+  },
+  "armada-v15:bsdata:separatist-alliance:6b9c-ebdc-e98b-7e16": {
+   "fr": "San Hill\nOfficer Ability : quand un vaisseau allié à distance 1-5 résout un ordre [Escadron], vous pouvez défausser 1 jeton [Escadron] de cette carte. Si vous le faites, ce vaisseau allié peut activer 1 escadron supplémentaire pendant cet ordre.\nMise en place : 2 jetons [Escadron]"
+  },
+  "armada-v15:bsdata:separatist-alliance:5cb6-6f4d-f394-17c4": {
+   "fr": "Asajj Ventress\nOfficer Ability : pendant l'activation d'un vaisseau allié à distance 1-5 de vous, vous pouvez épuiser cette carte pour défausser 1 jeton de perturbation d'un vaisseau ennemi à distance 1-5 de vous. Si vous le faites, ce vaisseau allié peut gagner 1 jeton de commandement de son choix."
+  },
+  "armada-v15:bsdata:separatist-alliance:589c-ef14-06ce-0bce": {
+   "fr": "Réserves de droïdes de combat\nSupport Team Ability : uniquement droïde.\n[Réparation] : vous pouvez épuiser cette carte. Si vous le faites :\nRetournez face cachée toutes les cartes de dégâts face visible avec le trait ÉQUIPAGE que vous voulez.\nDéfausser des cartes de dégâts face cachée coûte 1 point d'ingénierie de moins.\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation]"
+  },
+  "armada-v15:bsdata:separatist-alliance:58e9-84d4-02b1-e045": {
+   "fr": "Bête de somme\nTitle Ability : quand vous vous activez, vous pouvez épuiser cette carte et dépenser 1 pion de défense ou plus pour choisir jusqu'à autant de pions de défense sur des vaisseaux alliés à distance 1-3 et les restaurer.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:separatist-alliance:26fa-2d03-21a8-c291": {
+   "fr": "Travail de contremaître\nTitle Ability : avant de subir des dégâts d'une attaque, si la section de coque défendue a au moins 1 bouclier restant, vous pouvez épuiser cette carte pour réduire le total des dégâts de 1.\nRépétition : répétition"
+  },
+  "armada-v15:bsdata:separatist-alliance:334e-1b3f-5d79-18aa": {
+   "fr": "Sa Nalaor\nTitle Ability : en défense, si vous êtes à vitesse 2 ou plus, vous pouvez dépenser un pion de défense pour résoudre l'effet de défense [Évasion] au lieu de l'effet de ce pion. Vous ne pouvez pas résoudre l'effet de défense [Évasion] plus d'une fois par attaque."
+  },
+  "armada-v15:bsdata:separatist-alliance:da78-246c-0d1c-95a2": {
+   "fr": "Marée du progrès XII\nTitle Ability : avant qu'une carte de dégâts face visible avec le trait Vaisseau ne vous soit attribuée, vous pouvez épuiser cette carte pour défausser cette carte de dégâts (sans résoudre son effet).\nRépétition : non-répétition\nCoût de restauration : 1 jeton [Réparation]"
+  },
+  "armada-v15:bsdata:separatist-alliance:513a-adef-a6ba-24d6": {
+   "fr": "Otage jedi\nFleet Command Ability : quand un vaisseau ennemi vous désigne comme cible d'une attaque non [Salve], si cette carte est restaurée, l'attaquant gagne 1 jeton de perturbation de son choix, si possible.\nQuand un vaisseau ennemi à courte portée révèle un ordre, il peut défausser un cadran [Escadron] pour épuiser cette carte.\nEn défense, si cette carte est épuisée, vous ne pouvez pas dépenser plus d'1 pion de défense.\nRépétition : non-répétition"
+  },
+  "armada-v15:bsdata:separatist-alliance:7501-1e27-8d82-0760": {
+   "fr": "Égide dorée\nTitle Ability : à la fin de la phase de commandement ou de la phase de vaisseau, vous pouvez défausser un pion de défense [Redirection] pour déplacer des boucliers vers 1 de vos sections de coque. Si vous le faites, le nombre de boucliers de cette section ne peut pas dépasser un maximum de « 6 ». Vous ne pouvez pas restaurer de boucliers dans cette section tant qu'elle dépasse sa valeur maximale de boucliers."
+  },
+  "armada-v15:bsdata:separatist-alliance:da49-8d6f-866e-397a": {
+   "fr": "Nova Defiant\nTitle Ability : quand vous êtes déployé, vous devez choisir 1 de chaque type de jeton de commandement pour cette carte.\nVotre valeur de commandement est augmentée à 4.\nVous pouvez recevoir plus d'1 jeton de chaque type de commandement.\nQuand vous révélez un ordre, vous pouvez défausser tous les jetons de cette carte pour les gagner.\nMise en place : 1 jeton de chaque type de commandement"
+  },
+  "armada-v15:bsdata:separatist-alliance:0647-8947-2987-a205": {
+   "fr": "Poing patriote\nTitle Ability : en attaquant un vaisseau à courte-longue portée, si c'est votre première attaque pendant votre activation, vous pouvez ajouter 2 dés bleus à votre réserve d'attaque. Si vous le faites, vous ne pouvez pas attaquer à nouveau pendant cette activation."
+  },
+  "armada-v15:bsdata:separatist-alliance:4d3d-26be-2163-06a2": {
+   "fr": "Invincible\nTitle Ability : vous gagnez 1 icône [Remise en état défensive] supplémentaire dans votre barre d'amélioration."
+  },
+  "armada-v15:bsdata:separatist-alliance:9d22-f3eb-9ea9-79e0": {
+   "fr": "Main invisible\nTitle Ability : pendant le déploiement des flottes, si vous êtes dans la zone de jeu, quand vous devriez déployer un escadron avec Nuée, vous pouvez à la place mettre cet escadron de côté à côté de la carte de votre vaisseau. Vous pouvez mettre de côté jusqu'à 5 escadrons de cette façon.\n[Escadron] : choisissez n'importe quel nombre d'escadrons mis de côté avec cette carte. Puis placez-les à distance 1-3 de vous. Pendant votre activation, ces escadrons ne peuvent pas se déplacer et, s'ils ont une IA, peuvent augmenter leur valeur d'IA de 1."
+  },
+  "armada-v15:bsdata:separatist-alliance:18d8-c65f-cd4a-0423": {
+   "fr": "Voix lucide\nTitle Ability : considérez l'armement en batterie imprimé de votre section de coque arrière comme 3 dés rouges.\nL'armement en batterie de vos sections de coque gauche et droite est augmenté de 1 dé noir et diminué de 1 dé bleu."
+  }
+ }
+}
