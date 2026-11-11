@@ -960,10 +960,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onOppActivate = if (twoPlayer) null else { id -> soloOppStates = soloOppStates + (id to (soloOppStates[id] ?: SyncedUnitState(id)).copy(activated = true, orderReceived = false)) },
                             onWound = { id, delta ->
                                 if (id in ownStates) {
-                                    playSyncVm.updateOwnState(id) { st -> st.copy(wounds = ((st.wounds ?: 0) + delta).coerceAtLeast(0)) }
+                                    val maxWounds = playable.firstOrNull { it.instanceId == id }?.let { woundCapacity(it) } ?: Int.MAX_VALUE
+                                    playSyncVm.updateOwnState(id) { st ->
+                                        val w = ((st.wounds ?: maxWounds) + delta).coerceIn(0, maxWounds)
+                                        // Défaite automatique à 0 PV ; retrait des ordres de l'unité vaincue.
+                                        st.copy(wounds = w, defeated = w <= 0, orderReceived = if (w <= 0) false else st.orderReceived)
+                                    }
                                     playable.firstOrNull { it.instanceId == id }?.let { u -> logEvent("${u.card.name} : ${((ownStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0)} blessures") }
                                 } else if (!twoPlayer) {
-                                    soloOppStates = soloOppStates + (id to ((soloOppStates[id] ?: SyncedUnitState(id)).copy(wounds = ((soloOppStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0))))
+                                    val maxW = oppPlayable.firstOrNull { it.instanceId == id }?.let { woundCapacity(it) } ?: Int.MAX_VALUE
+                                    val cur = soloOppStates[id] ?: SyncedUnitState(id)
+                                    val w = ((cur.wounds ?: maxW) + delta).coerceIn(0, maxW)
+                                    soloOppStates = soloOppStates + (id to cur.copy(wounds = w, defeated = w <= 0, orderReceived = if (w <= 0) false else cur.orderReceived))
                                     oppPlayable.firstOrNull { it.instanceId == id }?.let { u -> logEvent("${u.card.name} (adv) : ${((soloOppStates[id]?.wounds ?: 0) + delta).coerceAtLeast(0)} blessures") }
                                 }
                             },
@@ -2059,6 +2067,12 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
 // ── MISSION DASHBOARD (style officiel AMG) : repliable, à déployer pour visualiser la mission ──
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
+/** Capacité de blessures d'une unité Legion : santé × figurines (pool de PV). */
+internal fun woundCapacity(unit: ListEntry): Int {
+    val st = LegionStatsParser.parse(unit.card.legionStats)
+    return (st?.health?.takeIf { it > 0 } ?: 1) * (st?.miniCount?.takeIf { it > 0 } ?: 1)
+}
+
 internal fun MissionDashboard(
     online: Boolean = true, reconnecting: Boolean = false,
     round: Int,
