@@ -813,7 +813,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // Bouton discret pour revenir au setup (seule sortie du plein écran de jeu).
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Surface(onClick = { phase = PlayPhase.PREP }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330)) {
-                            Text("✕ Retour setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text("← Setup", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                         }
                     }
                     if (isLegion) {
@@ -1511,7 +1511,7 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
     Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(unit.card.displayName(), color = if (defeated) Color(0xFF5A6A7A) else Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).alpha(if (defeated) 0.6f else 1f))
+                Text(unit.card.displayName(), color = if (defeated) Color(0xFF5A6A7A) else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).alpha(if (defeated) 0.6f else 1f))
                 Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(start = 6.dp))
                 Spacer(Modifier.width(8.dp))
                 // Silhouette du vaisseau : on n'affiche que le coin BAS-GAUCHE de la carte (où se trouve la petite
@@ -2059,8 +2059,8 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
             }
         }
         // Texte SOUS le cadre.
-        Text(title, color = color, fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.padding(top = 2.dp))
-        Text(name, color = Color(0xFFE2E8F0), fontSize = 7.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        Text(title, color = color, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.padding(top = 2.dp))
+        Text(name, color = Color(0xFFE2E8F0), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
 }
 
@@ -2145,8 +2145,8 @@ internal fun MissionDashboard(
                 DashSlot("CMD", cmdOpp?.name ?: "?", Color(0xFF6B7280), Modifier.weight(1f), imagePath = cmdOpp?.imagePath(), onClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = cmdOpp?.let { { onZoomMission(it.name, it.imagePath()) } })
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("AV MOI : ${advOwn ?: "—"}", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text("ADV : ${advOpp ?: "—"}", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             run {
                 // ── Piste de victoire 1-12 (suivi visuel; les scores sont éditables dans la barre au-dessus) ──
@@ -2160,7 +2160,7 @@ internal fun MissionDashboard(
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Text("■ MOI   ■ ADV   ■ les 2", color = Color(0xFF7A828A), fontSize = 8.sp)
+                    Text("■ MOI   ■ ADV   ■ les 2", color = Color(0xFF7A828A), fontSize = 10.sp)
                 }
             }
         }
