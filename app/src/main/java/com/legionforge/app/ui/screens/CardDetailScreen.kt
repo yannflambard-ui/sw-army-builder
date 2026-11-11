@@ -3335,6 +3335,15 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         }
                     }
                 }
+                // Activation : action clé de la manche, bouton direct (pas de section repliée).
+                run {
+                    val isOn = state.activated == true
+                    Surface(onClick = { set(state.copy(activated = !isOn)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
+                        color = if (isOn) Color(0xFF77D9A7) else Color(0xFF2A3A4A)) {
+                        Text(if (isOn) "✓ Activé ce round" else "Activer ce vaisseau", Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            color = if (isOn) Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
                 // ── command dial (roue de commandement) (en haut, repliable) ──
                 CollapsibleSection(stringResource(R.string.command_wheel), initiallyExpanded = true) {
                     // Panneau FUSIONNÉ : pile FIFO avec vraies icônes + cadran actif (halo), sans doublon.
@@ -3366,15 +3375,6 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         wikiSections = wikiSections,
                         onRuleClick = onRuleClick
                     )
-                }
-                // Activation : action clé de la manche, bouton direct (pas de section repliée).
-                run {
-                    val isOn = state.activated == true
-                    Surface(onClick = { set(state.copy(activated = !isOn)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
-                        color = if (isOn) Color(0xFF77D9A7) else Color(0xFF2A3A4A)) {
-                        Text(if (isOn) "✓ Activé ce round" else "Activer ce vaisseau", Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                            color = if (isOn) Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
                 }
                 // ── defense tokens (repliable) ──
                 CollapsibleSection(stringResource(R.string.defense_tokens), initiallyExpanded = true) {
