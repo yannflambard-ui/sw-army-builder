@@ -46,6 +46,8 @@ object Routes {
 @Composable
 fun LegionForgeNavHost(navController: NavHostController = rememberNavController()) {
     val vm: ArmyBuilderViewModel = viewModel()
+    val appContext = androidx.compose.ui.platform.LocalContext.current
+    val shipSizes = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadShipSizes(appContext) }
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             androidx.compose.runtime.LaunchedEffect(Unit) { vm.loadAllCatalog(GameSystem.LEGION_V2) }
@@ -123,7 +125,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             val lid = entry.arguments?.getString("listId") ?: return@composable
             androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
             val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" }
-            val sizes = remember { com.legionforge.app.ui.screens.loadShipSizes(context = androidx.compose.ui.platform.LocalContext.current) }
+            val sizes = shipSizes
             val pawns = ships.mapIndexed { i, e ->
                 com.legionforge.app.ui.screens.TabletopPawn(
                     id = e.instanceId,
