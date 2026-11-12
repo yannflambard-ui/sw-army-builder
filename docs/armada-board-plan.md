@@ -37,3 +37,8 @@ Le PDF de référence v1.x donne des valeurs anciennes (41x71, 61x102, 76x192) :
 2. Gabarit de manœuvre : choix de vitesse et de cadran (table du catalogue), trajet affiché, validation. Sans blocage.
 3. Arcs de tir et distance affichés entre deux vaisseaux, avec ligne de vue. Décision laissée au joueur.
 4. Sync des positions entre deux tablettes, avec journal (même rigueur que le mode Play).
+
+## Références externes
+- SWArmada (thetrufflegouda/SWArmada, Unity 3D, fan project non commercial, v0.2.7).
+  Inspiration seulement : bandes de portée (courte, moyenne, longue), outil de manœuvre avec planification du trajet, dossiers unitaires. Aucun code, modèle 3D, texture ni donnée repris : pas de licence open source affichée, et les données de flottes viennent de Star Forge.
+  Choix retenu pour nous : plateau 2D, gabarit officiel au doigt, bandes de portée calculées depuis les zones de coque.
