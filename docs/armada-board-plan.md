@@ -66,3 +66,9 @@ Le PDF de référence v1.x donne des valeurs anciennes (41x71, 61x102, 76x192) :
 ## Recoupement (archive fan KDYards)
 - archive.kdyards.com : cartes fan-made, non officielles. Fiche Acclamator Imperial Refit II : taille « Medium » (cohérent avec la table).
 - Ne sert ni aux dimensions de socle ni aux arcs. Pas repris dans le catalogue.
+
+## Décisions sur les 10 cas restants (validées par l'utilisateur)
+- Flottilles (Gozanti Assault Carriers / Cruisers / Cruiser, GR-75 Combat Retrofits / Medium Transports) : classe « flotilla », pas de taille de socle tranchée.
+- Prototypes Star Dreadnought (Command, Assault) : immense (huge), comme Executor.
+- Victory I (variante, republic) : grand. Consular c70 : petit. Hardcell Battle Refit : petit.
+- Résultat : 22 petits, 12 moyens, 23 grands, 4 immenses, 5 flottilles, 0 à confirmer.

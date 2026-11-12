@@ -340,62 +340,62 @@
   "armada-v15:bsdata:galactic-empire:65bf-eb5e-ea2e-01d3": {
    "name": "Gozanti-class Assault Carriers",
    "faction": "galactic-empire",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "flotilla",
+   "source": "décision : flottille : taille du socle non classée"
   },
   "armada-v15:bsdata:galactic-empire:eada-a46e-fab0-f89a": {
    "name": "Gozanti-class Cruisers",
    "faction": "galactic-empire",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "flotilla",
+   "source": "décision : flottille : taille du socle non classée"
   },
   "armada-v15:bsdata:galactic-empire:ba29-a098-a1c8-f249": {
    "name": "Star Dreadought Command Prototype",
    "faction": "galactic-empire",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "huge",
+   "source": "décision : prototype immense, comme Executor"
   },
   "armada-v15:bsdata:galactic-empire:77ea-bae8-6c6a-c8d5": {
    "name": "Star Dreadought Assault Prototype",
    "faction": "galactic-empire",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "huge",
+   "source": "décision : prototype immense, comme Executor"
   },
   "armada-v15:bsdata:rebel-alliance:6348-a2d3-d605-5c68": {
    "name": "GR-75 Combat Retrofits",
    "faction": "rebel-alliance",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "flotilla",
+   "source": "décision : flottille : taille du socle non classée"
   },
   "armada-v15:bsdata:rebel-alliance:7928-9325-451b-6e2a": {
    "name": "GR-75 Medium Transports",
    "faction": "rebel-alliance",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "flotilla",
+   "source": "décision : flottille : taille du socle non classée"
   },
   "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c": {
    "name": "Consular-class Charger c70",
    "faction": "galactic-republic",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "small",
+   "source": "décision : variante de Consular (petit)"
   },
   "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
    "name": "Victory I-Class Star Destroyer",
    "faction": "galactic-republic",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "large",
+   "source": "décision : variante de Victory I (grand)"
   },
   "armada-v15:bsdata:separatist-alliance:4eaa-a922-354c-6fdc": {
    "name": "Hardcell-class Battle Refit",
    "faction": "separatist-alliance",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "small",
+   "source": "décision : variante de Hardcell Transport (petit)"
   },
   "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0": {
    "name": "Gozanti-class Cruiser",
    "faction": "separatist-alliance",
-   "size": "a_confirmer",
-   "source": "non listé par le wiki"
+   "size": "flotilla",
+   "source": "décision : flottille : taille du socle non classée"
   }
  }
 }
