@@ -62,3 +62,7 @@ Le PDF de référence v1.x donne des valeurs anciennes (41x71, 61x102, 76x192) :
 - Résultat : 20 petits, 12 moyens, 22 grands, 2 immenses classés (Executor I/II), 10 à confirmer.
 - Recoupement : 12 vaisseaux comparés au tableau utilisateur, zéro écart.
 - Les 10 à confirmer : flottilles (Gozanti, GR-75), prototypes Star Dreadnought, variantes de nommage (Victory I, Consular c70, Hardcell Battle Refit, Gozanti Cruiser(s)). À trancher, pas à deviner.
+
+## Recoupement (archive fan KDYards)
+- archive.kdyards.com : cartes fan-made, non officielles. Fiche Acclamator Imperial Refit II : taille « Medium » (cohérent avec la table).
+- Ne sert ni aux dimensions de socle ni aux arcs. Pas repris dans le catalogue.
