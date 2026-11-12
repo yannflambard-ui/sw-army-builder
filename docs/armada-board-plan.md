@@ -48,3 +48,10 @@ Le PDF de référence v1.x donne des valeurs anciennes (41x71, 61x102, 76x192) :
 - Dessinées à l'échelle des socles (mm), proue vers le haut, quatre zones de coque (avant, bâbord, tribord, poupe), point jaune de mire.
 - Forme générique : une silhouette par classe, pas une par vaisseau. Les 66 vaisseaux utiliseront la classe de leur socle.
 - Contrôle visuel : 4 zones distinctes, lignes partant du centre vers les coins. Pas encore validé par l'utilisateur.
+
+## Socles et gabarits d'arc (mise à jour)
+- Socles aux dimensions RRG 1.5.0 (small 43x71, medium 63x102, large 77,5x129, huge 77,5x365 mm).
+- Quatre lignes d'arc partant du centre de la coque jusqu'au bord du socle (géométrie vérifiée : extrémités sur le contour).
+- Angles : arcs latéraux 120°, arcs avant et arrière 60° (source : mesures de gabarit, forum Reddit ; à confirmer sur la RRG).
+- Pas d'image officielle reprise : le socle et les arcs sont dessinés, pas copiés.
+- Point jaune de mire placé dans la moitié avant.
