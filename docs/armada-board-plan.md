@@ -42,3 +42,9 @@ Le PDF de référence v1.x donne des valeurs anciennes (41x71, 61x102, 76x192) :
 - SWArmada (thetrufflegouda/SWArmada, Unity 3D, fan project non commercial, v0.2.7).
   Inspiration seulement : bandes de portée (courte, moyenne, longue), outil de manœuvre avec planification du trajet, dossiers unitaires. Aucun code, modèle 3D, texture ni donnée repris : pas de licence open source affichée, et les données de flottes viennent de Star Forge.
   Choix retenu pour nous : plateau 2D, gabarit officiel au doigt, bandes de portée calculées depuis les zones de coque.
+
+## Silhouettes de base (vectoriel, à valider)
+- Fichiers : docs/armada-silhouettes/{small,medium,large,huge}.svg
+- Dessinées à l'échelle des socles (mm), proue vers le haut, quatre zones de coque (avant, bâbord, tribord, poupe), point jaune de mire.
+- Forme générique : une silhouette par classe, pas une par vaisseau. Les 66 vaisseaux utiliseront la classe de leur socle.
+- Contrôle visuel : 4 zones distinctes, lignes partant du centre vers les coins. Pas encore validé par l'utilisateur.
