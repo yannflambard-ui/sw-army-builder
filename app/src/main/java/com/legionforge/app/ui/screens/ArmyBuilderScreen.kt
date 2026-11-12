@@ -145,7 +145,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                                     Text("\u25B6", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                                 // Mode Tabletop (Armada uniquement, étape 1)
-                                if (game == GameSystem.ARMADA) {
+                                if (game == GameSystem.ARMADA_V15) {
                                     Button(
                                         onClick = onTabletop,
                                         shape = RoundedCornerShape(10.dp),
