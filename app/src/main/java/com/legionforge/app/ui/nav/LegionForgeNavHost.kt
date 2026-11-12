@@ -35,10 +35,12 @@ object Routes {
     const val WIKI = "wiki"
     const val CARD_DETAIL = "card_detail/{listId}/{entryInstanceId}"
         const val SHARE = "share/{listId}"
+    const val TABLETOP = "tabletop/{listId}"
         fun factionPicker(system: GameSystem) = "faction_picker/${system.name}"
         fun armyBuilder(listId: String) = "army_builder/$listId"
         fun cardDetail(listId: String, entryInstanceId: String) = "card_detail/$listId/$entryInstanceId"
         fun share(listId: String) = "share/$listId"
+        fun tabletop(listId: String) = "tabletop/$listId"
     }
 
 @Composable
@@ -94,6 +96,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                             if (firstPlayable != null) navController.navigate(Routes.cardDetail(listId, firstPlayable.instanceId))
                         }, onShare = {
                             navController.navigate(Routes.share(id))
+                        }, onTabletop = {
+                            navController.navigate(Routes.tabletop(id))
                         })
         }
         composable(Routes.SETTINGS) {
@@ -115,6 +119,22 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     val idx = allEntries.indexOfFirst { it.instanceId == eid }.coerceAtLeast(0)
                     CardDetailScreen(entries = allEntries, initialIndex = idx, listId = lid, onBack = { navController.popBackStack() })
                 }
+        composable(Routes.TABLETOP, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
+            val lid = entry.arguments?.getString("listId") ?: return@composable
+            androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
+            val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" }
+            val sizes = remember { com.legionforge.app.ui.screens.loadShipSizes(context = androidx.compose.ui.platform.LocalContext.current) }
+            val pawns = ships.mapIndexed { i, e ->
+                com.legionforge.app.ui.screens.TabletopPawn(
+                    id = e.instanceId,
+                    name = e.card.name,
+                    sizeClass = sizes[e.card.id] ?: "small",
+                    xMm = (i - ships.size / 2f) * 120f,
+                    yMm = 0f,
+                )
+            }
+            com.legionforge.app.ui.screens.TabletopScreen(pawns = pawns, onBack = { navController.popBackStack() })
+        }
         composable(Routes.SHARE, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
             val list = vm.currentList.value
