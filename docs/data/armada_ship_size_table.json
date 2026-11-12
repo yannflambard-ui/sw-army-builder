@@ -1,0 +1,401 @@
+{
+ "schemaVersion": 1,
+ "ships": {
+  "armada-v15:bsdata:galactic-empire:4f81-dab4-61b9-7141": {
+   "name": "Arquitens-class Command Cruiser",
+   "faction": "galactic-empire",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:2abf-4046-f18b-8acb": {
+   "name": "Arquitens-class Light Cruiser",
+   "faction": "galactic-empire",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:84f9-c194-d8cd-e718": {
+   "name": "CR90 Corvette A",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:9638-6bed-5646-56f4": {
+   "name": "CR90 Corvette B",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:4eaa-a922-354c-6fdc": {
+   "name": "Consular-class Armed Cruiser",
+   "faction": "galactic-republic",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:0349-305d-cbef-de54": {
+   "name": "Gladiator I-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:1db3-a85b-33fb-5273": {
+   "name": "Gladiator II-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:d83c-3f0a-9c20-695e": {
+   "name": "Hammerhead Scout Corvette",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:0927-179a-0d66-692b": {
+   "name": "Hammerhead Torpedo Corvette",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:8795-e911-4096-002c": {
+   "name": "Hardcell-class Transport",
+   "faction": "separatist-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:34d6-c129-c2b5-56bc": {
+   "name": "MC30c Scout Frigate",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:3879-0549-5a62-391d": {
+   "name": "MC30c Torpedo Frigate",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:6dbe-e35a-0c22-f436": {
+   "name": "Modified Pelta-class Assault Ship",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:dbb1-f7bc-b05c-fad6": {
+   "name": "Modified Pelta-class Command Ship",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:665d-d5d3-7e6d-7a9d": {
+   "name": "Nebulon-B Escort Frigate",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:666c-5bdb-92b3-13bf": {
+   "name": "Nebulon-B Support Refit",
+   "faction": "rebel-alliance",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:6143-f5f7-e034-e96e": {
+   "name": "Pelta-class Medical Frigate",
+   "faction": "galactic-republic",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:e1f0-8662-e79d-5ef1": {
+   "name": "Pelta-class Transport Frigate",
+   "faction": "galactic-republic",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:e58d-8015-91be-811a": {
+   "name": "Raider I-class Corvette",
+   "faction": "galactic-empire",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:7af3-f48f-d830-fa46": {
+   "name": "Raider II-class Corvette",
+   "faction": "galactic-empire",
+   "size": "small",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea": {
+   "name": "Acclamator I-class Assault Ship",
+   "faction": "galactic-republic",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:abd6-da81-1e67-43d6": {
+   "name": "Acclamator II-class Assault Ship",
+   "faction": "galactic-republic",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:37bc-3213-7cba-8aa7": {
+   "name": "Assault Frigate Mark II A",
+   "faction": "rebel-alliance",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:fd9c-4f9e-48c4-40c7": {
+   "name": "Assault Frigate Mark II B",
+   "faction": "rebel-alliance",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:d68c-9a24-9073-a3fd": {
+   "name": "Interdictor Combat Refit",
+   "faction": "galactic-empire",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:a35b-b5da-f71e-cf8a": {
+   "name": "Interdictor Suppression Refit",
+   "faction": "galactic-empire",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:1da0-310a-d8fc-25ea": {
+   "name": "Munificent-class Comms Frigate",
+   "faction": "separatist-alliance",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:abd6-da81-1e67-43d6": {
+   "name": "Munificent-class Star Frigate",
+   "faction": "separatist-alliance",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:9d20-740c-2c47-6a5b": {
+   "name": "Quasar Fire I-class Cruiser-Carrier",
+   "faction": "galactic-empire",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:002f-dd84-9b02-d929": {
+   "name": "Quasar Fire II-class Cruiser-Carrier",
+   "faction": "galactic-empire",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:1da0-310a-d8fc-25ea": {
+   "name": "Victory I-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:a976-92f2-81c1-0082": {
+   "name": "Victory II-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "medium",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:b635-0210-c1a9-608a": {
+   "name": "Imperial I-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:8fed-85c8-d87d-e4da": {
+   "name": "Imperial II-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:3f7b-d87c-c2c9-7f8c": {
+   "name": "Imperial Star Destroyer Cymoon 1 Refit",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:b06a-013c-e02e-0047": {
+   "name": "Imperial Star Destroyer Kuat Refit",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:3641-3e06-896e-17d4": {
+   "name": "MC75 Armored Cruiser",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:12b1-340f-d1aa-3abf": {
+   "name": "MC75 Ordnance Cruiser",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:5c0f-310c-1677-05a2": {
+   "name": "MC80 Assault Cruiser",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:08aa-ef7d-35e6-66a2": {
+   "name": "MC80 Battle Cruiser",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:85a3-f5e9-7349-d420": {
+   "name": "MC80 Command Cruiser",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:e084-7eab-46f3-a198": {
+   "name": "MC80 Star Cruiser",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:dadc-fa46-6875-c05b": {
+   "name": "Onager-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:4878-a8f2-25a5-a45b": {
+   "name": "Onager-class Testbed",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:6f3a-cb87-1134-a9fc": {
+   "name": "Providence-class Carrier",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:0083-8d4e-e272-2a09": {
+   "name": "Providence-class Carrier",
+   "faction": "separatist-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:7953-a4ce-f74b-c466": {
+   "name": "Providence-class Dreadnought",
+   "faction": "separatist-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:41e4-a9fd-cdc6-61d0": {
+   "name": "Recusant-class Light Destroyer",
+   "faction": "separatist-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:separatist-alliance:a1f5-bad7-507a-627c": {
+   "name": "Recusant-class Support Destroyer",
+   "faction": "separatist-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:177a-9aa2-3a99-90e5": {
+   "name": "Starhawk-class Battleship Mark I",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:rebel-alliance:6e26-58cd-afa7-da7b": {
+   "name": "Starhawk-class Battleship Mark II",
+   "faction": "rebel-alliance",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:be24-c216-6f4f-6299": {
+   "name": "Venator I-class Star Destroyer",
+   "faction": "galactic-republic",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:8f42-1fd2-503b-7953": {
+   "name": "Venator II-class Star Destroyer",
+   "faction": "galactic-empire",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-republic:3240-fd8a-04a3-ce98": {
+   "name": "Venator II-class Star Destroyer",
+   "faction": "galactic-republic",
+   "size": "large",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:c3ad-9639-a958-5ccd": {
+   "name": "Executor I-class Star Dreadnought",
+   "faction": "galactic-empire",
+   "size": "huge",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:6031-ede4-8ab9-d30f": {
+   "name": "Executor II-class Star Dreadnought",
+   "faction": "galactic-empire",
+   "size": "huge",
+   "source": "wiki Category"
+  },
+  "armada-v15:bsdata:galactic-empire:65bf-eb5e-ea2e-01d3": {
+   "name": "Gozanti-class Assault Carriers",
+   "faction": "galactic-empire",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:galactic-empire:eada-a46e-fab0-f89a": {
+   "name": "Gozanti-class Cruisers",
+   "faction": "galactic-empire",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:galactic-empire:ba29-a098-a1c8-f249": {
+   "name": "Star Dreadought Command Prototype",
+   "faction": "galactic-empire",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:galactic-empire:77ea-bae8-6c6a-c8d5": {
+   "name": "Star Dreadought Assault Prototype",
+   "faction": "galactic-empire",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:rebel-alliance:6348-a2d3-d605-5c68": {
+   "name": "GR-75 Combat Retrofits",
+   "faction": "rebel-alliance",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:rebel-alliance:7928-9325-451b-6e2a": {
+   "name": "GR-75 Medium Transports",
+   "faction": "rebel-alliance",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c": {
+   "name": "Consular-class Charger c70",
+   "faction": "galactic-republic",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
+   "name": "Victory I-Class Star Destroyer",
+   "faction": "galactic-republic",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:separatist-alliance:4eaa-a922-354c-6fdc": {
+   "name": "Hardcell-class Battle Refit",
+   "faction": "separatist-alliance",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  },
+  "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0": {
+   "name": "Gozanti-class Cruiser",
+   "faction": "separatist-alliance",
+   "size": "a_confirmer",
+   "source": "non listé par le wiki"
+  }
+ }
+}

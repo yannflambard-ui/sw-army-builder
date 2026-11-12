@@ -55,3 +55,10 @@ Le PDF de référence v1.x donne des valeurs anciennes (41x71, 61x102, 76x192) :
 - Angles : arcs latéraux 120°, arcs avant et arrière 60° (source : mesures de gabarit, forum Reddit ; à confirmer sur la RRG).
 - Pas d'image officielle reprise : le socle et les arcs sont dessinés, pas copiés.
 - Point jaune de mire placé dans la moitié avant.
+
+## Table des classes de socle (validée)
+- Fichier : docs/data/armada_ship_size_table.json (66 vaisseaux du catalogue).
+- Source : pages wiki Category:Small/Medium/Large/Huge_Sized_Ship (RRG 1.5.0).
+- Résultat : 20 petits, 12 moyens, 22 grands, 2 immenses classés (Executor I/II), 10 à confirmer.
+- Recoupement : 12 vaisseaux comparés au tableau utilisateur, zéro écart.
+- Les 10 à confirmer : flottilles (Gozanti, GR-75), prototypes Star Dreadnought, variantes de nommage (Victory I, Consular c70, Hardcell Battle Refit, Gozanti Cruiser(s)). À trancher, pas à deviner.
