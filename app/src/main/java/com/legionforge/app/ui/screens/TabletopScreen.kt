@@ -70,6 +70,7 @@ fun TabletopScreen(
     var positions by remember(pawns) { mutableStateOf(pawns) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var dragId by remember { mutableStateOf<String?>(null) }
+    var targetId by remember { mutableStateOf<String?>(null) }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
         Row(
@@ -99,7 +100,12 @@ fun TabletopScreen(
                     .pointerInput(positions, scale, pan) {
                         detectTapGestures { tap ->
                             val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
-                            selectedId = positions.firstOrNull { p -> hitPawn(p, c, scale, tap) }?.id
+                            val hit = positions.firstOrNull { p -> hitPawn(p, c, scale, tap) }
+                            when {
+                                hit == null -> { selectedId = null; targetId = null }
+                                selectedId != null && hit.id != selectedId -> targetId = hit.id
+                                else -> { selectedId = hit.id; targetId = null }
+                            }
                         }
                     }
                     .pointerInput(positions, scale, pan) {
@@ -137,7 +143,7 @@ fun TabletopScreen(
                 positions.forEach { p ->
                     val (w, h) = baseSizeMm(p.sizeClass)
                     val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                    drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId)
+                    drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId)
                 }
             }
         }
@@ -145,8 +151,7 @@ fun TabletopScreen(
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         val sel = positions.firstOrNull { it.id == selectedId }
         Text(
-            if (sel != null) "${sel.name} · ${"%.0f".format(hypot(sel.xMm, sel.yMm))} mm du centre"
-            else "Touchez un pion pour le sélectionner",
+            infoLine(positions, selectedId, targetId),
             color = Color(0xFF9EACBC), fontSize = 11.sp,
             modifier = Modifier.padding(8.dp),
         )
@@ -162,11 +167,11 @@ private fun DrawScope.drawGrid(c: Offset, scale: Float) {
     while (y < size.height) { drawLine(Color(0x22FFFFFF), Offset(0f, y), Offset(size.width, y)); y += step }
 }
 
-private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: Float, selected: Boolean) {
+private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: Float, selected: Boolean, target: Boolean = false) {
     val topLeft = Offset(center.x - w / 2, center.y - h / 2)
     drawRect(Color(0xFF1E2A3A), topLeft, androidx.compose.ui.geometry.Size(w, h))
     drawRect(
-        if (selected) Color(0xFFFFC857) else Color(0xFF4A6080),
+        if (target) Color(0xFFF87171) else if (selected) Color(0xFFFFC857) else Color(0xFF4A6080),
         topLeft, androidx.compose.ui.geometry.Size(w, h),
         style = androidx.compose.ui.graphics.drawscope.Stroke(width = if (selected) 3f else 1.5f),
     )
@@ -218,4 +223,29 @@ private fun DrawScope.drawFiringArcs(center: Offset, r: Float) {
         val end = Offset(center.x + r * kotlin.math.cos(rad).toFloat(), center.y + r * kotlin.math.sin(rad).toFloat())
         drawLine(Color(0x8838BDF8), center, end, strokeWidth = 1.5f)
     }
+}
+
+/** Secteur de la cible vu depuis l'attaquant (0 = proue). Angles non vérifiés (voir drawFiringArcs). */
+private fun sectorOf(att: TabletopPawn, tgt: TabletopPawn): String {
+    val dx = tgt.xMm - att.xMm
+    val dy = tgt.yMm - att.yMm
+    // 0 = vers le haut (proue), sens horaire positif : atan2(dx, -dy)
+    var rel = Math.toDegrees(kotlin.math.atan2(dx.toDouble(), (-dy).toDouble())).toFloat() - att.headingDeg
+    while (rel > 180f) rel -= 360f
+    while (rel < -180f) rel += 360f
+    return when {
+        kotlin.math.abs(rel) <= 30f -> "avant"
+        kotlin.math.abs(rel) >= 150f -> "arrière"
+        rel > 0f -> "tribord"
+        else -> "bâbord"
+    }
+}
+
+/** Texte d'information : distance centre à centre (pas une mesure de portée officielle). */
+private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?): String {
+    val att = pawns.firstOrNull { it.id == selId } ?: return "Touchez un pion pour le sélectionner"
+    val tgt = pawns.firstOrNull { it.id == tgtId }
+    if (tgt == null) return "${att.name} sélectionné · touchez une cible"
+    val d = hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
+    return "${att.name} → ${tgt.name} · ${"%.0f".format(d)} mm centre à centre · cible dans l'arc ${sectorOf(att, tgt)} (non vérifié)"
 }
