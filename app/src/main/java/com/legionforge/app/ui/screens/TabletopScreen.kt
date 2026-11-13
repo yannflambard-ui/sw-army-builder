@@ -54,7 +54,8 @@ data class TabletopPawn(
     val yMm: Float,
     val headingDeg: Float = 0f, // 0 = proue vers le haut
     val imagePath: String? = null, // chemin dans assets (catalogue)
-    val arcs: FiringArcs? = null,  // angles réels (tableur), null = repli non vérifié
+    val arcs: FiringArcs? = null,  // angles réels (Star Forge), null = repli non vérifié
+    val basePath: String? = null,  // socle illustré (assets), null = socle générique
 )
 
 /** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
@@ -82,9 +83,11 @@ fun TabletopScreen(
     var dragId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
+    var yawIdx by remember { mutableStateOf(0) }
+    var maxSpeed by remember { mutableStateOf(0) }
     val appCtx = androidx.compose.ui.platform.LocalContext.current
     val bitmaps = remember(pawns) {
-        pawns.mapNotNull { it.imagePath }.distinct().associateWith { loadAssetBitmap(appCtx, it) }
+        (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
     }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
@@ -128,27 +131,6 @@ fun TabletopScreen(
                             }
                         }
                     }
-                    .pointerInput(positions, scale, pan) {
-                        detectDragGestures(
-                            onDragStart = { start ->
-                                val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
-                                dragId = positions.firstOrNull { p -> hitPawn(p, c, scale, start) }?.id
-                                selectedId = dragId
-                            },
-                            onDrag = { change, delta ->
-                                val id = dragId ?: return@detectDragGestures
-                                change.consume()
-                                positions = positions.map { p ->
-                                    if (p.id == id) p.copy(
-                                        xMm = p.xMm + delta.x / (PX_PER_MM * scale),
-                                        yMm = p.yMm + delta.y / (PX_PER_MM * scale),
-                                    ) else p
-                                }
-                            },
-                            onDragEnd = { dragId = null },
-                            onDragCancel = { dragId = null },
-                        )
-                    }
             ) {
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                 // plateau : fond + grille de 100 mm
@@ -180,6 +162,7 @@ fun TabletopScreen(
                     val (w, h) = baseSizeMm(p.sizeClass)
                     val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
                     drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId)
+                    p.basePath?.let { bitmaps[it] }?.let { bmp -> drawCardImage(bmp, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale) }
                     drawCardImage(p.imagePath?.let { bitmaps[it] }, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
                 }
             }
@@ -318,6 +301,14 @@ fun loadShipImages(context: Context): Map<String, String> = try {
     val txt = context.assets.open("armada_ship_images.json").bufferedReader().use { it.readText() }
     val imgs = JSONObject(txt).getJSONObject("images")
     buildMap { imgs.keys().forEach { k -> put(k, imgs.getString(k)) } }
+} catch (_: Exception) { emptyMap() }
+
+/** Charge armada_firing_angles.json : id de carte -> angles (degrés). Vide si absent. */
+/** Charge armada_ship_bases.json : id de carte -> chemin du socle illustré (assets). */
+fun loadShipBases(context: Context): Map<String, String> = try {
+    val txt = context.assets.open("armada_ship_bases.json").bufferedReader().use { it.readText() }
+    val bases = JSONObject(txt).getJSONObject("bases")
+    buildMap { bases.keys().forEach { k -> put(k, bases.getJSONObject(k).getString("base")) } }
 } catch (_: Exception) { emptyMap() }
 
 /** Charge armada_firing_angles.json : id de carte -> angles (degrés). Vide si absent. */
