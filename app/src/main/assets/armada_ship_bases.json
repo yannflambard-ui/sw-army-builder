@@ -1,0 +1,61 @@
+{
+ "schemaVersion": 1,
+ "bases": {
+  "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea": {
+   "name": "Acclamator I-class Assault Ship",
+   "base": "armada_bases/acclamator-i-medium-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:abd6-da81-1e67-43d6": {
+   "name": "Acclamator II-class Assault Ship",
+   "base": "armada_bases/acclamator-ii-medium-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c": {
+   "name": "Consular-class Charger c70",
+   "base": "armada_bases/consular-charger-c70-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:4eaa-a922-354c-6fdc": {
+   "name": "Consular-class Armed Cruiser",
+   "base": "armada_bases/consular-republic-base.jpg"
+  },
+  "armada-v15:bsdata:rebel-alliance:7928-9325-451b-6e2a": {
+   "name": "GR-75 Medium Transports",
+   "base": "armada_bases/gr-75-base.jpg"
+  },
+  "armada-v15:bsdata:rebel-alliance:665d-d5d3-7e6d-7a9d": {
+   "name": "Nebulon-B Escort Frigate",
+   "base": "armada_bases/nebulon-b-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:e1f0-8662-e79d-5ef1": {
+   "name": "Pelta-class Transport Frigate",
+   "base": "armada_bases/pelta-frigate-base.jpg"
+  },
+  "armada-v15:bsdata:rebel-alliance:dbb1-f7bc-b05c-fad6": {
+   "name": "Modified Pelta-class Command Ship",
+   "base": "armada_bases/pelta-command-rebel-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:be24-c216-6f4f-6299": {
+   "name": "Venator I-class Star Destroyer",
+   "base": "armada_bases/venator-republic-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:3240-fd8a-04a3-ce98": {
+   "name": "Venator II-class Star Destroyer",
+   "base": "armada_bases/venator-imperial-refit-base.jpg"
+  },
+  "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
+   "name": "Victory I-Class Star Destroyer",
+   "base": "armada_bases/victory-republic-base.jpg"
+  },
+  "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0": {
+   "name": "Gozanti-class Cruiser",
+   "base": "armada_bases/gozanti-base.jpg"
+  },
+  "armada-v15:bsdata:separatist-alliance:abd6-da81-1e67-43d6": {
+   "name": "Munificent-class Star Frigate",
+   "base": "armada_bases/munificent-base1.jpg"
+  },
+  "armada-v15:bsdata:separatist-alliance:41e4-a9fd-cdc6-61d0": {
+   "name": "Recusant-class Light Destroyer",
+   "base": "armada_bases/recusant-base1.jpg"
+  }
+ }
+}
