@@ -48,6 +48,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
     val vm: ArmyBuilderViewModel = viewModel()
     val appContext = androidx.compose.ui.platform.LocalContext.current
     val shipSizes = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadShipSizes(appContext) }
+    val shipImages = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadShipImages(appContext) }
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             androidx.compose.runtime.LaunchedEffect(Unit) { vm.loadAllCatalog(GameSystem.LEGION_V2) }
@@ -131,6 +132,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     id = e.instanceId,
                     name = e.card.name,
                     sizeClass = sizes[e.card.id] ?: "small",
+                    imagePath = shipImages[e.card.id],
                     xMm = (i - ships.size / 2f) * 120f,
                     yMm = 0f,
                 )

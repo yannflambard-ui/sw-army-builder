@@ -49,6 +49,7 @@ data class TabletopPawn(
     val xMm: Float,
     val yMm: Float,
     val headingDeg: Float = 0f, // 0 = proue vers le haut
+    val imagePath: String? = null, // chemin dans assets (catalogue)
 )
 
 /** Dimensions de socle (mm), RRG 1.5.0. Les flottilles n'ont pas de taille tranchée : pion neutre. */
@@ -71,6 +72,10 @@ fun TabletopScreen(
     var selectedId by remember { mutableStateOf<String?>(null) }
     var dragId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
+    val appCtx = androidx.compose.ui.platform.LocalContext.current
+    val bitmaps = remember(pawns) {
+        pawns.mapNotNull { it.imagePath }.distinct().associateWith { loadAssetBitmap(appCtx, it) }
+    }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
         Row(
@@ -144,6 +149,7 @@ fun TabletopScreen(
                     val (w, h) = baseSizeMm(p.sizeClass)
                     val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
                     drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId)
+                    drawCardImage(p.imagePath?.let { bitmaps[it] }, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
                 }
             }
         }
@@ -177,6 +183,13 @@ private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: F
     )
     // proue : petit repère vers le haut du socle (heading 0)
     drawLine(Color(0xFF77D9A7), center, Offset(center.x, topLeft.y + h * 0.1f), strokeWidth = 2f)
+}
+
+/** Image de la carte au-dessus du socle (miniature). Le bitmap est chargé hors thread UI. */
+private fun DrawScope.drawCardImage(bmp: androidx.compose.ui.graphics.ImageBitmap?, center: Offset, w: Float, h: Float) {
+    if (bmp == null) return
+    val dst = androidx.compose.ui.unit.IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
+    drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset((center.x - w / 2).toInt(), (center.y - h / 2).toInt()), dstSize = dst)
 }
 
 /** Vrai si le point touché tombe dans le socle du pion (heading 0 uniquement, étape 1). */
@@ -249,3 +262,15 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
     val d = hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
     return "${att.name} → ${tgt.name} · ${"%.0f".format(d)} mm centre à centre · cible dans l'arc ${sectorOf(att, tgt)} (non vérifié)"
 }
+
+/** Charge une image d'asset en ImageBitmap (null si absente). Appelé une fois par chemin. */
+fun loadAssetBitmap(context: Context, path: String): androidx.compose.ui.graphics.ImageBitmap? = try {
+    context.assets.open(path).use { android.graphics.BitmapFactory.decodeStream(it)?.asImageBitmap() }
+} catch (_: Exception) { null }
+
+/** Table id de carte -> chemin d'image, depuis armada_ship_images.json. */
+fun loadShipImages(context: Context): Map<String, String> = try {
+    val txt = context.assets.open("armada_ship_images.json").bufferedReader().use { it.readText() }
+    val imgs = JSONObject(txt).getJSONObject("images")
+    buildMap { imgs.keys().forEach { k -> put(k, imgs.getString(k)) } }
+} catch (_: Exception) { emptyMap() }
