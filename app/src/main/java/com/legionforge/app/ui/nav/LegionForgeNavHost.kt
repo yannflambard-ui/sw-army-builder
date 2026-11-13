@@ -135,6 +135,19 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
             val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" }
             val playSyncVmTabletop: PlaySyncViewModel = viewModel()
+            val appCtxT = androidx.compose.ui.platform.LocalContext.current.applicationContext
+            val tabletopRound by androidx.compose.runtime.produceState(initialValue = 1, lid) {
+                value = try {
+                    val ent = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(appCtxT).gameSessionDao().getByList(lid)
+                    com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(ent?.snapshot ?: "")?.armadaRound ?: 1
+                } catch (_: Exception) { 1 }
+            }
+            val tabletopPhase by androidx.compose.runtime.produceState(initialValue = "COMMAND", lid) {
+                value = try {
+                    val ent = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(appCtxT).gameSessionDao().getByList(lid)
+                    (com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(ent?.snapshot ?: "")?.armadaPhase ?: "command").uppercase()
+                } catch (_: Exception) { "COMMAND" }
+            }
             val oppListJson by playSyncVmTabletop.opponentListJson.collectAsState()
             val oppShipsEntries = remember(oppListJson, vm.cards.value) {
                 val opp = try { com.google.gson.Gson().fromJson(oppListJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java) } catch (_: Exception) { null }
@@ -172,6 +185,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             }
             com.legionforge.app.ui.screens.TabletopScreen(
                 pawns = pawns,
+                round = tabletopRound,
+                phase = tabletopPhase,
                 onBack = { navController.popBackStack() },
                 onOpenPlay = { instanceId -> navController.navigate(Routes.cardDetail(lid, instanceId)) },
             )

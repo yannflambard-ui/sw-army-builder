@@ -76,6 +76,8 @@ fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
 @Composable
 fun TabletopScreen(
     pawns: List<TabletopPawn>,
+    round: Int = 1,
+    phase: String = "COMMAND",
     onBack: () -> Unit,
     onOpenPlay: (String) -> Unit = {},
 ) {
@@ -100,7 +102,10 @@ fun TabletopScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TextButton(onClick = onBack) { Text("← Retour", color = Color(0xFFFFC857), fontSize = 12.sp) }
-            Text("Tabletop · ${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 11.sp)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                Text("Tabletop · ${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 10.sp)
+            }
             TextButton(onClick = { scale = 1f; pan = Offset.Zero }) { Text("Recentrer", color = Color(0xFFFFC857), fontSize = 12.sp) }
         }
 
