@@ -127,6 +127,13 @@ fun TabletopScreen(
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                 // plateau : fond + grille de 100 mm
                 drawGrid(c, scale)
+                // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
+                if (dragId == null) {
+                    positions.firstOrNull { it.id == selectedId }?.let { p ->
+                        val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
+                        drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale)
+                    }
+                }
                 positions.forEach { p ->
                     val (w, h) = baseSizeMm(p.sizeClass)
                     val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
@@ -185,3 +192,30 @@ fun loadShipSizes(context: Context): Map<String, String> = try {
         ships.keys().forEach { k -> put(k, ships.getJSONObject(k).getString("size")) }
     }
 } catch (_: Exception) { emptyMap() }
+
+/** Rayon d'affichage des arcs (mm). Visuel seulement, pas une règle de portée. */
+private const val ARC_RADIUS_MM = 400f
+
+/**
+ * Secteurs de tir : avant 60°, arrière 60°, flancs 120° chacun.
+ * ANGLES NON VÉRIFIÉS : la RRG ne donne pas de degrés (arcs = lignes imprimées sur le pion).
+ * Origine = centre du socle (écart négligeable avec le centre de coque).
+ */
+private fun DrawScope.drawFiringArcs(center: Offset, r: Float) {
+    val tl = Offset(center.x - r, center.y - r)
+    val sz = androidx.compose.ui.geometry.Size(2 * r, 2 * r)
+    // Angles Compose : 0 = 3 h, sens horaire. Proue = -90.
+    val sectors = listOf(
+        Triple(-120f, 60f, Color(0x3338BDF8)),   // avant
+        Triple(60f, 60f, Color(0x33F87171)),     // arrière
+        Triple(-60f, 120f, Color(0x3334D399)),   // tribord
+        Triple(120f, 120f, Color(0x33A78BFA)),   // bâbord
+    )
+    sectors.forEach { (start, sweep, col) -> drawArc(col, start, sweep, useCenter = true, topLeft = tl, size = sz) }
+    // bordures des arcs
+    listOf(-120f, -60f, 60f, 120f).forEach { a ->
+        val rad = Math.toRadians(a.toDouble())
+        val end = Offset(center.x + r * kotlin.math.cos(rad).toFloat(), center.y + r * kotlin.math.sin(rad).toFloat())
+        drawLine(Color(0x8838BDF8), center, end, strokeWidth = 1.5f)
+    }
+}
