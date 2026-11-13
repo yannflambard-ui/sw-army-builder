@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
@@ -274,7 +275,7 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
 fun loadAssetBitmap(context: Context, path: String): androidx.compose.ui.graphics.ImageBitmap? = try {
     context.assets.open(path).use { stream ->
         val bmp: android.graphics.Bitmap? = android.graphics.BitmapFactory.decodeStream(stream)
-        bmp?.let { androidx.compose.ui.graphics.asImageBitmap(it) }
+        if (bmp == null) null else bmp.asImageBitmap()
     }
 } catch (_: Exception) { null }
 
