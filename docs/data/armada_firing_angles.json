@@ -1,8 +1,36 @@
 {
  "schemaVersion": 1,
  "unit": "degrés",
- "source": "fichier Google Sheets (stats), colonne Firing Angle",
+ "source": "fichier Google Sheets (stats), colonne Firing Angle ; défaut 60/120 pour les vaisseaux non mesurés",
  "ships": {
+  "armada_v15:ship-card/galactic-empire/arquitens-class-command-cruiser": {
+   "name": "Arquitens-class Command Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/arquitens-class-light-cruiser": {
+   "name": "Arquitens-class Light Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/executor-i-class-star-dreadnought": {
+   "name": "Executor I-Class Star Dreadnought",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/executor-ii-class-star-dreadnought": {
+   "name": "Executor II-Class Star Dreadnought",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
   "armada_v15:ship-card/galactic-empire/gladiator-i-class-star-destroyer": {
    "name": "Gladiator I-class Star Destroyer",
    "front": 72.5,
@@ -16,6 +44,20 @@
    "flank": 110.0,
    "rear": 67.5,
    "source": "tableur stats"
+  },
+  "armada_v15:ship-card/galactic-empire/gozanti-class-assault-carriers": {
+   "name": "Gozanti-class Assault Carriers",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/gozanti-class-cruisers": {
+   "name": "Gozanti-class Cruisers",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
   },
   "armada_v15:ship-card/galactic-empire/imperial-i-class-star-destroyer": {
    "name": "Imperial I-class Star Destroyer",
@@ -31,6 +73,62 @@
    "rear": 100.0,
    "source": "tableur stats"
   },
+  "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-cymoon-1-refit": {
+   "name": "Imperial Star Destroyer Cymoon 1 Refit",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-kuat-refit": {
+   "name": "Imperial Star Destroyer Kuat Refit",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/interdictor-combat-refit": {
+   "name": "Interdictor Combat Refit",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/interdictor-suppression-refit": {
+   "name": "Interdictor Suppression Refit",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/onager-class-star-destroyer": {
+   "name": "Onager-class Star Destroyer",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/onager-class-testbed": {
+   "name": "Onager-class Testbed",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/quasar-fire-i-class-cruiser-carrier": {
+   "name": "Quasar Fire I-class Cruiser-Carrier",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/quasar-fire-ii-class-cruiser-carrier": {
+   "name": "Quasar Fire II-class Cruiser-Carrier",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
   "armada_v15:ship-card/galactic-empire/raider-i-class-corvette": {
    "name": "Raider I-class Corvette",
    "front": 72.5,
@@ -44,6 +142,20 @@
    "flank": 97.5,
    "rear": 92.5,
    "source": "tableur stats (nom aligné: Raider IIclass Corvette)"
+  },
+  "armada_v15:ship-card/galactic-empire/star-dreadnought-assault-prototype": {
+   "name": "Star Dreadnought Assault Prototype",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/galactic-empire/star-dreadnought-command-prototype": {
+   "name": "Star Dreadnought Command Prototype",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
   },
   "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer": {
    "name": "Victory I-class Star Destroyer",
@@ -87,6 +199,34 @@
    "rear": 85.0,
    "source": "tableur stats"
   },
+  "armada_v15:ship-card/rebel-alliance/gr-75-combat-retrofits": {
+   "name": "GR-75 Combat Retrofits",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/gr-75-medium-transports": {
+   "name": "GR-75 Medium Transports",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/hammerhead-scout-corvette": {
+   "name": "Hammerhead Scout Corvette",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/hammerhead-torpedo-corvette": {
+   "name": "Hammerhead Torpedo Corvette",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
   "armada_v15:ship-card/rebel-alliance/mc30c-scout-frigate": {
    "name": "MC30c Scout Frigate",
    "front": 62.5,
@@ -101,12 +241,19 @@
    "rear": 72.5,
    "source": "tableur stats"
   },
-  "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser": {
-   "name": "MC80 Command Cruiser",
-   "front": 57.5,
-   "flank": 122.5,
-   "rear": 57.5,
-   "source": "tableur stats (nom aligné: MC80 Command)"
+  "armada_v15:ship-card/rebel-alliance/mc75-armored-cruiser": {
+   "name": "MC75 Armored Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc75-ordnance-cruiser": {
+   "name": "MC75 Ordnance Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
   },
   "armada_v15:ship-card/rebel-alliance/mc80-assault-cruiser": {
    "name": "MC80 Assault Cruiser",
@@ -114,6 +261,41 @@
    "flank": 122.5,
    "rear": 57.5,
    "source": "tableur stats (nom aligné: MC80 Assault)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-battle-cruiser": {
+   "name": "MC80 Battle Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser": {
+   "name": "MC80 Command Cruiser",
+   "front": 57.5,
+   "flank": 122.5,
+   "rear": 57.5,
+   "source": "tableur stats (nom aligné: MC80 Command)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-star-cruiser": {
+   "name": "MC80 Star Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/modified-pelta-class-assault-ship": {
+   "name": "Modified Pelta-class Assault Ship",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/modified-pelta-class-command-ship": {
+   "name": "Modified Pelta-class Command Ship",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
   },
   "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate": {
    "name": "Nebulon-B Escort Frigate",
@@ -128,6 +310,146 @@
    "flank": 125.0,
    "rear": 55.0,
    "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-i": {
+   "name": "Starhawk-Class Battleship Mark I",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-ii": {
+   "name": "Starhawk-Class Battleship Mark II",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea": {
+   "name": "Acclamator I-class Assault Ship",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:abd6-da81-1e67-43d6": {
+   "name": "Acclamator II-class Assault Ship",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c": {
+   "name": "Consular-class Charger c70",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:4eaa-a922-354c-6fdc": {
+   "name": "Consular-class Armed Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:be24-c216-6f4f-6299": {
+   "name": "Venator I-class Star Destroyer",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:3240-fd8a-04a3-ce98": {
+   "name": "Venator II-class Star Destroyer",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:6143-f5f7-e034-e96e": {
+   "name": "Pelta-class Medical Frigate",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:e1f0-8662-e79d-5ef1": {
+   "name": "Pelta-class Transport Frigate",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
+   "name": "Victory I-Class Star Destroyer",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:1da0-310a-d8fc-25ea": {
+   "name": "Munificent-class Comms Frigate",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:abd6-da81-1e67-43d6": {
+   "name": "Munificent-class Star Frigate",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:8795-e911-4096-002c": {
+   "name": "Hardcell-class Transport",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:4eaa-a922-354c-6fdc": {
+   "name": "Hardcell-class Battle Refit",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:41e4-a9fd-cdc6-61d0": {
+   "name": "Recusant-class Light Destroyer",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:a1f5-bad7-507a-627c": {
+   "name": "Recusant-class Support Destroyer",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:7953-a4ce-f74b-c466": {
+   "name": "Providence-class Dreadnought",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:0083-8d4e-e272-2a09": {
+   "name": "Providence-class Carrier",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
+  },
+  "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0": {
+   "name": "Gozanti-class Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120 (avant 60, flancs 120, arrière 60)"
   }
  }
 }
