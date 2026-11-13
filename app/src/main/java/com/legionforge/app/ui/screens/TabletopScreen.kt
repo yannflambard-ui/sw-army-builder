@@ -57,6 +57,7 @@ data class TabletopPawn(
     val basePath: String? = null,  // socle illustré (assets), null = socle générique
     val maxSpeed: Int = 0,
     val isOpp: Boolean = false,
+    val isSquadron: Boolean = false,
     val speedChart: List<Map<Int, Int>> = emptyList(), // position 1..n -> vitesse -> crans d'embardée (absent = interdit)
 )
 
@@ -168,7 +169,7 @@ fun TabletopScreen(
                         // socle illustré : remplace le rectangle générique
                         drawCardImage(baseBmp, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
                     } else {
-                        drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId)
+                        drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
                         drawCardImage(p.imagePath?.let { bitmaps[it] }, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
                     }
                 }
@@ -200,14 +201,19 @@ private fun DrawScope.drawGrid(c: Offset, scale: Float) {
     while (y < size.height) { drawLine(Color(0x22FFFFFF), Offset(0f, y), Offset(size.width, y)); y += step }
 }
 
-private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: Float, selected: Boolean, target: Boolean = false) {
+private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: Float, selected: Boolean, target: Boolean = false, round: Boolean = false) {
     val topLeft = Offset(center.x - w / 2, center.y - h / 2)
+    val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = if (selected) 3f else 1.5f)
+    val border = if (target) Color(0xFFF87171) else if (selected) Color(0xFFFFC857) else Color(0xFF4A6080)
+    if (round) {
+        // escadron (chasseur) : jeton rond, diamètre = plus petit côté
+        val r = minOf(w, h) / 2
+        drawCircle(Color(0xFF1E2A3A), r, center)
+        drawCircle(border, r, center, style = stroke)
+        return
+    }
     drawRect(Color(0xFF1E2A3A), topLeft, androidx.compose.ui.geometry.Size(w, h))
-    drawRect(
-        if (target) Color(0xFFF87171) else if (selected) Color(0xFFFFC857) else Color(0xFF4A6080),
-        topLeft, androidx.compose.ui.geometry.Size(w, h),
-        style = androidx.compose.ui.graphics.drawscope.Stroke(width = if (selected) 3f else 1.5f),
-    )
+    drawRect(border, topLeft, androidx.compose.ui.geometry.Size(w, h), style = stroke)
     // proue : petit repère vers le haut du socle (heading 0)
     drawLine(Color(0xFF77D9A7), center, Offset(center.x, topLeft.y + h * 0.1f), strokeWidth = 2f)
 }

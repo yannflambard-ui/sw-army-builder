@@ -1,6 +1,10 @@
 package com.legionforge.app.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import com.legionforge.app.data.model.ListEntry
+import com.legionforge.app.data.model.ArmadaSlot
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -133,7 +137,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             val oppListJson by playSyncVmTabletop.opponentListJson.collectAsState()
             val oppShipsEntries = remember(oppListJson, vm.cards.value) {
                 val opp = try { com.google.gson.Gson().fromJson(oppListJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java) } catch (_: Exception) { null }
-                opp?.entries?.mapNotNull { e ->
+                (opp?.entries ?: emptyList()).mapNotNull { e ->
                     vm.cards.value.firstOrNull { it.id == e.cardId }?.let { card ->
                         ListEntry(
                             instanceId = e.instanceId?.let { "B:$it" } ?: "opp_${e.cardId}_${e.parentInstanceId ?: "root"}",
@@ -143,7 +147,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                             chosenSlot = e.chosenSlot?.let { s -> runCatching { ArmadaSlot.valueOf(s) }.getOrNull() }
                         )
                     }
-                }?.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" } ?: emptyList()
+                }.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" }
             }
             val allShips = ships + oppShipsEntries
             val sizes = shipSizes
@@ -161,6 +165,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     },
                     xMm = (i - allShips.size / 2f) * 120f,
                     isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"),
+                    isSquadron = e.card.kind.name == "ARMADA_SQUADRON",
                     yMm = 0f,
                 )
             }
