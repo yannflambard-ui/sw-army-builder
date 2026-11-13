@@ -42,6 +42,9 @@ import org.json.JSONObject
  */
 private const val PX_PER_MM = 2.0f
 
+/** Valeur PROVISOIRE : mm par point de vitesse pour la trajectoire indicative. À étalonner sur la règle. */
+private const val TRAJ_STEP_MM = 40f
+
 /** Pion de vaisseau sur le plateau. Position en mm, plateau centré sur (0,0). */
 data class TabletopPawn(
     val id: String,
@@ -66,6 +69,7 @@ fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
 fun TabletopScreen(
     pawns: List<TabletopPawn>,
     onBack: () -> Unit,
+    onOpenPlay: (String) -> Unit = {},
 ) {
     var scale by remember { mutableStateOf(1f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
@@ -105,7 +109,12 @@ fun TabletopScreen(
                 Modifier
                     .fillMaxSize()
                     .pointerInput(positions, scale, pan) {
-                        detectTapGestures { tap ->
+                        detectTapGestures(
+                            onLongPress = { at ->
+                                val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
+                                positions.firstOrNull { p -> hitPawn(p, c, scale, at) }?.let { onOpenPlay(it.id) }
+                            }
+                        ) { tap ->
                             val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                             val hit = positions.firstOrNull { p -> hitPawn(p, c, scale, tap) }
                             when {
@@ -140,6 +149,22 @@ fun TabletopScreen(
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                 // plateau : fond + grille de 100 mm
                 drawGrid(c, scale)
+                // Trajectoire indicative : ligne droite, longueur = vitesse x TRAJ_STEP_MM (à étalonner)
+                if (dragId == null && speedIdx > 0) {
+                    positions.firstOrNull { it.id == selectedId }?.let { p ->
+                        val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
+                        val rad = Math.toRadians(p.headingDeg.toDouble())
+                        val len = speedIdx * TRAJ_STEP_MM * PX_PER_MM * scale
+                        val end = Offset(
+                            center.x + len * kotlin.math.sin(rad).toFloat(),
+                            center.y - len * kotlin.math.cos(rad).toFloat(),
+                        )
+                        drawLine(
+                            Color(0xFFFFC857), center, end, strokeWidth = 2f,
+                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                        )
+                    }
+                }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
                 if (dragId == null) {
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
@@ -268,7 +293,7 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
     val tgt = pawns.firstOrNull { it.id == tgtId }
     if (tgt == null) return "${att.name} sélectionné · touchez une cible"
     val d = hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
-    return "${att.name} → ${tgt.name} · ${"%.0f".format(d)} mm centre à centre · cible dans l'arc ${sectorOf(att, tgt)} (non vérifié)"
+    return "${att.name} → ${tgt.name} · ${"%.0f".format(d)} mm centre à centre · arc ${sectorOf(att, tgt)} (non vérifié)"
 }
 
 /** Charge une image d'asset en ImageBitmap (null si absente). Appelé une fois par chemin. */

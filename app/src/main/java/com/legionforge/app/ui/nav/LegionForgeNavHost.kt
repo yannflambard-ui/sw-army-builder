@@ -137,7 +137,11 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     yMm = 0f,
                 )
             }
-            com.legionforge.app.ui.screens.TabletopScreen(pawns = pawns, onBack = { navController.popBackStack() })
+            com.legionforge.app.ui.screens.TabletopScreen(
+                pawns = pawns,
+                onBack = { navController.popBackStack() },
+                onOpenPlay = { instanceId -> navController.navigate(Routes.cardDetail(lid, instanceId)) },
+            )
         }
         composable(Routes.SHARE, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
