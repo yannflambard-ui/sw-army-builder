@@ -72,6 +72,7 @@ fun TabletopScreen(
     var selectedId by remember { mutableStateOf<String?>(null) }
     var dragId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
+    var speedIdx by remember { mutableStateOf(0) }
     val appCtx = androidx.compose.ui.platform.LocalContext.current
     val bitmaps = remember(pawns) {
         pawns.mapNotNull { it.imagePath }.distinct().associateWith { loadAssetBitmap(appCtx, it) }
@@ -154,6 +155,12 @@ fun TabletopScreen(
             }
         }
 
+        // Sélecteur de trajectoire : flèches gauche/droite (vitesse 0 à max)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
+            Text("Vitesse ${speedIdx}", color = Color(0xFF9EACBC), fontSize = 11.sp)
+            TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(4) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
+        }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         val sel = positions.firstOrNull { it.id == selectedId }
         Text(
@@ -265,7 +272,10 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
 
 /** Charge une image d'asset en ImageBitmap (null si absente). Appelé une fois par chemin. */
 fun loadAssetBitmap(context: Context, path: String): androidx.compose.ui.graphics.ImageBitmap? = try {
-    context.assets.open(path).use { android.graphics.BitmapFactory.decodeStream(it)?.asImageBitmap() }
+    context.assets.open(path).use { stream ->
+        val bmp: android.graphics.Bitmap? = android.graphics.BitmapFactory.decodeStream(stream)
+        bmp?.let { androidx.compose.ui.graphics.asImageBitmap(it) }
+    }
 } catch (_: Exception) { null }
 
 /** Table id de carte -> chemin d'image, depuis armada_ship_images.json. */
