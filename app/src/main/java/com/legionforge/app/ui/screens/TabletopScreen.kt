@@ -161,9 +161,14 @@ fun TabletopScreen(
                 positions.forEach { p ->
                     val (w, h) = baseSizeMm(p.sizeClass)
                     val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                    drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId)
-                    p.basePath?.let { bitmaps[it] }?.let { bmp -> drawCardImage(bmp, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale) }
-                    drawCardImage(p.imagePath?.let { bitmaps[it] }, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
+                    val baseBmp = p.basePath?.let { bitmaps[it] }
+                    if (baseBmp != null) {
+                        // socle illustré : remplace le rectangle générique
+                        drawCardImage(baseBmp, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
+                    } else {
+                        drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId)
+                        drawCardImage(p.imagePath?.let { bitmaps[it] }, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
+                    }
                 }
             }
         }

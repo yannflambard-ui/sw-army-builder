@@ -127,7 +127,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
         composable(Routes.TABLETOP, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
             androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
-            val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" }
+            val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" }
             val sizes = shipSizes
             val pawns = ships.mapIndexed { i, e ->
                 com.legionforge.app.ui.screens.TabletopPawn(
