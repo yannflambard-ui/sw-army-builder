@@ -123,7 +123,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
     Scaffold(topBar = {
         TopAppBar(title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f, fill = false)) {
+                Column(Modifier.weight(1f, fill = true)) {
                     TextButton(onClick = {
                         renameText = list?.name ?: ""
                         renameOpen = true
@@ -149,9 +149,10 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                                     Button(
                                         onClick = onTabletop,
                                         shape = RoundedCornerShape(10.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A2330), contentColor = Color(0xFF77D9A7))
                                     ) {
-                                        Text("\u25A6", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text("\u25A6", fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                                     }
                                 }
                                 // Bouton partage (Nearby Connections)
