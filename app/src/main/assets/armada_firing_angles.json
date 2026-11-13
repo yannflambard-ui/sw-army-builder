@@ -1,342 +1,314 @@
 {
  "schemaVersion": 1,
  "unit": "degrés",
- "source": "Star Forge (api.swarmada.wiki), repli tableur puis défaut 60/120/60",
+ "source": "Star Forge (api.swarmada.wiki), repli 60/120/60",
  "ships": {
-  "armada-v15:bsdata:galactic-empire:0349-305d-cbef-de54": {
-   "name": "Gladiator I-class Star Destroyer",
-   "front": 72.0,
-   "flank": 108.0,
-   "rear": 72.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:1db3-a85b-33fb-5273": {
-   "name": "Gladiator II-class Star Destroyer",
-   "front": 72.0,
-   "flank": 108.0,
-   "rear": 72.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:65bf-eb5e-ea2e-01d3": {
-   "name": "Gozanti-class Assault Carriers",
-   "front": 79.0,
-   "flank": 85.5,
-   "rear": 110.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:eada-a46e-fab0-f89a": {
-   "name": "Gozanti-class Cruisers",
-   "front": 79.0,
-   "flank": 85.5,
-   "rear": 110.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:b635-0210-c1a9-608a": {
-   "name": "Imperial I-class Star Destroyer",
-   "front": 86.1,
-   "flank": 87.15,
-   "rear": 99.6,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:8fed-85c8-d87d-e4da": {
-   "name": "Imperial II-class Star Destroyer",
-   "front": 86.1,
-   "flank": 87.15,
-   "rear": 99.6,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:d68c-9a24-9073-a3fd": {
-   "name": "Interdictor Combat Refit",
-   "front": 96.8,
-   "flank": 95.4,
-   "rear": 72.4,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:a35b-b5da-f71e-cf8a": {
-   "name": "Interdictor Suppression Refit",
-   "front": 96.8,
-   "flank": 95.4,
-   "rear": 72.4,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:e58d-8015-91be-811a": {
-   "name": "Raider I-class Corvette",
-   "front": 72.0,
-   "flank": 99.0,
-   "rear": 90.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:7af3-f48f-d830-fa46": {
-   "name": "Raider II-class Corvette",
-   "front": 72.0,
-   "flank": 99.0,
-   "rear": 90.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:1da0-310a-d8fc-25ea": {
-   "name": "Victory I-class Star Destroyer",
-   "front": 105.2,
-   "flank": 83.8,
-   "rear": 87.2,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:a976-92f2-81c1-0082": {
-   "name": "Victory II-class Star Destroyer",
-   "front": 105.2,
-   "flank": 83.8,
-   "rear": 87.2,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:4f81-dab4-61b9-7141": {
+  "armada_v15:ship-card/galactic-empire/arquitens-class-command-cruiser": {
    "name": "Arquitens-class Command Cruiser",
    "front": 55.0,
    "flank": 102.5,
    "rear": 100.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:galactic-empire:2abf-4046-f18b-8acb": {
+  "armada_v15:ship-card/galactic-empire/arquitens-class-light-cruiser": {
    "name": "Arquitens-class Light Cruiser",
    "front": 55.0,
    "flank": 102.5,
    "rear": 100.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:galactic-empire:9d20-740c-2c47-6a5b": {
-   "name": "Quasar Fire I-class Cruiser-Carrier",
-   "front": 127.2,
-   "flank": 75.8,
-   "rear": 81.2,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:002f-dd84-9b02-d929": {
-   "name": "Quasar Fire II-class Cruiser-Carrier",
-   "front": 127.2,
-   "flank": 75.8,
-   "rear": 81.2,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:b06a-013c-e02e-0047": {
-   "name": "Imperial Star Destroyer Kuat Refit",
-   "front": 86.1,
-   "flank": 87.15,
-   "rear": 99.6,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:3f7b-d87c-c2c9-7f8c": {
-   "name": "Imperial Star Destroyer Cymoon 1 Refit",
-   "front": 86.1,
-   "flank": 87.15,
-   "rear": 99.6,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:galactic-empire:ba29-a098-a1c8-f249": {
-   "name": "Star Dreadought Command Prototype",
-   "front": 60.0,
-   "flank": 120.0,
-   "rear": 60.0,
-   "source": "défaut 60/120/60"
-  },
-  "armada-v15:bsdata:galactic-empire:77ea-bae8-6c6a-c8d5": {
-   "name": "Star Dreadought Assault Prototype",
-   "front": 60.0,
-   "flank": 120.0,
-   "rear": 60.0,
-   "source": "défaut 60/120/60"
-  },
-  "armada-v15:bsdata:galactic-empire:c3ad-9639-a958-5ccd": {
+  "armada_v15:ship-card/galactic-empire/executor-i-class-star-dreadnought": {
    "name": "Executor I-class Star Dreadnought",
    "front": 60.0,
    "flank": 120.0,
    "rear": 60.0,
    "source": "défaut 60/120/60"
   },
-  "armada-v15:bsdata:galactic-empire:6031-ede4-8ab9-d30f": {
+  "armada_v15:ship-card/galactic-empire/executor-ii-class-star-dreadnought": {
    "name": "Executor II-class Star Dreadnought",
    "front": 60.0,
    "flank": 120.0,
    "rear": 60.0,
    "source": "défaut 60/120/60"
   },
-  "armada-v15:bsdata:galactic-empire:dadc-fa46-6875-c05b": {
+  "armada_v15:ship-card/galactic-empire/gladiator-i-class-star-destroyer": {
+   "name": "Gladiator I-class Star Destroyer",
+   "front": 72.0,
+   "flank": 108.0,
+   "rear": 72.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/gladiator-ii-class-star-destroyer": {
+   "name": "Gladiator II-class Star Destroyer",
+   "front": 72.0,
+   "flank": 108.0,
+   "rear": 72.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/gozanti-class-assault-carriers": {
+   "name": "Gozanti-class Assault Carriers",
+   "front": 79.0,
+   "flank": 85.5,
+   "rear": 110.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/gozanti-class-cruisers": {
+   "name": "Gozanti-class Cruisers",
+   "front": 79.0,
+   "flank": 85.5,
+   "rear": 110.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-i-class-star-destroyer": {
+   "name": "Imperial I-class Star Destroyer",
+   "front": 86.1,
+   "flank": 87.15,
+   "rear": 99.6,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-ii-class-star-destroyer": {
+   "name": "Imperial II-class Star Destroyer",
+   "front": 86.1,
+   "flank": 87.15,
+   "rear": 99.6,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-cymoon-1-refit": {
+   "name": "Imperial Star Destroyer Cymoon 1 Refit",
+   "front": 86.1,
+   "flank": 87.15,
+   "rear": 99.6,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-kuat-refit": {
+   "name": "Imperial Star Destroyer Kuat Refit",
+   "front": 86.1,
+   "flank": 87.15,
+   "rear": 99.6,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/interdictor-combat-refit": {
+   "name": "Interdictor Combat Refit",
+   "front": 96.8,
+   "flank": 95.4,
+   "rear": 72.4,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/interdictor-suppression-refit": {
+   "name": "Interdictor Suppression Refit",
+   "front": 96.8,
+   "flank": 95.4,
+   "rear": 72.4,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/onager-class-star-destroyer": {
    "name": "Onager-class Star Destroyer",
    "front": 86.2,
    "flank": 109.15,
    "rear": 55.5,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:galactic-empire:4878-a8f2-25a5-a45b": {
+  "armada_v15:ship-card/galactic-empire/onager-class-testbed": {
    "name": "Onager-class Testbed",
    "front": 86.2,
    "flank": 109.15,
    "rear": 55.5,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:galactic-empire:8f42-1fd2-503b-7953": {
-   "name": "Venator II-class Star Destroyer",
-   "front": 74.0,
-   "flank": 95.4,
-   "rear": 95.2,
+  "armada_v15:ship-card/galactic-empire/quasar-fire-i-class-cruiser-carrier": {
+   "name": "Quasar Fire I-class Cruiser-Carrier",
+   "front": 127.2,
+   "flank": 75.8,
+   "rear": 81.2,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:37bc-3213-7cba-8aa7": {
+  "armada_v15:ship-card/galactic-empire/quasar-fire-ii-class-cruiser-carrier": {
+   "name": "Quasar Fire II-class Cruiser-Carrier",
+   "front": 127.2,
+   "flank": 75.8,
+   "rear": 81.2,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/raider-i-class-corvette": {
+   "name": "Raider I-class Corvette",
+   "front": 72.0,
+   "flank": 99.0,
+   "rear": 90.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/raider-ii-class-corvette": {
+   "name": "Raider II-class Corvette",
+   "front": 72.0,
+   "flank": 99.0,
+   "rear": 90.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer": {
+   "name": "Victory I-class Star Destroyer",
+   "front": 105.2,
+   "flank": 83.8,
+   "rear": 87.2,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/galactic-empire/victory-ii-class-star-destroyer": {
+   "name": "Victory II-class Star Destroyer",
+   "front": 105.2,
+   "flank": 83.8,
+   "rear": 87.2,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-a": {
    "name": "Assault Frigate Mark II A",
    "front": 72.0,
    "flank": 108.0,
    "rear": 72.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:fd9c-4f9e-48c4-40c7": {
+  "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-b": {
    "name": "Assault Frigate Mark II B",
    "front": 72.0,
    "flank": 108.0,
    "rear": 72.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:84f9-c194-d8cd-e718": {
+  "armada_v15:ship-card/rebel-alliance/cr90-corvette-a": {
    "name": "CR90 Corvette A",
    "front": 90.0,
    "flank": 90.0,
    "rear": 90.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:9638-6bed-5646-56f4": {
+  "armada_v15:ship-card/rebel-alliance/cr90-corvette-b": {
    "name": "CR90 Corvette B",
    "front": 90.0,
    "flank": 90.0,
    "rear": 90.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:6348-a2d3-d605-5c68": {
+  "armada_v15:ship-card/rebel-alliance/gr-75-combat-retrofits": {
    "name": "GR-75 Combat Retrofits",
    "front": 58.0,
    "flank": 122.0,
    "rear": 58.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:7928-9325-451b-6e2a": {
+  "armada_v15:ship-card/rebel-alliance/gr-75-medium-transports": {
    "name": "GR-75 Medium Transports",
    "front": 58.0,
    "flank": 122.0,
    "rear": 58.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:34d6-c129-c2b5-56bc": {
-   "name": "MC30c Scout Frigate",
-   "front": 66.0,
-   "flank": 111.0,
-   "rear": 72.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:3879-0549-5a62-391d": {
-   "name": "MC30c Torpedo Frigate",
-   "front": 66.0,
-   "flank": 111.0,
-   "rear": 72.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:5c0f-310c-1677-05a2": {
-   "name": "MC80 Assault Cruiser",
-   "front": 60.0,
-   "flank": 120.0,
-   "rear": 60.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:08aa-ef7d-35e6-66a2": {
-   "name": "MC80 Battle Cruiser",
-   "front": 86.0,
-   "flank": 92.0,
-   "rear": 90.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:85a3-f5e9-7349-d420": {
-   "name": "MC80 Command Cruiser",
-   "front": 60.0,
-   "flank": 120.0,
-   "rear": 60.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:665d-d5d3-7e6d-7a9d": {
-   "name": "Nebulon-B Escort Frigate",
-   "front": 58.0,
-   "flank": 122.0,
-   "rear": 58.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:666c-5bdb-92b3-13bf": {
-   "name": "Nebulon-B Support Refit",
-   "front": 58.0,
-   "flank": 122.0,
-   "rear": 58.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:6dbe-e35a-0c22-f436": {
-   "name": "Modified Pelta-class Assault Ship",
-   "front": 90.0,
-   "flank": 100.0,
-   "rear": 70.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:dbb1-f7bc-b05c-fad6": {
-   "name": "Modified Pelta-class Command Ship",
-   "front": 90.0,
-   "flank": 100.0,
-   "rear": 70.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:0927-179a-0d66-692b": {
-   "name": "Hammerhead Torpedo Corvette",
-   "front": 90.0,
-   "flank": 100.0,
-   "rear": 70.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:d83c-3f0a-9c20-695e": {
+  "armada_v15:ship-card/rebel-alliance/hammerhead-scout-corvette": {
    "name": "Hammerhead Scout Corvette",
    "front": 90.0,
    "flank": 100.0,
    "rear": 70.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:3641-3e06-896e-17d4": {
+  "armada_v15:ship-card/rebel-alliance/hammerhead-torpedo-corvette": {
+   "name": "Hammerhead Torpedo Corvette",
+   "front": 90.0,
+   "flank": 100.0,
+   "rear": 70.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc30c-scout-frigate": {
+   "name": "MC30c Scout Frigate",
+   "front": 66.0,
+   "flank": 111.0,
+   "rear": 72.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc30c-torpedo-frigate": {
+   "name": "MC30c Torpedo Frigate",
+   "front": 66.0,
+   "flank": 111.0,
+   "rear": 72.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc75-armored-cruiser": {
    "name": "MC75 Armored Cruiser",
    "front": 78.0,
    "flank": 111.5,
    "rear": 59.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:12b1-340f-d1aa-3abf": {
+  "armada_v15:ship-card/rebel-alliance/mc75-ordnance-cruiser": {
    "name": "MC75 Ordnance Cruiser",
    "front": 78.0,
    "flank": 111.5,
    "rear": 59.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:e084-7eab-46f3-a198": {
+  "armada_v15:ship-card/rebel-alliance/mc80-assault-cruiser": {
+   "name": "MC80 Assault Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-battle-cruiser": {
+   "name": "MC80 Battle Cruiser",
+   "front": 86.0,
+   "flank": 92.0,
+   "rear": 90.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser": {
+   "name": "MC80 Command Cruiser",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-star-cruiser": {
    "name": "MC80 Star Cruiser",
    "front": 86.0,
    "flank": 92.0,
    "rear": 90.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:177a-9aa2-3a99-90e5": {
+  "armada_v15:ship-card/rebel-alliance/modified-pelta-class-assault-ship": {
+   "name": "Modified Pelta-class Assault Ship",
+   "front": 90.0,
+   "flank": 100.0,
+   "rear": 70.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/modified-pelta-class-command-ship": {
+   "name": "Modified Pelta-class Command Ship",
+   "front": 90.0,
+   "flank": 100.0,
+   "rear": 70.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate": {
+   "name": "Nebulon-B Escort Frigate",
+   "front": 58.0,
+   "flank": 122.0,
+   "rear": 58.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/nebulon-b-support-refit": {
+   "name": "Nebulon-B Support Refit",
+   "front": 58.0,
+   "flank": 122.0,
+   "rear": 58.0,
+   "source": "Star Forge (api.swarmada.wiki)"
+  },
+  "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-i": {
    "name": "Starhawk-class Battleship Mark I",
    "front": 52.0,
    "flank": 128.0,
    "rear": 52.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
-  "armada-v15:bsdata:rebel-alliance:6e26-58cd-afa7-da7b": {
+  "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-ii": {
    "name": "Starhawk-class Battleship Mark II",
    "front": 52.0,
    "flank": 128.0,
    "rear": 52.0,
-   "source": "Star Forge (api.swarmada.wiki)"
-  },
-  "armada-v15:bsdata:rebel-alliance:6f3a-cb87-1134-a9fc": {
-   "name": "Providence-class Carrier",
-   "front": 59.0,
-   "flank": 121.0,
-   "rear": 59.0,
    "source": "Star Forge (api.swarmada.wiki)"
   },
   "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea": {
@@ -396,7 +368,7 @@
    "source": "Star Forge (api.swarmada.wiki)"
   },
   "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
-   "name": "Victory I-Class Star Destroyer",
+   "name": "Victory I-class Star Destroyer",
    "front": 105.2,
    "flank": 83.8,
    "rear": 87.2,
@@ -464,6 +436,20 @@
    "flank": 120.0,
    "rear": 60.0,
    "source": "défaut 60/120/60"
+  },
+  "armada_v15:ship-card/galactic-empire/star-dreadnought-assault-prototype": {
+   "name": "Star Dreadnought Assault Prototype",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120/60 (orthographe alignée)"
+  },
+  "armada_v15:ship-card/galactic-empire/star-dreadnought-command-prototype": {
+   "name": "Star Dreadnought Command Prototype",
+   "front": 60.0,
+   "flank": 120.0,
+   "rear": 60.0,
+   "source": "défaut 60/120/60 (orthographe alignée)"
   }
  }
 }

@@ -309,7 +309,6 @@ fun loadShipImages(context: Context): Map<String, String> = try {
     buildMap { imgs.keys().forEach { k -> put(k, imgs.getString(k)) } }
 } catch (_: Exception) { emptyMap() }
 
-/** Charge armada_firing_angles.json : id de carte -> angles (degrés). Vide si absent. */
 /** Charge armada_ship_bases.json : id de carte -> chemin du socle illustré (assets). */
 fun loadShipBases(context: Context): Map<String, String> = try {
     val txt = context.assets.open("armada_ship_bases.json").bufferedReader().use { it.readText() }

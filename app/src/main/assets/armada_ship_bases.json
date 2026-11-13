@@ -17,11 +17,11 @@
    "name": "Consular-class Armed Cruiser",
    "base": "armada_bases/consular-republic-base.jpg"
   },
-  "armada-v15:bsdata:rebel-alliance:7928-9325-451b-6e2a": {
+  "armada_v15:ship-card/rebel-alliance/gr-75-medium-transports": {
    "name": "GR-75 Medium Transports",
    "base": "armada_bases/gr-75-base.jpg"
   },
-  "armada-v15:bsdata:rebel-alliance:665d-d5d3-7e6d-7a9d": {
+  "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate": {
    "name": "Nebulon-B Escort Frigate",
    "base": "armada_bases/nebulon-b-base.jpg"
   },
@@ -29,7 +29,7 @@
    "name": "Pelta-class Transport Frigate",
    "base": "armada_bases/pelta-frigate-base.jpg"
   },
-  "armada-v15:bsdata:rebel-alliance:dbb1-f7bc-b05c-fad6": {
+  "armada_v15:ship-card/rebel-alliance/modified-pelta-class-command-ship": {
    "name": "Modified Pelta-class Command Ship",
    "base": "armada_bases/pelta-command-rebel-base.jpg"
   },
@@ -41,7 +41,7 @@
    "name": "Venator II-class Star Destroyer",
    "base": "armada_bases/venator-imperial-refit-base.jpg"
   },
-  "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
+  "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer": {
    "name": "Victory I-Class Star Destroyer",
    "base": "armada_bases/victory-republic-base.jpg"
   },
