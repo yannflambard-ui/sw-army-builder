@@ -23,6 +23,7 @@ import com.legionforge.app.ui.screens.ShareScreen
 import com.legionforge.app.ui.screens.WikiScreen
 import com.legionforge.app.ui.viewmodel.ArmyBuilderViewModel
 import com.legionforge.app.ui.viewmodel.ShareListPayload
+import com.legionforge.app.ui.viewmodel.PlaySyncViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 
 object Routes {
@@ -128,8 +129,25 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             val lid = entry.arguments?.getString("listId") ?: return@composable
             androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
             val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" }
+            val playSyncVmTabletop: PlaySyncViewModel = viewModel()
+            val oppListJson by playSyncVmTabletop.opponentListJson.collectAsState()
+            val oppShipsEntries = remember(oppListJson, vm.cards.value) {
+                val opp = try { com.google.gson.Gson().fromJson(oppListJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java) } catch (_: Exception) { null }
+                opp?.entries?.mapNotNull { e ->
+                    vm.cards.value.firstOrNull { it.id == e.cardId }?.let { card ->
+                        ListEntry(
+                            instanceId = e.instanceId?.let { "B:$it" } ?: "opp_${e.cardId}_${e.parentInstanceId ?: "root"}",
+                            card = card,
+                            parentInstanceId = e.parentInstanceId?.let { "B:$it" },
+                            quantity = e.quantity,
+                            chosenSlot = e.chosenSlot?.let { s -> runCatching { ArmadaSlot.valueOf(s) }.getOrNull() }
+                        )
+                    }
+                }?.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" } ?: emptyList()
+            }
+            val allShips = ships + oppShipsEntries
             val sizes = shipSizes
-            val pawns = ships.mapIndexed { i, e ->
+            val pawns = allShips.mapIndexed { i, e ->
                 com.legionforge.app.ui.screens.TabletopPawn(
                     id = e.instanceId,
                     name = e.card.name,
@@ -141,7 +159,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     speedChart = (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.speedChart ?: emptyList()).map { pos ->
                         pos.mapNotNull { (k, v) -> k.toIntOrNull()?.let { it to v } }.toMap()
                     },
-                    xMm = (i - ships.size / 2f) * 120f,
+                    xMm = (i - allShips.size / 2f) * 120f,
+                    isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"),
                     yMm = 0f,
                 )
             }

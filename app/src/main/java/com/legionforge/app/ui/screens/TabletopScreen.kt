@@ -56,6 +56,7 @@ data class TabletopPawn(
     val arcs: FiringArcs? = null,  // angles réels (Star Forge), null = repli non vérifié
     val basePath: String? = null,  // socle illustré (assets), null = socle générique
     val maxSpeed: Int = 0,
+    val isOpp: Boolean = false,
     val speedChart: List<Map<Int, Int>> = emptyList(), // position 1..n -> vitesse -> crans d'embardée (absent = interdit)
 )
 
