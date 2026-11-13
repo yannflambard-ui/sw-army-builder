@@ -2,7 +2,6 @@ package com.legionforge.app.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +55,8 @@ data class TabletopPawn(
     val imagePath: String? = null, // chemin dans assets (catalogue)
     val arcs: FiringArcs? = null,  // angles réels (Star Forge), null = repli non vérifié
     val basePath: String? = null,  // socle illustré (assets), null = socle générique
+    val maxSpeed: Int = 0,
+    val speedChart: List<Map<Int, Int>> = emptyList(), // position 1..n -> vitesse -> crans d'embardée (absent = interdit)
 )
 
 /** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
