@@ -54,7 +54,11 @@ data class TabletopPawn(
     val yMm: Float,
     val headingDeg: Float = 0f, // 0 = proue vers le haut
     val imagePath: String? = null, // chemin dans assets (catalogue)
+    val arcs: FiringArcs? = null,  // angles réels (tableur), null = repli non vérifié
 )
+
+/** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
+data class FiringArcs(val front: Float, val flank: Float, val rear: Float)
 
 /** Dimensions de socle (mm), RRG 1.5.0. Les flottilles n'ont pas de taille tranchée : pion neutre. */
 fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
@@ -169,7 +173,7 @@ fun TabletopScreen(
                 if (dragId == null) {
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
                         val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                        drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale)
+                        drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs)
                     }
                 }
                 positions.forEach { p ->
@@ -252,19 +256,24 @@ private const val ARC_RADIUS_MM = 400f
  * ANGLES NON VÉRIFIÉS : la RRG ne donne pas de degrés (arcs = lignes imprimées sur le pion).
  * Origine = centre du socle (écart négligeable avec le centre de coque).
  */
-private fun DrawScope.drawFiringArcs(center: Offset, r: Float) {
+private fun DrawScope.drawFiringArcs(center: Offset, r: Float, arcs: FiringArcs?) {
     val tl = Offset(center.x - r, center.y - r)
     val sz = androidx.compose.ui.geometry.Size(2 * r, 2 * r)
     // Angles Compose : 0 = 3 h, sens horaire. Proue = -90.
+    // Secteurs centrés sur la proue (-90 en Compose). Avant = front, flancs = flank, arrière = rear.
+    val f = arcs?.front ?: 60f
+    val fl = arcs?.flank ?: 120f
+    val rr = arcs?.rear ?: 60f
     val sectors = listOf(
-        Triple(-120f, 60f, Color(0x3338BDF8)),   // avant
-        Triple(60f, 60f, Color(0x33F87171)),     // arrière
-        Triple(-60f, 120f, Color(0x3334D399)),   // tribord
-        Triple(120f, 120f, Color(0x33A78BFA)),   // bâbord
+        Triple(-90f - f / 2, f, Color(0x3338BDF8)),       // avant
+        Triple(-90f + f / 2, fl, Color(0x3334D399)),      // tribord
+        Triple(-90f + f / 2 + fl, rr, Color(0x33F87171)), // arrière
+        Triple(-90f + f / 2 + fl + rr, fl, Color(0x33A78BFA)), // bâbord
     )
     sectors.forEach { (start, sweep, col) -> drawArc(col, start, sweep, useCenter = true, topLeft = tl, size = sz) }
-    // bordures des arcs
-    listOf(-120f, -60f, 60f, 120f).forEach { a ->
+    // bordures des arcs : bornes de chaque secteur
+    val bounds = listOf(-90f - f / 2, -90f + f / 2, -90f + f / 2 + fl, -90f + f / 2 + fl + rr)
+    bounds.forEach { a ->
         val rad = Math.toRadians(a.toDouble())
         val end = Offset(center.x + r * kotlin.math.cos(rad).toFloat(), center.y + r * kotlin.math.sin(rad).toFloat())
         drawLine(Color(0x8838BDF8), center, end, strokeWidth = 1.5f)
@@ -309,4 +318,16 @@ fun loadShipImages(context: Context): Map<String, String> = try {
     val txt = context.assets.open("armada_ship_images.json").bufferedReader().use { it.readText() }
     val imgs = JSONObject(txt).getJSONObject("images")
     buildMap { imgs.keys().forEach { k -> put(k, imgs.getString(k)) } }
+} catch (_: Exception) { emptyMap() }
+
+/** Charge armada_firing_angles.json : id de carte -> angles (degrés). Vide si absent. */
+fun loadFiringArcs(context: Context): Map<String, FiringArcs> = try {
+    val txt = context.assets.open("armada_firing_angles.json").bufferedReader().use { it.readText() }
+    val ships = JSONObject(txt).getJSONObject("ships")
+    buildMap {
+        ships.keys().forEach { k ->
+            val o = ships.getJSONObject(k)
+            put(k, FiringArcs(o.getDouble("front").toFloat(), o.getDouble("flank").toFloat(), o.getDouble("rear").toFloat()))
+        }
+    }
 } catch (_: Exception) { emptyMap() }

@@ -1,0 +1,133 @@
+{
+ "schemaVersion": 1,
+ "unit": "degrés",
+ "source": "fichier Google Sheets (stats), colonne Firing Angle",
+ "ships": {
+  "armada_v15:ship-card/galactic-empire/gladiator-i-class-star-destroyer": {
+   "name": "Gladiator I-class Star Destroyer",
+   "front": 72.5,
+   "flank": 110.0,
+   "rear": 67.5,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/galactic-empire/gladiator-ii-class-star-destroyer": {
+   "name": "Gladiator II-class Star Destroyer",
+   "front": 72.5,
+   "flank": 110.0,
+   "rear": 67.5,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-i-class-star-destroyer": {
+   "name": "Imperial I-class Star Destroyer",
+   "front": 85.0,
+   "flank": 87.5,
+   "rear": 100.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/galactic-empire/imperial-ii-class-star-destroyer": {
+   "name": "Imperial II-class Star Destroyer",
+   "front": 85.0,
+   "flank": 87.5,
+   "rear": 100.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/galactic-empire/raider-i-class-corvette": {
+   "name": "Raider I-class Corvette",
+   "front": 72.5,
+   "flank": 97.5,
+   "rear": 92.5,
+   "source": "tableur stats (nom aligné: Raider Iclass Corvette)"
+  },
+  "armada_v15:ship-card/galactic-empire/raider-ii-class-corvette": {
+   "name": "Raider II-class Corvette",
+   "front": 72.5,
+   "flank": 97.5,
+   "rear": 92.5,
+   "source": "tableur stats (nom aligné: Raider IIclass Corvette)"
+  },
+  "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer": {
+   "name": "Victory I-class Star Destroyer",
+   "front": 105.0,
+   "flank": 85.0,
+   "rear": 85.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/galactic-empire/victory-ii-class-star-destroyer": {
+   "name": "Victory II-class Star Destroyer",
+   "front": 105.0,
+   "flank": 85.0,
+   "rear": 85.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-a": {
+   "name": "Assault Frigate Mark II A",
+   "front": 67.5,
+   "flank": 110.0,
+   "rear": 72.5,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-b": {
+   "name": "Assault Frigate Mark II B",
+   "front": 67.5,
+   "flank": 110.0,
+   "rear": 72.5,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/cr90-corvette-a": {
+   "name": "CR90 Corvette A",
+   "front": 85.0,
+   "flank": 95.0,
+   "rear": 85.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/cr90-corvette-b": {
+   "name": "CR90 Corvette B",
+   "front": 85.0,
+   "flank": 95.0,
+   "rear": 85.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc30c-scout-frigate": {
+   "name": "MC30c Scout Frigate",
+   "front": 62.5,
+   "flank": 112.5,
+   "rear": 72.5,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc30c-torpedo-frigate": {
+   "name": "MC30c Torpedo Frigate",
+   "front": 62.5,
+   "flank": 112.5,
+   "rear": 72.5,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser": {
+   "name": "MC80 Command Cruiser",
+   "front": 57.5,
+   "flank": 122.5,
+   "rear": 57.5,
+   "source": "tableur stats (nom aligné: MC80 Command)"
+  },
+  "armada_v15:ship-card/rebel-alliance/mc80-assault-cruiser": {
+   "name": "MC80 Assault Cruiser",
+   "front": 57.5,
+   "flank": 122.5,
+   "rear": 57.5,
+   "source": "tableur stats (nom aligné: MC80 Assault)"
+  },
+  "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate": {
+   "name": "Nebulon-B Escort Frigate",
+   "front": 55.0,
+   "flank": 125.0,
+   "rear": 55.0,
+   "source": "tableur stats"
+  },
+  "armada_v15:ship-card/rebel-alliance/nebulon-b-support-refit": {
+   "name": "Nebulon-B Support Refit",
+   "front": 55.0,
+   "flank": 125.0,
+   "rear": 55.0,
+   "source": "tableur stats"
+  }
+ }
+}
