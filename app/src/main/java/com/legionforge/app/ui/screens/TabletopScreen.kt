@@ -88,6 +88,10 @@ fun TabletopScreen(
     var dragId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
+    var attackResult by remember { mutableStateOf<String?>(null) }
+    var blackDice by remember { mutableStateOf(1) }
+    var blueDice by remember { mutableStateOf(0) }
+    var redDice by remember { mutableStateOf(0) }
     var yawIdx by remember { mutableStateOf(0) }
     var maxSpeed by remember { mutableStateOf(0) }
     val appCtx = androidx.compose.ui.platform.LocalContext.current
@@ -181,6 +185,26 @@ fun TabletopScreen(
             }
         }
 
+        // Attaque : choisir les dés, lancer (attaquant = sélection, cible = 2e tap)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { blackDice = (blackDice - 1).coerceAtLeast(0) }) { Text("− noir", color = Color(0xFF9EACBC), fontSize = 11.sp) }
+            Text("N$blackDice B$blueDice R$redDice", color = Color(0xFF9EACBC), fontSize = 11.sp)
+            TextButton(onClick = { blackDice = (blackDice + 1).coerceAtMost(6) }) { Text("noir +", color = Color(0xFF9EACBC), fontSize = 11.sp) }
+            TextButton(onClick = { blueDice = (blueDice + 1).coerceAtMost(6) }) { Text("bleu +", color = Color(0xFF9EACBC), fontSize = 11.sp) }
+            TextButton(onClick = { redDice = (redDice + 1).coerceAtMost(6) }) { Text("rouge +", color = Color(0xFF9EACBC), fontSize = 11.sp) }
+            TextButton(
+                enabled = selectedId != null && targetId != null && (blackDice + blueDice + redDice) > 0,
+                onClick = {
+                    val rolls = com.legionforge.app.ui.screens.ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
+                    val vsShip = positions.firstOrNull { it.id == targetId }?.let { it.sizeClass != "flotilla" } ?: true
+                    val dmg = com.legionforge.app.ui.screens.ArmadaDiceRoller.damage(rolls, vsShip)
+                    val acc = com.legionforge.app.ui.screens.ArmadaDiceRoller.accuracies(rolls)
+                    val crit = rolls.count { it.face.crit }
+                    attackResult = "Dégâts $dmg · Critiques $crit · Précisions $acc"
+                },
+            ) { Text("Attaquer", color = Color(0xFFF87171), fontSize = 12.sp) }
+        }
+        attackResult?.let { Text(it, color = Color(0xFFFFC857), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
         // Sélecteur de trajectoire : flèches gauche/droite (vitesse 0 à max)
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
