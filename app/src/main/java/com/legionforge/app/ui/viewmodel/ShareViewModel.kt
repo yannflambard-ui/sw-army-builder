@@ -27,7 +27,8 @@ data class ShareEntry(
     val parentInstanceId: String? = null,
     val quantity: Int = 0,
     val chosenSlot: String?,
-    val instanceId: String? = null
+    val instanceId: String? = null,
+    val parentIndex: Int? = null,
 )
 
 class ShareViewModel(application: Application) : AndroidViewModel(application) {
@@ -64,18 +65,18 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     /** Sérialise la liste courante et l'envoie à l'endpoint connecté. */
     fun shareList(list: BuilderListEntity?, entries: List<ListEntry>) {
         val l = list ?: return
+        val indexById = entries.withIndex().associate { it.value.instanceId to it.index }
         val payload = ShareListPayload(
             name = l.name,
             gameSystem = l.gameSystem,
             factionId = l.factionId,
             pointsLimit = l.pointsLimit,
             entries = entries.map { e ->
-                ShareEntry(e.card.id, e.parentInstanceId, e.quantity, e.chosenSlot?.name, e.instanceId)
+                ShareEntry(e.card.id, e.parentInstanceId, e.quantity, e.chosenSlot?.name, e.instanceId,
+                    parentIndex = e.parentInstanceId?.let { indexById[it] })
             }
         )
-        val json = gson.toJson(payload)
-        android.util.Log.i("ShareVM", "envoi: " + json)
-        nearby.sendList(json)
+        nearby.sendList(gson.toJson(payload))
         _sent.value = true
     }
 
