@@ -30,6 +30,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.hypot
+import com.legionforge.app.domain.SEGMENT_MM
+import com.legionforge.app.domain.YAW_STEP_DEG
+import com.legionforge.app.domain.maxClicks
+import com.legionforge.app.domain.maneuverPolyline
+import com.legionforge.app.domain.resolveManeuver2
 import android.content.Context
 import org.json.JSONObject
 
@@ -41,9 +46,6 @@ import org.json.JSONObject
  * Échelle : 1 mm de table = [PX_PER_MM] px à zoom 1. Socles en mm (RRG 1.5.0).
  */
 private const val PX_PER_MM = 2.0f
-
-/** Valeur PROVISOIRE : mm par point de vitesse pour la trajectoire indicative. À étalonner sur la règle. */
-private const val TRAJ_STEP_MM = 40f
 
 /** Pion de vaisseau sur le plateau. Position en mm, plateau centré sur (0,0). */
 data class TabletopPawn(
@@ -99,15 +101,19 @@ fun TabletopScreen(
     var blackDice by remember { mutableStateOf(1) }
     var blueDice by remember { mutableStateOf(0) }
     var redDice by remember { mutableStateOf(0) }
-    var yawIdx by remember { mutableStateOf(0) }
-    // Crans légaux (yaw) pour la vitesse choisie, lus dans la matrice du pion sélectionné
-    val legalYaws = positions.firstOrNull { it.id == selectedId }?.let { p ->
-        p.speedChart.flatMap { pos -> listOfNotNull(pos[speedIdx]) }.distinct().sorted()
-    } ?: emptyList()
-    // Trajectoire : crans 0 à max légal, bornés par la matrice
-    val maxYaw = legalYaws.maxOrNull() ?: 0
+    // État de pliage du gabarit : 4 articulations, crans SIGNÉS (- = gauche, + = droite). RRG 1519-1524.
+    var bends by remember { mutableStateOf(listOf(0, 0, 0, 0)) }
+    var activeJoint by remember { mutableStateOf(1) }
+    val selPawn = positions.firstOrNull { it.id == selectedId }
     // Vitesse max du vaisseau sélectionné (lue dans sa carte, pas en dur)
-    val maxSpeed = positions.firstOrNull { it.id == selectedId }?.maxSpeed ?: 0
+    val maxSpeed = selPawn?.maxSpeed ?: 0
+    // Bornes de crans par articulation, lues dans la Speed Chart (position 1..4, vitesse courante)
+    val jointMax = { pos: Int -> if (selPawn != null) maxClicks(selPawn.speedChart, pos, speedIdx) else 0 }
+    // Crans effectifs bornés : aucune mutation d'état pendant la composition
+    val effectiveBends = List(4) { i -> bends[i].coerceIn(-jointMax(i + 1), jointMax(i + 1)) }
+    val bendsSummary = effectiveBends.mapIndexedNotNull { i, b ->
+        if (b == 0) null else "${"①②③④"[i]}${if (b < 0) "←" else "→"}${kotlin.math.abs(b)}"
+    }.joinToString(" ").ifEmpty { "droit" }
     val appCtx = androidx.compose.ui.platform.LocalContext.current
     val bitmaps = remember(pawns) {
         (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
@@ -162,26 +168,37 @@ fun TabletopScreen(
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                 // plateau : fond + grille de 100 mm
                 drawGrid(c, scale)
-                // Déplacement : position d'arrivée tirée de la matrice (speedChart) pour la vitesse choisie.
-                // Cran 0 = ligne droite. Le point d'arrivée n'est PAS mesuré en mm : il est placé à l'échelle
-                // provisoire TRAJ_STEP_MM (non sourcée, indiqué comme indicatif dans l'app).
-                if (dragId == null && speedIdx > 0) {
-                    positions.firstOrNull { it.id == selectedId }?.let { p ->
-                        val reachable = p.speedChart.any { pos -> pos[speedIdx] != null }
-                        if (reachable) {
-                            val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                            val rad = Math.toRadians(p.headingDeg.toDouble())
-                            val len = speedIdx * TRAJ_STEP_MM * PX_PER_MM * scale
-                            val end = Offset(
-                                center.x + len * kotlin.math.sin(rad).toFloat(),
-                                center.y - len * kotlin.math.cos(rad).toFloat(),
-                            )
-                            drawLine(
-                                Color(0xFFFFC857), center, end, strokeWidth = 2f,
-                                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
-                            )
-                        }
+                // Aperçu du gabarit : polyligne d'autant de segments que la vitesse, poignées aux
+                // articulations et vaisseau fantôme d'arrivée. INDICATIF : 22,5°/cran et 40 mm/segment non sourcés.
+                if (dragId == null && speedIdx > 0 && selPawn != null) {
+                    val poly = maneuverPolyline(selPawn.xMm, selPawn.yMm, selPawn.headingDeg, speedIdx, effectiveBends)
+                    val pts = poly.map { (x, y) -> Offset(c.x + x * PX_PER_MM * scale, c.y + y * PX_PER_MM * scale) }
+                    val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+                    for (i in 1 until pts.size) {
+                        drawLine(Color(0xCCFFC857), pts[i - 1], pts[i], strokeWidth = 3f, pathEffect = dash)
                     }
+                    for (i in 1 until pts.lastIndex) {
+                        drawCircle(Color(0x44FFC857), radius = 9f, center = pts[i])
+                        drawCircle(Color(0xFFFFC857), radius = 3f, center = pts[i])
+                    }
+                    val ghost = resolveManeuver2(selPawn.xMm, selPawn.yMm, selPawn.headingDeg, speedIdx, effectiveBends)
+                    val (gw, gh) = baseSizeMm(selPawn.sizeClass)
+                    val gwPx = gw * PX_PER_MM * scale
+                    val ghPx = gh * PX_PER_MM * scale
+                    drawRect(
+                        Color(0x55FFC857),
+                        topLeft = Offset(pts.last().x - gwPx / 2, pts.last().y - ghPx / 2),
+                        size = androidx.compose.ui.geometry.Size(gwPx, ghPx),
+                    )
+                    val gr = Math.toRadians(ghost.headingDeg.toDouble())
+                    drawLine(
+                        Color(0x8877D9A7), pts.last(),
+                        Offset(
+                            pts.last().x + ghPx * 0.4f * kotlin.math.sin(gr).toFloat(),
+                            pts.last().y - ghPx * 0.4f * kotlin.math.cos(gr).toFloat(),
+                        ),
+                        strokeWidth = 2f,
+                    )
                 }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
                 if (dragId == null) {
@@ -241,43 +258,93 @@ fun TabletopScreen(
         // Sélecteur de trajectoire : flèches gauche/droite (vitesse 0 à max)
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
-            Text("Vitesse ${speedIdx}", color = Color(0xFF9EACBC), fontSize = 11.sp)
+            Text("Vitesse ${speedIdx} · ≈ indicatif", color = Color(0xFF9EACBC), fontSize = 11.sp)
             TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
         }
-        // Déplacement : choisir le cran puis confirmer. Géométrie indicative (TRAJ_STEP_MM non sourcé).
-        val selPawn = positions.firstOrNull { it.id == selectedId }
+        // Déplacement multi-coudes : UNE ligne, 4 chips + ◄ ► ⊘. Bornes lues dans speedChart (RRG 1519-1524).
         if (selPawn != null && maxSpeed > 0) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { yawIdx = (yawIdx - 1).coerceAtLeast(0) }) { Text("◀ cran", color = Color(0xFFFFC857), fontSize = 12.sp) }
-                Text("Cran ${yawIdx} / ${maxYaw} · 22,5°/cran provisoire", color = Color(0xFF9EACBC), fontSize = 11.sp)
-                TextButton(onClick = { yawIdx = (yawIdx + 1).coerceAtMost(maxYaw) }) { Text("cran ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = {
+                    val j = activeJoint
+                    bends = bends.toMutableList().also { it[j - 1] = (it[j - 1] - 1).coerceAtLeast(-jointMax(j)) }
+                }) { Text("◄", color = Color(0xFFFFC857), fontSize = 14.sp) }
+                for (j in 1..4) {
+                    JointChip(
+                        label = "①②③④"[j - 1].toString(),
+                        value = effectiveBends[j - 1],
+                        max = jointMax(j),
+                        active = activeJoint == j,
+                        onTap = {
+                            if (activeJoint == j && effectiveBends[j - 1] != 0) {
+                                bends = bends.toMutableList().also { it[j - 1] = -it[j - 1] }
+                            } else activeJoint = j
+                        },
+                        onReset = { bends = bends.toMutableList().also { it[j - 1] = 0 } },
+                    )
+                }
+                TextButton(onClick = {
+                    val j = activeJoint
+                    bends = bends.toMutableList().also { it[j - 1] = (it[j - 1] + 1).coerceAtMost(jointMax(j)) }
+                }) { Text("►", color = Color(0xFFFFC857), fontSize = 14.sp) }
+                TextButton(onClick = { bends = listOf(0, 0, 0, 0) }) { Text("⊘", color = Color(0xFF9EACBC), fontSize = 14.sp) }
             }
             Button(
-                enabled = speedIdx > 0 && legalYaws.isNotEmpty() && yawIdx in legalYaws,
+                enabled = speedIdx > 0,
                 onClick = {
-                    val len = speedIdx * TRAJ_STEP_MM
-                    // Cap à l'arrivée = cap + crans x 22,5° (provisoire). Résolution RRG 1032-1036.
-                    val newHeading = selPawn.headingDeg + yawIdx * YAW_STEP_DEG_PROVISIONAL
-                    val out = resolveManeuver(selPawn, positions, speedIdx, newHeading)
+                    val out = resolveManeuver(selPawn, positions, speedIdx, effectiveBends)
                     positions = positions.map { p ->
                         if (p.id == selPawn.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.heading) else p
                     }
-                    speedIdx = 0; yawIdx = 0
+                    speedIdx = 0
+                    bends = listOf(0, 0, 0, 0)
                     attackResult = out.collidedWith?.let {
                         "⚠ Chevauchement avec $it : vitesse réduite à ${out.speedUsed} (RRG 1032). À faire à la main : carte de dégâts face cachée à ${selPawn.name} et à $it."
                     }
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            ) { Text("Déplacer (vitesse $speedIdx, cran $yawIdx)", fontSize = 12.sp) }
+            ) { Text("Déplacer (V$speedIdx · $bendsSummary) ≈ indicatif", fontSize = 12.sp) }
         }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
-        val sel = positions.firstOrNull { it.id == selectedId }
         Text(
-            infoLine(positions, selectedId, targetId),
+            if (selPawn != null && speedIdx > 0)
+                "V$speedIdx · $bendsSummary · cap final ${"%.1f".format(selPawn.headingDeg + effectiveBends.take(speedIdx).sum() * YAW_STEP_DEG)}° ≈ · ◄► plient le coude ${"①②③④"[activeJoint - 1]} · appui long = 0 · ${YAW_STEP_DEG}°/cran et ${SEGMENT_MM.toInt()} mm non sourcés"
+            else infoLine(positions, selectedId, targetId),
             color = Color(0xFF9EACBC), fontSize = 11.sp,
             modifier = Modifier.padding(8.dp),
         )
     }
+}
+
+@Composable
+private fun JointChip(
+    label: String, value: Int, max: Int, active: Boolean,
+    onTap: () -> Unit, onReset: () -> Unit,
+) {
+    val locked = max == 0
+    val glyph = when {
+        locked -> "⊘"
+        value < 0 -> "←${-value}"
+        value > 0 -> "→$value"
+        else -> "·"
+    }
+    val tint = when {
+        locked -> Color(0xFF55637A)
+        value < 0 -> Color(0xFF7EC8FF)
+        value > 0 -> Color(0xFFFFAE6B)
+        else -> Color(0xFF9EACBC)
+    }
+    val bg = if (active) Color(0x33FFC857) else Color(0x11FFFFFF)
+    Box(
+        Modifier
+            .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }, onLongPress = { onReset() }) }
+            .background(bg, androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+            .padding(horizontal = 5.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center,
+    ) { Text("$label$glyph", color = tint, fontSize = 12.sp) }
 }
 
 private fun DrawScope.drawGrid(c: Offset, scale: Float) {
@@ -315,9 +382,6 @@ private fun DrawScope.drawCardImage(bmp: androidx.compose.ui.graphics.ImageBitma
 
 /** Vrai si le point touché tombe dans le socle du pion (heading 0 uniquement, étape 1). */
 /** Demi-dimensions du socle en mm (RRG : petit 43x71, moyen 63x102, gros 77.5x129). Immense = 2 bases, non traité ici. */
-/** Angle par cran de gabarit : 22,5° = valeur PROVISOIRE choisie par le produit (non confirmée par la RRG). */
-const val YAW_STEP_DEG_PROVISIONAL = 22.5f
-
 private fun baseHalfMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
     "medium" -> 31.5f to 51f
     "large", "huge" -> 38.75f to 64.5f
@@ -337,19 +401,16 @@ fun resolveManeuver(
     mover: TabletopPawn,
     others: List<TabletopPawn>,
     speed: Int,
-    newHeading: Float,
-    stepMm: Float = TRAJ_STEP_MM,
+    bends: List<Int>,
 ): ManeuverOutcome {
     var v = speed
     while (true) {
-        val rad = Math.toRadians(newHeading.toDouble())
-        val len = v * stepMm
-        val x = mover.xMm + (len * kotlin.math.sin(rad)).toFloat()
-        val y = mover.yMm - (len * kotlin.math.cos(rad)).toFloat()
-        val probe = mover.copy(xMm = x, yMm = y, headingDeg = newHeading)
+        // RRG 786-787 : à vitesse v, seules les v premières articulations comptent.
+        val out = resolveManeuver2(mover.xMm, mover.yMm, mover.headingDeg, v, bends.take(v))
+        val probe = mover.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.headingDeg)
         val hit = others.firstOrNull { it.id != mover.id && basesOverlap(probe, it) }
         if (hit == null || v == 0) {
-            return ManeuverOutcome(x, y, newHeading, v, hit?.name)
+            return ManeuverOutcome(out.xMm, out.yMm, out.headingDeg, v, hit?.name)
         }
         v -= 1
     }

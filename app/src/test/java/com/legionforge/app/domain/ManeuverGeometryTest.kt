@@ -66,4 +66,25 @@ class ManeuverGeometryTest {
         assertEquals(3, maneuverPolyline(0f, 0f, 0f, 2, listOf(0, 0)).size)
         assertEquals(1, maneuverPolyline(0f, 0f, 0f, 0, listOf(1)).size)
     }
+
+    @Test fun polylineDernierPointEgaleArrivee() {
+        val bends = listOf(1, -1, 2)
+        val r = resolveManeuver2(0f, 0f, 0f, 3, bends)
+        val last = maneuverPolyline(0f, 0f, 0f, 3, bends).last()
+        assertEquals(r.xMm, last.first, 0.001f)
+        assertEquals(r.yMm, last.second, 0.001f)
+    }
+
+    @Test fun reductionDeVitesseTronqueLesCoudes() {
+        // RRG 1032 : vitesse réduite de 1. À v on ne compte que les v premières articulations.
+        val bends = listOf(1, -1, 2)
+        val v1 = resolveManeuver2(0f, 0f, 0f, 1, bends.take(1))
+        val v2 = resolveManeuver2(0f, 0f, 0f, 2, bends.take(2))
+        val v3 = resolveManeuver2(0f, 0f, 0f, 3, bends.take(3))
+        assertEquals(22.5f, v1.headingDeg, 0.01f)
+        assertEquals(0f, v2.headingDeg, 0.01f)
+        assertEquals(45f, v3.headingDeg, 0.01f)
+        // v1 et v2 ont des arrivées distinctes
+        org.junit.Assert.assertFalse(v1.xMm == v2.xMm && v1.yMm == v2.yMm)
+    }
 }
