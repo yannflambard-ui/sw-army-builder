@@ -15,17 +15,17 @@ import kotlinx.coroutines.launch
 
 /** Payload de partage d'une liste (sérialisé en JSON, envoyé via Nearby). */
 data class ShareListPayload(
-    val name: String,
-    val gameSystem: String,
-    val factionId: String,
+    val name: String = "",
+    val gameSystem: String = "",
+    val factionId: String = "",
     val pointsLimit: Int = 0,
     val entries: List<ShareEntry> = emptyList(),
 )
 
 data class ShareEntry(
-    val cardId: String,
-    val parentInstanceId: String?,
-    val quantity: Int,
+    val cardId: String = "",
+    val parentInstanceId: String? = null,
+    val quantity: Int = 0,
     val chosenSlot: String?,
     val instanceId: String? = null
 )

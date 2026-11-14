@@ -94,7 +94,7 @@ fun ShareScreen(
                 Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.share_received), color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
-                        Text(payload.name, color = Color.White, style = MaterialTheme.typography.titleSmall)
+                        Text((payload.name as String?) ?: "", color = Color.White, style = MaterialTheme.typography.titleSmall)
                         Text("${payload.gameSystem} • ${payload.factionId} • ${payload.pointsLimit} pts • ${(payload.entries as List<ShareEntry>?)?.size ?: 0} entrées", color = Color(0xFF8F9BAD), fontSize = 11.sp)
                         Button(onClick = { onImport(payload); vm.clearReceived() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
                             Text(stringResource(R.string.share_import), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
