@@ -99,7 +99,8 @@ fun TabletopScreen(
     var blueDice by remember { mutableStateOf(0) }
     var redDice by remember { mutableStateOf(0) }
     var yawIdx by remember { mutableStateOf(0) }
-    var maxSpeed by remember { mutableStateOf(0) }
+    // Vitesse max du vaisseau sélectionné (lue dans sa carte, pas en dur)
+    val maxSpeed = positions.firstOrNull { it.id == selectedId }?.maxSpeed ?: 0
     val appCtx = androidx.compose.ui.platform.LocalContext.current
     val bitmaps = remember(pawns) {
         (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
@@ -153,20 +154,25 @@ fun TabletopScreen(
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                 // plateau : fond + grille de 100 mm
                 drawGrid(c, scale)
-                // Trajectoire indicative : ligne droite, longueur = vitesse x TRAJ_STEP_MM (à étalonner)
+                // Déplacement : position d'arrivée tirée de la matrice (speedChart) pour la vitesse choisie.
+                // Cran 0 = ligne droite. Le point d'arrivée n'est PAS mesuré en mm : il est placé à l'échelle
+                // provisoire TRAJ_STEP_MM (non sourcée, indiqué comme indicatif dans l'app).
                 if (dragId == null && speedIdx > 0) {
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
-                        val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                        val rad = Math.toRadians(p.headingDeg.toDouble())
-                        val len = speedIdx * TRAJ_STEP_MM * PX_PER_MM * scale
-                        val end = Offset(
-                            center.x + len * kotlin.math.sin(rad).toFloat(),
-                            center.y - len * kotlin.math.cos(rad).toFloat(),
-                        )
-                        drawLine(
-                            Color(0xFFFFC857), center, end, strokeWidth = 2f,
-                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
-                        )
+                        val reachable = p.speedChart.any { pos -> pos[speedIdx] != null }
+                        if (reachable) {
+                            val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
+                            val rad = Math.toRadians(p.headingDeg.toDouble())
+                            val len = speedIdx * TRAJ_STEP_MM * PX_PER_MM * scale
+                            val end = Offset(
+                                center.x + len * kotlin.math.sin(rad).toFloat(),
+                                center.y - len * kotlin.math.cos(rad).toFloat(),
+                            )
+                            drawLine(
+                                Color(0xFFFFC857), center, end, strokeWidth = 2f,
+                                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                            )
+                        }
                     }
                 }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
@@ -228,7 +234,7 @@ fun TabletopScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
             Text("Vitesse ${speedIdx}", color = Color(0xFF9EACBC), fontSize = 11.sp)
-            TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(4) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
+            TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
         }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         val sel = positions.firstOrNull { it.id == selectedId }
