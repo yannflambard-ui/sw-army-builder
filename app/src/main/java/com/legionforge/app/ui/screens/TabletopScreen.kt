@@ -263,6 +263,9 @@ fun TabletopScreen(
                         ) else p
                     }
                     speedIdx = 0; yawIdx = 0
+                    val moved = positions.firstOrNull { it.id == selPawn.id }
+                    val hits = if (moved != null) positions.filter { it.id != moved.id && basesOverlap(moved, it) } else emptyList()
+                    attackResult = if (hits.isNotEmpty()) "⚠ Chevauchement : ${hits.joinToString { it.name }} (règle non résolue : dégâts et vitesse réduite à faire)" else null
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             ) { Text("Déplacer (vitesse $speedIdx, cran $yawIdx)", fontSize = 12.sp) }
@@ -311,6 +314,32 @@ private fun DrawScope.drawCardImage(bmp: androidx.compose.ui.graphics.ImageBitma
 }
 
 /** Vrai si le point touché tombe dans le socle du pion (heading 0 uniquement, étape 1). */
+/** Demi-dimensions du socle en mm (RRG : petit 43x71, moyen 63x102, gros 77.5x129). Immense = 2 bases, non traité ici. */
+private fun baseHalfMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
+    "medium" -> 31.5f to 51f
+    "large", "huge" -> 38.75f to 64.5f
+    else -> 21.5f to 35.5f
+}
+
+/** Chevauchement de deux socles rectangulaires orientés (axes = cap de chaque pion). Test SAT simplifié. */
+fun basesOverlap(a: TabletopPawn, b: TabletopPawn): Boolean {
+    if (a.isSquadron || b.isSquadron) return false
+    val (ahw, ahl) = baseHalfMm(a.sizeClass)
+    val (bhw, bhl) = baseHalfMm(b.sizeClass)
+    val ra = Math.toRadians(a.headingDeg.toDouble())
+    val rb = Math.toRadians(b.headingDeg.toDouble())
+    val axes = listOf(ra, ra + Math.PI / 2, rb, rb + Math.PI / 2)
+    val dx = (b.xMm - a.xMm).toDouble(); val dy = (b.yMm - a.yMm).toDouble()
+    for (ax in axes) {
+        val ux = kotlin.math.cos(ax); val uy = kotlin.math.sin(ax)
+        val dist = kotlin.math.abs(dx * ux + dy * uy)
+        val ra2 = ahw * kotlin.math.abs(ux) + ahl * kotlin.math.abs(uy)
+        val rb2 = bhw * kotlin.math.abs(ux) + bhl * kotlin.math.abs(uy)
+        if (dist > ra2 + rb2) return false // axe séparateur trouvé
+    }
+    return true
+}
+
 private fun hitPawn(p: TabletopPawn, c: Offset, scale: Float, at: Offset): Boolean {
     val (w, h) = baseSizeMm(p.sizeClass)
     val cx = c.x + p.xMm * PX_PER_MM * scale
