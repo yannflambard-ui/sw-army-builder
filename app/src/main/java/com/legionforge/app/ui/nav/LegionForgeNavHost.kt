@@ -177,10 +177,10 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     speedChart = (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.speedChart ?: emptyList()).map { pos ->
                         pos.mapNotNull { (k, v) -> k.toIntOrNull()?.let { it to v } }.toMap()
                     },
-                    xMm = (i - allShips.size / 2f) * 120f,
+                    xMm = (run { val mine = allShips.count { !(it.instanceId.startsWith("B:") || it.instanceId.startsWith("opp_")) }; val sameSide = allShips.take(i).count { (it.instanceId.startsWith("B:") || it.instanceId.startsWith("opp_")) == (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) }; val isOppE = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"); val n = if (isOppE) allShips.size - mine else mine; (sameSide - n / 2f) * 160f }),
                     isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"),
                     isSquadron = e.card.kind.name == "ARMADA_SQUADRON",
-                    yMm = 0f,
+                    yMm = if (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) -420f else 420f,
                 )
             }
             com.legionforge.app.ui.screens.TabletopScreen(
