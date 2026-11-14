@@ -125,8 +125,10 @@ class PlaySyncManager(context: Context) {
             nearby.receivedPayload.collect { json ->
                 if (json == null) return@collect
                 val payload = try { gson.fromJson(json, PlaySyncPayload::class.java) } catch (_: Exception) { null } ?: return@collect
-                if (!fresh(payload.type, payload.seq)) return@collect  // payload obsolète (last-write-wins)
-                when (payload.type) {
+                // Message sans type (JSON incomplet / autre appareil) : ignoré, sinon NPE
+                val type = payload.type ?: return@collect
+                if (!fresh(type, payload.seq)) return@collect  // payload obsolète (last-write-wins)
+                when (type) {
                     "round" -> _receivedRound.value = payload.round
                     "state" -> _receivedUnits.value = payload.units
                     "list" -> _receivedListJson.value = payload.listJson
