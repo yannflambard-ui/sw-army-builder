@@ -254,20 +254,16 @@ fun TabletopScreen(
                 enabled = speedIdx > 0 && legalYaws.isNotEmpty() && yawIdx in legalYaws,
                 onClick = {
                     val len = speedIdx * TRAJ_STEP_MM
-                    // Cap à l'arrivée = cap + crans x 22,5° (provisoire). Sens : droite (horaire).
+                    // Cap à l'arrivée = cap + crans x 22,5° (provisoire). Résolution RRG 1032-1036.
                     val newHeading = selPawn.headingDeg + yawIdx * YAW_STEP_DEG_PROVISIONAL
-                    val rad = Math.toRadians(newHeading.toDouble())
+                    val out = resolveManeuver(selPawn, positions, speedIdx, newHeading)
                     positions = positions.map { p ->
-                        if (p.id == selPawn.id) p.copy(
-                            xMm = p.xMm + (len * kotlin.math.sin(rad)).toFloat(),
-                            yMm = p.yMm - (len * kotlin.math.cos(rad)).toFloat(),
-                            headingDeg = newHeading,
-                        ) else p
+                        if (p.id == selPawn.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.heading) else p
                     }
                     speedIdx = 0; yawIdx = 0
-                    val moved = positions.firstOrNull { it.id == selPawn.id }
-                    val hits = if (moved != null) positions.filter { it.id != moved.id && basesOverlap(moved, it) } else emptyList()
-                    attackResult = if (hits.isNotEmpty()) "⚠ Chevauchement : ${hits.joinToString { it.name }} (règle non résolue : dégâts et vitesse réduite à faire)" else null
+                    attackResult = out.collidedWith?.let {
+                        "⚠ Chevauchement avec $it : vitesse réduite à ${out.speedUsed} (RRG 1032). À faire à la main : carte de dégâts face cachée à ${selPawn.name} et à $it."
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             ) { Text("Déplacer (vitesse $speedIdx, cran $yawIdx)", fontSize = 12.sp) }
@@ -324,6 +320,37 @@ private fun baseHalfMm(sizeClass: String): Pair<Float, Float> = when (sizeClass)
     "medium" -> 31.5f to 51f
     "large", "huge" -> 38.75f to 64.5f
     else -> 21.5f to 35.5f
+}
+
+/** Résultat d'une manœuvre : position finale, vitesse effective, vaisseau chevauché (s'il y en a un). */
+data class ManeuverOutcome(val xMm: Float, val yMm: Float, val heading: Float, val speedUsed: Int, val collidedWith: String?)
+
+/**
+ * RRG 1032-1036 : si le vaisseau chevauche un autre vaisseau au terme de sa manœuvre, sa vitesse est
+ * temporairement réduite de 1 et il se déplace à cette vitesse ; on répète jusqu'à une position libre
+ * ou une vitesse 0 (sur place). Le cadran de vitesse n'est pas modifié.
+ * position(v) = point d'arrivée pour la vitesse v (géométrie indicative : 40 mm/vitesse, cap donné).
+ */
+fun resolveManeuver(
+    mover: TabletopPawn,
+    others: List<TabletopPawn>,
+    speed: Int,
+    newHeading: Float,
+    stepMm: Float = TRAJ_STEP_MM,
+): ManeuverOutcome {
+    var v = speed
+    while (true) {
+        val rad = Math.toRadians(newHeading.toDouble())
+        val len = v * stepMm
+        val x = mover.xMm + (len * kotlin.math.sin(rad)).toFloat()
+        val y = mover.yMm - (len * kotlin.math.cos(rad)).toFloat()
+        val probe = mover.copy(xMm = x, yMm = y, headingDeg = newHeading)
+        val hit = others.firstOrNull { it.id != mover.id && basesOverlap(probe, it) }
+        if (hit == null || v == 0) {
+            return ManeuverOutcome(x, y, newHeading, v, hit?.name)
+        }
+        v -= 1
+    }
 }
 
 /** Chevauchement de deux socles rectangulaires orientés (axes = cap de chaque pion). Test SAT simplifié. */
