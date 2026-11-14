@@ -320,10 +320,15 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
                 _currentList.value = list
                 _entries.value = emptyList()
                 loadCatalog(system, payload.factionId)
-                // Ajoute les entrées reçues (cardId -> carte du catalogue).
+                // Le catalogue se charge en asynchrone : attendre les cartes avant de résoudre les ids
+                // (sinon les vaisseaux, pas encore chargés, sont ignorés silencieusement).
+                kotlinx.coroutines.withTimeoutOrNull(5000L) {
+                    _cards.filter { it.isNotEmpty() }.first()
+                }
+                // Recharge la faction complète et attend les cartes qui manquent encore.
                 val byId = _cards.value.associateBy(CardDefinition::id)
                 payload.entries.forEach { e ->
-                    val card = byId[e.cardId] ?: return@forEach
+                    val card = byId[e.cardId] ?: run { android.util.Log.w("Import", "carte absente du catalogue: ${e.cardId}"); return@forEach }
                     _entries.value = _entries.value + ListEntry(
                         instanceId = UUID.randomUUID().toString(),
                         card = card,
