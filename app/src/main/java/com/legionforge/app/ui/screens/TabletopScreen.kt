@@ -59,6 +59,11 @@ data class TabletopPawn(
     val isOpp: Boolean = false,
     val isSquadron: Boolean = false,
     val speedChart: List<Map<Int, Int>> = emptyList(), // position 1..n -> vitesse -> crans d'embardée (absent = interdit)
+    val hull: Int = 0,          // coque de départ (ArmadaStats.hull)
+    val shieldFront: Int = 0,   // bouclier de secteur avant (ArmadaStats.shieldFront)
+    val shieldRear: Int = 0,
+    val shieldPort: Int = 0,
+    val shieldStarboard: Int = 0,
 )
 
 /** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
@@ -81,7 +86,8 @@ fun TabletopScreen(
     onBack: () -> Unit,
     onOpenPlay: (String) -> Unit = {},
 ) {
-    var scale by remember { mutableStateOf(1f) }
+    // Cadrage initial : le tapis 1800x900 mm tient dans la largeur (PX_PER_MM = 2 px/mm, ~1080 px écran)
+    var scale by remember { mutableStateOf(0.5f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
     var positions by remember(pawns) { mutableStateOf(pawns) }
     var selectedId by remember { mutableStateOf<String?>(null) }
@@ -110,7 +116,7 @@ fun TabletopScreen(
                 Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 Text("Tabletop · ${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 10.sp)
             }
-            TextButton(onClick = { scale = 1f; pan = Offset.Zero }) { Text("Recentrer", color = Color(0xFFFFC857), fontSize = 12.sp) }
+            TextButton(onClick = { scale = 0.5f; pan = Offset.Zero }) { Text("Recentrer", color = Color(0xFFFFC857), fontSize = 12.sp) }
         }
 
         Box(
@@ -204,6 +210,16 @@ fun TabletopScreen(
                     val acc = com.legionforge.app.ui.screens.ArmadaDiceRoller.accuracies(rolls)
                     val crit = rolls.count { it.face.crit }
                     attackResult = "Dégâts $dmg · Critiques $crit · Précisions $acc"
+                    // Appliquer les dégâts sur la cible : boucliers du secteur avant, puis coque, puis cartes (RRG)
+                    if (tgt != null && dmg > 0) {
+                        positions = positions.map { p ->
+                            if (p.id != tgt.id) p else {
+                                val (sh, hl, cards) = com.legionforge.app.ui.screens.ArmadaDefense.applyDamage(p.shieldFront, p.hull, dmg)
+                                attackResult = "Dégâts $dmg → boucliers ${sh}, coque ${hl}, cartes ${cards} · Critiques $crit · Précisions $acc"
+                                p.copy(shieldFront = sh, hull = hl)
+                            }
+                        }
+                    }
                 },
             ) { Text("Attaquer", color = Color(0xFFF87171), fontSize = 12.sp) }
         }

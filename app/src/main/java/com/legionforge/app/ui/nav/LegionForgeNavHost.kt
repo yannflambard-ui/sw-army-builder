@@ -173,6 +173,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     imagePath = shipImages[e.card.id],
                     arcs = shipArcs[e.card.id],
                     basePath = shipBases[e.card.id],
+                    hull = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.hull ?: 0,
+                    shieldFront = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.shieldFront ?: 0,
                     maxSpeed = (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.maxSpeed ?: 0),
                     speedChart = (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.speedChart ?: emptyList()).map { pos ->
                         pos.mapNotNull { (k, v) -> k.toIntOrNull()?.let { it to v } }.toMap()
