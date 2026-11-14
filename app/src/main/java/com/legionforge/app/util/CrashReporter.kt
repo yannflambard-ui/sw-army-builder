@@ -11,6 +11,7 @@ object CrashReporter {
     private const val TAG = "SWArmyBuilder"
 
     fun init(ctx: Context) {
+        appCtx = ctx.applicationContext
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             report(throwable)
@@ -18,9 +19,21 @@ object CrashReporter {
         }
     }
 
+    private var appCtx: Context? = null
+    private const val FILE = "last_crash.txt"
+
+    /** Texte du dernier crash (affiché au redémarrage pour copie). */
+    fun lastCrash(ctx: Context): String? =
+        ctx.getFileStreamPath(FILE).takeIf { it.exists() }?.readText()
+
+    fun clearCrash(ctx: Context) { ctx.getFileStreamPath(FILE).delete() }
+
     private fun report(error: Throwable) {
         val msg = error.message?.take(120) ?: error.javaClass.simpleName
-        Log.e(TAG, "Crash: $msg\n${error.stackTraceToString()}")
+        val full = "Crash: $msg\n${error.stackTraceToString()}"
+        Log.e(TAG, full)
+        // Écriture locale : survit au crash, relue au prochain lancement
+        appCtx?.let { c -> try { c.openFileOutput(FILE, Context.MODE_PRIVATE).use { it.write(full.toByteArray()) } } catch (_: Exception) {} }
     }
 
     /**

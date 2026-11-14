@@ -10,6 +10,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.text.style.TextAlign
 import com.legionforge.app.data.repository.CollectionRepository
@@ -21,6 +24,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 CrashReporter.init(applicationContext)
+        val lastCrashText = CrashReporter.lastCrash(applicationContext)
         CollectionRepository.init(applicationContext)
         com.legionforge.app.data.i18n.I18n.load(applicationContext)
         // Réapplique la langue sauvegardée par l'utilisateur (Settings) à chaque ouverture.
@@ -30,9 +34,35 @@ CrashReporter.init(applicationContext)
         setContent {
             LegionForgeTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    SafeApp()
+                    if (lastCrashText != null) {
+                        CrashScreen(lastCrashText, onClear = {
+                            CrashReporter.clearCrash(applicationContext)
+                            recreate()
+                        })
+                    } else {
+                        SafeApp()
+                    }
                 }
             }
+        }
+    }
+}
+
+/** Écran affiché après un plantage : texte complet + bouton Copier (presse-papiers, aucun réseau). */
+@Composable
+private fun CrashScreen(text: String, onClear: () -> Unit) {
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    Column(Modifier.fillMaxSize().padding(12.dp)) {
+        Text("Crash détecté", style = MaterialTheme.typography.titleMedium, color = Color(0xFFF87171))
+        Spacer(Modifier.height(8.dp))
+        Row {
+            Button(onClick = { clipboard.setText(androidx.compose.ui.text.AnnotatedString(text)) }) { Text("Copier") }
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(onClick = onClear) { Text("Effacer et continuer") }
+        }
+        Spacer(Modifier.height(8.dp))
+        Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Text(text, fontSize = 11.sp, color = Color(0xFFE5E7EB))
         }
     }
 }
