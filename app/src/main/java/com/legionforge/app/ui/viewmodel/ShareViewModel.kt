@@ -65,13 +65,22 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     /** Sérialise la liste courante et l'envoie à l'endpoint connecté. */
     fun shareList(list: BuilderListEntity?, entries: List<ListEntry>) {
         val l = list ?: return
-        val indexById = entries.withIndex().associate { it.value.instanceId to it.index }
+        // Un seul JSON : les parents (vaisseaux, unités) d'abord, chaque amélioration juste après
+        // son parent. parentIndex = position du parent DANS cette liste ordonnée.
+        val parents = entries.filter { it.parentInstanceId == null }
+        val ordered = parents.flatMap { p ->
+            listOf(p) + entries.filter { it.parentInstanceId == p.instanceId }
+        }
+        // Entrées orphelines (parent absent) : envoyées à la fin, sans parent.
+        val orphans = entries.filter { e -> e !in ordered }
+        val all = ordered + orphans
+        val indexById = all.withIndex().associate { it.value.instanceId to it.index }
         val payload = ShareListPayload(
             name = l.name,
             gameSystem = l.gameSystem,
             factionId = l.factionId,
             pointsLimit = l.pointsLimit,
-            entries = entries.map { e ->
+            entries = all.map { e ->
                 ShareEntry(e.card.id, e.parentInstanceId, e.quantity, e.chosenSlot?.name, e.instanceId,
                     parentIndex = e.parentInstanceId?.let { indexById[it] })
             }
