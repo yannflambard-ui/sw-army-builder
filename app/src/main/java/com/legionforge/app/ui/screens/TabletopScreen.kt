@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -129,7 +130,8 @@ fun TabletopScreen(
 
         Box(
             Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f)
                 // Zoom et déplacement du plateau (deux doigts) : on ne touche pas aux pions
                 .pointerInput(Unit) {
                     detectTransformGestures { _, panChange, zoom, _ ->
