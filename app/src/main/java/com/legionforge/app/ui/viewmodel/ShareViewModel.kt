@@ -73,7 +73,9 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                 ShareEntry(e.card.id, e.parentInstanceId, e.quantity, e.chosenSlot?.name, e.instanceId)
             }
         )
-        nearby.sendList(gson.toJson(payload))
+        val json = gson.toJson(payload)
+        android.util.Log.i("ShareVM", "envoi: " + json)
+        nearby.sendList(json)
         _sent.value = true
     }
 
