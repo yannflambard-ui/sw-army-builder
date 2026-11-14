@@ -99,6 +99,12 @@ fun TabletopScreen(
     var blueDice by remember { mutableStateOf(0) }
     var redDice by remember { mutableStateOf(0) }
     var yawIdx by remember { mutableStateOf(0) }
+    // Crans légaux (yaw) pour la vitesse choisie, lus dans la matrice du pion sélectionné
+    val legalYaws = positions.firstOrNull { it.id == selectedId }?.let { p ->
+        p.speedChart.flatMap { pos -> listOfNotNull(pos[speedIdx]) }.distinct().sorted()
+    } ?: emptyList()
+    // Trajectoire : crans 0 à max légal, bornés par la matrice
+    val maxYaw = legalYaws.maxOrNull() ?: 0
     // Vitesse max du vaisseau sélectionné (lue dans sa carte, pas en dur)
     val maxSpeed = positions.firstOrNull { it.id == selectedId }?.maxSpeed ?: 0
     val appCtx = androidx.compose.ui.platform.LocalContext.current
@@ -235,6 +241,31 @@ fun TabletopScreen(
             TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
             Text("Vitesse ${speedIdx}", color = Color(0xFF9EACBC), fontSize = 11.sp)
             TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
+        }
+        // Déplacement : choisir le cran puis confirmer. Géométrie indicative (TRAJ_STEP_MM non sourcé).
+        val selPawn = positions.firstOrNull { it.id == selectedId }
+        if (selPawn != null && maxSpeed > 0) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = { yawIdx = (yawIdx - 1).coerceAtLeast(0) }) { Text("◀ cran", color = Color(0xFFFFC857), fontSize = 12.sp) }
+                Text("Cran ${yawIdx} / ${maxYaw} (indicatif)", color = Color(0xFF9EACBC), fontSize = 11.sp)
+                TextButton(onClick = { yawIdx = (yawIdx + 1).coerceAtMost(maxYaw) }) { Text("cran ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
+            }
+            Button(
+                enabled = speedIdx > 0 && legalYaws.isNotEmpty() && yawIdx in legalYaws,
+                onClick = {
+                    val len = speedIdx * TRAJ_STEP_MM
+                    // Cap inchangé : l'angle d'un cran n'est pas sourcé (voir RRG / note gabarit).
+                    val rad = Math.toRadians(selPawn.headingDeg.toDouble())
+                    positions = positions.map { p ->
+                        if (p.id == selPawn.id) p.copy(
+                            xMm = p.xMm + (len * kotlin.math.sin(rad)).toFloat(),
+                            yMm = p.yMm - (len * kotlin.math.cos(rad)).toFloat(),
+                        ) else p
+                    }
+                    speedIdx = 0; yawIdx = 0
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            ) { Text("Déplacer (vitesse $speedIdx, cran $yawIdx)", fontSize = 12.sp) }
         }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         val sel = positions.firstOrNull { it.id == selectedId }
