@@ -322,8 +322,9 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
                 loadCatalog(system, payload.factionId)
                 // Le catalogue se charge en asynchrone : attendre les cartes avant de résoudre les ids
                 // (sinon les vaisseaux, pas encore chargés, sont ignorés silencieusement).
+                // Attente bornée (5 s) : on sonde la valeur, sans opérateur de flux.
                 kotlinx.coroutines.withTimeoutOrNull(5000L) {
-                    _cards.filter { it.isNotEmpty() }.first()
+                    while (_cards.value.isEmpty()) kotlinx.coroutines.delay(50L)
                 }
                 // Recharge la faction complète et attend les cartes qui manquent encore.
                 val byId = _cards.value.associateBy(CardDefinition::id)
