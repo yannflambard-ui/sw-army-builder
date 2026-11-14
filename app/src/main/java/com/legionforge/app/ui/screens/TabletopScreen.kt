@@ -247,19 +247,21 @@ fun TabletopScreen(
         if (selPawn != null && maxSpeed > 0) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(onClick = { yawIdx = (yawIdx - 1).coerceAtLeast(0) }) { Text("◀ cran", color = Color(0xFFFFC857), fontSize = 12.sp) }
-                Text("Cran ${yawIdx} / ${maxYaw} (indicatif)", color = Color(0xFF9EACBC), fontSize = 11.sp)
+                Text("Cran ${yawIdx} / ${maxYaw} · 22,5°/cran provisoire", color = Color(0xFF9EACBC), fontSize = 11.sp)
                 TextButton(onClick = { yawIdx = (yawIdx + 1).coerceAtMost(maxYaw) }) { Text("cran ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
             }
             Button(
                 enabled = speedIdx > 0 && legalYaws.isNotEmpty() && yawIdx in legalYaws,
                 onClick = {
                     val len = speedIdx * TRAJ_STEP_MM
-                    // Cap inchangé : l'angle d'un cran n'est pas sourcé (voir RRG / note gabarit).
-                    val rad = Math.toRadians(selPawn.headingDeg.toDouble())
+                    // Cap à l'arrivée = cap + crans x 22,5° (provisoire). Sens : droite (horaire).
+                    val newHeading = selPawn.headingDeg + yawIdx * YAW_STEP_DEG_PROVISIONAL
+                    val rad = Math.toRadians(newHeading.toDouble())
                     positions = positions.map { p ->
                         if (p.id == selPawn.id) p.copy(
                             xMm = p.xMm + (len * kotlin.math.sin(rad)).toFloat(),
                             yMm = p.yMm - (len * kotlin.math.cos(rad)).toFloat(),
+                            headingDeg = newHeading,
                         ) else p
                     }
                     speedIdx = 0; yawIdx = 0
@@ -315,6 +317,9 @@ private fun DrawScope.drawCardImage(bmp: androidx.compose.ui.graphics.ImageBitma
 
 /** Vrai si le point touché tombe dans le socle du pion (heading 0 uniquement, étape 1). */
 /** Demi-dimensions du socle en mm (RRG : petit 43x71, moyen 63x102, gros 77.5x129). Immense = 2 bases, non traité ici. */
+/** Angle par cran de gabarit : 22,5° = valeur PROVISOIRE choisie par le produit (non confirmée par la RRG). */
+const val YAW_STEP_DEG_PROVISIONAL = 22.5f
+
 private fun baseHalfMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
     "medium" -> 31.5f to 51f
     "large", "huge" -> 38.75f to 64.5f
