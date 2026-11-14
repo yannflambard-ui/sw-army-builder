@@ -18,8 +18,8 @@ data class ShareListPayload(
     val name: String,
     val gameSystem: String,
     val factionId: String,
-    val pointsLimit: Int,
-    val entries: List<ShareEntry>
+    val pointsLimit: Int = 0,
+    val entries: List<ShareEntry> = emptyList(),
 )
 
 data class ShareEntry(

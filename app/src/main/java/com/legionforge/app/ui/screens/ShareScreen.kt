@@ -19,6 +19,7 @@ import com.legionforge.app.data.model.BuilderListEntity
 import com.legionforge.app.data.model.ListEntry
 import com.legionforge.app.data.nearby.ShareMode
 import com.legionforge.app.ui.viewmodel.ShareListPayload
+import com.legionforge.app.ui.viewmodel.ShareEntry
 import com.legionforge.app.ui.viewmodel.ShareViewModel
 import com.legionforge.app.util.rememberNearbyPermissionAction
 
@@ -94,7 +95,7 @@ fun ShareScreen(
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.share_received), color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
                         Text(payload.name, color = Color.White, style = MaterialTheme.typography.titleSmall)
-                        Text("${payload.gameSystem} • ${payload.factionId} • ${payload.pointsLimit} pts • ${payload.entries.size} entrées", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                        Text("${payload.gameSystem} • ${payload.factionId} • ${payload.pointsLimit} pts • ${(payload.entries as List<ShareEntry>?)?.size ?: 0} entrées", color = Color(0xFF8F9BAD), fontSize = 11.sp)
                         Button(onClick = { onImport(payload); vm.clearReceived() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
                             Text(stringResource(R.string.share_import), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
                         }
