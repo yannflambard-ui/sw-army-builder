@@ -75,6 +75,17 @@ class ManeuverGeometryTest {
         assertEquals(r.yMm, last.second, 0.001f)
     }
 
+    @Test fun hitRotatedBaseSuitLaRotation() {
+        // Socle 43x71 (demi 21,5 / 35,5), centre (0,0), cap 0 = proue vers le haut.
+        org.junit.Assert.assertTrue(hitRotatedBase(0f, -30f, 0f, 0f, 21.5f, 35.5f, 0f))
+        org.junit.Assert.assertFalse(hitRotatedBase(30f, 0f, 0f, 0f, 21.5f, 35.5f, 0f))
+        // Cap 90 : le socle est couché, sa longueur est selon x. Un point à +30 en x est DEDANS.
+        org.junit.Assert.assertTrue(hitRotatedBase(30f, 0f, 0f, 0f, 21.5f, 35.5f, 90f))
+        org.junit.Assert.assertFalse(hitRotatedBase(0f, -30f, 0f, 0f, 21.5f, 35.5f, 90f))
+        // Cap 45 : un point sur l'axe du socle tourné est dedans.
+        org.junit.Assert.assertTrue(hitRotatedBase(21.21f, -21.21f, 0f, 0f, 21.5f, 35.5f, 45f))
+    }
+
     @Test fun reductionDeVitesseTronqueLesCoudes() {
         // RRG 1032 : vitesse réduite de 1. À v on ne compte que les v premières articulations.
         val bends = listOf(1, -1, 2)

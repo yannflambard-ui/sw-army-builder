@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.legionforge.app.domain.YAW_STEP_DEG
 import com.legionforge.app.domain.maxClicks
 import com.legionforge.app.domain.maneuverPolyline
 import com.legionforge.app.domain.resolveManeuver2
+import com.legionforge.app.domain.hitRotatedBase
 import android.content.Context
 import org.json.JSONObject
 
@@ -185,38 +187,44 @@ fun TabletopScreen(
                     val (gw, gh) = baseSizeMm(selPawn.sizeClass)
                     val gwPx = gw * PX_PER_MM * scale
                     val ghPx = gh * PX_PER_MM * scale
-                    drawRect(
-                        Color(0x55FFC857),
-                        topLeft = Offset(pts.last().x - gwPx / 2, pts.last().y - ghPx / 2),
-                        size = androidx.compose.ui.geometry.Size(gwPx, ghPx),
-                    )
-                    val gr = Math.toRadians(ghost.headingDeg.toDouble())
-                    drawLine(
-                        Color(0x8877D9A7), pts.last(),
-                        Offset(
-                            pts.last().x + ghPx * 0.4f * kotlin.math.sin(gr).toFloat(),
-                            pts.last().y - ghPx * 0.4f * kotlin.math.cos(gr).toFloat(),
-                        ),
-                        strokeWidth = 2f,
-                    )
+                    rotate(degrees = ghost.headingDeg, pivot = pts.last()) {
+                        drawRect(
+                            Color(0x55FFC857),
+                            topLeft = Offset(pts.last().x - gwPx / 2, pts.last().y - ghPx / 2),
+                            size = androidx.compose.ui.geometry.Size(gwPx, ghPx),
+                        )
+                        // Proue du fantôme : vers le haut du repère local, la rotation fait le reste.
+                        drawLine(
+                            Color(0x8877D9A7), pts.last(),
+                            Offset(pts.last().x, pts.last().y - ghPx * 0.4f),
+                            strokeWidth = 2f,
+                        )
+                    }
                 }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
                 if (dragId == null) {
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
                         val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                        drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs)
+                        rotate(degrees = p.headingDeg, pivot = center) {
+                            drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs)
+                        }
                     }
                 }
                 positions.forEach { p ->
                     val (w, h) = baseSizeMm(p.sizeClass)
                     val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                    val baseBmp = p.basePath?.let { bitmaps[it] }
-                    if (baseBmp != null) {
-                        // socle illustré : remplace le rectangle générique
-                        drawCardImage(baseBmp, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
-                    } else {
-                        drawBase(center, w * PX_PER_MM * scale, h * PX_PER_MM * scale, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
-                        drawCardImage(p.imagePath?.let { bitmaps[it] }, center, w * PX_PER_MM * scale, h * PX_PER_MM * scale)
+                    val wp = w * PX_PER_MM * scale
+                    val hp = h * PX_PER_MM * scale
+                    // Le socle SUIT le cap : rotate autour de son centre (RRG : le vaisseau est parallèle
+                    // au dernier segment du gabarit à l'arrivée).
+                    rotate(degrees = p.headingDeg, pivot = center) {
+                        val baseBmp = p.basePath?.let { bitmaps[it] }
+                        if (baseBmp != null) {
+                            drawCardImage(baseBmp, center, wp, hp)
+                        } else {
+                            drawBase(center, wp, hp, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
+                            drawCardImage(p.imagePath?.let { bitmaps[it] }, center, wp, hp)
+                        }
                     }
                 }
             }
@@ -441,7 +449,7 @@ private fun hitPawn(p: TabletopPawn, c: Offset, scale: Float, at: Offset): Boole
     val cy = c.y + p.yMm * PX_PER_MM * scale
     val hw = w * PX_PER_MM * scale / 2
     val hh = h * PX_PER_MM * scale / 2
-    return at.x in (cx - hw)..(cx + hw) && at.y in (cy - hh)..(cy + hh)
+    return hitRotatedBase(at.x, at.y, cx, cy, hw, hh, p.headingDeg)
 }
 
 /** Charge armada_ship_size_table.json : id de carte -> classe de socle. */

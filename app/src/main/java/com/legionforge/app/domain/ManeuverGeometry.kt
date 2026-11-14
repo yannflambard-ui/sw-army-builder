@@ -60,3 +60,16 @@ fun maneuverPolyline(
 /** Crans max d'une articulation, lus dans la Speed Chart (position 1..n -> vitesse -> crans). */
 fun maxClicks(speedChart: List<Map<Int, Int>>, position: Int, speed: Int): Int =
     speedChart.getOrNull(position - 1)?.get(speed) ?: 0
+
+/** Toucher un socle RECTANGULAIRE tourné de headingDeg : on ramène le point dans le repère local du socle. */
+fun hitRotatedBase(
+    atX: Float, atY: Float, cx: Float, cy: Float,
+    halfW: Float, halfH: Float, headingDeg: Float,
+): Boolean {
+    val r = Math.toRadians(headingDeg.toDouble())
+    val dx = (atX - cx).toDouble()
+    val dy = (atY - cy).toDouble()
+    val lx = dx * cos(r) + dy * sin(r)
+    val ly = -dx * sin(r) + dy * cos(r)
+    return kotlin.math.abs(lx) <= halfW && kotlin.math.abs(ly) <= halfH
+}
