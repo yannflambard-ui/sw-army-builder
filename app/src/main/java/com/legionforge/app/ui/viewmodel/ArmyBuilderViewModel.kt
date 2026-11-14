@@ -328,15 +328,23 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
                 }
                 // Recharge la faction complète et attend les cartes qui manquent encore.
                 val byId = _cards.value.associateBy(CardDefinition::id)
+                // Ancien instanceId (côté envoi) -> nouvel instanceId (ici), pour recoller les upgrades à leur vaisseau.
+                val remap = HashMap<String, String>()
                 payload.entries.forEach { e ->
                     val card = byId[e.cardId] ?: run { android.util.Log.w("Import", "carte absente du catalogue: ${e.cardId}"); return@forEach }
+                    val newId = UUID.randomUUID().toString()
+                    e.instanceId?.let { remap[it] = newId }
                     _entries.value = _entries.value + ListEntry(
-                        instanceId = UUID.randomUUID().toString(),
+                        instanceId = newId,
                         card = card,
                         parentInstanceId = e.parentInstanceId,
                         quantity = e.quantity,
                         chosenSlot = e.chosenSlot?.let(ArmadaSlot::valueOf)
                     )
+                }
+                _entries.value = _entries.value.map { en ->
+                    val p = en.parentInstanceId
+                    if (p != null && remap[p] != null) en.copy(parentInstanceId = remap[p]) else en
                 }
                 persistAndValidate()
                 onImported(list.id)

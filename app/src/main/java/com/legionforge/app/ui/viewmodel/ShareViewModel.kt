@@ -70,7 +70,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             factionId = l.factionId,
             pointsLimit = l.pointsLimit,
             entries = entries.map { e ->
-                ShareEntry(e.card.id, e.parentInstanceId, e.quantity, e.chosenSlot?.name)
+                ShareEntry(e.card.id, e.parentInstanceId, e.quantity, e.chosenSlot?.name, e.instanceId)
             }
         )
         nearby.sendList(gson.toJson(payload))
