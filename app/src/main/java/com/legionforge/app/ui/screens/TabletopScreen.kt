@@ -196,8 +196,11 @@ fun TabletopScreen(
                 enabled = selectedId != null && targetId != null && (blackDice + blueDice + redDice) > 0,
                 onClick = {
                     val rolls = com.legionforge.app.ui.screens.ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
-                    val vsShip = positions.firstOrNull { it.id == targetId }?.let { it.sizeClass != "flotilla" } ?: true
-                    val dmg = com.legionforge.app.ui.screens.ArmadaDiceRoller.damage(rolls, vsShip)
+                    val tgt = positions.firstOrNull { it.id == targetId }
+                    val att = positions.firstOrNull { it.id == selectedId }
+                    val targetIsShip = tgt?.isSquadron != true
+                    val attackerIsShip = att?.isSquadron != true
+                    val dmg = com.legionforge.app.ui.screens.ArmadaDiceRoller.damage(rolls, attackerIsShip, targetIsShip)
                     val acc = com.legionforge.app.ui.screens.ArmadaDiceRoller.accuracies(rolls)
                     val crit = rolls.count { it.face.crit }
                     attackResult = "Dégâts $dmg · Critiques $crit · Précisions $acc"

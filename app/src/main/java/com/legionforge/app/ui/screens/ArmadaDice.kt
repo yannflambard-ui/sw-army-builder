@@ -53,8 +53,15 @@ object ArmadaDiceRoller {
     }
 
     /** Dégâts totaux vs vaisseau ou escadron. */
-    fun damage(rolls: List<ArmadaRoll>, vsShip: Boolean): Int =
-        rolls.sumOf { if (vsShip) it.face.ship else it.face.squadron }
+    /**
+     * Dégâts (RRG l.89-92, 402) : si attaquant OU défenseur est un escadron, on compte
+     * les touches seulement. Le critique ne compte que vaisseau contre vaisseau.
+     */
+    fun damage(rolls: List<ArmadaRoll>, attackerIsShip: Boolean, targetIsShip: Boolean): Int {
+        val shipVsShip = attackerIsShip && targetIsShip
+        // Hors vaisseau-vs-vaisseau : face.squadron ne compte que les touches (CRIT pur = 0).
+        return rolls.sumOf { r -> if (shipVsShip) r.face.ship else r.face.squadron }
+    }
 
     /** Précisions : nombre de pions de défense que l'attaquant peut choisir de neutraliser. */
     fun accuracies(rolls: List<ArmadaRoll>): Int = rolls.count { it.face.accuracy }
