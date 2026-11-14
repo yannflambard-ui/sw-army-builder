@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import java.util.UUID
@@ -320,26 +321,13 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
                 _currentList.value = list
                 _entries.value = emptyList()
                 loadCatalog(system, payload.factionId)
-                // Le catalogue se charge en asynchrone : attendre les cartes avant de résoudre les ids
-                // (sinon les vaisseaux, pas encore chargés, sont ignorés silencieusement).
-                // Attente bornée (5 s) : on sonde la valeur, sans opérateur de flux.
-                kotlinx.coroutines.withTimeoutOrNull(5000L) {
-                    while (_cards.value.isEmpty()) kotlinx.coroutines.delay(50L)
-                }
-                // Recharge la faction complète et attend les cartes qui manquent encore.
-                val byId = _cards.value.associateBy(CardDefinition::id)
-                // Ids neufs pour chaque entrée reçue ; le parent est retrouvé par sa position (parentIndex).
-                val ids = payload.entries.map { UUID.randomUUID().toString() }
-                payload.entries.forEachIndexed { i, e ->
-                    val card = byId[e.cardId] ?: run { android.util.Log.w("Import", "carte absente du catalogue: ${e.cardId}"); return@forEachIndexed }
-                    _entries.value = _entries.value + ListEntry(
-                        instanceId = ids[i],
-                        card = card,
-                        parentInstanceId = e.parentIndex?.let { ids.getOrNull(it) },
-                        quantity = e.quantity,
-                        chosenSlot = e.chosenSlot?.let(ArmadaSlot::valueOf)
-                    )
-                }
+                // Résolution contre le catalogue DE LA FACTION RECUE, lu directement depuis la base
+                // (et non depuis _cards, qui peut encore contenir la faction de la liste précédente :
+                // les vaisseaux et commandants, propres à la faction, étaient alors ignorés).
+                val cards = repository.observeCards(system, payload.factionId).first()
+                val fleet = FleetShareCodec.rebuild(payload, cards) { UUID.randomUUID().toString() }
+                fleet.missingCardIds.forEach { android.util.Log.w("Import", "carte absente du catalogue: $it") }
+                _entries.value = fleet.entries
                 persistAndValidate()
                 onImported(list.id)
             }
