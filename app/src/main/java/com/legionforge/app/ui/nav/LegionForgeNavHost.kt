@@ -128,7 +128,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
                     val allEntries = vm.entries.value
                     val idx = allEntries.indexOfFirst { it.instanceId == eid }.coerceAtLeast(0)
-                    CardDetailScreen(entries = allEntries, initialIndex = idx, listId = lid, onBack = { navController.popBackStack() })
+                    CardDetailScreen(entries = allEntries, initialIndex = idx, listId = lid, onBack = { navController.popBackStack() }, onOpenTabletop = { id -> navController.navigate(Routes.tabletop(id)) })
                 }
         composable(Routes.TABLETOP, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable

@@ -206,7 +206,7 @@ enum class ArmadaPhase { COMMAND, SHIP, SQUADRON, STATUS }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: () -> Unit, listId: String? = null, vm: ArmyBuilderViewModel = viewModel(), playSyncVm: PlaySyncViewModel = viewModel()) {
+fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: () -> Unit, onOpenTabletop: ((String) -> Unit)? = null, listId: String? = null, vm: ArmyBuilderViewModel = viewModel(), playSyncVm: PlaySyncViewModel = viewModel()) {
     // Charge la liste dans CE vm (scopé à l'écran play) : sinon currentList est null et la
     // synchro 2 joueurs ne peut pas envoyer la liste adverse.
     if (listId != null) androidx.compose.runtime.LaunchedEffect(listId) { vm.openList(listId) }
@@ -594,6 +594,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         TopAppBar(title = { Text(stringResource(R.string.play_mode), style = MaterialTheme.typography.titleMedium) },
             navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.back)) } },
             actions = {
+                            if (onOpenTabletop != null && listId != null) {
+                                TextButton(onClick = { onOpenTabletop(listId) }) { Text("▦ Tabletop", color = Color(0xFFFFC857), fontSize = 12.sp) }
+                            }
                             // Bouton 2 joueurs : active/désactive le mode sync live.
                             Surface(onClick = {
                                 twoPlayer = !twoPlayer
