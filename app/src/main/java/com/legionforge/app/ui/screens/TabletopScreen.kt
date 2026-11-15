@@ -223,17 +223,16 @@ fun TabletopScreen(
                     // Le socle SUIT le cap : rotate autour de son centre (RRG : le vaisseau est parallèle
                     // au dernier segment du gabarit à l'arrivée).
                     rotate(degrees = p.headingDeg, pivot = center) {
-                        // 1) DESSOUS : token carton (carte de jeu), sinon socle illustré, sinon rectangle.
-                        val tokBmp = (p.tokenPath ?: p.imagePath)?.let { bitmaps[it] }
+                        // 1) DESSOUS : plus de carte de l'unité. Socle seulement si PAS de figurine.
+                        val figBmp0 = p.figurePath?.let { bitmaps[it] }
+                        val hasFig = figBmp0 != null && p.figureLengthMm > 0f
                         val baseBmp = p.basePath?.let { bitmaps[it] }
-                        if (tokBmp != null) {
-                            // le token garde son ratio (carte portrait), centré sur le socle
-                            val tk = wp / tokBmp.width.toFloat()
-                            drawCardImage(tokBmp, center, wp, tokBmp.height * tk)
-                        } else if (baseBmp != null) {
-                            drawCardImage(baseBmp, center, wp, hp)
-                        } else {
-                            drawBase(center, wp, hp, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
+                        if (!hasFig) {
+                            if (baseBmp != null) {
+                                drawCardImage(baseBmp, center, wp, hp)
+                            } else {
+                                drawBase(center, wp, hp, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
+                            }
                         }
                         // Figurine réelle à l'ÉCHELLE DE LA FIGURINE : longueur nez-queue = lengthMm.
                         val figBmp = p.figurePath?.let { bitmaps[it] }
