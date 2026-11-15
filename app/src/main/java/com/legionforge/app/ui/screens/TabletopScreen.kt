@@ -209,6 +209,18 @@ fun TabletopScreen(
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
                         val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
                         rotate(degrees = p.headingDeg, pivot = center) {
+                            drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs)
+                        }
+                    }
+                }
+                positions.forEach { p ->
+                    val (w, h) = baseSizeMm(p.sizeClass)
+                    val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
+                    val wp = w * PX_PER_MM * scale
+                    val hp = h * PX_PER_MM * scale
+                    // Le socle SUIT le cap : rotate autour de son centre (RRG : le vaisseau est parallèle
+                    // au dernier segment du gabarit à l'arrivée).
+                    rotate(degrees = p.headingDeg, pivot = center) {
                         val baseBmp = p.basePath?.let { bitmaps[it] }
                         if (baseBmp != null) {
                             drawCardImage(baseBmp, center, wp, hp)
