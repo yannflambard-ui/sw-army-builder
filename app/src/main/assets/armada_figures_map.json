@@ -1,5 +1,5 @@
 {
-  "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
+  "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
   "count": 41,
   "assets": [
     "a_wing_img06.png",
@@ -34,7 +34,8 @@
       "size_class": "small",
       "figure_kind": "fighter",
       "length_mm": 9.48,
-      "source": "reddit img6#6 (OCR 96.5)"
+      "source": "reddit img6#6 (OCR 96.5)",
+      "figure_count": 3
     },
     "armada_v15:squadron-card/galactic-empire/tie-interceptor-squadron": {
       "card_id": "armada_v15:squadron-card/galactic-empire/tie-interceptor-squadron",
@@ -44,7 +45,8 @@
       "size_class": "small",
       "figure_kind": "fighter",
       "length_mm": 11.55,
-      "source": "reddit img1#19 (OCR 96.7)"
+      "source": "reddit img1#19 (OCR 96.7)",
+      "figure_count": 3
     },
     "armada_v15:ship-card/galactic-empire/gozanti-class-assault-carriers": {
       "card_id": "armada_v15:ship-card/galactic-empire/gozanti-class-assault-carriers",
@@ -54,7 +56,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 36.88,
-      "source": "reddit img1#56 (OCR 94.2)"
+      "source": "reddit img1#56 (OCR 94.2)",
+      "figure_count": 2
     },
     "armada_v15:ship-card/galactic-empire/gozanti-class-cruisers": {
       "card_id": "armada_v15:ship-card/galactic-empire/gozanti-class-cruisers",
@@ -64,7 +67,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 36.88,
-      "source": "reddit img1#56 (OCR 94.2)"
+      "source": "reddit img1#56 (OCR 94.2)",
+      "figure_count": 2
     },
     "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0": {
       "card_id": "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0",
@@ -74,7 +78,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 36.88,
-      "source": "reddit img1#56 (OCR 94.2)"
+      "source": "reddit img1#56 (OCR 94.2)",
+      "figure_count": 2
     },
     "armada-v15:bsdata:separatist-alliance:3b12-4d0f-41b6-4078": {
       "card_id": "armada-v15:bsdata:separatist-alliance:3b12-4d0f-41b6-4078",
@@ -84,7 +89,8 @@
       "size_class": "small",
       "figure_kind": "fighter",
       "length_mm": 12.5,
-      "source": "reddit img6#19 (OCR 96.7)"
+      "source": "reddit img6#19 (OCR 96.7)",
+      "figure_count": 3
     },
     "armada_v15:ship-card/rebel-alliance/mc75-armored-cruiser": {
       "card_id": "armada_v15:ship-card/rebel-alliance/mc75-armored-cruiser",
@@ -94,7 +100,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 183.0,
-      "source": "reddit img3#6 (OCR 96.1)"
+      "source": "reddit img3#6 (OCR 96.1)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/mc75-ordnance-cruiser": {
       "card_id": "armada_v15:ship-card/rebel-alliance/mc75-ordnance-cruiser",
@@ -104,7 +111,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 183.0,
-      "source": "reddit img3#6 (OCR 96.1)"
+      "source": "reddit img3#6 (OCR 96.1)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:galactic-republic:be24-c216-6f4f-6299": {
       "card_id": "armada-v15:bsdata:galactic-republic:be24-c216-6f4f-6299",
@@ -114,7 +122,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 165.0,
-      "source": "reddit img4#10 (OCR 96.8)"
+      "source": "reddit img4#10 (OCR 96.8)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:galactic-republic:3240-fd8a-04a3-ce98": {
       "card_id": "armada-v15:bsdata:galactic-republic:3240-fd8a-04a3-ce98",
@@ -124,7 +133,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 165.0,
-      "source": "reddit img4#10 (OCR 96.8)"
+      "source": "reddit img4#10 (OCR 96.8)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:separatist-alliance:1da0-310a-d8fc-25ea": {
       "card_id": "armada-v15:bsdata:separatist-alliance:1da0-310a-d8fc-25ea",
@@ -134,7 +144,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 125.07,
-      "source": "reddit img3#10 (OCR 96.8)"
+      "source": "reddit img3#10 (OCR 96.8)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:separatist-alliance:abd6-da81-1e67-43d6": {
       "card_id": "armada-v15:bsdata:separatist-alliance:abd6-da81-1e67-43d6",
@@ -144,7 +155,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 125.07,
-      "source": "reddit img3#10 (OCR 96.8)"
+      "source": "reddit img3#10 (OCR 96.8)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:separatist-alliance:41e4-a9fd-cdc6-61d0": {
       "card_id": "armada-v15:bsdata:separatist-alliance:41e4-a9fd-cdc6-61d0",
@@ -154,7 +166,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 172.0,
-      "source": "reddit img3#13 (OCR 96.9)"
+      "source": "reddit img3#13 (OCR 96.9)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:separatist-alliance:a1f5-bad7-507a-627c": {
       "card_id": "armada-v15:bsdata:separatist-alliance:a1f5-bad7-507a-627c",
@@ -164,7 +177,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 172.0,
-      "source": "reddit img3#13 (OCR 96.9)"
+      "source": "reddit img3#13 (OCR 96.9)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/quasar-fire-i-class-cruiser-carrier": {
       "card_id": "armada_v15:ship-card/galactic-empire/quasar-fire-i-class-cruiser-carrier",
@@ -174,7 +188,8 @@
       "size_class": "medium",
       "figure_kind": "ship",
       "length_mm": 91.24,
-      "source": "reddit img3#17 (OCR 87.7)"
+      "source": "reddit img3#17 (OCR 87.7)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/quasar-fire-ii-class-cruiser-carrier": {
       "card_id": "armada_v15:ship-card/galactic-empire/quasar-fire-ii-class-cruiser-carrier",
@@ -184,7 +199,8 @@
       "size_class": "medium",
       "figure_kind": "ship",
       "length_mm": 91.24,
-      "source": "reddit img3#17 (OCR 87.7)"
+      "source": "reddit img3#17 (OCR 87.7)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/arquitens-class-command-cruiser": {
       "card_id": "armada_v15:ship-card/galactic-empire/arquitens-class-command-cruiser",
@@ -194,7 +210,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 73.55,
-      "source": "reddit img3#29 (OCR 96.6)"
+      "source": "reddit img3#29 (OCR 96.6)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/arquitens-class-light-cruiser": {
       "card_id": "armada_v15:ship-card/galactic-empire/arquitens-class-light-cruiser",
@@ -204,7 +221,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 73.55,
-      "source": "reddit img3#29 (OCR 96.6)"
+      "source": "reddit img3#29 (OCR 96.6)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/executor-i-class-star-dreadnought": {
       "card_id": "armada_v15:ship-card/galactic-empire/executor-i-class-star-dreadnought",
@@ -214,7 +232,8 @@
       "size_class": "huge",
       "figure_kind": "ship",
       "length_mm": 622.0,
-      "source": "reddit img4#2 (OCR 96.6)"
+      "source": "reddit img4#2 (OCR 96.6)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/executor-ii-class-star-dreadnought": {
       "card_id": "armada_v15:ship-card/galactic-empire/executor-ii-class-star-dreadnought",
@@ -224,7 +243,8 @@
       "size_class": "huge",
       "figure_kind": "ship",
       "length_mm": 622.0,
-      "source": "reddit img4#2 (OCR 96.6)"
+      "source": "reddit img4#2 (OCR 96.6)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/imperial-i-class-star-destroyer": {
       "card_id": "armada_v15:ship-card/galactic-empire/imperial-i-class-star-destroyer",
@@ -234,7 +254,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 205.0,
-      "source": "reddit img4#3 (OCR 96.4)"
+      "source": "reddit img4#3 (OCR 96.4)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/imperial-ii-class-star-destroyer": {
       "card_id": "armada_v15:ship-card/galactic-empire/imperial-ii-class-star-destroyer",
@@ -244,7 +265,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 205.0,
-      "source": "reddit img4#3 (OCR 96.4)"
+      "source": "reddit img4#3 (OCR 96.4)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-cymoon-1-refit": {
       "card_id": "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-cymoon-1-refit",
@@ -254,7 +276,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 205.0,
-      "source": "reddit img4#3 (OCR 96.4)"
+      "source": "reddit img4#3 (OCR 96.4)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-kuat-refit": {
       "card_id": "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-kuat-refit",
@@ -264,7 +287,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 205.0,
-      "source": "reddit img4#3 (OCR 96.4)"
+      "source": "reddit img4#3 (OCR 96.4)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c": {
       "card_id": "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c",
@@ -274,7 +298,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 53.47,
-      "source": "reddit img6#1 (OCR 92.7)"
+      "source": "reddit img6#1 (OCR 92.7)",
+      "figure_count": 1
     },
     "armada-v15:bsdata:galactic-republic:4eaa-a922-354c-6fdc": {
       "card_id": "armada-v15:bsdata:galactic-republic:4eaa-a922-354c-6fdc",
@@ -284,7 +309,8 @@
       "size_class": "small",
       "figure_kind": "ship",
       "length_mm": 53.47,
-      "source": "reddit img6#1 (OCR 92.7)"
+      "source": "reddit img6#1 (OCR 92.7)",
+      "figure_count": 1
     },
     "armada_v15:squadron-card/galactic-empire/tie-defender-squadron": {
       "card_id": "armada_v15:squadron-card/galactic-empire/tie-defender-squadron",
@@ -294,7 +320,8 @@
       "size_class": "small",
       "figure_kind": "fighter",
       "length_mm": 12.0,
-      "source": "reddit img6#3 (OCR 96.7)"
+      "source": "reddit img6#3 (OCR 96.7)",
+      "figure_count": 3
     },
     "armada_v15:squadron-card/rebel-alliance/b-wing-squadron": {
       "card_id": "armada_v15:squadron-card/rebel-alliance/b-wing-squadron",
@@ -304,7 +331,8 @@
       "size_class": "small",
       "figure_kind": "fighter",
       "length_mm": 19.0,
-      "source": "reddit img6#11 (OCR 96.8)"
+      "source": "reddit img6#11 (OCR 96.8)",
+      "figure_count": 3
     },
     "armada_v15:squadron-card/rebel-alliance/a-wing-squadron": {
       "card_id": "armada_v15:squadron-card/rebel-alliance/a-wing-squadron",
@@ -314,7 +342,8 @@
       "size_class": "small",
       "figure_kind": "fighter",
       "length_mm": 12.0,
-      "source": "reddit img6#17 (OCR 90.7)"
+      "source": "reddit img6#17 (OCR 90.7)",
+      "figure_count": 3
     },
     "armada_v15:ship-card/galactic-empire/gladiator-i-class-star-destroyer": {
       "card_id": "armada_v15:ship-card/galactic-empire/gladiator-i-class-star-destroyer",
@@ -324,7 +353,8 @@
       "size_class": "medium",
       "figure_kind": "ship",
       "length_mm": 92.05,
-      "source": "image externe fournie par l'utilisateur"
+      "source": "image externe fournie par l'utilisateur",
+      "figure_count": 1
     },
     "armada_v15:ship-card/galactic-empire/gladiator-ii-class-star-destroyer": {
       "card_id": "armada_v15:ship-card/galactic-empire/gladiator-ii-class-star-destroyer",
@@ -334,7 +364,8 @@
       "size_class": "medium",
       "figure_kind": "ship",
       "length_mm": 92.05,
-      "source": "image externe fournie par l'utilisateur"
+      "source": "image externe fournie par l'utilisateur",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-a": {
       "card_id": "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-a",
@@ -344,7 +375,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 107.0,
-      "source": "image externe fournie par l'utilisateur"
+      "source": "image externe fournie par l'utilisateur",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-b": {
       "card_id": "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-b",
@@ -354,7 +386,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 107.0,
-      "source": "image externe fournie par l'utilisateur"
+      "source": "image externe fournie par l'utilisateur",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-i": {
       "card_id": "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-i",
@@ -364,7 +397,8 @@
       "size_class": "huge",
       "figure_kind": "ship",
       "length_mm": 251.0,
-      "source": "image externe fournie par l'utilisateur (planche comparative, n°2)"
+      "source": "image externe fournie par l'utilisateur (planche comparative, n°2)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-ii": {
       "card_id": "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-ii",
@@ -374,7 +408,8 @@
       "size_class": "huge",
       "figure_kind": "ship",
       "length_mm": 251.0,
-      "source": "image externe fournie par l'utilisateur (planche comparative, n°2)"
+      "source": "image externe fournie par l'utilisateur (planche comparative, n°2)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/mc80-battle-cruiser": {
       "card_id": "armada_v15:ship-card/rebel-alliance/mc80-battle-cruiser",
@@ -384,7 +419,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 176.0,
-      "source": "reddit img3#5 (planche MrAppleWillEatYou, localisée par vision)"
+      "source": "reddit img3#5 (planche MrAppleWillEatYou, localisée par vision)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/mc80-star-cruiser": {
       "card_id": "armada_v15:ship-card/rebel-alliance/mc80-star-cruiser",
@@ -394,7 +430,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 176.0,
-      "source": "reddit img3#5 (planche MrAppleWillEatYou, localisée par vision)"
+      "source": "reddit img3#5 (planche MrAppleWillEatYou, localisée par vision)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate": {
       "card_id": "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate",
@@ -404,7 +441,8 @@
       "size_class": "medium",
       "figure_kind": "ship",
       "length_mm": 90.9,
-      "source": "reddit img3#4 (localisé par vision)"
+      "source": "reddit img3#4 (localisé par vision)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/nebulon-b-support-refit": {
       "card_id": "armada_v15:ship-card/rebel-alliance/nebulon-b-support-refit",
@@ -414,7 +452,8 @@
       "size_class": "medium",
       "figure_kind": "ship",
       "length_mm": 90.9,
-      "source": "reddit img3#4 (localisé par vision)"
+      "source": "reddit img3#4 (localisé par vision)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/mc80-assault-cruiser": {
       "card_id": "armada_v15:ship-card/rebel-alliance/mc80-assault-cruiser",
@@ -424,7 +463,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 182.8,
-      "source": "reddit img3#3 (localisé par vision)"
+      "source": "reddit img3#3 (localisé par vision)",
+      "figure_count": 1
     },
     "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser": {
       "card_id": "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser",
@@ -434,7 +474,8 @@
       "size_class": "large",
       "figure_kind": "ship",
       "length_mm": 182.8,
-      "source": "reddit img3#3 (localisé par vision)"
+      "source": "reddit img3#3 (localisé par vision)",
+      "figure_count": 1
     }
   }
 }

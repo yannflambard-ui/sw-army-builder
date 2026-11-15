@@ -64,6 +64,7 @@ data class TabletopPawn(
     val figurePath: String? = null,   // figurine réelle (assets), fond transparent
     val figureLengthMm: Float = 0f,   // longueur nez-queue de la figurine (RebelScale)
     val figureKind: String = "ship",  // ship = socle rectangulaire | fighter = jeton rond
+    val figureCount: Int = 1,          // exemplaires sur le jeton : 3 escadron, 2 flottille
     val isOpp: Boolean = false,
     val isSquadron: Boolean = false,
     val speedChart: List<Map<Int, Int>> = emptyList(), // position 1..n -> vitesse -> crans d'embardée (absent = interdit)
@@ -232,7 +233,23 @@ fun TabletopScreen(
                         if (figBmp != null && p.figureLengthMm > 0f) {
                             val longPx = p.figureLengthMm * PX_PER_MM * scale
                             val k = longPx / maxOf(figBmp.width, figBmp.height).toFloat()
-                            drawCardImage(figBmp, center, figBmp.width * k, figBmp.height * k)
+                            val fw = figBmp.width * k
+                            val fh = figBmp.height * k
+                            val n = p.figureCount.coerceAtLeast(1)
+                            if (n == 1) {
+                                drawCardImage(figBmp, center, fw, fh)
+                            } else {
+                                // Escadre (3 chasseurs) ou flottille (2 vaisseaux) : jetons en quinconce
+                                val step = longPx * 0.17f
+                                val half = (n - 1) / 2f
+                                for (i in 0 until n) {
+                                    drawCardImage(
+                                        figBmp,
+                                        Offset(center.x + (i - half) * step, center.y + (i - half) * step * 0.5f),
+                                        fw, fh,
+                                    )
+                                }
+                            }
                         } else if (baseBmp == null) {
                             drawCardImage(p.imagePath?.let { bitmaps[it] }, center, wp, hp)
                         }
@@ -469,6 +486,7 @@ data class ArmadaFigure(
     val sizeClass: String,
     val figureKind: String,
     val lengthMm: Float,
+    val figureCount: Int = 1,
 )
 
 /** Charge armada_figures_map.json : id de carte -> figurine réelle (fond transparent). */
@@ -483,6 +501,7 @@ fun loadArmadaFigures(context: Context): Map<String, ArmadaFigure> = try {
                 sizeClass = o.optString("size_class", "small"),
                 figureKind = o.optString("figure_kind", "ship"),
                 lengthMm = o.optDouble("length_mm", 0.0).toFloat(),
+                figureCount = o.optInt("figure_count", 1),
             ))
         }
     }

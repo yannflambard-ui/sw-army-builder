@@ -175,6 +175,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     figurePath = shipFigures[e.card.id]?.asset,
                     figureLengthMm = shipFigures[e.card.id]?.lengthMm ?: 0f,
                     figureKind = shipFigures[e.card.id]?.figureKind ?: "ship",
+                    figureCount = shipFigures[e.card.id]?.figureCount ?: 1,
                     arcs = shipArcs[e.card.id],
                     basePath = shipBases[e.card.id],
                     hull = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.hull ?: 0,
