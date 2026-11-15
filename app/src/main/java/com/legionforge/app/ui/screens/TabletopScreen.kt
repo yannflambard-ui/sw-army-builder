@@ -61,6 +61,7 @@ data class TabletopPawn(
     val arcs: FiringArcs? = null,  // angles réels (Star Forge), null = repli non vérifié
     val basePath: String? = null,  // socle illustré (assets), null = socle générique
     val maxSpeed: Int = 0,
+    val tokenPath: String? = null,    // token carton (Swarmada.wiki), dessous
     val figurePath: String? = null,   // figurine réelle (assets), fond transparent
     val figureLengthMm: Float = 0f,   // longueur nez-queue de la figurine (RebelScale)
     val figureKind: String = "ship",  // ship = socle rectangulaire | fighter = jeton rond
@@ -122,7 +123,7 @@ fun TabletopScreen(
     }.joinToString(" ").ifEmpty { "droit" }
     val appCtx = androidx.compose.ui.platform.LocalContext.current
     val bitmaps = remember(pawns) {
-        (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath } + pawns.mapNotNull { it.figurePath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
+        (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath } + pawns.mapNotNull { it.figurePath } + pawns.mapNotNull { it.tokenPath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
     }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
@@ -222,8 +223,14 @@ fun TabletopScreen(
                     // Le socle SUIT le cap : rotate autour de son centre (RRG : le vaisseau est parallèle
                     // au dernier segment du gabarit à l'arrivée).
                     rotate(degrees = p.headingDeg, pivot = center) {
+                        // 1) DESSOUS : token carton (carte de jeu), sinon socle illustré, sinon rectangle.
+                        val tokBmp = (p.tokenPath ?: p.imagePath)?.let { bitmaps[it] }
                         val baseBmp = p.basePath?.let { bitmaps[it] }
-                        if (baseBmp != null) {
+                        if (tokBmp != null) {
+                            // le token garde son ratio (carte portrait), centré sur le socle
+                            val tk = wp / tokBmp.width.toFloat()
+                            drawCardImage(tokBmp, center, wp, tokBmp.height * tk)
+                        } else if (baseBmp != null) {
                             drawCardImage(baseBmp, center, wp, hp)
                         } else {
                             drawBase(center, wp, hp, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
@@ -488,6 +495,15 @@ data class ArmadaFigure(
     val lengthMm: Float,
     val figureCount: Int = 1,
 )
+
+/** Charge armada_ship_tokens.json : id de carte -> token carton (carte de jeu). */
+fun loadArmadaTokens(context: Context): Map<String, String> = try {
+    val txt = context.assets.open("armada_ship_tokens.json").bufferedReader().use { it.readText() }
+    val items = JSONObject(txt).getJSONObject("images")
+    buildMap {
+        items.keys().forEach { k -> put(k, items.getString(k)) }
+    }
+} catch (_: Exception) { emptyMap() }
 
 /** Charge armada_figures_map.json : id de carte -> figurine réelle (fond transparent). */
 fun loadArmadaFigures(context: Context): Map<String, ArmadaFigure> = try {
