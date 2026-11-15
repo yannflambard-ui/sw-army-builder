@@ -1,8 +1,9 @@
 {
   "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
-  "count": 41,
+  "count": 48,
   "assets": [
     "a_wing_img06.png",
+    "acclamator_img03.png",
     "arquitens_img03.png",
     "assault_frigate_external.png",
     "b_wing_img06.png",
@@ -11,6 +12,7 @@
     "gladiator_external.png",
     "gozanti_img01.png",
     "imperial_star_destroyer_img04.png",
+    "interdictor_img03.png",
     "mc75_img03.png",
     "mc80_home_one_img03.png",
     "mc80_liberty_img03.png",
@@ -23,7 +25,9 @@
     "tie_defender_img06.png",
     "tie_interceptor_img01.png",
     "venator_img04.png",
-    "vulture_img06.png"
+    "vulture_img06.png",
+    "x_wing_img06.png",
+    "y_wing_img06.png"
   ],
   "items": {
     "armada_v15:squadron-card/galactic-empire/tie-advanced-squadron": {
@@ -476,6 +480,83 @@
       "length_mm": 182.8,
       "source": "reddit img3#3 (localisé par vision)",
       "figure_count": 1
+    },
+    "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea": {
+      "card_id": "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea",
+      "card_name": "Acclamator I-class Assault Ship",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/acclamator_img03.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 122.22,
+      "source": "reddit img3#8",
+      "figure_count": 1
+    },
+    "armada-v15:bsdata:galactic-republic:abd6-da81-1e67-43d6": {
+      "card_id": "armada-v15:bsdata:galactic-republic:abd6-da81-1e67-43d6",
+      "card_name": "Acclamator II-class Assault Ship",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/acclamator_img03.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 122.22,
+      "source": "reddit img3#8",
+      "figure_count": 1
+    },
+    "armada_v15:ship-card/galactic-empire/interdictor-combat-refit": {
+      "card_id": "armada_v15:ship-card/galactic-empire/interdictor-combat-refit",
+      "card_name": "Interdictor Combat Refit",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/interdictor_img03.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 159.0,
+      "source": "reddit img3#19",
+      "figure_count": 1
+    },
+    "armada_v15:ship-card/galactic-empire/interdictor-suppression-refit": {
+      "card_id": "armada_v15:ship-card/galactic-empire/interdictor-suppression-refit",
+      "card_name": "Interdictor Suppression Refit",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/interdictor_img03.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 159.0,
+      "source": "reddit img3#19",
+      "figure_count": 1
+    },
+    "armada_v15:squadron-card/rebel-alliance/x-wing-squadron": {
+      "card_id": "armada_v15:squadron-card/rebel-alliance/x-wing-squadron",
+      "card_name": "X-wing Squadron",
+      "card_kind": "ARMADA_SQUADRON",
+      "asset": "armada_figures/x_wing_img06.png",
+      "size_class": "small",
+      "figure_kind": "fighter",
+      "length_mm": 14.0,
+      "source": "reddit img6#23",
+      "figure_count": 3
+    },
+    "armada_v15:squadron-card/rebel-alliance/y-wing-squadron": {
+      "card_id": "armada_v15:squadron-card/rebel-alliance/y-wing-squadron",
+      "card_name": "Y-wing Squadron",
+      "card_kind": "ARMADA_SQUADRON",
+      "asset": "armada_figures/y_wing_img06.png",
+      "size_class": "small",
+      "figure_kind": "fighter",
+      "length_mm": 17.5,
+      "source": "reddit img6#8",
+      "figure_count": 3
+    },
+    "armada-v15:bsdata:galactic-republic:59fc-b936-5b91-66a1": {
+      "card_id": "armada-v15:bsdata:galactic-republic:59fc-b936-5b91-66a1",
+      "card_name": "BTL-B Y-wing Squadron",
+      "card_kind": "ARMADA_SQUADRON",
+      "asset": "armada_figures/y_wing_img06.png",
+      "size_class": "small",
+      "figure_kind": "fighter",
+      "length_mm": 17.5,
+      "source": "reddit img6#8",
+      "figure_count": 3
     }
   }
 }
