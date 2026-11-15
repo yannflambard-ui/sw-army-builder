@@ -61,6 +61,9 @@ data class TabletopPawn(
     val arcs: FiringArcs? = null,  // angles réels (Star Forge), null = repli non vérifié
     val basePath: String? = null,  // socle illustré (assets), null = socle générique
     val maxSpeed: Int = 0,
+    val figurePath: String? = null,   // figurine réelle (assets), fond transparent
+    val figureLengthMm: Float = 0f,   // longueur nez-queue de la figurine (RebelScale)
+    val figureKind: String = "ship",  // ship = socle rectangulaire | fighter = jeton rond
     val isOpp: Boolean = false,
     val isSquadron: Boolean = false,
     val speedChart: List<Map<Int, Int>> = emptyList(), // position 1..n -> vitesse -> crans d'embardée (absent = interdit)
@@ -118,7 +121,7 @@ fun TabletopScreen(
     }.joinToString(" ").ifEmpty { "droit" }
     val appCtx = androidx.compose.ui.platform.LocalContext.current
     val bitmaps = remember(pawns) {
-        (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
+        (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath } + pawns.mapNotNull { it.figurePath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
     }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
@@ -206,23 +209,19 @@ fun TabletopScreen(
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
                         val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
                         rotate(degrees = p.headingDeg, pivot = center) {
-                            drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs)
-                        }
-                    }
-                }
-                positions.forEach { p ->
-                    val (w, h) = baseSizeMm(p.sizeClass)
-                    val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
-                    val wp = w * PX_PER_MM * scale
-                    val hp = h * PX_PER_MM * scale
-                    // Le socle SUIT le cap : rotate autour de son centre (RRG : le vaisseau est parallèle
-                    // au dernier segment du gabarit à l'arrivée).
-                    rotate(degrees = p.headingDeg, pivot = center) {
                         val baseBmp = p.basePath?.let { bitmaps[it] }
                         if (baseBmp != null) {
                             drawCardImage(baseBmp, center, wp, hp)
                         } else {
                             drawBase(center, wp, hp, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
+                        }
+                        // Figurine réelle à l'ÉCHELLE DE LA FIGURINE : longueur nez-queue = lengthMm.
+                        val figBmp = p.figurePath?.let { bitmaps[it] }
+                        if (figBmp != null && p.figureLengthMm > 0f) {
+                            val longPx = p.figureLengthMm * PX_PER_MM * scale
+                            val k = longPx / maxOf(figBmp.width, figBmp.height).toFloat()
+                            drawCardImage(figBmp, center, figBmp.width * k, figBmp.height * k)
+                        } else if (baseBmp == null) {
                             drawCardImage(p.imagePath?.let { bitmaps[it] }, center, wp, hp)
                         }
                     }
@@ -451,6 +450,31 @@ private fun hitPawn(p: TabletopPawn, c: Offset, scale: Float, at: Offset): Boole
     val hh = h * PX_PER_MM * scale / 2
     return hitRotatedBase(at.x, at.y, cx, cy, hw, hh, p.headingDeg)
 }
+
+/** Figurine réelle d'une carte Armada : asset, classe de socle, longueur de figurine. */
+data class ArmadaFigure(
+    val asset: String,
+    val sizeClass: String,
+    val figureKind: String,
+    val lengthMm: Float,
+)
+
+/** Charge armada_figures_map.json : id de carte -> figurine réelle (fond transparent). */
+fun loadArmadaFigures(context: Context): Map<String, ArmadaFigure> = try {
+    val txt = context.assets.open("armada_figures_map.json").bufferedReader().use { it.readText() }
+    val items = JSONObject(txt).getJSONObject("items")
+    buildMap {
+        items.keys().forEach { k ->
+            val o = items.getJSONObject(k)
+            put(k, ArmadaFigure(
+                asset = o.getString("asset"),
+                sizeClass = o.optString("size_class", "small"),
+                figureKind = o.optString("figure_kind", "ship"),
+                lengthMm = o.optDouble("length_mm", 0.0).toFloat(),
+            ))
+        }
+    }
+} catch (_: Exception) { emptyMap() }
 
 /** Charge armada_ship_size_table.json : id de carte -> classe de socle. */
 fun loadShipSizes(context: Context): Map<String, String> = try {
