@@ -1,6 +1,6 @@
 {
   "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
-  "count": 64,
+  "count": 65,
   "assets": [
     "a_wing_img06.png",
     "acclamator_img03.png",
@@ -23,15 +23,16 @@
     "munificent_img03.png",
     "nebulon_img03.png",
     "onager_external.png",
-    "pelta_img03.png",
+    "pelta_external.png",
     "providence_external.png",
     "quasar_img03.png",
-    "recusant_img03.png",
+    "recusant_external.png",
     "starhawk_external.png",
     "tie_advanced_img06.png",
     "tie_defender_img06.png",
+    "tie_fighter_external.png",
     "tie_interceptor_img01.png",
-    "venator_img04.png",
+    "venator_external.png",
     "vulture_img06.png",
     "x_wing_img06.png",
     "y_wing_img06.png"
@@ -740,6 +741,17 @@
       "length_mm": 183.0,
       "source": "image externe fournie (boîte FFG Invisible Hand, socle retiré)",
       "figure_count": 1
+    },
+    "armada_v15:squadron-card/galactic-empire/tie-fighter-squadron": {
+      "card_id": "armada_v15:squadron-card/galactic-empire/tie-fighter-squadron",
+      "card_name": "TIE Fighter Squadron",
+      "card_kind": "ARMADA_SQUADRON",
+      "asset": "armada_figures/tie_fighter_external.png",
+      "size_class": "small",
+      "figure_kind": "fighter",
+      "length_mm": 13.0,
+      "source": "cosmos-models.com 1/48 TIE Fighter (photo #13)",
+      "figure_count": 3
     }
   }
 }
