@@ -179,6 +179,22 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     figureKind = shipFigures[e.card.id]?.figureKind ?: "ship",
                     figureCount = shipFigures[e.card.id]?.figureCount ?: 1,
                     arcs = shipArcs[e.card.id],
+                    attack = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.let { st ->
+                        fun toBag(l: List<Int>): com.legionforge.app.ui.screens.ArmadaDiceBag {
+                            fun n(i: Int) = l.getOrElse(i) { 0 }
+                            // ArmadaStats.attack* = [rouge, bleu, noir]
+                            return com.legionforge.app.ui.screens.ArmadaDiceBag(red = n(0), blue = n(1), black = n(2))
+                        }
+                        com.legionforge.app.ui.screens.ArmadaAttack(
+                            front = toBag(st.attackFront),
+                            right = toBag(st.attackStarboard),
+                            left = toBag(st.attackPort),
+                            rear = toBag(st.attackRear),
+                        )
+                    },
+                    snipe = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SQUADRON)
+                        ?.keywords?.any { it.equals("Snipe", ignoreCase = true) } == true ||
+                        (e.card.rulesText ?: "").contains("Snipe", ignoreCase = true),
                     basePath = shipBases[e.card.id],
                     hull = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.hull ?: 0,
                     shieldFront = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.shieldFront ?: 0,

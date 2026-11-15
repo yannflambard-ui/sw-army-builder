@@ -3148,6 +3148,12 @@ internal object ArmadaStatsParser {
             when (kind) {
                 CardKind.ARMADA_SHIP -> {
                     val attack = o.optJSONObject("attack")
+                    // Les tableaux shipStats.attack sont [rouge, bleu, noir] (idx 0 = rouge).
+                    fun bag(name: String): com.legionforge.app.ui.screens.ArmadaDiceBag {
+                        val a = attack?.optJSONArray(name) ?: return com.legionforge.app.ui.screens.ArmadaDiceBag()
+                        fun n(i: Int) = if (i < a.length()) a.optInt(i) else 0
+                        return com.legionforge.app.ui.screens.ArmadaDiceBag(red = n(0), blue = n(1), black = n(2))
+                    }
                     fun arc(name: String): List<Int> {
                         val a = attack?.optJSONArray(name) ?: return emptyList()
                         return buildList { for (i in 0 until a.length()) add(a.optInt(i)) }

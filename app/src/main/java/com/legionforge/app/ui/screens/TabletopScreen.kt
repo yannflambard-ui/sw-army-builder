@@ -74,7 +74,40 @@ data class TabletopPawn(
     val shieldRear: Int = 0,
     val shieldPort: Int = 0,
     val shieldStarboard: Int = 0,
+    /** Armement de batterie par zone de coque (hull zone). [noir, bleu, rouge] (shipStats.attack). */
+    val attack: ArmadaAttack? = null,
+    /** Snipe (Embuscade) : un escadron qui tire à distance 2 au lieu de 1. */
+    val snipe: Boolean = false,
 )
+
+/** Dés d'attaque d'une zone de coque : [noirs, bleus, rouges]. */
+data class ArmadaDiceBag(val black: Int = 0, val blue: Int = 0, val red: Int = 0) {
+    val isEmpty get() = black + blue + red == 0
+}
+
+/** Armement par zone de coque (front/right/left/rear). */
+data class ArmadaAttack(
+    val front: ArmadaDiceBag = ArmadaDiceBag(),
+    val right: ArmadaDiceBag = ArmadaDiceBag(),
+    val left: ArmadaDiceBag = ArmadaDiceBag(),
+    val rear: ArmadaDiceBag = ArmadaDiceBag(),
+) {
+    fun sector(name: String): ArmadaDiceBag = when (name) {
+        "front" -> front; "right" -> right; "left" -> left; else -> rear
+    }
+}
+
+/**
+ * Portée maximale d'une zone de coque (RRG 1.5.0 p.7) : close si uniquement des dés noirs,
+ * medium s'il y a au moins un dé bleu, long s'il y a au moins un dé rouge.
+ * Renvoie le rayon en mm depuis le bord du socle, et les couleurs jouables.
+ */
+fun attackRange(bag: ArmadaDiceBag): Pair<Float, List<String>> = when {
+    bag.red > 0 -> RANGE_LONG_MM to listOf("noir", "bleu", "rouge")
+    bag.blue > 0 -> RANGE_MEDIUM_MM to listOf("noir", "bleu")
+    bag.black > 0 -> RANGE_CLOSE_MM to listOf("noir")
+    else -> 0f to emptyList()
+}
 
 /** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
 data class FiringArcs(val front: Float, val flank: Float, val rear: Float)
@@ -173,7 +206,8 @@ fun TabletopScreen(
                     }
             ) {
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
-                // plateau : fond + grille de 100 mm
+                // plateau : zones de déploiement + grille de 100 mm
+                drawDeploymentZones(c, scale)
                 drawGrid(c, scale)
                 // Aperçu du gabarit : polyligne d'autant de segments que la vitesse, poignées aux
                 // articulations et vaisseau fantôme d'arrivée. INDICATIF : 22,5°/cran et 40 mm/segment non sourcés.
@@ -204,6 +238,17 @@ fun TabletopScreen(
                             Offset(pts.last().x, pts.last().y - ghPx * 0.4f),
                             strokeWidth = 2f,
                         )
+                    }
+                }
+                // Anneaux de portée du vaisseau sélectionné (noir=Close, bleu=Medium, rouge=Long)
+                if (dragId == null && selectedId != null) {
+                    positions.find { it.id == selectedId }?.let { sel ->
+                        val (sw, sh) = baseSizeMm(sel.sizeClass)
+                        val sc = Offset(c.x + sel.xMm * PX_PER_MM * scale, c.y + sel.yMm * PX_PER_MM * scale)
+                        val bag = sel.attack?.sector("front") ?: ArmadaDiceBag(
+                            black = if (sel.isSquadron) 1 else 0, blue = 0, red = 0
+                        )
+                        drawRangeRings(sc, scale, if (sel.isSquadron) null else bag, sel.isSquadron, sel.snipe)
                     }
                 }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
@@ -389,7 +434,90 @@ private fun JointChip(
     ) { Text("$label$glyph", color = tint, fontSize = 12.sp) }
 }
 
-private fun DrawScope.drawGrid(c: Offset, scale: Float) {
+private /**
+ * Zones de déploiement (Armada 400 pts) : deux bandes, une par joueur, sur toute la largeur
+ * du plateau. Bande = distance 1 à 3 depuis le bord de table du joueur.
+ * Dessinées en teinte pleine + liseré pour rester lisibles quand les pions sont posés dessus.
+ */
+fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
+    val k = PX_PER_MM * scale
+    val halfW = BOARD_W_MM / 2f * k
+    val halfH = BOARD_H_MM / 2f * k
+    val depMin = DEPLOY_MIN_MM * k
+    val depMax = DEPLOY_MAX_MM * k
+    // plateau : cadre
+    drawRect(
+        Color(0x2238BDF8),
+        topLeft = Offset(c.x - halfW, c.y - halfH),
+        size = androidx.compose.ui.geometry.Size(2 * halfW, 2 * halfH),
+    )
+    // zone de mise en place : cadre pointillé
+    val setupHalfH = SETUP_H_MM / 2f * k
+    drawRect(
+        Color(0x55FFC857),
+        topLeft = Offset(c.x - halfW, c.y - setupHalfH),
+        size = androidx.compose.ui.geometry.Size(2 * halfW, 2 * setupHalfH),
+        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f),
+    )
+    // zone de déploiement SUD (joueur 1) : distance 1..3 depuis le bord sud
+    val southTop = c.y + halfH - depMax
+    val southBottom = c.y + halfH - depMin
+    drawRect(
+        Color(0x5522D3EE),
+        topLeft = Offset(c.x - halfW, southTop),
+        size = androidx.compose.ui.geometry.Size(2 * halfW, southBottom - southTop),
+    )
+    drawRect(
+        Color(0xCC22D3EE),
+        topLeft = Offset(c.x - halfW, southTop),
+        size = androidx.compose.ui.geometry.Size(2 * halfW, southBottom - southTop),
+        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
+    )
+    // zone de déploiement NORD (joueur 2) : symétrique
+    val northTop = c.y - halfH + depMin
+    val northBottom = c.y - halfH + depMax
+    drawRect(
+        Color(0x55F87171),
+        topLeft = Offset(c.x - halfW, northTop),
+        size = androidx.compose.ui.geometry.Size(2 * halfW, northBottom - northTop),
+    )
+    drawRect(
+        Color(0xCCF87171),
+        topLeft = Offset(c.x - halfW, northTop),
+        size = androidx.compose.ui.geometry.Size(2 * halfW, northBottom - northTop),
+        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
+    )
+    // libellés
+    // (les textes sont dessinés par la couche Compose au-dessus, pas ici)
+}
+
+/**
+ * Anneaux de portée d'un vaisseau sélectionné (RRG 1.5.0 p.7/9).
+ * Trois cercles concentriques depuis le bord du socle : noir = Close, bleu = Medium, rouge = Long.
+ * Pour un escadron : un seul cercle (distance 1, ou 2 avec Snipe).
+ */
+fun DrawScope.drawRangeRings(center: Offset, scale: Float, bag: ArmadaDiceBag?, isSquadron: Boolean, snipe: Boolean) {
+    val base = if (isSquadron) {
+        listOf(Triple(if (snipe) SNIPE_RANGE_MM else SQUADRON_RANGE_MM, Color(0x99FFC857), "escadron"))
+    } else {
+        val (maxRange, _) = attackRange(bag ?: ArmadaDiceBag())
+        val rings = mutableListOf<Triple<Float, Color, String>>()
+        if (maxRange >= RANGE_CLOSE_MM) rings += Triple(RANGE_CLOSE_MM, Color(0xAAFFFFFF), "noir")
+        if (maxRange >= RANGE_MEDIUM_MM) rings += Triple(RANGE_MEDIUM_MM, Color(0xAA38BDF8), "bleu")
+        if (maxRange >= RANGE_LONG_MM) rings += Triple(RANGE_LONG_MM, Color(0xAAF87171), "rouge")
+        rings
+    }
+    if (base.isEmpty()) return
+    val k = PX_PER_MM * scale
+    val maxR = base.maxOf { it.first }
+    // disque de fond pour démarquer la zone de portée
+    drawCircle(Color(0x2238BDF8), radius = maxR * k, center = center)
+    base.forEach { (mm, col, _) ->
+        drawCircle(col, radius = mm * k, center = center, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
+    }
+}
+
+fun DrawScope.drawGrid(c: Offset, scale: Float) {
     val step = 100f * PX_PER_MM * scale
     if (step < 8f) return
     var x = c.x % step
@@ -533,6 +661,34 @@ fun loadShipSizes(context: Context): Map<String, String> = try {
 
 /** Rayon d'affichage des arcs (mm). Visuel seulement, pas une règle de portée. */
 private const val ARC_RADIUS_MM = 400f
+
+/**
+ * Portées d'attaque (RRG 1.5.0 p.7/9). La règle de portée fait 1 pied (304,8 mm) et se lit
+ * depuis le point le plus proche du SOCLE attaquant (jamais le centre).
+ *  - Close  = 1 bande (0..101,6 mm) : dés NOIRS + bleus + rouges
+ *  - Medium = 2 bandes (0..203,2 mm) : dés BLEUS + rouges
+ *  - Long   = 3 bandes (0..304,8 mm) : dés ROUGES seuls
+ * Escadrons : distance 1 (61 mm), ou 2 (122 mm) avec le mot-clé Snipe (Embuscade).
+ */
+private const val RANGE_RULER_MM = 304.8f   // 1 pied
+private const val RANGE_BAND_MM = RANGE_RULER_MM / 3f   // 101,6 mm par bande
+private const val RANGE_CLOSE_MM = RANGE_BAND_MM          // 101,6 mm
+private const val RANGE_MEDIUM_MM = RANGE_BAND_MM * 2f    // 203,2 mm
+private const val RANGE_LONG_MM = RANGE_RULER_MM          // 304,8 mm
+private const val SQUADRON_RANGE_MM = 60.96f               // distance 1
+private const val SNIPE_RANGE_MM = 121.92f                 // distance 2 (Snipe/Embuscade)
+
+/**
+ * Plateau standard Armada : 3 x 6 pieds (914 x 1829 mm), centré sur (0,0).
+ * Zone de mise en place : 3 x 4 pieds au centre (914 x 1219 mm).
+ * Zone de déploiement : bande de la distance 1 à 3 depuis VOTRE bord de table,
+ * sur toute la largeur de la zone de mise en place.
+ */
+private const val BOARD_W_MM = 914.4f    // 3 pieds (largeur)
+private const val BOARD_H_MM = 1828.8f   // 6 pieds (longueur)
+private const val SETUP_H_MM = 1219.2f   // 4 pieds (zone de mise en place)
+private const val DEPLOY_MIN_MM = 60.96f // distance 1
+private const val DEPLOY_MAX_MM = 182.88f // distance 3
 
 /**
  * Secteurs de tir : avant 60°, arrière 60°, flancs 120° chacun.
