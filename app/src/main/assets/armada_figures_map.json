@@ -1,6 +1,6 @@
 {
   "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
-  "count": 48,
+  "count": 54,
   "assets": [
     "a_wing_img06.png",
     "acclamator_img03.png",
@@ -11,6 +11,7 @@
     "executor_img04.png",
     "gladiator_external.png",
     "gozanti_img01.png",
+    "hammerhead_img01.png",
     "imperial_star_destroyer_img04.png",
     "interdictor_img03.png",
     "mc75_img03.png",
@@ -18,6 +19,7 @@
     "mc80_liberty_img03.png",
     "munificent_img03.png",
     "nebulon_img03.png",
+    "pelta_img03.png",
     "quasar_img03.png",
     "recusant_img03.png",
     "starhawk_external.png",
@@ -557,6 +559,72 @@
       "length_mm": 17.5,
       "source": "reddit img6#8",
       "figure_count": 3
+    },
+    "armada_v15:ship-card/rebel-alliance/modified-pelta-class-assault-ship": {
+      "card_id": "armada_v15:ship-card/rebel-alliance/modified-pelta-class-assault-ship",
+      "card_name": "Modified Pelta-class Assault Ship",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/pelta_img03.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 59.0,
+      "source": "reddit img3#22",
+      "figure_count": 1
+    },
+    "armada_v15:ship-card/rebel-alliance/modified-pelta-class-command-ship": {
+      "card_id": "armada_v15:ship-card/rebel-alliance/modified-pelta-class-command-ship",
+      "card_name": "Modified Pelta-class Command Ship",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/pelta_img03.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 59.0,
+      "source": "reddit img3#22",
+      "figure_count": 1
+    },
+    "armada-v15:bsdata:galactic-republic:6143-f5f7-e034-e96e": {
+      "card_id": "armada-v15:bsdata:galactic-republic:6143-f5f7-e034-e96e",
+      "card_name": "Pelta-class Medical Frigate",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/pelta_img03.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 59.0,
+      "source": "reddit img3#22",
+      "figure_count": 1
+    },
+    "armada-v15:bsdata:galactic-republic:e1f0-8662-e79d-5ef1": {
+      "card_id": "armada-v15:bsdata:galactic-republic:e1f0-8662-e79d-5ef1",
+      "card_name": "Pelta-class Transport Frigate",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/pelta_img03.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 59.0,
+      "source": "reddit img3#22",
+      "figure_count": 1
+    },
+    "armada_v15:ship-card/rebel-alliance/hammerhead-scout-corvette": {
+      "card_id": "armada_v15:ship-card/rebel-alliance/hammerhead-scout-corvette",
+      "card_name": "Hammerhead Scout Corvette",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/hammerhead_img01.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 54.47,
+      "source": "reddit img1#53",
+      "figure_count": 1
+    },
+    "armada_v15:ship-card/rebel-alliance/hammerhead-torpedo-corvette": {
+      "card_id": "armada_v15:ship-card/rebel-alliance/hammerhead-torpedo-corvette",
+      "card_name": "Hammerhead Torpedo Corvette",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/hammerhead_img01.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 54.47,
+      "source": "reddit img1#53",
+      "figure_count": 1
     }
   }
 }
