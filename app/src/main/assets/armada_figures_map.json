@@ -1,6 +1,6 @@
 {
   "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
-  "count": 65,
+  "count": 68,
   "assets": [
     "a_wing_img06.png",
     "acclamator_img03.png",
@@ -33,6 +33,7 @@
     "tie_fighter_external.png",
     "tie_interceptor_img01.png",
     "venator_external.png",
+    "victory_external.png",
     "vulture_img06.png",
     "x_wing_img06.png",
     "y_wing_img06.png"
@@ -752,6 +753,39 @@
       "length_mm": 13.0,
       "source": "cosmos-models.com 1/48 TIE Fighter (photo #13)",
       "figure_count": 3
+    },
+    "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer": {
+      "card_id": "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer",
+      "card_name": "Victory I-class Star Destroyer",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/victory_external.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 137.0,
+      "source": "image externe fournie (maquette Victory)",
+      "figure_count": 1
+    },
+    "armada_v15:ship-card/galactic-empire/victory-ii-class-star-destroyer": {
+      "card_id": "armada_v15:ship-card/galactic-empire/victory-ii-class-star-destroyer",
+      "card_name": "Victory II-class Star Destroyer",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/victory_external.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 137.0,
+      "source": "image externe fournie (maquette Victory)",
+      "figure_count": 1
+    },
+    "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
+      "card_id": "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817",
+      "card_name": "Victory I-Class Star Destroyer",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/victory_external.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 137.0,
+      "source": "image externe fournie (maquette Victory)",
+      "figure_count": 1
     }
   }
 }
