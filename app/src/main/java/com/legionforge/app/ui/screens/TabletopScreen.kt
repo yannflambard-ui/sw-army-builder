@@ -487,8 +487,23 @@ fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
         size = androidx.compose.ui.geometry.Size(2 * halfW, northBottom - northTop),
         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
     )
-    // libellés
-    // (les textes sont dessinés par la couche Compose au-dessus, pas ici)
+    // libellés de zone (drawIntoCanvas pour le texte)
+    drawIntoCanvas { canvas ->
+        val p = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            textSize = 13f * scale + 9f
+            isAntiAlias = true
+            setShadowLayer(4f, 0f, 0f, android.graphics.Color.BLACK)
+        }
+        val label = "ZONE DE DÉPLOIEMENT"
+        val w = p.measureText(label)
+        canvas.nativeCanvas.drawText(label, c.x - w / 2f, southTop + (southBottom - southTop) / 2f + 5f, p)
+        canvas.nativeCanvas.drawText(label, c.x - w / 2f, northTop + (northBottom - northTop) / 2f + 5f, p)
+        p.textSize = 11f * scale + 8f
+        val setup = "Zone de mise en place (3×4 ft)"
+        val w2 = p.measureText(setup)
+        canvas.nativeCanvas.drawText(setup, c.x - w2 / 2f, c.y - setupHalfH + 22f, p)
+    }
 }
 
 /**
@@ -738,10 +753,23 @@ private fun sectorOf(att: TabletopPawn, tgt: TabletopPawn): String {
 /** Texte d'information : distance centre à centre (pas une mesure de portée officielle). */
 private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?): String {
     val att = pawns.firstOrNull { it.id == selId } ?: return "Touchez un pion pour le sélectionner"
+    // Portée de l'armement (par défaut le secteur avant)
+    val bag = att.attack?.sector("front") ?: ArmadaDiceBag(black = if (att.isSquadron) 1 else 0)
+    val (maxR, _) = attackRange(bag)
+    val portee = if (att.isSquadron) {
+        if (att.snipe) "escadron · Snipe distance 2 (122 mm)" else "escadron · distance 1 (61 mm)"
+    } else if (maxR > 0f) {
+        val bands = buildList {
+            if (maxR >= RANGE_CLOSE_MM) add("noir")
+            if (maxR >= RANGE_MEDIUM_MM) add("bleu")
+            if (maxR >= RANGE_LONG_MM) add("rouge")
+        }.joinToString("+")
+        "portée " + "%.0f".format(maxR) + " mm · dés " + bands
+    } else "pas d'armement"
     val tgt = pawns.firstOrNull { it.id == tgtId }
-    if (tgt == null) return "${att.name} sélectionné · touchez une cible"
+    if (tgt == null) return att.name + " · " + portee + " · touchez une cible"
     val d = hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
-    return "${att.name} → ${tgt.name} · ${"%.0f".format(d)} mm centre à centre · arc ${sectorOf(att, tgt)} (non vérifié)"
+    return att.name + " → " + tgt.name + " · " + "%.0f".format(d) + " mm · arc " + sectorOf(att, tgt) + " · " + portee
 }
 
 /** Charge une image d'asset en ImageBitmap (null si absente). Appelé une fois par chemin. */
