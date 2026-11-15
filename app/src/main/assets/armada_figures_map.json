@@ -1,6 +1,6 @@
 {
   "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
-  "count": 62,
+  "count": 64,
   "assets": [
     "a_wing_img06.png",
     "acclamator_img03.png",
@@ -24,6 +24,7 @@
     "nebulon_img03.png",
     "onager_external.png",
     "pelta_img03.png",
+    "providence_external.png",
     "quasar_img03.png",
     "recusant_img03.png",
     "starhawk_external.png",
@@ -716,6 +717,28 @@
       "figure_kind": "ship",
       "length_mm": 54.47,
       "source": "reddit img1#53",
+      "figure_count": 1
+    },
+    "armada-v15:bsdata:separatist-alliance:7953-a4ce-f74b-c466": {
+      "card_id": "armada-v15:bsdata:separatist-alliance:7953-a4ce-f74b-c466",
+      "card_name": "Providence-class Dreadnought",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/providence_external.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 183.0,
+      "source": "image externe fournie (boîte FFG Invisible Hand, socle retiré)",
+      "figure_count": 1
+    },
+    "armada-v15:bsdata:separatist-alliance:0083-8d4e-e272-2a09": {
+      "card_id": "armada-v15:bsdata:separatist-alliance:0083-8d4e-e272-2a09",
+      "card_name": "Providence-class Carrier",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/providence_external.png",
+      "size_class": "large",
+      "figure_kind": "ship",
+      "length_mm": 183.0,
+      "source": "image externe fournie (boîte FFG Invisible Hand, socle retiré)",
       "figure_count": 1
     }
   }
