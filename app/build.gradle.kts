@@ -14,8 +14,8 @@ android {
         applicationId = "com.legionforge.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 271
-                                                versionName = "2.52.23"
+        versionCode = 272
+                                                versionName = "2.52.24"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
