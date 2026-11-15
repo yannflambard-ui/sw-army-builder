@@ -1,6 +1,6 @@
 {
   "note": "Figurines à l'échelle réelle (RebelScale, longueur nez-queue) pour le mode tabletop. size_class = socle RRG; figure_kind = ship (socle rectangulaire) | fighter (jeton rond). Détourage : fond et parasites supprimés (couleur du fond détectée sur les bords). figure_count = nombre d'exemplaires dessinés sur le jeton : 3 pour un escadron de chasseurs, 2 pour une flottille (GR-75, Gozanti), 1 pour un vaisseau unique ou normal. Une carte sans entrée ici garde le rendu générique (socle + miniature de carte).",
-  "count": 70,
+  "count": 72,
   "assets": [
     "a_wing_img06.png",
     "acclamator_img03.png",
@@ -12,6 +12,7 @@
     "executor_img04.png",
     "gladiator_external.png",
     "gozanti_img01.png",
+    "gr75_external.png",
     "hammerhead_img01.png",
     "hardcell_external.png",
     "imperial_star_destroyer_img04.png",
@@ -809,6 +810,28 @@
       "length_mm": 60.0,
       "source": "reddit slide 1 #56",
       "figure_count": 1
+    },
+    "armada_v15:ship-card/rebel-alliance/gr-75-combat-retrofits": {
+      "card_id": "armada_v15:ship-card/rebel-alliance/gr-75-combat-retrofits",
+      "card_name": "GR-75 Combat Retrofits",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/gr75_external.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 50.0,
+      "source": "reddit slide 1 #52",
+      "figure_count": 2
+    },
+    "armada_v15:ship-card/rebel-alliance/gr-75-medium-transports": {
+      "card_id": "armada_v15:ship-card/rebel-alliance/gr-75-medium-transports",
+      "card_name": "GR-75 Medium Transports",
+      "card_kind": "ARMADA_SHIP",
+      "asset": "armada_figures/gr75_external.png",
+      "size_class": "small",
+      "figure_kind": "ship",
+      "length_mm": 50.0,
+      "source": "reddit slide 1 #52",
+      "figure_count": 2
     }
   }
 }
