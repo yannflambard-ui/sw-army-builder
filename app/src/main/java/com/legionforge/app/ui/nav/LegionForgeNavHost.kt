@@ -215,6 +215,12 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                             rear = toBag(st.attackRear),
                         )
                     },
+                    antiSquadron = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, e.card.kind)?.antiSquadron?.takeIf { it.isNotEmpty() }?.let { d ->
+                        com.legionforge.app.ui.screens.ArmadaDiceBag(red = d.getOrElse(0) { 0 }, blue = d.getOrElse(1) { 0 }, black = d.getOrElse(2) { 0 })
+                    },
+                    squadronBattery = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, e.card.kind)?.battery?.takeIf { it.isNotEmpty() }?.let { d ->
+                        com.legionforge.app.ui.screens.ArmadaDiceBag(red = d.getOrElse(0) { 0 }, blue = d.getOrElse(1) { 0 }, black = d.getOrElse(2) { 0 })
+                    },
                     snipe = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SQUADRON)
                         ?.keywords?.any { it.equals("Snipe", ignoreCase = true) } == true ||
                         (e.card.rulesText ?: "").contains("Snipe", ignoreCase = true),
@@ -229,6 +235,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     },
                     xMm = (run { val mine = allShips.count { !(it.instanceId.startsWith("B:") || it.instanceId.startsWith("opp_")) }; val sameSide = allShips.take(i).count { (it.instanceId.startsWith("B:") || it.instanceId.startsWith("opp_")) == (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) }; val isOppE = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"); val n = if (isOppE) allShips.size - mine else mine; (sameSide - n / 2f) * 160f }),
                     isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"),
+                    headingDeg = if (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) 180f else 0f,
                     isSquadron = e.card.kind.name == "ARMADA_SQUADRON",
                     // Placé au centre de la zone de déploiement (distance 1..3 depuis le bord long = bord du joueur).
                     // BOARD_H_MM=914.4, halfH=457.2, DEPLOY_MIN=76.2, DEPLOY_MAX=228.6 → milieu = 304.8 mm.

@@ -3219,6 +3219,10 @@ internal object ArmadaStatsParser {
                         attackStarboard = arc("right"),
                         attackPortAux = arc("left_aux"),
                         attackStarboardAux = arc("right_aux"),
+                        antiSquadron = buildList {
+                            val a = o.optJSONArray("antiSquadron")
+                            if (a != null) for (i in 0 until a.length()) add(a.optInt(i))
+                        },
                         defenseTokens = tokens,
                         speedChart = speedChart,
                         size = o.optString("size", "small")
