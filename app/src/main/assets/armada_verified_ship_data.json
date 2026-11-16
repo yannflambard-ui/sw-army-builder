@@ -1,0 +1,917 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://api.swarmada.wiki/ships",
+    "retrievedUtc": "2026-11-16",
+    "sha256": "504547a87f667a50e8f401c0cd012ea8e0e9f2472d96e6479bc9f9f79bbf6d74",
+    "sizeField": "ships.<chassis>.size",
+    "antiSquadronField": "ships.<chassis>.models.<model>.armament.asa",
+    "sourceDiceOrder": [
+      "red",
+      "blue",
+      "black"
+    ]
+  },
+  "ships": {
+    "armada_v15:ship-card/galactic-empire/arquitens-class-command-cruiser": {
+      "name": "Arquitens-class Command Cruiser",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Arquitens-class Command Cruiser",
+      "sourceModelSlug": "arquitens-class-command-cruiser",
+      "sourceChassisSlug": "arquitens-class-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/arquitens-class-light-cruiser": {
+      "name": "Arquitens-class Light Cruiser",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "Arquitens-class Light Cruiser",
+      "sourceModelSlug": "arquitens-class-light-cruiser",
+      "sourceChassisSlug": "arquitens-class-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/executor-i-class-star-dreadnought": {
+      "name": "Executor I-Class Star Dreadnought",
+      "faction": "empire",
+      "size": "huge",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 1
+      },
+      "sourceModelName": "Executor I-class Star Dreadnought",
+      "sourceModelSlug": "executor-i-class-star-dreadnought",
+      "sourceChassisSlug": "executor-super-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/executor-ii-class-star-dreadnought": {
+      "name": "Executor II-Class Star Dreadnought",
+      "faction": "empire",
+      "size": "huge",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Executor II-class Star Dreadnought",
+      "sourceModelSlug": "executor-ii-class-star-dreadnought",
+      "sourceChassisSlug": "executor-super-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/gladiator-i-class-star-destroyer": {
+      "name": "Gladiator I-class Star Destroyer",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Gladiator I-class Star Destroyer",
+      "sourceModelSlug": "gladiator-i-class-star-destroyer",
+      "sourceChassisSlug": "gladiator-class-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/gladiator-ii-class-star-destroyer": {
+      "name": "Gladiator II-class Star Destroyer",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Gladiator II-class Star Destroyer",
+      "sourceModelSlug": "gladiator-ii-class-star-destroyer",
+      "sourceChassisSlug": "gladiator-class-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/gozanti-class-assault-carriers": {
+      "name": "Gozanti-class Assault Carriers",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Gozanti-class Assault Carriers",
+      "sourceModelSlug": "gozanti-class-assault-carriers",
+      "sourceChassisSlug": "gozanti-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/gozanti-class-cruisers": {
+      "name": "Gozanti-class Cruisers",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "Gozanti-class Cruisers",
+      "sourceModelSlug": "gozanti-class-cruisers",
+      "sourceChassisSlug": "gozanti-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/imperial-i-class-star-destroyer": {
+      "name": "Imperial I-class Star Destroyer",
+      "faction": "empire",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Imperial I-class Star Destroyer",
+      "sourceModelSlug": "imperial-i-class-star-destroyer",
+      "sourceChassisSlug": "imperial-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/imperial-ii-class-star-destroyer": {
+      "name": "Imperial II-class Star Destroyer",
+      "faction": "empire",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Imperial II-class Star Destroyer",
+      "sourceModelSlug": "imperial-ii-class-star-destroyer",
+      "sourceChassisSlug": "imperial-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-cymoon-1-refit": {
+      "name": "Imperial Star Destroyer Cymoon 1 Refit",
+      "faction": "empire",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 2
+      },
+      "sourceModelName": "Imperial Star Destroyer Cymoon 1 Refit",
+      "sourceModelSlug": "imperial-star-destroyer-cymoon-refit",
+      "sourceChassisSlug": "imperial-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/imperial-star-destroyer-kuat-refit": {
+      "name": "Imperial Star Destroyer Kuat Refit",
+      "faction": "empire",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Imperial Star Destroyer Kuat Refit",
+      "sourceModelSlug": "imperial-star-destroyer-kuat-refit",
+      "sourceChassisSlug": "imperial-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/interdictor-combat-refit": {
+      "name": "Interdictor Combat Refit",
+      "faction": "empire",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Interdictor Combat Refit",
+      "sourceModelSlug": "interdictor-combat-refit",
+      "sourceChassisSlug": "interdictor-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/interdictor-suppression-refit": {
+      "name": "Interdictor Suppression Refit",
+      "faction": "empire",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Interdictor Suppression Refit",
+      "sourceModelSlug": "interdictor-suppression-refit",
+      "sourceChassisSlug": "interdictor-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/onager-class-star-destroyer": {
+      "name": "Onager-class Star Destroyer",
+      "faction": "empire",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Onager-class Star Destroyer",
+      "sourceModelSlug": "onager-class-star-destroyer",
+      "sourceChassisSlug": "onager-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/onager-class-testbed": {
+      "name": "Onager-class Testbed",
+      "faction": "empire",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "Onager-class Testbed",
+      "sourceModelSlug": "onager-class-testbed",
+      "sourceChassisSlug": "onager-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/quasar-fire-i-class-cruiser-carrier": {
+      "name": "Quasar Fire I-class Cruiser-Carrier",
+      "faction": "empire",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Quasar Fire I-class Cruiser-Carrier",
+      "sourceModelSlug": "quasar-fire-i-class-cruiser-carrier",
+      "sourceChassisSlug": "quasar-fire-class-cruiser-carrier",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/quasar-fire-ii-class-cruiser-carrier": {
+      "name": "Quasar Fire II-class Cruiser-Carrier",
+      "faction": "empire",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 0,
+        "black": 0
+      },
+      "sourceModelName": "Quasar Fire II-class Cruiser-Carrier",
+      "sourceModelSlug": "quasar-fire-ii-class-cruiser-carrier",
+      "sourceChassisSlug": "quasar-fire-class-cruiser-carrier",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/raider-i-class-corvette": {
+      "name": "Raider I-class Corvette",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 2
+      },
+      "sourceModelName": "Raider I-class Corvette",
+      "sourceModelSlug": "raider-i-class-corvette",
+      "sourceChassisSlug": "raider-class-corvette",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/raider-ii-class-corvette": {
+      "name": "Raider II-class Corvette",
+      "faction": "empire",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Raider II-class Corvette",
+      "sourceModelSlug": "raider-ii-class-corvette",
+      "sourceChassisSlug": "raider-class-corvette",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/star-dreadnought-assault-prototype": {
+      "name": "Star Dreadnought Assault Prototype",
+      "faction": "empire",
+      "size": "huge",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Star Dreadnought Assault Prototype",
+      "sourceModelSlug": "star-dreadnought-assault-prototype",
+      "sourceChassisSlug": "prototype-super-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/star-dreadnought-command-prototype": {
+      "name": "Star Dreadnought Command Prototype",
+      "faction": "empire",
+      "size": "huge",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Star Dreadnought Command Prototype",
+      "sourceModelSlug": "star-dreadnought-command-prototype",
+      "sourceChassisSlug": "prototype-super-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/victory-i-class-star-destroyer": {
+      "name": "Victory I-class Star Destroyer",
+      "faction": "empire",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Victory I-class Star Destroyer",
+      "sourceModelSlug": "victory-i-class-star-destroyer",
+      "sourceChassisSlug": "victory-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/galactic-empire/victory-ii-class-star-destroyer": {
+      "name": "Victory II-class Star Destroyer",
+      "faction": "empire",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Victory II-class Star Destroyer",
+      "sourceModelSlug": "victory-ii-class-star-destroyer",
+      "sourceChassisSlug": "victory-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-a": {
+      "name": "Assault Frigate Mark II A",
+      "faction": "rebel",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Assault Frigate Mark II A",
+      "sourceModelSlug": "assault-frigate-mark-ii-a",
+      "sourceChassisSlug": "assault-frigate-mark-ii",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/assault-frigate-mark-ii-b": {
+      "name": "Assault Frigate Mark II B",
+      "faction": "rebel",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Assault Frigate Mark II B",
+      "sourceModelSlug": "assault-frigate-mark-ii-b",
+      "sourceChassisSlug": "assault-frigate-mark-ii",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/cr90-corvette-a": {
+      "name": "CR90 Corvette A",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "CR90 Corvette A",
+      "sourceModelSlug": "cr90-corvette-a",
+      "sourceChassisSlug": "cr90-corvette",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/cr90-corvette-b": {
+      "name": "CR90 Corvette B",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "CR90 Corvette B",
+      "sourceModelSlug": "cr90-corvette-b",
+      "sourceChassisSlug": "cr90-corvette",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/gr-75-combat-retrofits": {
+      "name": "GR-75 Combat Retrofits",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "GR-75 Combat Retrofits",
+      "sourceModelSlug": "gr75-combat-retrofits",
+      "sourceChassisSlug": "gr75-rebel-transport",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/gr-75-medium-transports": {
+      "name": "GR-75 Medium Transports",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "GR-75 Medium Transports",
+      "sourceModelSlug": "gr75-medium-transports",
+      "sourceChassisSlug": "gr75-rebel-transport",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/hammerhead-scout-corvette": {
+      "name": "Hammerhead Scout Corvette",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Hammerhead Scout Corvette",
+      "sourceModelSlug": "hammerhead-scout-corvette",
+      "sourceChassisSlug": "hammerhead-corvette",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/hammerhead-torpedo-corvette": {
+      "name": "Hammerhead Torpedo Corvette",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "Hammerhead Torpedo Corvette",
+      "sourceModelSlug": "hammerhead-torpedo-corvette",
+      "sourceChassisSlug": "hammerhead-corvette",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc30c-scout-frigate": {
+      "name": "MC30c Scout Frigate",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "MC30c Scout Frigate",
+      "sourceModelSlug": "mc30c-scout-frigate",
+      "sourceChassisSlug": "mc30c-frigate",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc30c-torpedo-frigate": {
+      "name": "MC30c Torpedo Frigate",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "MC30c Torpedo Frigate",
+      "sourceModelSlug": "mc30c-torpedo-frigate",
+      "sourceChassisSlug": "mc30c-frigate",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc75-armored-cruiser": {
+      "name": "MC75 Armored Cruiser",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "MC75 Armored Cruiser",
+      "sourceModelSlug": "mc75-armored-cruiser",
+      "sourceChassisSlug": "mc75-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc75-ordnance-cruiser": {
+      "name": "MC75 Ordnance Cruiser",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "MC75 Ordnance Cruiser",
+      "sourceModelSlug": "mc75-ordnance-cruiser",
+      "sourceChassisSlug": "mc75-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc80-assault-cruiser": {
+      "name": "MC80 Assault Cruiser",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "MC80 Assault Cruiser",
+      "sourceModelSlug": "mc80h-assault-cruiser",
+      "sourceChassisSlug": "mc80h-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc80-battle-cruiser": {
+      "name": "MC80 Battle Cruiser",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 2
+      },
+      "sourceModelName": "MC80 Battle Cruiser",
+      "sourceModelSlug": "mc80l-battle-cruiser",
+      "sourceChassisSlug": "mc80l-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc80-command-cruiser": {
+      "name": "MC80 Command Cruiser",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "MC80 Command Cruiser",
+      "sourceModelSlug": "mc80h-command-cruiser",
+      "sourceChassisSlug": "mc80h-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/mc80-star-cruiser": {
+      "name": "MC80 Star Cruiser",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "MC80 Star Cruiser",
+      "sourceModelSlug": "mc80l-star-cruiser",
+      "sourceChassisSlug": "mc80l-cruiser",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/modified-pelta-class-assault-ship": {
+      "name": "Modified Pelta-class Assault Ship",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Modified Pelta-class Assault Ship",
+      "sourceModelSlug": "modified-pelta-class-assault-ship",
+      "sourceChassisSlug": "pelta-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/modified-pelta-class-command-ship": {
+      "name": "Modified Pelta-class Command Ship",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Modified Pelta-class Command Ship",
+      "sourceModelSlug": "modified-pelta-class-command-ship",
+      "sourceChassisSlug": "pelta-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/nebulon-b-escort-frigate": {
+      "name": "Nebulon-B Escort Frigate",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Nebulon-B Escort Frigate",
+      "sourceModelSlug": "nebulon-b-escort-frigate",
+      "sourceChassisSlug": "nebulon-b-frigate",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/nebulon-b-support-refit": {
+      "name": "Nebulon-B Support Refit",
+      "faction": "rebel",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Nebulon-B Support Refit",
+      "sourceModelSlug": "nebulon-b-support-refit",
+      "sourceChassisSlug": "nebulon-b-frigate",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-i": {
+      "name": "Starhawk-Class Battleship Mark I",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Starhawk-class Battleship Mark I",
+      "sourceModelSlug": "starhawk-class-battleship-mark-i",
+      "sourceChassisSlug": "starhawk-class-battleship",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada_v15:ship-card/rebel-alliance/starhawk-class-battleship-mark-ii": {
+      "name": "Starhawk-Class Battleship Mark II",
+      "faction": "rebel",
+      "size": "large",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Starhawk-class Battleship Mark II",
+      "sourceModelSlug": "starhawk-class-battleship-mark-ii",
+      "sourceChassisSlug": "starhawk-class-battleship",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:1da0-310a-d8fc-25ea": {
+      "name": "Acclamator I-class Assault Ship",
+      "faction": "republic",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 2
+      },
+      "sourceModelName": "Acclamator I-class Assault Ship",
+      "sourceModelSlug": "acclamator-i-class-assault-ship",
+      "sourceChassisSlug": "acclamator-assault-ship",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:abd6-da81-1e67-43d6": {
+      "name": "Acclamator II-class Assault Ship",
+      "faction": "republic",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Acclamator II-class Assault Ship",
+      "sourceModelSlug": "acclamator-ii-class-assault-ship",
+      "sourceChassisSlug": "acclamator-assault-ship",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:8795-e911-4096-002c": {
+      "name": "Consular-class Charger c70",
+      "faction": "republic",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "Consular-class Charger c70",
+      "sourceModelSlug": "consular-class-charger-c70",
+      "sourceChassisSlug": "consular-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:4eaa-a922-354c-6fdc": {
+      "name": "Consular-class Armed Cruiser",
+      "faction": "republic",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Consular-class Armed Cruiser",
+      "sourceModelSlug": "consular-class-armed-cruiser",
+      "sourceChassisSlug": "consular-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:be24-c216-6f4f-6299": {
+      "name": "Venator I-class Star Destroyer",
+      "faction": "republic",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 2,
+        "black": 0
+      },
+      "sourceModelName": "Venator I-class Star Destroyer",
+      "sourceModelSlug": "venator-i-class-star-destroyer",
+      "sourceChassisSlug": "venator-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:3240-fd8a-04a3-ce98": {
+      "name": "Venator II-class Star Destroyer",
+      "faction": "republic",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Venator II-class Star Destroyer",
+      "sourceModelSlug": "venator-ii-class-star-destroyer",
+      "sourceChassisSlug": "venator-star-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:6143-f5f7-e034-e96e": {
+      "name": "Pelta-class Medical Frigate",
+      "faction": "republic",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Pelta-class Medical Frigate",
+      "sourceModelSlug": "pelta-class-medical-frigate",
+      "sourceChassisSlug": "pelta-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:e1f0-8662-e79d-5ef1": {
+      "name": "Pelta-class Transport Frigate",
+      "faction": "republic",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Pelta-class Transport Frigate",
+      "sourceModelSlug": "pelta-class-transport-frigate",
+      "sourceChassisSlug": "pelta-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:galactic-republic:2baf-29a0-daae-6817": {
+      "name": "Victory I-Class Star Destroyer",
+      "faction": "republic",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Victory I-class Star Destroyer {GAR}",
+      "sourceModelSlug": "victory-i-class-star-destroyer-republic",
+      "sourceChassisSlug": "victory-star-destroyer",
+      "match": "documented_alias",
+      "matchExplanation": "The source adds {GAR}; Rapid Reinforcements v2.1 page 3 prints Victory I-class Star Destroyer as the Republic Clone card.",
+      "identitySource": "https://cdn.svc.asmodee.net/production-amgcom/uploads/2023/10/SWM_RapidReinforcements_2.1-1-1.pdf#page=3"
+    },
+    "armada-v15:bsdata:separatist-alliance:1da0-310a-d8fc-25ea": {
+      "name": "Munificent-class Comms Frigate",
+      "faction": "separatist",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 0,
+        "black": 0
+      },
+      "sourceModelName": "Munificent-class Comms Frigate",
+      "sourceModelSlug": "munificent-class-comms-frigate",
+      "sourceChassisSlug": "munificent-class-frigate",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:abd6-da81-1e67-43d6": {
+      "name": "Munificent-class Star Frigate",
+      "faction": "separatist",
+      "size": "medium",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "Munificent-class Star Frigate",
+      "sourceModelSlug": "munificent-class-star-frigate",
+      "sourceChassisSlug": "munificent-class-frigate",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:8795-e911-4096-002c": {
+      "name": "Hardcell-class Transport",
+      "faction": "separatist",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Hardcell-class Transport",
+      "sourceModelSlug": "hardcell-class-transport",
+      "sourceChassisSlug": "hardcell-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:4eaa-a922-354c-6fdc": {
+      "name": "Hardcell-class Battle Refit",
+      "faction": "separatist",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 1
+      },
+      "sourceModelName": "Hardcell-class Battle Refit",
+      "sourceModelSlug": "hardcell-class-battle-refit",
+      "sourceChassisSlug": "hardcell-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:41e4-a9fd-cdc6-61d0": {
+      "name": "Recusant-class Light Destroyer",
+      "faction": "separatist",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Recusant-class Light Destroyer",
+      "sourceModelSlug": "recusant-class-light-destroyer",
+      "sourceChassisSlug": "recusant-class-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:a1f5-bad7-507a-627c": {
+      "name": "Recusant-class Support Destroyer",
+      "faction": "separatist",
+      "size": "large",
+      "antiSquadron": {
+        "red": 1,
+        "blue": 0,
+        "black": 0
+      },
+      "sourceModelName": "Recusant-class Support Destroyer",
+      "sourceModelSlug": "recusant-class-support-destroyer",
+      "sourceChassisSlug": "recusant-class-destroyer",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:7953-a4ce-f74b-c466": {
+      "name": "Providence-class Dreadnought",
+      "faction": "separatist",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 1,
+        "black": 0
+      },
+      "sourceModelName": "Providence-class Dreadnought",
+      "sourceModelSlug": "providence-class-dreadnought",
+      "sourceChassisSlug": "providence-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:0083-8d4e-e272-2a09": {
+      "name": "Providence-class Carrier",
+      "faction": "separatist",
+      "size": "large",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 2
+      },
+      "sourceModelName": "Providence-class Carrier",
+      "sourceModelSlug": "providence-class-carrier",
+      "sourceChassisSlug": "providence-class",
+      "match": "name_case_insensitive_and_faction"
+    },
+    "armada-v15:bsdata:separatist-alliance:c286-06ca-0bc0-fcc0": {
+      "name": "Gozanti-class Cruiser",
+      "faction": "separatist",
+      "size": "small",
+      "antiSquadron": {
+        "red": 0,
+        "blue": 0,
+        "black": 1
+      },
+      "sourceModelName": "C-ROC Gozanti-class Cruisers {CIS}",
+      "sourceModelSlug": "gozanti-class-cruisers-separatist",
+      "sourceChassisSlug": "gozanti-class",
+      "match": "documented_alias",
+      "matchExplanation": "The official Rapid Reinforcements v2.1 page 3 prints Gozanti-class Cruisers (plural), faction Separatist; source calls it C-ROC Gozanti-class Cruisers {CIS}; catalogue uses the singular.",
+      "identitySource": "https://cdn.svc.asmodee.net/production-amgcom/uploads/2023/10/SWM_RapidReinforcements_2.1-1-1.pdf#page=3"
+    }
+  }
+}

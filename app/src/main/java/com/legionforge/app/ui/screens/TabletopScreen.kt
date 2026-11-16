@@ -105,7 +105,7 @@ data class ArmadaAttack(
     val rear: ArmadaDiceBag = ArmadaDiceBag(),
 ) {
     fun sector(name: String): ArmadaDiceBag = when (name) {
-        "front" -> front; "right" -> right; "left" -> left; else -> rear
+        "front" -> front; "right" -> right; "left" -> left; "rear" -> rear; else -> ArmadaDiceBag()
     }
 }
 
@@ -210,10 +210,12 @@ fun TabletopScreen(
     var showManeuver by remember { mutableStateOf(false) }
     // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau
     var sheetPawnId by remember { mutableStateOf<String?>(null) }
+    var chosenAttackSector by remember { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
     var attackResult by remember { mutableStateOf<String?>(null) }
+    var manualAntiDice by remember { mutableStateOf(ArmadaDiceBag()) }
     var blackDice by remember { mutableStateOf(0) }
     var blueDice by remember { mutableStateOf(0) }
     var redDice by remember { mutableStateOf(0) }
@@ -223,8 +225,15 @@ fun TabletopScreen(
     val selPawn = positions.firstOrNull { it.id == selectedId }
     val targetPawn = positions.firstOrNull { it.id == targetId }
     val minRange = if (selPawn != null && targetPawn != null) tabletopBaseDistance(selPawn, targetPawn) else null
+    val estimatedSector = if (selPawn != null && targetPawn != null) {
+        val angle = Math.toDegrees(kotlin.math.atan2((targetPawn.xMm - selPawn.xMm).toDouble(), (selPawn.yMm - targetPawn.yMm).toDouble())).toFloat()
+        attackSectorFor(selPawn, angle)
+    } else "front"
+    val selectedSector = chosenAttackSector ?: estimatedSector
+    val antiShipMissing = selPawn != null && !selPawn.isSquadron && targetPawn?.isSquadron == true && selPawn.antiSquadron == null
     val eligibleDice = if (selPawn != null && targetPawn != null && minRange != null)
-        tabletopEligibleDice(selPawn, targetPawn, minRange) else ArmadaDiceBag()
+        tabletopEligibleDice(selPawn, targetPawn, minRange, selectedSector, if (antiShipMissing) manualAntiDice else null) else ArmadaDiceBag()
+    val currentAttackRolls = remember { mutableStateOf<List<ArmadaRoll>>(emptyList()) }
     // Vitesse max du vaisseau sélectionné (lue dans sa carte, pas en dur)
     val maxSpeed = selPawn?.maxSpeed ?: 0
     // Rayon atteignable (mm) pour un escadron : vitesse max × 1 distance (76,2 mm).
@@ -287,11 +296,13 @@ fun TabletopScreen(
                 }
         ) {
             // Init des dés quand attaquant ou cible (position, cap, armement) change.
-            androidx.compose.runtime.LaunchedEffect(selPawn, targetPawn) {
+            androidx.compose.runtime.LaunchedEffect(selectedId, targetId) { manualAntiDice = ArmadaDiceBag() }
+            androidx.compose.runtime.LaunchedEffect(selPawn, targetPawn, selectedSector, manualAntiDice) {
                 blackDice = eligibleDice.black
                 blueDice = eligibleDice.blue
                 redDice = eligibleDice.red
                 attackResult = null
+                currentAttackRolls.value = emptyList()
             }
             Canvas(
                 Modifier
@@ -304,6 +315,7 @@ fun TabletopScreen(
                                 val hit = positions.firstOrNull { p -> hitPawn(p, cc, scale, at) }
                                 if (hit != null) {
                                     selectedId = hit.id
+                                    chosenAttackSector = null
                                     dragId = hit.id
                                     dragPosMm = Offset(
                                         (at.x - cc.x) / (PX_PER_MM * scale),
@@ -350,6 +362,7 @@ fun TabletopScreen(
                                 positions.firstOrNull { p -> hitPawn(p, c, scale, at) }?.let {
                                     selectedId = it.id
                                     targetId = null
+                                    chosenAttackSector = null
                                     speedIdx = 0
                                     bends = listOf(0, 0, 0, 0)
                                     sheetPawnId = null
@@ -361,10 +374,10 @@ fun TabletopScreen(
                             val hit = positions.firstOrNull { p -> hitPawn(p, c, scale, tap) }
                             when {
                                 hit == null -> { selectedId = null; targetId = null }
-                                selectedId == null -> { selectedId = hit.id; targetId = null }
+                                selectedId == null -> { selectedId = hit.id; targetId = null; chosenAttackSector = null }
                                 hit.id == selectedId -> targetId = null
-                                positions.firstOrNull { it.id == selectedId }?.isOpp != hit.isOpp -> targetId = hit.id
-                                else -> { selectedId = hit.id; targetId = null; speedIdx = 0; bends = listOf(0, 0, 0, 0) }
+                                positions.firstOrNull { it.id == selectedId }?.isOpp != hit.isOpp -> { targetId = hit.id; chosenAttackSector = null }
+                                else -> { selectedId = hit.id; targetId = null; chosenAttackSector = null; speedIdx = 0; bends = listOf(0, 0, 0, 0) }
                             }
                         }
                     }
@@ -608,7 +621,28 @@ fun TabletopScreen(
                                 )
                             }
                         }
-                        // Dés N/B/R + Attaquer (le même panneau que le mode Play)
+                        if (!sp.isSquadron && targetPawn != null) {
+                            Text("Zone attaquante : à confirmer selon les arcs", color = Color(0xFF9EACBC), fontSize = 12.sp)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                                listOf("front" to "Avant", "left" to "Bâbord", "right" to "Tribord", "rear" to "Arrière").forEach { (sector, label) ->
+                                    TextButton(onClick = { chosenAttackSector = sector }) {
+                                        Text(label, color = if (sector == selectedSector) Color(0xFFFFC857) else Color.White, fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        }
+                        if (antiShipMissing) {
+                            Text("Dés anti-escadron imprimés : indique-les depuis la carte", color = Color(0xFFFFC857), fontSize = 12.sp)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                                listOf("N" to manualAntiDice.black, "B" to manualAntiDice.blue, "R" to manualAntiDice.red).forEach { (color, amount) ->
+                                    TextButton(onClick = {
+                                        val n = (amount + 1) % 7
+                                        manualAntiDice = when (color) { "N" -> manualAntiDice.copy(black = n); "B" -> manualAntiDice.copy(blue = n); else -> manualAntiDice.copy(red = n) }
+                                    }) { Text("$color : $amount", color = Color.White) }
+                                }
+                            }
+                        }
+                        // Dés initiaux N/B/R filtrés par portée.
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
                             DiceColumn("N", Color(0xFF1F2937), blackDice, eligibleDice.black > 0) { blackDice = it.coerceAtMost(eligibleDice.black) }
                             DiceColumn("B", Color(0xFF3B82F6), blueDice, eligibleDice.blue > 0) { blueDice = it.coerceAtMost(eligibleDice.blue) }
@@ -616,7 +650,9 @@ fun TabletopScreen(
                         }
                         Text(
                             if (targetPawn == null) "Choisis une cible ennemie sur le plateau."
-                            else if (eligibleDice.isEmpty) "Aucun dé initial disponible à cette portée (ou armement absent). Tir normal impossible."
+                            else if (antiShipMissing) "Armement anti-escadron absent du catalogue : choisissez les dés indiqués sur la carte."
+                            else if (sp.sizeClass == "unknown" || targetPawn.sizeClass == "unknown") "Taille de socle inconnue : contrôle de portée indisponible."
+                            else if (eligibleDice.isEmpty) "Aucun dé initial disponible à cette portée. Tir normal impossible."
                             else "Distance minimale socle : ${"%.0f".format(minRange)} mm · arc, zone et ligne de vue à vérifier. Effets spéciaux non gérés.",
                             color = Color(0xFFFFC857), fontSize = 12.sp,
                         )
@@ -625,13 +661,14 @@ fun TabletopScreen(
                                 val att = positions.firstOrNull { it.id == selectedId }
                                 val tgt = positions.firstOrNull { it.id == targetId }
                                 if (att != null && tgt != null && att.isOpp != tgt.isOpp) {
-                                    val allowed = tabletopEligibleDice(att, tgt, tabletopBaseDistance(att, tgt))
+                                    val allowed = tabletopEligibleDice(att, tgt, tabletopBaseDistance(att, tgt), selectedSector, if (antiShipMissing) manualAntiDice else null)
                                     if (blackDice + blueDice + redDice == 0 || blackDice > allowed.black || blueDice > allowed.blue || redDice > allowed.red) return@Button
                                     val rolls = ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
-                                    val damage = ArmadaDiceRoller.damage(rolls, !att.isSquadron, !tgt.isSquadron)
+                                    currentAttackRolls.value = rolls
+                                    val hits = rolls.sumOf { it.face.squadron }
                                     val crit = rolls.count { it.face.crit }
                                     val acc = ArmadaDiceRoller.accuracies(rolls)
-                                    attackResult = "Touches/dégâts $damage · critiques $crit · précisions $acc — défense et dégâts à appliquer manuellement"
+                                    attackResult = "Touches $hits · critiques $crit · précisions $acc — appliquez défense, effets et dégâts manuellement"
                                     sheetPawnId = null
                                 }
                             },
@@ -649,10 +686,30 @@ fun TabletopScreen(
             }
         }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
+        if (currentAttackRolls.value.isNotEmpty() && selPawn != null && targetPawn != null) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Effet après jet :", color = Color(0xFF9EACBC), fontSize = 11.sp)
+                listOf("N" to ArmadaDieColor.BLACK, "B" to ArmadaDieColor.BLUE, "R" to ArmadaDieColor.RED).forEach { (label, die) ->
+                    TextButton(onClick = {
+                        val addition = when (die) {
+                            ArmadaDieColor.BLACK -> ArmadaDiceRoller.roll(1, 0, 0)
+                            ArmadaDieColor.BLUE -> ArmadaDiceRoller.roll(0, 1, 0)
+                            ArmadaDieColor.RED -> ArmadaDiceRoller.roll(0, 0, 1)
+                        }
+                        val rolls = currentAttackRolls.value + addition
+                        currentAttackRolls.value = rolls
+                        val hits = rolls.sumOf { it.face.squadron }
+                        val crit = rolls.count { it.face.crit }
+                        val acc = ArmadaDiceRoller.accuracies(rolls)
+                        attackResult = "Touches $hits · critiques $crit · précisions $acc — appliquez défense, effets et dégâts manuellement"
+                    }) { Text("+$label", fontSize = 12.sp) }
+                }
+            }
+        }
         Text(
             if (selPawn != null && speedIdx > 0)
                 "V$speedIdx · $bendsSummary · cap final ${"%.1f".format(selPawn.headingDeg + effectiveBends.take(speedIdx).sum() * YAW_STEP_DEG)}° ≈ · ◄► plient le coude ${"①②③④"[activeJoint - 1]} · appui long = 0 · ${YAW_STEP_DEG}°/cran et ${SEGMENT_MM.toInt()} mm non sourcés"
-            else infoLine(positions, selectedId, targetId),
+            else infoLine(positions, selectedId, targetId, selectedSector),
             color = Color(0xFF9EACBC), fontSize = 11.sp,
             modifier = Modifier.padding(8.dp),
         )
@@ -1062,7 +1119,7 @@ private fun sectorOf(att: TabletopPawn, tgt: TabletopPawn): String {
 
 /** Secteur indicatif depuis le centre, aux mêmes angles que le dessin. */
 private fun attackSectorFor(att: TabletopPawn, angle: Float): String {
-    val relative = ((angle - att.headingDeg + 540f) % 360f) - 180f
+    val relative = (((angle - att.headingDeg + 180f) % 360f + 360f) % 360f) - 180f
     val frontHalf = (att.arcs?.front ?: 60f) / 2f
     val rearHalf = (att.arcs?.rear ?: 60f) / 2f
     return when {
@@ -1084,14 +1141,15 @@ private fun tabletopBaseDistance(a: TabletopPawn, b: TabletopPawn): Double {
 }
 
 /** Pool initial conservateur ; les secteurs exacts, Snipe et Ignition restent manuels. */
-private fun tabletopEligibleDice(att: TabletopPawn, tgt: TabletopPawn, distanceMm: Double): ArmadaDiceBag {
+private fun tabletopEligibleDice(att: TabletopPawn, tgt: TabletopPawn, distanceMm: Double, sector: String, manualAnti: ArmadaDiceBag? = null): ArmadaDiceBag {
     if (att.id == tgt.id || att.isOpp == tgt.isOpp) return ArmadaDiceBag()
-    val angle = Math.toDegrees(kotlin.math.atan2((tgt.xMm - att.xMm).toDouble(), (att.yMm - tgt.yMm).toDouble())).toFloat()
+    if ((!att.isSquadron && att.sizeClass !in setOf("small", "medium", "large", "huge")) ||
+        (!tgt.isSquadron && tgt.sizeClass !in setOf("small", "medium", "large", "huge"))) return ArmadaDiceBag()
     val bag = when {
         att.isSquadron && tgt.isSquadron -> att.antiSquadron
         att.isSquadron -> att.squadronBattery
-        tgt.isSquadron -> att.antiSquadron
-        else -> att.attack?.sector(attackSectorFor(att, angle))
+        tgt.isSquadron -> att.antiSquadron ?: manualAnti
+        else -> att.attack?.sector(sector)
     } ?: return ArmadaDiceBag()
     if (att.isSquadron) return if (distanceMm <= SQUADRON_RANGE_MM.toDouble()) bag else ArmadaDiceBag()
     val filtered = com.legionforge.app.domain.filterPossibleShipAttackDice(
@@ -1163,11 +1221,12 @@ private fun DiceColumn(label: String, color: Color, value: Int, enabled: Boolean
     }
 }
 
-private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?): String {
+private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?, sector: String?): String {
     val att = pawns.firstOrNull { it.id == selId } ?: return "Touchez un pion pour le sélectionner"
     val tgt = pawns.firstOrNull { it.id == tgtId } ?: return "${att.name} · touchez une cible ennemie"
     val distance = tabletopBaseDistance(att, tgt)
-    val dice = tabletopEligibleDice(att, tgt, distance)
+    val angle = Math.toDegrees(kotlin.math.atan2((tgt.xMm - att.xMm).toDouble(), (att.yMm - tgt.yMm).toDouble())).toFloat()
+    val dice = tabletopEligibleDice(att, tgt, distance, sector ?: attackSectorFor(att, angle))
     val available = listOfNotNull(
         if (dice.black > 0) "N${dice.black}" else null,
         if (dice.blue > 0) "B${dice.blue}" else null,
@@ -1175,6 +1234,21 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
     ).joinToString(" ").ifEmpty { "aucun dé initial" }
     return "${att.name} → ${tgt.name} · socles ≥ ${"%.0f".format(distance)} mm · $available · arc/visibilité à vérifier"
 }
+
+data class VerifiedArmadaShipData(val sizeClass: String, val antiSquadron: ArmadaDiceBag)
+
+/** Données de socle et armement anti-escadron par ID exact du catalogue. */
+fun loadVerifiedArmadaShipData(context: Context): Map<String, VerifiedArmadaShipData> = try {
+    val root = JSONObject(context.assets.open("armada_verified_ship_data.json").bufferedReader().use { it.readText() }).getJSONObject("ships")
+    buildMap {
+        root.keys().forEach { id ->
+            val ship = root.getJSONObject(id)
+            val dice = ship.getJSONObject("antiSquadron")
+            put(id, VerifiedArmadaShipData(ship.getString("size"), ArmadaDiceBag(
+                black = dice.getInt("black"), blue = dice.getInt("blue"), red = dice.getInt("red"))))
+        }
+    }
+} catch (_: Exception) { emptyMap() }
 
 /** Charge une image d'asset en ImageBitmap (null si absente). Appelé une fois par chemin. */
 fun loadAssetBitmap(context: Context, path: String): androidx.compose.ui.graphics.ImageBitmap? = try {

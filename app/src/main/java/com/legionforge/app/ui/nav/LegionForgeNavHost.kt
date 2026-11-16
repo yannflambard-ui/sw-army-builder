@@ -60,6 +60,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
     val shipBases = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadShipBases(appContext) }
     val shipFigures = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadArmadaFigures(appContext) }
     val shipTokens = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadArmadaTokens(appContext) }
+    val verifiedShipData = androidx.compose.runtime.remember { com.legionforge.app.ui.screens.loadVerifiedArmadaShipData(appContext) }
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
             androidx.compose.runtime.LaunchedEffect(Unit) { vm.loadAllCatalog(GameSystem.LEGION_V2) }
@@ -194,7 +195,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 com.legionforge.app.ui.screens.TabletopPawn(
                     id = e.instanceId,
                     name = e.card.name,
-                    sizeClass = shipFigures[e.card.id]?.sizeClass ?: sizes[e.card.id] ?: "small",
+                    sizeClass = if (e.card.kind == CardKind.ARMADA_SQUADRON) "squadron" else verifiedShipData[e.card.id]?.sizeClass ?: sizes[e.card.id] ?: "unknown",
                     imagePath = shipImages[e.card.id],
                     tokenPath = shipTokens[e.card.id],
                     figurePath = shipFigures[e.card.id]?.asset,
@@ -215,11 +216,14 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                             rear = toBag(st.attackRear),
                         )
                     },
-                    antiSquadron = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, e.card.kind)?.antiSquadron?.takeIf { it.isNotEmpty() }?.let { d ->
-                        com.legionforge.app.ui.screens.ArmadaDiceBag(red = d.getOrElse(0) { 0 }, blue = d.getOrElse(1) { 0 }, black = d.getOrElse(2) { 0 })
-                    },
+                    antiSquadron = if (e.card.kind == CardKind.ARMADA_SHIP) verifiedShipData[e.card.id]?.antiSquadron else
+                        com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, e.card.kind)?.antiSquadron?.takeIf { it.isNotEmpty() }?.let { d ->
+                            val v = com.legionforge.app.domain.ArmadaAttackMapping.squadronDice(d)
+                            com.legionforge.app.ui.screens.ArmadaDiceBag(black = v.black, blue = v.blue, red = v.red)
+                        },
                     squadronBattery = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, e.card.kind)?.battery?.takeIf { it.isNotEmpty() }?.let { d ->
-                        com.legionforge.app.ui.screens.ArmadaDiceBag(red = d.getOrElse(0) { 0 }, blue = d.getOrElse(1) { 0 }, black = d.getOrElse(2) { 0 })
+                        val v = com.legionforge.app.domain.ArmadaAttackMapping.squadronDice(d)
+                        com.legionforge.app.ui.screens.ArmadaDiceBag(black = v.black, blue = v.blue, red = v.red)
                     },
                     snipe = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SQUADRON)
                         ?.keywords?.any { it.equals("Snipe", ignoreCase = true) } == true ||
