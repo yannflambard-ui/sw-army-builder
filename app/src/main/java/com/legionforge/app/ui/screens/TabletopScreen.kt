@@ -438,6 +438,7 @@ fun TabletopScreen(
             DiceColumn("B", Color(0xFF3B82F6), blueDice, selectedId != null) { blueDice = it }
             DiceColumn("R", Color(0xFFEF4444), redDice, selectedId != null) { redDice = it }
         }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             TextButton(
                 enabled = selectedId != null && targetId != null && (blackDice + blueDice + redDice) > 0,
                 onClick = {
