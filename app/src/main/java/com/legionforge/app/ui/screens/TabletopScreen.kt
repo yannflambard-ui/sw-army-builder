@@ -151,6 +151,8 @@ fun TabletopScreen(
     var dragPosMm by remember { mutableStateOf<Offset?>(null) }
     // Volet « Manœuvre » (vitesse + coudes) : replié par défaut, ouvert si un pion est sélectionné
     var showManeuver by remember { mutableStateOf(false) }
+    // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau
+    var sheetPawnId by remember { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
@@ -291,7 +293,10 @@ fun TabletopScreen(
                         detectTapGestures(
                             onLongPress = { at ->
                                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
-                                positions.firstOrNull { p -> hitPawn(p, c, scale, at) }?.let { onOpenPlay(it.id) }
+                                positions.firstOrNull { p -> hitPawn(p, c, scale, at) }?.let {
+                                    selectedId = it.id
+                                    sheetPawnId = it.id
+                                }
                             }
                         ) { tap ->
                             val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
@@ -491,66 +496,82 @@ fun TabletopScreen(
             ) { Text("Attaquer", color = Color(0xFFF87171), fontSize = 12.sp) }
         }
         attackResult?.let { Text(it, color = Color(0xFFFFC857), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
-        // Volet « Manœuvre » : replié pour laisser de la place au plateau
-        androidx.compose.material3.TextButton(onClick = { showManeuver = !showManeuver }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-            Text(if (showManeuver) "Manœuvre ▼" else "Manœuvre ▲", color = Color(0xFFFFC857), fontSize = 13.sp, maxLines = 1)
-        }
-        androidx.compose.animation.AnimatedVisibility(visible = showManeuver) {
-        // Sélecteur de trajectoire : flèches gauche/droite (vitesse 0 à max)
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
-            Text("Vitesse ${speedIdx}", color = Color(0xFF9EACBC), fontSize = 12.sp)
-            // L'estimation de trajectoire n'est pas sourcée RRG : une icône info remplace le jargon.
-            Text("ℹ", color = Color(0xFF55637A), fontSize = 13.sp)
-            TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
-        }
-        // Déplacement multi-coudes : UNE ligne, 4 chips + ◄ ► ⊘. Bornes lues dans speedChart (RRG 1519-1524).
-        if (selPawn != null && maxSpeed > 0) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = {
-                    val j = activeJoint
-                    bends = bends.toMutableList().also { it[j - 1] = (it[j - 1] - 1).coerceAtLeast(-jointMax(j)) }
-                }) { Text("◄", color = Color(0xFFFFC857), fontSize = 14.sp) }
-                for (j in 1..4) {
-                    JointChip(
-                        label = "①②③④"[j - 1].toString(),
-                        value = effectiveBends[j - 1],
-                        max = jointMax(j),
-                        active = activeJoint == j,
-                        onTap = {
-                            if (activeJoint == j && effectiveBends[j - 1] != 0) {
-                                bends = bends.toMutableList().also { it[j - 1] = -it[j - 1] }
-                            } else activeJoint = j
-                        },
-                        onReset = { bends = bends.toMutableList().also { it[j - 1] = 0 } },
-                    )
+        // Bouton d'action principal : compact, dans le pouce (la vitesse se pilote depuis le sheet)
+        Button(
+            enabled = speedIdx > 0,
+            onClick = {
+                val out = resolveManeuver(selPawn, positions, speedIdx, effectiveBends)
+                positions = positions.map { p ->
+                    if (p.id == selPawn.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.headingDeg) else p
                 }
-                TextButton(onClick = {
-                    val j = activeJoint
-                    bends = bends.toMutableList().also { it[j - 1] = (it[j - 1] + 1).coerceAtMost(jointMax(j)) }
-                }) { Text("►", color = Color(0xFFFFC857), fontSize = 14.sp) }
-                TextButton(onClick = { bends = listOf(0, 0, 0, 0) }) { Text("⊘", color = Color(0xFF9EACBC), fontSize = 14.sp) }
+                speedIdx = 0
+                bends = listOf(0, 0, 0, 0)
+                attackResult = out.collidedWith?.let {
+                    "⚠ Chevauchement avec $it : vitesse réduite à ${out.speedUsed} (RRG 1032)"
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857), contentColor = Color(0xFF0B1220)),
+        ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
+        // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau.
+        // Il pilote la vitesse, la manœuvre et l'attaque — le plateau reste visible au-dessus.
+        if (sheetPawnId != null) {
+            val sp = positions.find { it.id == sheetPawnId }
+            if (sp != null) {
+                androidx.compose.material3.ModalBottomSheet(
+                    onDismissRequest = { sheetPawnId = null },
+                    containerColor = Color(0xFF111827),
+                    sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(sp.name, color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+                        Text(
+                            if (sp.isSquadron) "Escadron · vitesse max ${sp.maxSpeed}" else "Vaisseau · vitesse max ${sp.maxSpeed}",
+                            color = Color(0xFF8F9BAD), fontSize = 12.sp, maxLines = 1,
+                        )
+                        // Vitesse : ◄ ► pilote speedIdx (le volet Manœuvre reste synchronisé)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◄ vitesse", color = Color(0xFFFFC857), fontSize = 14.sp) }
+                            Text("Vitesse $speedIdx", color = Color(0xFF9EACBC), fontSize = 14.sp)
+                            androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ►", color = Color(0xFFFFC857), fontSize = 14.sp) }
+                        }
+                        // Coudes : les 4 chips du volet Manœuvre
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.TextButton(onClick = { bends = listOf(0, 0, 0, 0) }) { Text("⊘ droit", color = Color(0xFF9EACBC), fontSize = 13.sp) }
+                            for (j in 1..4) {
+                                JointChip(
+                                    label = "①②③④"[j - 1].toString(),
+                                    value = effectiveBends[j - 1],
+                                    max = jointMax(j),
+                                    active = activeJoint == j,
+                                    onTap = {
+                                        if (activeJoint == j && effectiveBends[j - 1] != 0) {
+                                            bends = bends.toMutableList().also { it[j - 1] = -it[j - 1] }
+                                        } else activeJoint = j
+                                    },
+                                    onReset = { bends = bends.toMutableList().also { it[j - 1] = 0 } },
+                                )
+                            }
+                        }
+                        // Dés N/B/R + Attaquer (le même panneau que le mode Play)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+                            DiceColumn("N", Color(0xFF1F2937), blackDice, true) { blackDice = it }
+                            DiceColumn("B", Color(0xFF3B82F6), blueDice, true) { blueDice = it }
+                            DiceColumn("R", Color(0xFFEF4444), redDice, true) { redDice = it }
+                        }
+                        androidx.compose.material3.Button(
+                            onClick = { /* le jet de dés se fait depuis le plateau */ },
+                            enabled = (blackDice + blueDice + redDice) > 0,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = Color(0xFF0B1220)),
+                        ) { Text("Attaquer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
+                        // Lien vers l'écran Play (les 2 écrans synchronisés)
+                        androidx.compose.material3.TextButton(onClick = { sheetPawnId = null; onOpenPlay(sp.id) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Ouvrir dans Play ↗", color = Color(0xFF38BDF8), fontSize = 13.sp, maxLines = 1)
+                        }
+                    }
+                }
             }
-            Button(
-                enabled = speedIdx > 0,
-                onClick = {
-                    val out = resolveManeuver(selPawn, positions, speedIdx, effectiveBends)
-                    positions = positions.map { p ->
-                        if (p.id == selPawn.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.heading) else p
-                    }
-                    speedIdx = 0
-                    bends = listOf(0, 0, 0, 0)
-                    attackResult = out.collidedWith?.let {
-                        "⚠ Chevauchement avec $it : vitesse réduite à ${out.speedUsed} (RRG 1032). À faire à la main : carte de dégâts face cachée à ${selPawn.name} et à $it."
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
-        }
         }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         Text(
