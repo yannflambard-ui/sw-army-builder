@@ -30,6 +30,11 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.hypot
@@ -187,6 +192,27 @@ fun TabletopScreen(
                     }
                 }
         ) {
+            // Init auto des dés quand la cible change (arc attaquant + bande de portée)
+            androidx.compose.runtime.LaunchedEffect(targetId, selectedId) {
+                val att = positions.firstOrNull { it.id == selectedId }
+                val tgt = positions.firstOrNull { it.id == targetId }
+                if (att != null && tgt != null) {
+                    val dist = kotlin.math.hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
+                    val sect = attackedSector(att.headingDeg, kotlin.math.atan2((tgt.yMm - att.yMm).toDouble(), (tgt.xMm - att.xMm).toDouble()) * 180.0 / Math.PI - 90.0).toFloat().let {
+                        // atan2 renvoie un angle dans le repère image (x vers la droite, y vers le bas).
+                        // Notre repère : cap 0 = prôe vers le haut, donc on retire 90°.
+                        attackedSector(att.headingDeg, it)
+                    }
+                    val bag = att.attack?.sector(sect)
+                    val (nb, bl, rd) = initDiceFor(bag, dist, att.isSquadron, att.snipe)
+                    blackDice = nb; blueDice = bl; redDice = rd
+                } else if (att != null) {
+                    // Pas de cible : proposer l'armement du secteur avant
+                    val bag = att.attack?.sector("front")
+                    val (nb, bl, rd) = initDiceFor(bag, 0f, att.isSquadron, att.snipe)
+                    blackDice = nb; blueDice = bl; redDice = rd
+                }
+            }
             Canvas(
                 Modifier
                     .fillMaxSize()
@@ -253,6 +279,23 @@ fun TabletopScreen(
                         drawRangeRings(sc, scale, if (sel.isSquadron) null else bag, sel.isSquadron, sel.snipe)
                     }
                 }
+                // Triangle de flanc attaqué (attaquant → cible)
+                if (dragId == null && selectedId != null && targetId != null) {
+                    val att = positions.find { it.id == selectedId }
+                    val tgt = positions.find { it.id == targetId }
+                    if (att != null && tgt != null) {
+                        val (aw, ah) = baseSizeMm(att.sizeClass)
+                        val (tw, th) = baseSizeMm(tgt.sizeClass)
+                        val ac = Offset(c.x + att.xMm * PX_PER_MM * scale, c.y + att.yMm * PX_PER_MM * scale)
+                        val tc = Offset(c.x + tgt.xMm * PX_PER_MM * scale, c.y + tgt.yMm * PX_PER_MM * scale)
+                        val dx = (tgt.xMm - att.xMm).toDouble()
+                        val dy = (tgt.yMm - att.yMm).toDouble()
+                        val tAngle = Math.toDegrees(Math.atan2(dx, -dy)).toFloat()
+                        val sect = attackedSector(att.headingDeg, tAngle)
+                        val bag = att.attack?.sector(sect)
+                        drawAttackedFlank(ac, att.headingDeg, tc, tgt.headingDeg, tw / 2f, th / 2f, bag, scale)
+                    }
+                }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
                 if (dragId == null) {
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
@@ -311,13 +354,12 @@ fun TabletopScreen(
             }
         }
 
-        // Attaque : choisir les dés, lancer (attaquant = sélection, cible = 2e tap)
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { blackDice = (blackDice - 1).coerceAtLeast(0) }) { Text("− noir", color = Color(0xFF9EACBC), fontSize = 11.sp) }
-            Text("N$blackDice B$blueDice R$redDice", color = Color(0xFF9EACBC), fontSize = 11.sp)
-            TextButton(onClick = { blackDice = (blackDice + 1).coerceAtMost(6) }) { Text("noir +", color = Color(0xFF9EACBC), fontSize = 11.sp) }
-            TextButton(onClick = { blueDice = (blueDice + 1).coerceAtMost(6) }) { Text("bleu +", color = Color(0xFF9EACBC), fontSize = 11.sp) }
-            TextButton(onClick = { redDice = (redDice + 1).coerceAtMost(6) }) { Text("rouge +", color = Color(0xFF9EACBC), fontSize = 11.sp) }
+        // Attaque : dés N/B/R (colonnes +/- empilés), lancer (attaquant = sélection, cible = 2e tap)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+            DiceColumn("N", Color(0xFF1F2937), blackDice, selectedId != null) { blackDice = it }
+            DiceColumn("B", Color(0xFF3B82F6), blueDice, selectedId != null) { blueDice = it }
+            DiceColumn("R", Color(0xFFEF4444), redDice, selectedId != null) { redDice = it }
+        }
             TextButton(
                 enabled = selectedId != null && targetId != null && (blackDice + blueDice + redDice) > 0,
                 onClick = {
@@ -509,6 +551,60 @@ fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
 }
 
 /**
+ * Triangle de flanc : pointe vers le hull zone de la cible qui est attaqué.
+ * Collé au bord du socle de la cible, couleur = dé dominant de l'armement attaquant.
+ * + trait de visée pointillé entre les deux centres de socle.
+ */
+fun DrawScope.drawAttackedFlank(
+    attackerCenter: Offset, attackerHeadingDeg: Float,
+    targetCenter: Offset, targetHeadingDeg: Float,
+    targetHalfW: Float, targetHalfH: Float,
+    bag: ArmadaDiceBag?,
+    scale: Float,
+) {
+    // angle du vecteur attaquant→cible dans notre repère (cap 0 = haut, horaire positif)
+    val dx = (targetCenter.x - attackerCenter.x).toDouble()
+    val dy = (targetCenter.y - attackerCenter.y).toDouble()
+    val targetAngleDeg = Math.toDegrees(Math.atan2(dx, -dy)).toFloat()
+    val sect = attackedSector(attackerHeadingDeg, targetAngleDeg)
+    // couleur du dé dominant de la zone attaquée
+    val col = when {
+        (bag?.black ?: 0) >= (bag?.blue ?: 0) && (bag?.black ?: 0) >= (bag?.red ?: 0) -> Color(0xCC1F2937)
+        (bag?.blue ?: 0) >= (bag?.red ?: 0) -> Color(0xCC3B82F6)
+        else -> Color(0xCEF4444)
+    }
+    // trait de visée pointillé
+    drawLine(
+        Color(0x88FFC857),
+        start = attackerCenter, end = targetCenter,
+        strokeWidth = 2f * scale,
+        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(12f, 8f)),
+    )
+    // triangle collé au milieu du flanc touché (dans le repère de la cible)
+    val tSize = 24f * scale
+    val (ux, uy, ang) = when (sect) {
+        "front" -> Triple(0f, -1f, 0f)
+        "right" -> Triple(1f, 0f, 90f)
+        "left" -> Triple(-1f, 0f, -90f)
+        else -> Triple(0f, 1f, 180f)
+    }
+    // point d'accroche sur le bord du socle
+    val anchor = Offset(
+        targetCenter.x + ux * targetHalfW * PX_PER_MM * scale,
+        targetCenter.y + uy * targetHalfH * PX_PER_MM * scale,
+    )
+    rotate(degrees = ang + targetHeadingDeg, pivot = anchor) {
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(anchor.x, anchor.y - tSize)
+            lineTo(anchor.x - tSize * 0.86f, anchor.y + tSize * 0.5f)
+            lineTo(anchor.x + tSize * 0.86f, anchor.y + tSize * 0.5f)
+            close()
+        }
+        drawPath(p, col)
+    }
+}
+
+/**
  * Anneaux de portée d'un vaisseau sélectionné (RRG 1.5.0 p.7/9).
  * Trois cercles concentriques depuis le bord du socle : noir = Close, bleu = Medium, rouge = Long.
  * Pour un escadron : un seul cercle (distance 1, ou 2 avec Snipe).
@@ -682,18 +778,19 @@ private const val ARC_RADIUS_MM = 400f
 /**
  * Portées d'attaque (RRG 1.5.0 p.7/9). La règle de portée fait 1 pied (304,8 mm) et se lit
  * depuis le point le plus proche du SOCLE attaquant (jamais le centre).
- *  - Close  = 1 bande (0..101,6 mm) : dés NOIRS + bleus + rouges
- *  - Medium = 2 bandes (0..203,2 mm) : dés BLEUS + rouges
- *  - Long   = 3 bandes (0..304,8 mm) : dés ROUGES seuls
- * Escadrons : distance 1 (61 mm), ou 2 (122 mm) avec le mot-clé Snipe (Embuscade).
+ * Les bandes de la règle physique sont INÉGALES ; mesures relevées :
+ *  - Close  ≈ 0..124 mm : dés NOIRS + bleus + rouges
+ *  - Medium ≈ 0..188 mm : dés BLEUS + rouges (la bande close est incluse)
+ *  - Long   ≈ 0..304,8 mm : dés ROUGES seuls
+ * ATTENTION escadrons : ils utilisent le côté DISTANCE de la règle (bandes 1..5),
+ * JAMAIS le côté range. Distance 1 = 60,96 mm, distance 2 = 121,92 mm.
  */
-private const val RANGE_RULER_MM = 304.8f   // 1 pied
-private const val RANGE_BAND_MM = RANGE_RULER_MM / 3f   // 101,6 mm par bande
-private const val RANGE_CLOSE_MM = RANGE_BAND_MM          // 101,6 mm
-private const val RANGE_MEDIUM_MM = RANGE_BAND_MM * 2f    // 203,2 mm
-private const val RANGE_LONG_MM = RANGE_RULER_MM          // 304,8 mm
-private const val SQUADRON_RANGE_MM = 60.96f               // distance 1
-private const val SNIPE_RANGE_MM = 121.92f                 // distance 2 (Snipe/Embuscade)
+private const val RANGE_RULER_MM = 304.8f      // 1 pied
+private const val RANGE_CLOSE_MM = 124f        // borne haute close (≈ 4,88 pouces)
+private const val RANGE_MEDIUM_MM = 188f       // borne haute medium (≈ 7,40 pouces)
+private const val RANGE_LONG_MM = RANGE_RULER_MM  // borne haute long
+private const val SQUADRON_RANGE_MM = 60.96f   // distance 1 (côté DISTANCE de la règle)
+private const val SNIPE_RANGE_MM = 121.92f     // distance 2 (Snipe/Embuscade)
 
 /**
  * Plateau standard Armada : 3 x 6 pieds (914 x 1829 mm), centré sur (0,0).
@@ -753,6 +850,69 @@ private fun sectorOf(att: TabletopPawn, tgt: TabletopPawn): String {
 }
 
 /** Texte d'information : distance centre à centre (pas une mesure de portée officielle). */
+/**
+ * Initialisation auto des dés selon le hull zone attaquant + la bande de portée (RRG).
+ * `bag` = armement du hull zone (front/right/left/rear) ; `distMm` = distance attaquant→cible.
+ * Renvoie [noirs, bleus, rouges] à mettre dans le lanceur (le joueur reste libre d'ajuster).
+ */
+fun initDiceFor(bag: ArmadaDiceBag?, distMm: Float, isSquadron: Boolean, snipe: Boolean): Triple<Int, Int, Int> {
+    if (isSquadron) {
+        // Escadron : distance 1 (ou 2 avec Snipe), toutes couleurs, Snipe = X dés bleus
+        val maxD = if (snipe) SNIPE_RANGE_MM else SQUADRON_RANGE_MM
+        if (distMm > maxD) return Triple(0, 0, 0)
+        val b = bag ?: ArmadaDiceBag(black = 1)
+        return if (snipe) Triple(0, b.black, 0) else Triple(b.black, b.blue, b.red)
+    }
+    val b = bag ?: return Triple(0, 0, 0)
+    return when {
+        distMm <= RANGE_CLOSE_MM -> Triple(b.black, b.blue, b.red)          // close : les 3 couleurs
+        distMm <= RANGE_MEDIUM_MM -> Triple(0, b.blue, b.red)               // medium : bleus + rouges
+        distMm <= RANGE_LONG_MM -> Triple(0, 0, b.red)                       // long : rouges seuls
+        else -> Triple(0, 0, 0)                                              // hors portée
+    }
+}
+
+/** Secteur (hull zone) attaqué par un attaquant dont le cap est `attHeadingDeg` vers une cible à `targetAngleDeg`. */
+fun attackedSector(attHeadingDeg: Float, targetAngleDeg: Float): String {
+    // angle relatif dans le repère du vaisseau (0 = devant, +90 = tribord, 180 = derrière, -90 = bâbord)
+    var rel = (targetAngleDeg - attHeadingDeg + 540f) % 360f - 180f
+    return when {
+        rel in -45f..45f -> "front"
+        rel in 45f..135f -> "right"
+        rel in -135f..-45f -> "left"
+        else -> "rear"
+    }
+}
+
+/** Une colonne de dé : [+] au-dessus, valeur, [−] en-dessous, pastille + lettre. */
+@Composable
+private fun DiceColumn(label: String, color: Color, value: Int, enabled: Boolean, onChange: (Int) -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        TextButton(
+            onClick = { onChange((value + 1).coerceAtMost(6)) },
+            modifier = Modifier.size(48.dp, 48.dp),
+            enabled = enabled,
+        ) { Text("+", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+        Text(
+            "$value",
+            color = color,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            modifier = Modifier.defaultMinSize(minWidth = 32.dp),
+        )
+        TextButton(
+            onClick = { onChange((value - 1).coerceAtLeast(0)) },
+            modifier = Modifier.size(48.dp, 48.dp),
+            enabled = enabled,
+        ) { Text("−", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(12.dp).background(color, CircleShape))
+            Text(" $label", color = Color(0xFF9EACBC), fontSize = 12.sp)
+        }
+    }
+}
+
 private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?): String {
     val att = pawns.firstOrNull { it.id == selId } ?: return "Touchez un pion pour le sélectionner"
     // Portée de l'armement (par défaut le secteur avant)
