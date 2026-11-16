@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -139,12 +141,17 @@ fun TabletopScreen(
 ) {
     // Cadrage initial : le tapis 1800x900 mm tient dans la largeur (PX_PER_MM = 2 px/mm, ~1080 px écran)
     var scale by remember { mutableStateOf(0.5f) }
+    // Scale de cadrage : le plateau entier tient dans l'écran (ergonome).
+    var fitScale by remember { mutableStateOf(0.5f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
     var positions by remember(pawns) { mutableStateOf(pawns) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var dragId by remember { mutableStateOf<String?>(null) }
     // Position du doigt pendant un drag (en mm plateau) — pour le trait de visée et le dépôt
     var dragPosMm by remember { mutableStateOf<Offset?>(null) }
+    // Volet « Manœuvre » (vitesse + coudes) : replié par défaut, ouvert si un pion est sélectionné
+    var showManeuver by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
     var attackResult by remember { mutableStateOf<String?>(null) }
@@ -173,23 +180,39 @@ fun TabletopScreen(
     }
 
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
+        // Top bar : retour (icône) · manche + zoom · recentrer (icône). Tout en maxLines=1.
         Row(
-            Modifier.fillMaxWidth().padding(8.dp),
+            Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack) { Text("← Retour", color = Color(0xFFFFC857), fontSize = 12.sp) }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                Text("Tabletop · ${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 10.sp)
+            androidx.compose.material3.IconButton(onClick = onBack) {
+                Text("←", color = Color(0xFFFFC857), fontSize = 22.sp)
             }
-            TextButton(onClick = { scale = 0.5f; pan = Offset.Zero }) { Text("Recentrer", color = Color(0xFFFFC857), fontSize = 12.sp) }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+                Text("${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 10.sp, maxLines = 1)
+            }
+            androidx.compose.material3.IconButton(onClick = { scale = fitScale; pan = Offset.Zero }) {
+                Text("◎", color = Color(0xFFFFC857), fontSize = 22.sp)
+            }
         }
+
 
         Box(
             Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                .onSizeChanged { sz ->
+                    // Cadrage : le plateau 6x3 ft tient dans l'écran (ergonome : * 0.95)
+                    val need = minOf(
+                        sz.width / (BOARD_W_MM * PX_PER_MM),
+                        sz.height / (BOARD_H_MM * PX_PER_MM),
+                    ) * 0.95f
+                    fitScale = need
+                    scale = need
+                    pan = Offset.Zero
+                }
                 // Zoom et déplacement du plateau (deux doigts) : on ne touche pas aux pions
                 .pointerInput(Unit) {
                     detectTransformGestures { _, panChange, zoom, _ ->
@@ -468,10 +491,17 @@ fun TabletopScreen(
             ) { Text("Attaquer", color = Color(0xFFF87171), fontSize = 12.sp) }
         }
         attackResult?.let { Text(it, color = Color(0xFFFFC857), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
+        // Volet « Manœuvre » : replié pour laisser de la place au plateau
+        androidx.compose.material3.TextButton(onClick = { showManeuver = !showManeuver }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+            Text(if (showManeuver) "Manœuvre ▼" else "Manœuvre ▲", color = Color(0xFFFFC857), fontSize = 13.sp, maxLines = 1)
+        }
+        androidx.compose.animation.AnimatedVisibility(visible = showManeuver) {
         // Sélecteur de trajectoire : flèches gauche/droite (vitesse 0 à max)
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◀ vitesse", color = Color(0xFFFFC857), fontSize = 12.sp) }
-            Text("Vitesse ${speedIdx} · ≈ indicatif", color = Color(0xFF9EACBC), fontSize = 11.sp)
+            Text("Vitesse ${speedIdx}", color = Color(0xFF9EACBC), fontSize = 12.sp)
+            // L'estimation de trajectoire n'est pas sourcée RRG : une icône info remplace le jargon.
+            Text("ℹ", color = Color(0xFF55637A), fontSize = 13.sp)
             TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ▶", color = Color(0xFFFFC857), fontSize = 12.sp) }
         }
         // Déplacement multi-coudes : UNE ligne, 4 chips + ◄ ► ⊘. Bornes lues dans speedChart (RRG 1519-1524).
@@ -519,7 +549,8 @@ fun TabletopScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            ) { Text("Déplacer (V$speedIdx · $bendsSummary) ≈ indicatif", fontSize = 12.sp) }
+            ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
+        }
         }
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         Text(
@@ -999,23 +1030,22 @@ private fun DiceColumn(label: String, color: Color, value: Int, enabled: Boolean
 
 private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?): String {
     val att = pawns.firstOrNull { it.id == selId } ?: return "Touchez un pion pour le sélectionner"
-    // Portée de l'armement (par défaut le secteur avant)
     val bag = att.attack?.sector("front") ?: ArmadaDiceBag(black = if (att.isSquadron) 1 else 0)
     val (maxR, _) = attackRange(bag)
     val portee = if (att.isSquadron) {
-        if (att.snipe) "escadron · Snipe distance 2 (122 mm)" else "escadron · distance 1 (61 mm)"
+        if (att.snipe) "Snipe D2 (152 mm)" else "D1 (76 mm)"
     } else if (maxR > 0f) {
         val bands = buildList {
             if (maxR >= RANGE_CLOSE_MM) add("noir")
             if (maxR >= RANGE_MEDIUM_MM) add("bleu")
             if (maxR >= RANGE_LONG_MM) add("rouge")
         }.joinToString("+")
-        "portée " + "%.0f".format(maxR) + " mm · dés " + bands
+        "%.0f mm · dés %s".format(maxR, bands)
     } else "pas d'armement"
-    val tgt = pawns.firstOrNull { it.id == tgtId }
-    if (tgt == null) return att.name + " · " + portee + " · touchez une cible"
+    val tgt = pawns.firstOrNull { it.id == targetId }
+    if (tgt == null) return "%s · %s · touchez une cible".format(att.name, portee)
     val d = hypot((tgt.xMm - att.xMm).toDouble(), (tgt.yMm - att.yMm).toDouble()).toFloat()
-    return att.name + " → " + tgt.name + " · " + "%.0f".format(d) + " mm · arc " + sectorOf(att, tgt) + " · " + portee
+    return "%s → %s · %.0f mm · arc %s · %s".format(att.name, tgt.name, d, sectorOf(att, tgt), portee)
 }
 
 /** Charge une image d'asset en ImageBitmap (null si absente). Appelé une fois par chemin. */
