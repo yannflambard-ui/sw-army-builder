@@ -165,7 +165,7 @@ fun TabletopScreen(
                 if (item != null && kotlin.math.abs(item.optDouble("x", Double.NaN) - p.xMm.toDouble()) < 0.01 &&
                     kotlin.math.abs(item.optDouble("y", Double.NaN) - p.yMm.toDouble()) < 0.01 &&
                     kotlin.math.abs(item.optDouble("heading", Double.NaN)) < 0.01) item.put("heading", 180.0)
-                tablePrefs.edit().putBoolean(migrationKey, true).apply()
+                tablePrefs.edit().putString(sessionId, savedPositions.toString()).putBoolean(migrationKey, true).apply()
             }
             if (item == null) p else p.copy(
                 xMm = item.optDouble("x", p.xMm.toDouble()).toFloat(),
@@ -177,6 +177,7 @@ fun TabletopScreen(
     androidx.compose.runtime.LaunchedEffect(pawns, sessionId) {
         // Réconcilier le chargement différé sans effacer les positions déjà modifiées.
         val current = positions.associateBy { it.id }
+        positions.forEach { p -> savedPositions.put(p.id, JSONObject().put("x", p.xMm).put("y", p.yMm).put("heading", p.headingDeg)) }
         positions = pawns.map { p ->
             val live = current[p.id]
             val saved = savedPositions.optJSONObject(p.id)
@@ -188,7 +189,7 @@ fun TabletopScreen(
                     val heading = saved.optDouble("heading", Double.NaN)
                     if (kotlin.math.abs(x - p.xMm.toDouble()) < 0.01 && kotlin.math.abs(y - p.yMm.toDouble()) < 0.01 && kotlin.math.abs(heading) < 0.01) saved.put("heading", 180.0)
                 }
-                tablePrefs.edit().putBoolean(migrationKey, true).apply()
+                tablePrefs.edit().putString(sessionId, savedPositions.toString()).putBoolean(migrationKey, true).apply()
             }
             when {
                 live != null -> p.copy(xMm = live.xMm, yMm = live.yMm, headingDeg = live.headingDeg)
@@ -467,16 +468,11 @@ fun TabletopScreen(
                     val att = positions.find { it.id == selectedId }
                     val tgt = positions.find { it.id == targetId }
                     if (att != null && tgt != null) {
-                        val (aw, ah) = baseSizeMm(att.sizeClass)
-                        val (tw, th) = baseSizeMm(tgt.sizeClass)
                         val ac = Offset(c.x + att.xMm * PX_PER_MM * scale, c.y + att.yMm * PX_PER_MM * scale)
                         val tc = Offset(c.x + tgt.xMm * PX_PER_MM * scale, c.y + tgt.yMm * PX_PER_MM * scale)
-                        val dx = (tgt.xMm - att.xMm).toDouble()
-                        val dy = (tgt.yMm - att.yMm).toDouble()
-                        val tAngle = Math.toDegrees(Math.atan2(dx, -dy)).toFloat()
-                        val sect = attackSectorFor(att, tAngle)
-                        val bag = if (tgt.isSquadron) att.antiSquadron else att.attack?.sector(sect)
-                        drawAttackedFlank(ac, att.headingDeg, tc, tgt.headingDeg, tw / 2f, th / 2f, bag, scale)
+                        // Le trait ne présume pas du flanc défenseur : il doit être déclaré par le joueur.
+                        drawLine(Color(0xAAFFFFFF), ac, tc, strokeWidth = 2f,
+                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(8f, 8f)))
                     }
                 }
                 // Arcs de tir du vaisseau sélectionné : masqués pendant un drag, non bloquants
@@ -630,6 +626,10 @@ fun TabletopScreen(
                                     }
                                 }
                             }
+                        }
+                        if (currentAttackRolls.value.isNotEmpty()) {
+                            Text("Jet : " + currentAttackRolls.value.joinToString("  ") { "${it.color.name.take(1)}:${it.face.name}" },
+                                color = Color.White, fontSize = 11.sp)
                         }
                         if (antiShipMissing) {
                             Text("Dés anti-escadron imprimés : indique-les depuis la carte", color = Color(0xFFFFC857), fontSize = 12.sp)
