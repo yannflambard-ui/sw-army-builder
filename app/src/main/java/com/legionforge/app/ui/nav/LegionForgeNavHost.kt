@@ -50,6 +50,7 @@ object Routes {
     }
 
 @Composable
+@androidx.compose.material3.ExperimentalMaterial3Api
 fun LegionForgeNavHost(navController: NavHostController = rememberNavController()) {
     val vm: ArmyBuilderViewModel = viewModel()
     val appContext = androidx.compose.ui.platform.LocalContext.current
