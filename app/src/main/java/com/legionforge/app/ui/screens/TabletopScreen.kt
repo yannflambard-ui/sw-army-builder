@@ -204,7 +204,7 @@ fun TabletopScreen(
                 val tgt = positions.firstOrNull { it.id == targetId }
                 if (att != null && tgt != null) {
                     val dist = kotlin.math.hypot((tgt.xMm - att.xMm).toDouble(), (tgt.yMm - att.yMm).toDouble()).toFloat()
-                    val sect = attackedSector(att.headingDeg, kotlin.math.atan2((tgt.yMm - att.yMm).toDouble(), (tgt.xMm - att.xMm).toDouble()) * 180.0 / Math.PI - 90.0).toFloat().let {
+                    val sect = (Math.toDegrees(Math.atan2((tgt.xMm - att.xMm).toDouble(), -((tgt.yMm - att.yMm).toDouble()))) - att.headingDeg).toFloat().let {
                         // atan2 renvoie un angle dans le repère image (x vers la droite, y vers le bas).
                         // Notre repère : cap 0 = prôe vers le haut, donc on retire 90°.
                         attackedSector(att.headingDeg, it)
@@ -323,8 +323,10 @@ fun TabletopScreen(
                     drawCircle(Color(0x2222D3EE), radius = r, center = sc)
                     drawCircle(
                         Color(0xAA22D3EE), radius = r, center = sc,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
-                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = 2.5f,
+                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                        ),
                     )
                 }
                 // Pendant un drag : trait de visée + position fantôme + limite de zone
