@@ -68,6 +68,7 @@ private fun CrashScreen(text: String, onClear: () -> Unit) {
 }
 
 @Composable
+@androidx.compose.material3.ExperimentalMaterial3Api
 private fun SafeApp() {
     var hasError by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
