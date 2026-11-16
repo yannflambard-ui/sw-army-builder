@@ -3,6 +3,7 @@ package com.legionforge.app.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -158,7 +159,7 @@ fun TabletopScreen(
     val maxSpeed = selPawn?.maxSpeed ?: 0
     // Rayon atteignable (mm) pour un escadron : vitesse max × 1 distance (76,2 mm).
     // Un escadron se déplace librement (pas de gabarit), dans un disque de ce rayon.
-    val squadronReachMm = if (selPawn?.isSquadron == true) (maxSpeed.coerceAtLeast(1) * 76.2f) else 0f
+    val squadronReachMm: Float = if (selPawn?.isSquadron == true) (maxSpeed.coerceAtLeast(1).toFloat() * 76.2f) else 0f
     // Bornes de crans par articulation, lues dans la Speed Chart (position 1..4, vitesse courante)
     val jointMax = { pos: Int -> if (selPawn != null) maxClicks(selPawn.speedChart, pos, speedIdx) else 0 }
     // Crans effectifs bornés : aucune mutation d'état pendant la composition
@@ -202,7 +203,7 @@ fun TabletopScreen(
                 val att = positions.firstOrNull { it.id == selectedId }
                 val tgt = positions.firstOrNull { it.id == targetId }
                 if (att != null && tgt != null) {
-                    val dist = kotlin.math.hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
+                    val dist = kotlin.math.hypot((tgt.xMm - att.xMm).toDouble(), (tgt.yMm - att.yMm).toDouble()).toFloat()
                     val sect = attackedSector(att.headingDeg, kotlin.math.atan2((tgt.yMm - att.yMm).toDouble(), (tgt.xMm - att.xMm).toDouble()) * 180.0 / Math.PI - 90.0).toFloat().let {
                         // atan2 renvoie un angle dans le repère image (x vers la droite, y vers le bas).
                         // Notre repère : cap 0 = prôe vers le haut, donc on retire 90°.
@@ -223,9 +224,9 @@ fun TabletopScreen(
                     .fillMaxSize()
                     .pointerInput(positions, scale, pan) {
                         // Drag d'un pion (escadron surtout) : déplacement libre dans la zone atteignable
-                        androidx.compose.foundation.gestures.detectDragGestures(
-                            onDragStart = { at ->
-                                val cc = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
+                        detectDragGestures(
+                            onDragStart = { at: androidx.compose.ui.geometry.Offset ->
+                                val cc = Offset(size.width / 2f + pan.x, size.height / 2f + pan.y)
                                 val hit = positions.firstOrNull { p -> hitPawn(p, cc, scale, at) }
                                 if (hit != null) {
                                     dragId = hit.id
@@ -256,9 +257,9 @@ fun TabletopScreen(
                                 dragPosMm = null
                             },
                             onDragCancel = { dragId = null; dragPosMm = null },
-                        ) { change, _ ->
+                        ) { change: androidx.compose.ui.input.pointer.PointerInputChange, _: androidx.compose.ui.geometry.Offset ->
                             change.consume()
-                            val cc = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
+                            val cc = Offset(size.width / 2f + pan.x, size.height / 2f + pan.y)
                             dragPosMm = Offset(
                                 (change.position.x - cc.x) / (PX_PER_MM * scale),
                                 (change.position.y - cc.y) / (PX_PER_MM * scale),
@@ -334,7 +335,7 @@ fun TabletopScreen(
                         val from = Offset(c.x + dragPawn.xMm * PX_PER_MM * scale, c.y + dragPawn.yMm * PX_PER_MM * scale)
                         val to = Offset(c.x + dp.x * PX_PER_MM * scale, c.y + dp.y * PX_PER_MM * scale)
                         val reach = if (dragPawn.isSquadron) dragPawn.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
-                        val dist = kotlin.math.hypot(dp.x - dragPawn.xMm, dp.y - dragPawn.yMm)
+                        val dist = kotlin.math.hypot((dp.x - dragPawn.xMm).toDouble(), (dp.y - dragPawn.yMm).toDouble()).toFloat()
                         val inRange = !dragPawn.isSquadron || dist <= reach
                         val col = if (inRange) Color(0xCC22D3EE) else Color(0xCCF87171)
                         drawLine(col, from, to, strokeWidth = 3f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(12f, 8f)))
@@ -644,7 +645,7 @@ fun DrawScope.drawAttackedFlank(
     // angle du vecteur attaquant→cible dans notre repère (cap 0 = haut, horaire positif)
     val dx = (targetCenter.x - attackerCenter.x).toDouble()
     val dy = (targetCenter.y - attackerCenter.y).toDouble()
-    val targetAngleDeg = Math.toDegrees(Math.atan2(dx, -dy)).toFloat()
+    val targetAngleDeg = Math.toDegrees(Math.atan2(dx, -dy)).toFloat()  // Double -> Float
     val sect = attackedSector(attackerHeadingDeg, targetAngleDeg)
     // couleur du dé dominant de la zone attaquée
     val col = when {
@@ -1011,7 +1012,7 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
     } else "pas d'armement"
     val tgt = pawns.firstOrNull { it.id == tgtId }
     if (tgt == null) return att.name + " · " + portee + " · touchez une cible"
-    val d = hypot(tgt.xMm - att.xMm, tgt.yMm - att.yMm)
+    val d = hypot((tgt.xMm - att.xMm).toDouble(), (tgt.yMm - att.yMm).toDouble()).toFloat()
     return att.name + " → " + tgt.name + " · " + "%.0f".format(d) + " mm · arc " + sectorOf(att, tgt) + " · " + portee
 }
 
