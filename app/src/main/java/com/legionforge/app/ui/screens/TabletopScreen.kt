@@ -1042,7 +1042,7 @@ private fun infoLine(pawns: List<TabletopPawn>, selId: String?, tgtId: String?):
         }.joinToString("+")
         "%.0f mm · dés %s".format(maxR, bands)
     } else "pas d'armement"
-    val tgt = pawns.firstOrNull { it.id == targetId }
+    val tgt = pawns.firstOrNull { it.id == tgtId }
     if (tgt == null) return "%s · %s · touchez une cible".format(att.name, portee)
     val d = hypot((tgt.xMm - att.xMm).toDouble(), (tgt.yMm - att.yMm).toDouble()).toFloat()
     return "%s → %s · %.0f mm · arc %s · %s".format(att.name, tgt.name, d, sectorOf(att, tgt), portee)
