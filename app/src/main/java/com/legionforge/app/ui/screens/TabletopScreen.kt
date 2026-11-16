@@ -132,6 +132,7 @@ fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
 }
 
 @Composable
+@androidx.compose.material3.ExperimentalMaterial3Api
 fun TabletopScreen(
     pawns: List<TabletopPawn>,
     round: Int = 1,
@@ -500,9 +501,10 @@ fun TabletopScreen(
         Button(
             enabled = speedIdx > 0,
             onClick = {
-                val out = resolveManeuver(selPawn, positions, speedIdx, effectiveBends)
+                val mover = selPawn ?: return@Button
+                val out = resolveManeuver(mover, positions, speedIdx, effectiveBends)
                 positions = positions.map { p ->
-                    if (p.id == selPawn.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.headingDeg) else p
+                    if (p.id == mover.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.heading) else p
                 }
                 speedIdx = 0
                 bends = listOf(0, 0, 0, 0)
