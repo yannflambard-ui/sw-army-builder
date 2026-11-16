@@ -20,6 +20,7 @@ import com.legionforge.app.ui.nav.LegionForgeNavHost
 import com.legionforge.app.ui.theme.LegionForgeTheme
 import com.legionforge.app.util.CrashReporter
 
+@androidx.compose.material3.ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
