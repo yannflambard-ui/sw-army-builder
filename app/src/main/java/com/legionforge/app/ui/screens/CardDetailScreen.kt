@@ -206,7 +206,7 @@ enum class ArmadaPhase { COMMAND, SHIP, SQUADRON, STATUS }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: () -> Unit, onOpenTabletop: ((String) -> Unit)? = null, listId: String? = null, vm: ArmyBuilderViewModel = viewModel(), playSyncVm: PlaySyncViewModel = viewModel()) {
+fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: () -> Unit, onOpenTabletop: ((String) -> Unit)? = null, listId: String? = null, tabletopSelectedId: String? = null, onTabletopSelectionConsumed: () -> Unit = {}, vm: ArmyBuilderViewModel = viewModel(), playSyncVm: PlaySyncViewModel = viewModel()) {
     // Charge la liste dans CE vm (scopé à l'écran play) : sinon currentList est null et la
     // synchro 2 joueurs ne peut pas envoyer la liste adverse.
     if (listId != null) androidx.compose.runtime.LaunchedEffect(listId) { vm.openList(listId) }
@@ -485,6 +485,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val oppPlayable = oppEntries.filter { e ->
         e.parentInstanceId == null && (e.card.kind == CardKind.LEGION_UNIT || e.card.kind == CardKind.ARMADA_SHIP || e.card.kind == CardKind.ARMADA_SQUADRON || e.card.kind == CardKind.COMMANDER)
     }
+    LaunchedEffect(tabletopSelectedId, playable, oppPlayable) {
+        if (tabletopSelectedId != null) {
+            (playable + oppPlayable).firstOrNull { it.instanceId == tabletopSelectedId }?.let {
+                selectedUnit = it
+                onTabletopSelectionConsumed()
+            }
+        }
+    }
     // ── Règle v2 : Pass Pool + verrou de fin de round (solo) ──
     // Au début de partie, le joueur dont l'armée a le MOINS d'unités reçoit (différence − 1)
     // jetons de passe ; passer une unité coûte 1 jeton. Armées de taille égale → 0 jeton.
@@ -552,6 +560,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     playSyncVm.restoreOwnStates(snap.ownStates)
                     if (snap.twoPlayer) { twoPlayer = true; playSyncVm.restoreOppStates(snap.oppStates) }
                     soloOppStates = snap.soloOppStates
+                    if (!snap.twoPlayer) snap.soloOppListId?.let(vm::loadOpponentList)
                     armadaRound = snap.armadaRound
                     armadaPhase = ArmadaPhase.entries.firstOrNull { it.name == snap.armadaPhase } ?: ArmadaPhase.COMMAND
                 }
@@ -1045,6 +1054,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     }
                                 }
                             }
+                            if (onOpenTabletop != null && listId != null) item {
+                                TextButton(onClick = { onOpenTabletop(listId) }, modifier = Modifier.fillMaxWidth()) {
+                                    Text("▦ Ouvrir le plateau Tabletop", color = Color(0xFFFFC857))
+                                }
+                            }
                             item {
                                 ArmadaRoundBar(
                                     armadaRound = armadaRound, armadaPhase = armadaPhase,
@@ -1422,10 +1436,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     // Détail d'unité (refonte A1/A8) : sheet réutilisant la page unité.
     selectedUnit?.let { unit ->
-        val isOppDetail = twoPlayer && viewingArmy == "opp"
-        // En solo, l'adversaire est joué par le même écran : routage vers soloOppStates + gate de tour.
-        val isOppUnit = if (twoPlayer) isOppDetail else oppPlayable.any { it.instanceId == unit.instanceId }
-        val detailAll = if (isOppDetail) oppEntries else entries
+        val isOppUnit = oppPlayable.any { it.instanceId == unit.instanceId }
+        val isOppDetail = twoPlayer && isOppUnit
+        // L'identité de l'unité, pas l'écran actif, détermine son camp et ses améliorations.
+        val detailAll = if (isOppUnit) oppEntries else entries
         val detailStates = if (isOppDetail) oppStates else if (isOppUnit) soloOppStates else ownStates
         val detailState = detailStates[unit.instanceId] ?: SyncedUnitState(unit.instanceId)
         val detailChildren = detailAll.filter { it.parentInstanceId == unit.instanceId }
@@ -3398,7 +3412,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         onPush = { name -> set(state.copy(commandDialStack = com.legionforge.app.data.model.ArmadaCommandStack.push(state.commandDialStack, name, maxOrderStock))) },
                         onReveal = {
                             val (h, rest) = com.legionforge.app.data.model.ArmadaCommandStack.reveal(state.commandDialStack)
-                            if (h != null && !state.commandDialRevealed) set(state.copy(commandDialStack = rest, commandOrder = h, orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.credit(orderTokens, h), commandDialRevealed = true))
+                            if (h != null && !state.commandDialRevealed) set(state.copy(commandDialStack = rest, commandOrder = h, commandDialRevealed = true))
                         },
                         onSpend = { if (commandOrder != null) set(state.copy(orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.spend(orderTokens, commandOrder.name))) }
                     )

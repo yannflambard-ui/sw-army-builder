@@ -241,9 +241,15 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    private var opponentCollector: kotlinx.coroutines.Job? = null
+
     /** Charge une liste comme armée adverse (mode solo 2 armées). */
     fun loadOpponentList(id: String) {
-        viewModelScope.launch {
+        if (_soloOppList.value?.id == id && opponentCollector?.isActive == true) return
+        opponentCollector?.cancel()
+        _soloOppList.value = null
+        _soloOppEntries.value = emptyList()
+        opponentCollector = viewModelScope.launch {
             awaitCatalog()
             val list = repository.getList(id) ?: return@launch
             _soloOppList.value = list

@@ -136,6 +136,7 @@ fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
 fun TabletopScreen(
     pawns: List<TabletopPawn>,
     sessionId: String,
+    onSelectPlayUnit: (String) -> Unit = {},
     round: Int = 1,
     phase: String = "COMMAND",
     onBack: () -> Unit,
@@ -151,7 +152,7 @@ fun TabletopScreen(
     val savedPositions = remember(sessionId) {
         runCatching { JSONObject(tablePrefs.getString(sessionId, "{}") ?: "{}") }.getOrElse { JSONObject() }
     }
-    var positions by remember(pawns, sessionId) {
+    var positions by remember(sessionId) {
         mutableStateOf(pawns.map { p ->
             val item = savedPositions.optJSONObject(p.id)
             if (item == null) p else p.copy(
@@ -160,6 +161,19 @@ fun TabletopScreen(
                 headingDeg = item.optDouble("heading", p.headingDeg.toDouble()).toFloat(),
             )
         })
+    }
+    androidx.compose.runtime.LaunchedEffect(pawns, sessionId) {
+        // Réconcilier le chargement différé sans effacer les positions déjà modifiées.
+        val current = positions.associateBy { it.id }
+        positions = pawns.map { p ->
+            val live = current[p.id]
+            val saved = savedPositions.optJSONObject(p.id)
+            when {
+                live != null -> p.copy(xMm = live.xMm, yMm = live.yMm, headingDeg = live.headingDeg)
+                saved != null -> p.copy(xMm = saved.optDouble("x", p.xMm.toDouble()).toFloat(), yMm = saved.optDouble("y", p.yMm.toDouble()).toFloat(), headingDeg = saved.optDouble("heading", p.headingDeg.toDouble()).toFloat())
+                else -> p
+            }
+        }
     }
     androidx.compose.runtime.LaunchedEffect(positions, sessionId) {
         // Modifier uniquement les unités présentes ; conserver les positions d'une flotte temporairement absente.
@@ -245,7 +259,7 @@ fun TabletopScreen(
                 }
         ) {
             // Init auto des dés quand la cible change (arc attaquant + bande de portée)
-            androidx.compose.runtime.LaunchedEffect(targetId, selectedId) {
+            androidx.compose.runtime.LaunchedEffect(targetId, selectedId, positions) {
                 val att = positions.firstOrNull { it.id == selectedId }
                 val tgt = positions.firstOrNull { it.id == targetId }
                 if (att != null && tgt != null) {
@@ -302,12 +316,14 @@ fun TabletopScreen(
                             },
                             onDragCancel = { dragId = null; dragPosMm = null },
                         ) { change: androidx.compose.ui.input.pointer.PointerInputChange, _: androidx.compose.ui.geometry.Offset ->
-                            if (dragId != null) change.consume()
-                            val cc = Offset(size.width / 2f + pan.x, size.height / 2f + pan.y)
-                            dragPosMm = Offset(
-                                (change.position.x - cc.x) / (PX_PER_MM * scale),
-                                (change.position.y - cc.y) / (PX_PER_MM * scale),
-                            )
+                            if (dragId != null) {
+                                change.consume()
+                                val cc = Offset(size.width / 2f + pan.x, size.height / 2f + pan.y)
+                                dragPosMm = Offset(
+                                    (change.position.x - cc.x) / (PX_PER_MM * scale),
+                                    (change.position.y - cc.y) / (PX_PER_MM * scale),
+                                )
+                            }
                         }
                     }
                     .pointerInput(positions, scale, pan, selectedId) {
@@ -319,7 +335,8 @@ fun TabletopScreen(
                                     targetId = null
                                     speedIdx = 0
                                     bends = listOf(0, 0, 0, 0)
-                                    sheetPawnId = it.id
+                                    sheetPawnId = null
+                                    onSelectPlayUnit(it.id)
                                 }
                             }
                         ) { tap ->
@@ -327,8 +344,10 @@ fun TabletopScreen(
                             val hit = positions.firstOrNull { p -> hitPawn(p, c, scale, tap) }
                             when {
                                 hit == null -> { selectedId = null; targetId = null }
-                                selectedId != null && hit.id != selectedId -> targetId = hit.id
-                                else -> { selectedId = hit.id; targetId = null }
+                                selectedId == null -> { selectedId = hit.id; targetId = null }
+                                hit.id == selectedId -> targetId = null
+                                positions.firstOrNull { it.id == selectedId }?.isOpp != hit.isOpp -> targetId = hit.id
+                                else -> { selectedId = hit.id; targetId = null; speedIdx = 0; bends = listOf(0, 0, 0, 0) }
                             }
                         }
                     }
@@ -590,8 +609,8 @@ fun TabletopScreen(
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = Color(0xFF0B1220)),
                         ) { Text("Attaquer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
-                        // Lien vers l'écran Play (les 2 écrans synchronisés)
-                        androidx.compose.material3.TextButton(onClick = { sheetPawnId = null; onOpenPlay(sp.id) }, modifier = Modifier.fillMaxWidth()) {
+                        // Fiche complète Play de ce pion.
+                        androidx.compose.material3.TextButton(onClick = { sheetPawnId = null; onSelectPlayUnit(sp.id) }, modifier = Modifier.fillMaxWidth()) {
                             Text("Ouvrir dans Play ↗", color = Color(0xFF38BDF8), fontSize = 13.sp, maxLines = 1)
                         }
                     }

@@ -131,7 +131,11 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
                     val allEntries = vm.entries.value
                     val idx = allEntries.indexOfFirst { it.instanceId == eid }.coerceAtLeast(0)
-                    CardDetailScreen(entries = allEntries, initialIndex = idx, listId = lid, onBack = { navController.popBackStack() }, onOpenTabletop = { id -> navController.navigate(Routes.tabletop(id)) })
+                    val selectedFromTabletop by entry.savedStateHandle.getStateFlow<String?>("tabletop_selected_unit", null).collectAsState()
+                    CardDetailScreen(entries = allEntries, initialIndex = idx, listId = lid, vm = vm,
+                        tabletopSelectedId = selectedFromTabletop,
+                        onTabletopSelectionConsumed = { entry.savedStateHandle["tabletop_selected_unit"] = null },
+                        onBack = { navController.popBackStack() }, onOpenTabletop = { id -> navController.navigate(Routes.tabletop(id)) })
                 }
         composable(Routes.TABLETOP, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
@@ -219,6 +223,15 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             com.legionforge.app.ui.screens.TabletopScreen(
                 pawns = pawns,
                 sessionId = lid,
+                onSelectPlayUnit = { unitId ->
+                    val playEntry = navController.previousBackStackEntry?.takeIf { it.destination.route == Routes.CARD_DETAIL }
+                    if (playEntry != null) {
+                        playEntry.savedStateHandle["tabletop_selected_unit"] = unitId
+                        navController.popBackStack()
+                    } else {
+                        navController.navigate(Routes.cardDetail(lid, unitId))
+                    }
+                },
                 round = tabletopRound,
                 phase = tabletopPhase,
                 onBack = { navController.popBackStack() },
