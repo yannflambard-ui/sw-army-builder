@@ -205,7 +205,9 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     xMm = (run { val mine = allShips.count { !(it.instanceId.startsWith("B:") || it.instanceId.startsWith("opp_")) }; val sameSide = allShips.take(i).count { (it.instanceId.startsWith("B:") || it.instanceId.startsWith("opp_")) == (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) }; val isOppE = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"); val n = if (isOppE) allShips.size - mine else mine; (sameSide - n / 2f) * 160f }),
                     isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_"),
                     isSquadron = e.card.kind.name == "ARMADA_SQUADRON",
-                    yMm = if (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) -420f else 420f,
+                    // Placé au centre de la zone de déploiement (distance 1..3 depuis le bord long = bord du joueur).
+                    // BOARD_H_MM=914.4, halfH=457.2, DEPLOY_MIN=76.2, DEPLOY_MAX=228.6 → milieu = 304.8 mm.
+                    yMm = if (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) -304.8f else 304.8f,
                 )
             }
             com.legionforge.app.ui.screens.TabletopScreen(

@@ -142,6 +142,8 @@ fun TabletopScreen(
     var positions by remember(pawns) { mutableStateOf(pawns) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var dragId by remember { mutableStateOf<String?>(null) }
+    // Position du doigt pendant un drag (en mm plateau) — pour le trait de visée et le dépôt
+    var dragPosMm by remember { mutableStateOf<Offset?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
     var attackResult by remember { mutableStateOf<String?>(null) }
@@ -154,6 +156,9 @@ fun TabletopScreen(
     val selPawn = positions.firstOrNull { it.id == selectedId }
     // Vitesse max du vaisseau sélectionné (lue dans sa carte, pas en dur)
     val maxSpeed = selPawn?.maxSpeed ?: 0
+    // Rayon atteignable (mm) pour un escadron : vitesse max × 1 distance (76,2 mm).
+    // Un escadron se déplace librement (pas de gabarit), dans un disque de ce rayon.
+    val squadronReachMm = if (selPawn?.isSquadron == true) (maxSpeed.coerceAtLeast(1) * 76.2f) else 0f
     // Bornes de crans par articulation, lues dans la Speed Chart (position 1..4, vitesse courante)
     val jointMax = { pos: Int -> if (selPawn != null) maxClicks(selPawn.speedChart, pos, speedIdx) else 0 }
     // Crans effectifs bornés : aucune mutation d'état pendant la composition
@@ -217,6 +222,48 @@ fun TabletopScreen(
                 Modifier
                     .fillMaxSize()
                     .pointerInput(positions, scale, pan) {
+                        // Drag d'un pion (escadron surtout) : déplacement libre dans la zone atteignable
+                        androidx.compose.foundation.gestures.detectDragGestures(
+                            onDragStart = { at ->
+                                val cc = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
+                                val hit = positions.firstOrNull { p -> hitPawn(p, cc, scale, at) }
+                                if (hit != null) {
+                                    dragId = hit.id
+                                    dragPosMm = Offset(
+                                        (at.x - cc.x) / (PX_PER_MM * scale),
+                                        (at.y - cc.y) / (PX_PER_MM * scale),
+                                    )
+                                }
+                            },
+                            onDragEnd = {
+                                val id = dragId
+                                val pos = dragPosMm
+                                if (id != null && pos != null) {
+                                    positions = positions.map { p ->
+                                        if (p.id != id) p else {
+                                            val reach = if (p.isSquadron) p.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
+                                            val d = kotlin.math.hypot(pos.x - p.xMm, pos.y - p.yMm)
+                                            if (p.isSquadron && d > reach) {
+                                                // hors zone atteignable : on garde la position
+                                                p
+                                            } else {
+                                                p.copy(xMm = pos.x, yMm = pos.y)
+                                            }
+                                        }
+                                    }
+                                }
+                                dragId = null
+                                dragPosMm = null
+                            },
+                            onDragCancel = { dragId = null; dragPosMm = null },
+                        ) { change, _ ->
+                            change.consume()
+                            val cc = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
+                            dragPosMm = Offset(
+                                (change.position.x - cc.x) / (PX_PER_MM * scale),
+                                (change.position.y - cc.y) / (PX_PER_MM * scale),
+                            )
+                        }
                         detectTapGestures(
                             onLongPress = { at ->
                                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
@@ -266,6 +313,37 @@ fun TabletopScreen(
                             Offset(pts.last().x, pts.last().y - ghPx * 0.4f),
                             strokeWidth = 2f,
                         )
+                    }
+                }
+                // Zone atteignable d'un escadron sélectionné (disque de rayon vitesse × 1 distance)
+                if (selectedId != null && selPawn?.isSquadron == true && squadronReachMm > 0f) {
+                    val sc = Offset(c.x + selPawn.xMm * PX_PER_MM * scale, c.y + selPawn.yMm * PX_PER_MM * scale)
+                    val r = squadronReachMm * PX_PER_MM * scale
+                    drawCircle(Color(0x2222D3EE), radius = r, center = sc)
+                    drawCircle(
+                        Color(0xAA22D3EE), radius = r, center = sc,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                    )
+                }
+                // Pendant un drag : trait de visée + position fantôme + limite de zone
+                if (dragId != null && dragPosMm != null) {
+                    val dp = dragPosMm!!
+                    val dragPawn = positions.find { it.id == dragId }
+                    if (dragPawn != null) {
+                        val from = Offset(c.x + dragPawn.xMm * PX_PER_MM * scale, c.y + dragPawn.yMm * PX_PER_MM * scale)
+                        val to = Offset(c.x + dp.x * PX_PER_MM * scale, c.y + dp.y * PX_PER_MM * scale)
+                        val reach = if (dragPawn.isSquadron) dragPawn.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
+                        val dist = kotlin.math.hypot(dp.x - dragPawn.xMm, dp.y - dragPawn.yMm)
+                        val inRange = !dragPawn.isSquadron || dist <= reach
+                        val col = if (inRange) Color(0xCC22D3EE) else Color(0xCCF87171)
+                        drawLine(col, from, to, strokeWidth = 3f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(12f, 8f)))
+                        // fantôme du pion à la position du doigt
+                        val (pw, ph) = baseSizeMm(dragPawn.sizeClass)
+                        val pwPx = pw * PX_PER_MM * scale
+                        val phPx = ph * PX_PER_MM * scale
+                        drawRect(col.copy(alpha = 0.35f), topLeft = Offset(to.x - pwPx / 2, to.y - phPx / 2), size = androidx.compose.ui.geometry.Size(pwPx, phPx))
+                        drawRect(col, topLeft = Offset(to.x - pwPx / 2, to.y - phPx / 2), size = androidx.compose.ui.geometry.Size(pwPx, phPx), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
                     }
                 }
                 // Anneaux de portée du vaisseau sélectionné (noir=Close, bleu=Medium, rouge=Long)
@@ -485,8 +563,8 @@ private /**
  */
 fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
     val k = PX_PER_MM * scale
-    val halfW = BOARD_W_MM / 2f * k
-    val halfH = BOARD_H_MM / 2f * k
+    val halfW = BOARD_W_MM / 2f * k   // 6 ft = bord long = bord du joueur
+    val halfH = BOARD_H_MM / 2f * k   // 3 ft = bord court
     val depMin = DEPLOY_MIN_MM * k
     val depMax = DEPLOY_MAX_MM * k
     // plateau : cadre
@@ -495,26 +573,26 @@ fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
         topLeft = Offset(c.x - halfW, c.y - halfH),
         size = androidx.compose.ui.geometry.Size(2 * halfW, 2 * halfH),
     )
-    // zone de mise en place : cadre pointillé
-    val setupHalfH = SETUP_H_MM / 2f * k
+    // zone de mise en place : 4 x 3 ft, centrée (marqueurs à 1 ft des bords courts)
+    val setupHalfW = SETUP_W_MM / 2f * k
     drawRect(
         Color(0x55FFC857),
-        topLeft = Offset(c.x - halfW, c.y - setupHalfH),
-        size = androidx.compose.ui.geometry.Size(2 * halfW, 2 * setupHalfH),
+        topLeft = Offset(c.x - setupHalfW, c.y - halfH),
+        size = androidx.compose.ui.geometry.Size(2 * setupHalfW, 2 * halfH),
         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f),
     )
-    // zone de déploiement SUD (joueur 1) : distance 1..3 depuis le bord sud
+    // zone de déploiement SUD (joueur 1) : distance 1..3 depuis le bord bas (bord long)
     val southTop = c.y + halfH - depMax
     val southBottom = c.y + halfH - depMin
     drawRect(
         Color(0x5522D3EE),
-        topLeft = Offset(c.x - halfW, southTop),
-        size = androidx.compose.ui.geometry.Size(2 * halfW, southBottom - southTop),
+        topLeft = Offset(c.x - setupHalfW, southTop),
+        size = androidx.compose.ui.geometry.Size(2 * setupHalfW, southBottom - southTop),
     )
     drawRect(
         Color(0xCC22D3EE),
-        topLeft = Offset(c.x - halfW, southTop),
-        size = androidx.compose.ui.geometry.Size(2 * halfW, southBottom - southTop),
+        topLeft = Offset(c.x - setupHalfW, southTop),
+        size = androidx.compose.ui.geometry.Size(2 * setupHalfW, southBottom - southTop),
         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
     )
     // zone de déploiement NORD (joueur 2) : symétrique
@@ -522,13 +600,13 @@ fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
     val northBottom = c.y - halfH + depMax
     drawRect(
         Color(0x55F87171),
-        topLeft = Offset(c.x - halfW, northTop),
-        size = androidx.compose.ui.geometry.Size(2 * halfW, northBottom - northTop),
+        topLeft = Offset(c.x - setupHalfW, northTop),
+        size = androidx.compose.ui.geometry.Size(2 * setupHalfW, northBottom - northTop),
     )
     drawRect(
         Color(0xCCF87171),
-        topLeft = Offset(c.x - halfW, northTop),
-        size = androidx.compose.ui.geometry.Size(2 * halfW, northBottom - northTop),
+        topLeft = Offset(c.x - setupHalfW, northTop),
+        size = androidx.compose.ui.geometry.Size(2 * setupHalfW, northBottom - northTop),
         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
     )
     // libellés de zone (drawIntoCanvas pour le texte)
@@ -544,9 +622,9 @@ fun DrawScope.drawDeploymentZones(c: Offset, scale: Float) {
         canvas.nativeCanvas.drawText(label, c.x - w / 2f, southTop + (southBottom - southTop) / 2f + 5f, p)
         canvas.nativeCanvas.drawText(label, c.x - w / 2f, northTop + (northBottom - northTop) / 2f + 5f, p)
         p.textSize = 11f * scale + 8f
-        val setup = "Zone de mise en place (3×4 ft)"
+        val setup = "Zone de mise en place (4×3 ft)"
         val w2 = p.measureText(setup)
-        canvas.nativeCanvas.drawText(setup, c.x - w2 / 2f, c.y - setupHalfH + 22f, p)
+        canvas.nativeCanvas.drawText(setup, c.x - w2 / 2f, c.y - halfH + 22f, p)
     }
 }
 
@@ -785,12 +863,14 @@ private const val ARC_RADIUS_MM = 400f
  * ATTENTION escadrons : ils utilisent le côté DISTANCE de la règle (bandes 1..5),
  * JAMAIS le côté range. Distance 1 = 60,96 mm, distance 2 = 121,92 mm.
  */
-private const val RANGE_RULER_MM = 304.8f      // 1 pied
-private const val RANGE_CLOSE_MM = 124f        // borne haute close (≈ 4,88 pouces)
-private const val RANGE_MEDIUM_MM = 188f       // borne haute medium (≈ 7,40 pouces)
-private const val RANGE_LONG_MM = RANGE_RULER_MM  // borne haute long
-private const val SQUADRON_RANGE_MM = 60.96f   // distance 1 (côté DISTANCE de la règle)
-private const val SNIPE_RANGE_MM = 121.92f     // distance 2 (Snipe/Embuscade)
+private const val RANGE_RULER_MM = 304.8f      // 1 pied = 12 pouces
+// Bandes INÉGALES de la réglette physique (mesures relevées, tolérance impression 1-2 mm) :
+private const val RANGE_CLOSE_MM = 123.19f     // noir  = 4 7/8" ≈ 12,3 cm
+private const val RANGE_MEDIUM_MM = 186.69f    // bleu  = 7 3/8" ≈ 18,7 cm
+private const val RANGE_LONG_MM = RANGE_RULER_MM // rouge = 12"  ≈ 30,5 cm
+// Côté DISTANCE de la réglette (escadrons) : 1 distance = 3" = 76,2 mm
+private const val SQUADRON_RANGE_MM = 76.2f    // distance 1
+private const val SNIPE_RANGE_MM = 152.4f      // distance 2 (Snipe/Embuscade)
 
 /**
  * Plateau standard Armada : 3 x 6 pieds (914 x 1829 mm), centré sur (0,0).
@@ -798,11 +878,11 @@ private const val SNIPE_RANGE_MM = 121.92f     // distance 2 (Snipe/Embuscade)
  * Zone de déploiement : bande de la distance 1 à 3 depuis VOTRE bord de table,
  * sur toute la largeur de la zone de mise en place.
  */
-private const val BOARD_W_MM = 914.4f    // 3 pieds (largeur)
-private const val BOARD_H_MM = 1828.8f   // 6 pieds (longueur)
-private const val SETUP_H_MM = 1219.2f   // 4 pieds (zone de mise en place)
-private const val DEPLOY_MIN_MM = 60.96f // distance 1
-private const val DEPLOY_MAX_MM = 182.88f // distance 3
+private const val BOARD_W_MM = 1828.8f   // 6 pieds (bord long = bord du joueur, HORIZONTAL)
+private const val BOARD_H_MM = 914.4f    // 3 pieds (bord court = vertical)
+private const val SETUP_W_MM = 1219.2f   // 4 pieds (zone de mise en place, centrée)
+private const val DEPLOY_MIN_MM = 76.2f  // distance 1 (3")
+private const val DEPLOY_MAX_MM = 228.6f // distance 3 (9")
 
 /**
  * Secteurs de tir : avant 60°, arrière 60°, flancs 120° chacun.
