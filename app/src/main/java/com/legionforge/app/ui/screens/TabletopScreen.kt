@@ -135,6 +135,7 @@ fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
 @androidx.compose.material3.ExperimentalMaterial3Api
 fun TabletopScreen(
     pawns: List<TabletopPawn>,
+    sessionId: String,
     round: Int = 1,
     phase: String = "COMMAND",
     onBack: () -> Unit,
@@ -145,7 +146,26 @@ fun TabletopScreen(
     // Scale de cadrage : le plateau entier tient dans l'écran (ergonome).
     var fitScale by remember { mutableStateOf(0.5f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
-    var positions by remember(pawns) { mutableStateOf(pawns) }
+    // Positions distinctes du snapshot Play : éviter d'écraser les données de partie.
+    val tablePrefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences("armada_tabletop_positions", android.content.Context.MODE_PRIVATE)
+    val savedPositions = remember(sessionId) {
+        runCatching { JSONObject(tablePrefs.getString(sessionId, "{}") ?: "{}") }.getOrElse { JSONObject() }
+    }
+    var positions by remember(pawns, sessionId) {
+        mutableStateOf(pawns.map { p ->
+            val item = savedPositions.optJSONObject(p.id)
+            if (item == null) p else p.copy(
+                xMm = item.optDouble("x", p.xMm.toDouble()).toFloat(),
+                yMm = item.optDouble("y", p.yMm.toDouble()).toFloat(),
+                headingDeg = item.optDouble("heading", p.headingDeg.toDouble()).toFloat(),
+            )
+        })
+    }
+    androidx.compose.runtime.LaunchedEffect(positions, sessionId) {
+        // Modifier uniquement les unités présentes ; conserver les positions d'une flotte temporairement absente.
+        positions.forEach { p -> savedPositions.put(p.id, JSONObject().put("x", p.xMm).put("y", p.yMm).put("heading", p.headingDeg)) }
+        tablePrefs.edit().putString(sessionId, savedPositions.toString()).apply()
+    }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var dragId by remember { mutableStateOf<String?>(null) }
     // Position du doigt pendant un drag (en mm plateau) — pour le trait de visée et le dépôt
@@ -230,11 +250,8 @@ fun TabletopScreen(
                 val tgt = positions.firstOrNull { it.id == targetId }
                 if (att != null && tgt != null) {
                     val dist = kotlin.math.hypot((tgt.xMm - att.xMm).toDouble(), (tgt.yMm - att.yMm).toDouble()).toFloat()
-                    val sect = (Math.toDegrees(Math.atan2((tgt.xMm - att.xMm).toDouble(), -((tgt.yMm - att.yMm).toDouble()))) - att.headingDeg).toFloat().let {
-                        // atan2 renvoie un angle dans le repère image (x vers la droite, y vers le bas).
-                        // Notre repère : cap 0 = prôe vers le haut, donc on retire 90°.
-                        attackedSector(att.headingDeg, it)
-                    }
+                    val angle = Math.toDegrees(Math.atan2((tgt.xMm - att.xMm).toDouble(), -((tgt.yMm - att.yMm).toDouble()))).toFloat()
+                    val sect = attackedSector(att.headingDeg, angle)
                     val bag = att.attack?.sector(sect)
                     val (nb, bl, rd) = initDiceFor(bag, dist, att.isSquadron, att.snipe)
                     blackDice = nb; blueDice = bl; redDice = rd
@@ -249,12 +266,13 @@ fun TabletopScreen(
                 Modifier
                     .fillMaxSize()
                     .pointerInput(positions, scale, pan) {
-                        // Drag d'un pion (escadron surtout) : déplacement libre dans la zone atteignable
+                        // Déplacement manuel : placement des navires et déplacement indicatif des escadrons.
                         detectDragGestures(
                             onDragStart = { at: androidx.compose.ui.geometry.Offset ->
                                 val cc = Offset(size.width / 2f + pan.x, size.height / 2f + pan.y)
                                 val hit = positions.firstOrNull { p -> hitPawn(p, cc, scale, at) }
                                 if (hit != null) {
+                                    selectedId = hit.id
                                     dragId = hit.id
                                     dragPosMm = Offset(
                                         (at.x - cc.x) / (PX_PER_MM * scale),
@@ -284,18 +302,23 @@ fun TabletopScreen(
                             },
                             onDragCancel = { dragId = null; dragPosMm = null },
                         ) { change: androidx.compose.ui.input.pointer.PointerInputChange, _: androidx.compose.ui.geometry.Offset ->
-                            change.consume()
+                            if (dragId != null) change.consume()
                             val cc = Offset(size.width / 2f + pan.x, size.height / 2f + pan.y)
                             dragPosMm = Offset(
                                 (change.position.x - cc.x) / (PX_PER_MM * scale),
                                 (change.position.y - cc.y) / (PX_PER_MM * scale),
                             )
                         }
+                    }
+                    .pointerInput(positions, scale, pan, selectedId) {
                         detectTapGestures(
                             onLongPress = { at ->
                                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                                 positions.firstOrNull { p -> hitPawn(p, c, scale, at) }?.let {
                                     selectedId = it.id
+                                    targetId = null
+                                    speedIdx = 0
+                                    bends = listOf(0, 0, 0, 0)
                                     sheetPawnId = it.id
                                 }
                             }
@@ -434,6 +457,12 @@ fun TabletopScreen(
                                 drawBase(center, wp, hp, p.headingDeg, selected = p.id == selectedId, target = p.id == targetId, round = p.isSquadron)
                             }
                         }
+                        if (p.id == selectedId || p.id == targetId) {
+                            drawRect(if (p.id == selectedId) Color(0xFFFFC857) else Color(0xFFF87171),
+                                topLeft = Offset(center.x - wp / 2, center.y - hp / 2),
+                                size = androidx.compose.ui.geometry.Size(wp, hp),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
+                        }
                         // Figurine réelle à l'ÉCHELLE DE LA FIGURINE : longueur nez-queue = lengthMm.
                         val figBmp = p.figurePath?.let { bitmaps[it] }
                         if (figBmp != null && p.figureLengthMm > 0f) {
@@ -464,42 +493,19 @@ fun TabletopScreen(
             }
         }
 
-        // Attaque : dés N/B/R (colonnes +/- empilés), lancer (attaquant = sélection, cible = 2e tap)
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-            DiceColumn("N", Color(0xFF1F2937), blackDice, selectedId != null) { blackDice = it }
-            DiceColumn("B", Color(0xFF3B82F6), blueDice, selectedId != null) { blueDice = it }
-            DiceColumn("R", Color(0xFFEF4444), redDice, selectedId != null) { redDice = it }
-        }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            TextButton(
-                enabled = selectedId != null && targetId != null && (blackDice + blueDice + redDice) > 0,
-                onClick = {
-                    val rolls = com.legionforge.app.ui.screens.ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
-                    val tgt = positions.firstOrNull { it.id == targetId }
-                    val att = positions.firstOrNull { it.id == selectedId }
-                    val targetIsShip = tgt?.isSquadron != true
-                    val attackerIsShip = att?.isSquadron != true
-                    val dmg = com.legionforge.app.ui.screens.ArmadaDiceRoller.damage(rolls, attackerIsShip, targetIsShip)
-                    val acc = com.legionforge.app.ui.screens.ArmadaDiceRoller.accuracies(rolls)
-                    val crit = rolls.count { it.face.crit }
-                    attackResult = "Dégâts $dmg · Critiques $crit · Précisions $acc"
-                    // Appliquer les dégâts sur la cible : boucliers du secteur avant, puis coque, puis cartes (RRG)
-                    if (tgt != null && dmg > 0) {
-                        positions = positions.map { p ->
-                            if (p.id != tgt.id) p else {
-                                val (sh, hl, cards) = com.legionforge.app.ui.screens.ArmadaDefense.applyDamage(p.shieldFront, p.hull, dmg)
-                                attackResult = "Dégâts $dmg → boucliers ${sh}, coque ${hl}, cartes ${cards} · Critiques $crit · Précisions $acc"
-                                p.copy(shieldFront = sh, hull = hl)
-                            }
-                        }
-                    }
-                },
-            ) { Text("Attaquer", color = Color(0xFFF87171), fontSize = 12.sp) }
+        // Commandes contextuelles : le plateau reste dégagé tant qu'aucun pion n'est choisi.
+        if (selPawn != null) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(selPawn.name, modifier = Modifier.weight(1f), maxLines = 1,
+                    color = Color.White, fontSize = 12.sp)
+                TextButton(onClick = { sheetPawnId = selPawn.id }) { Text("Actions") }
+            }
         }
         attackResult?.let { Text(it, color = Color(0xFFFFC857), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
         // Bouton d'action principal : compact, dans le pouce (la vitesse se pilote depuis le sheet)
-        Button(
-            enabled = speedIdx > 0,
+        if (selPawn != null && !selPawn.isSquadron && speedIdx > 0) Button(
+            enabled = true,
             onClick = {
                 val mover = selPawn ?: return@Button
                 val out = resolveManeuver(mover, positions, speedIdx, effectiveBends)
@@ -527,6 +533,7 @@ fun TabletopScreen(
                 ) {
                     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(sp.name, color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+                        Text("Tir et trajectoire indicatifs : vérifiez avec la réglette.", color = Color(0xFFFFC857), fontSize = 12.sp)
                         Text(
                             if (sp.isSquadron) "Escadron · vitesse max ${sp.maxSpeed}" else "Vaisseau · vitesse max ${sp.maxSpeed}",
                             color = Color(0xFF8F9BAD), fontSize = 12.sp, maxLines = 1,
@@ -536,6 +543,11 @@ fun TabletopScreen(
                             androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◄ vitesse", color = Color(0xFFFFC857), fontSize = 14.sp) }
                             Text("Vitesse $speedIdx", color = Color(0xFF9EACBC), fontSize = 14.sp)
                             androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ►", color = Color(0xFFFFC857), fontSize = 14.sp) }
+                        }
+                        if (!sp.isSquadron) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(onClick = { val j = activeJoint - 1; bends = bends.toMutableList().also { it[j] = (it[j] - 1).coerceAtLeast(-jointMax(activeJoint)) } }) { Text("◀ Cran") }
+                            Text("Coude $activeJoint", color = Color.White)
+                            TextButton(onClick = { val j = activeJoint - 1; bends = bends.toMutableList().also { it[j] = (it[j] + 1).coerceAtMost(jointMax(activeJoint)) } }) { Text("Cran ▶") }
                         }
                         // Coudes : les 4 chips du volet Manœuvre
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
@@ -562,8 +574,19 @@ fun TabletopScreen(
                             DiceColumn("R", Color(0xFFEF4444), redDice, true) { redDice = it }
                         }
                         androidx.compose.material3.Button(
-                            onClick = { /* le jet de dés se fait depuis le plateau */ },
-                            enabled = (blackDice + blueDice + redDice) > 0,
+                            onClick = {
+                                val att = positions.firstOrNull { it.id == selectedId }
+                                val tgt = positions.firstOrNull { it.id == targetId }
+                                if (att != null && tgt != null) {
+                                    val rolls = ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
+                                    val damage = ArmadaDiceRoller.damage(rolls, !att.isSquadron, !tgt.isSquadron)
+                                    val crit = rolls.count { it.face.crit }
+                                    val acc = ArmadaDiceRoller.accuracies(rolls)
+                                    attackResult = "Touches/dégâts $damage · critiques $crit · précisions $acc — défense et dégâts à appliquer manuellement"
+                                    sheetPawnId = null
+                                }
+                            },
+                            enabled = selectedId != null && targetId != null && (blackDice + blueDice + redDice) > 0,
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = Color(0xFF0B1220)),
                         ) { Text("Attaquer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }

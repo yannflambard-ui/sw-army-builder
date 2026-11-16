@@ -166,7 +166,10 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     }
                 }.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" }
             }
-            val allShips = ships + oppShipsEntries
+            // En local, la flotte adverse sélectionnée dans Play doit apparaître aussi sur le plateau.
+            val soloOppEntries by vm.soloOppEntries.collectAsState()
+            val tabletopOpp = if (oppListJson.isNullOrBlank()) soloOppEntries else oppShipsEntries
+            val allShips = ships + tabletopOpp.filter { it.card.kind == CardKind.ARMADA_SHIP || it.card.kind == CardKind.ARMADA_SQUADRON }
             val sizes = shipSizes
             val pawns = allShips.mapIndexed { i, e ->
                 com.legionforge.app.ui.screens.TabletopPawn(
@@ -199,7 +202,9 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     basePath = shipBases[e.card.id],
                     hull = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.hull ?: 0,
                     shieldFront = com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.shieldFront ?: 0,
-                    maxSpeed = (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.maxSpeed ?: 0),
+                    maxSpeed = if (e.card.kind == CardKind.ARMADA_SQUADRON)
+                        (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, CardKind.ARMADA_SQUADRON)?.speed ?: 0)
+                    else (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, CardKind.ARMADA_SHIP)?.maxSpeed ?: 0),
                     speedChart = (com.legionforge.app.ui.screens.ArmadaStatsParser.parse(e.card.shipStats, com.legionforge.app.data.model.CardKind.ARMADA_SHIP)?.speedChart ?: emptyList()).map { pos ->
                         pos.mapNotNull { (k, v) -> k.toIntOrNull()?.let { it to v } }.toMap()
                     },
@@ -213,6 +218,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             }
             com.legionforge.app.ui.screens.TabletopScreen(
                 pawns = pawns,
+                sessionId = lid,
                 round = tabletopRound,
                 phase = tabletopPhase,
                 onBack = { navController.popBackStack() },

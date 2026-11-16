@@ -1052,18 +1052,28 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     twoPlayer = twoPlayer,
                                     onAdvance = {
                                         if (!twoPlayer && !isLegion) {
-                                            if (soloRoundDone()) {
+                                            // Les phases commande et statut ne demandent aucune activation ;
+                                            // la phase vaisseaux ne dépend pas des escadrons et inversement.
+                                            val requiredKind = when (armadaPhase) {
+                                                ArmadaPhase.SHIP -> CardKind.ARMADA_SHIP
+                                                ArmadaPhase.SQUADRON -> CardKind.ARMADA_SQUADRON
+                                                else -> null
+                                            }
+                                            val blocked = if (requiredKind == null) emptyList() else
+                                                playable.filter { it.card.kind == requiredKind && ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
+                                                oppPlayable.filter { it.card.kind == requiredKind && soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
+                                            if (blocked.isEmpty()) {
                                                 val crossing = armadaPhase == ArmadaPhase.STATUS
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
-                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), commandDialRevealed = false, defTokens = emptyMap()) } }
-                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, orderTokens = emptyMap(), commandDialStack = emptyList(), commandDialRevealed = false, defTokens = emptyMap()) }
+                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) } }
+                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1
                                                     else {
                                                         val myScore = oppPlayable.filter { soloOppStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
                                                         val oppScore = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
-                                                        armadaWinner = if (myScore >= oppScore) 1 else 0  // égalité → 2e joueur (règle Armada)
-                                                        logEvent("Armada: fin de partie — VOUS $myScore pts / ADVERSAIRE $oppScore pts (gagnant ${if (myScore >= oppScore) "adversaire" else "vous"})")
+                                                        armadaWinner = if (myScore > oppScore) 0 else 1  // égalité → 2e joueur
+                                                        logEvent("Armada: fin de partie — VOUS $myScore pts / ADVERSAIRE $oppScore pts (gagnant ${if (myScore > oppScore) "vous" else "adversaire"})")
                                                     }
                                                 }
                                                 armadaPhase = when (armadaPhase) {
@@ -1074,9 +1084,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 }.also { np -> if (np == ArmadaPhase.SHIP || np == ArmadaPhase.SQUADRON) armadaTurn = 0 }
                                                 logEvent("Armada: manche R$armadaRound -> phase ${armadaPhase.name}")
                                             } else {
-                                                val blocked = playable.filter { ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
-                                                    oppPlayable.filter { soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
-                                                scope.launch { snackbarHostState.showSnackbar("${blocked.size} vaisseau(x) à activer avant de passer la phase") }
+                                                scope.launch { snackbarHostState.showSnackbar("${blocked.size} unité(s) à activer avant de passer la phase") }
                                                 showBlockers = true
                                             }
                                         }
@@ -1106,8 +1114,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         // Fin immédiate : une flotte sans vaisseaux survivants → partie finie (solo).
                         LaunchedEffect(ownStates, soloOppStates, armadaWinner) {
                             if (phase == PlayPhase.GAME && !isLegion && !twoPlayer && armadaWinner == null) {
-                                if (playable.isNotEmpty() && playable.all { ownStates[it.instanceId]?.defeated == true }) armadaWinner = 1
-                                else if (oppPlayable.isNotEmpty() && oppPlayable.all { soloOppStates[it.instanceId]?.defeated == true }) armadaWinner = 0
+                                val ownShips = playable.filter { it.card.kind == CardKind.ARMADA_SHIP }
+                                val enemyShips = oppPlayable.filter { it.card.kind == CardKind.ARMADA_SHIP }
+                                if (ownShips.isNotEmpty() && ownShips.all { ownStates[it.instanceId]?.defeated == true }) armadaWinner = 1
+                                else if (enemyShips.isNotEmpty() && enemyShips.all { soloOppStates[it.instanceId]?.defeated == true }) armadaWinner = 0
                             }
                         }
                         // Overlay de fin de partie (score officiel : points de flotte adverse détruits).
