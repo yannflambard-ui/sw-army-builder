@@ -152,6 +152,12 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     if (saved?.twoPlayer == false) saved.soloOppListId?.let(vm::loadOpponentList)
                 }
             }
+            val tabletopSetup by androidx.compose.runtime.produceState(initialValue = true, lid) {
+                value = try {
+                    val ent = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(appCtxT).gameSessionDao().getByList(lid)
+                    ent == null || com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(ent.snapshot).phase != "GAME"
+                } catch (_: Exception) { true }
+            }
             val tabletopRound by androidx.compose.runtime.produceState(initialValue = 1, lid) {
                 value = try {
                     val ent = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(appCtxT).gameSessionDao().getByList(lid)
@@ -245,6 +251,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 },
                 round = tabletopRound,
                 phase = tabletopPhase,
+                deployment = tabletopSetup,
                 onBack = { navController.popBackStack() },
                 onOpenPlay = { instanceId -> navController.navigate(Routes.cardDetail(lid, instanceId)) },
             )

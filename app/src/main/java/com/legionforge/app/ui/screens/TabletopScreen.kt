@@ -139,6 +139,7 @@ fun TabletopScreen(
     onSelectPlayUnit: (String) -> Unit = {},
     round: Int = 1,
     phase: String = "COMMAND",
+    deployment: Boolean = false,
     onBack: () -> Unit,
     onOpenPlay: (String) -> Unit = {},
 ) {
@@ -146,6 +147,8 @@ fun TabletopScreen(
     var scale by remember { mutableStateOf(0.5f) }
     // Scale de cadrage : le plateau entier tient dans l'écran (ergonome).
     var fitScale by remember { mutableStateOf(0.5f) }
+    var fitInitialized by remember { mutableStateOf(false) }
+    var showDeployment by remember(deployment) { mutableStateOf(deployment) }
     var pan by remember { mutableStateOf(Offset.Zero) }
     // Positions distinctes du snapshot Play : éviter d'écraser les données de partie.
     val tablePrefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences("armada_tabletop_positions", android.content.Context.MODE_PRIVATE)
@@ -230,8 +233,11 @@ fun TabletopScreen(
                 Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
                 Text("${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 10.sp, maxLines = 1)
             }
-            androidx.compose.material3.IconButton(onClick = { scale = fitScale; pan = Offset.Zero }) {
-                Text("◎", color = Color(0xFFFFC857), fontSize = 22.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { showDeployment = !showDeployment }) { Text(if (showDeployment) "Masquer zones" else "Zones", fontSize = 11.sp) }
+                androidx.compose.material3.IconButton(onClick = { scale = fitScale; pan = Offset.Zero }) {
+                    Text("◎", color = Color(0xFFFFC857), fontSize = 22.sp)
+                }
             }
         }
 
@@ -247,8 +253,7 @@ fun TabletopScreen(
                         sz.height / (BOARD_H_MM * PX_PER_MM),
                     ) * 0.95f
                     fitScale = need
-                    scale = need
-                    pan = Offset.Zero
+                    if (!fitInitialized) { scale = need; pan = Offset.Zero; fitInitialized = true }
                 }
                 // Zoom et déplacement du plateau (deux doigts) : on ne touche pas aux pions
                 .pointerInput(Unit) {
@@ -354,7 +359,7 @@ fun TabletopScreen(
             ) {
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
                 // plateau : zones de déploiement + grille de 100 mm
-                drawDeploymentZones(c, scale)
+                if (showDeployment) drawDeploymentZones(c, scale)
                 drawGrid(c, scale)
                 // Aperçu du gabarit : polyligne d'autant de segments que la vitesse, poignées aux
                 // articulations et vaisseau fantôme d'arrivée. INDICATIF : 22,5°/cran et 40 mm/segment non sourcés.
