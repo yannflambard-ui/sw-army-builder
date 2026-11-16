@@ -66,6 +66,26 @@ class ArmadaRoundRulesTest {
         assertEquals(ArmadaPlayer.SECOND, armadaEliminationWinner(0, 0, 80, 80))
     }
 
+    @Test fun sixRoundLocalScenarioExercisesBothFleetsAndPhaseGates() {
+        var state = ArmadaRoundState()
+        repeat(6) { roundIndex ->
+            var shipsA = 1; var shipsB = 1
+            var squadronsA = 1; var squadronsB = 1
+            fun advance(): ArmadaPhaseAdvance = advanceArmadaPhase(state, shipsA + shipsB, squadronsA + squadronsB)
+            fun accept(result: ArmadaPhaseAdvance) { state = (result as ArmadaPhaseAdvance.Advanced).state }
+            assertEquals(roundIndex + 1, state.round)
+            accept(advance()) // commandement
+            assertEquals(ArmadaPhaseAdvance.Blocked(2), advance())
+            shipsA--; shipsB--
+            accept(advance()) // vaisseaux -> escadrons
+            assertEquals(ArmadaPhaseAdvance.Blocked(2), advance())
+            squadronsA--; squadronsB--
+            accept(advance()) // escadrons -> statut
+            val next = advance()
+            if (roundIndex == 5) assertEquals(ArmadaPhaseAdvance.GameFinished, next) else accept(next)
+        }
+    }
+
     @Test fun scoreUsesLongForLargeTotals() {
         val fleet = listOf(ArmadaScoringUnit(Int.MAX_VALUE, Int.MAX_VALUE, true))
         assertEquals(4294967294L, armadaScore(fleet, 0))
