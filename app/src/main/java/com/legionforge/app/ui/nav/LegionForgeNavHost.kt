@@ -140,9 +140,18 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
         composable(Routes.TABLETOP, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
             androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
-            val ships = vm.entries.value.filter { it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON" }
+            val ships = vm.entries.value.filter { it.parentInstanceId == null && (it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON") }
             val playSyncVmTabletop: PlaySyncViewModel = viewModel()
             val appCtxT = androidx.compose.ui.platform.LocalContext.current.applicationContext
+            androidx.compose.runtime.LaunchedEffect(lid) {
+                if (vm.soloOppList.value == null) {
+                    val saved = runCatching {
+                        val ent = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(appCtxT).gameSessionDao().getByList(lid)
+                        ent?.snapshot?.let { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(it) }
+                    }.getOrNull()
+                    if (saved?.twoPlayer == false) saved.soloOppListId?.let(vm::loadOpponentList)
+                }
+            }
             val tabletopRound by androidx.compose.runtime.produceState(initialValue = 1, lid) {
                 value = try {
                     val ent = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(appCtxT).gameSessionDao().getByList(lid)
@@ -173,7 +182,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
             // En local, la flotte adverse sélectionnée dans Play doit apparaître aussi sur le plateau.
             val soloOppEntries by vm.soloOppEntries.collectAsState()
             val tabletopOpp = if (oppListJson.isNullOrBlank()) soloOppEntries else oppShipsEntries
-            val allShips = ships + tabletopOpp.filter { it.card.kind == CardKind.ARMADA_SHIP || it.card.kind == CardKind.ARMADA_SQUADRON }
+            val allShips = ships + tabletopOpp.filter { it.parentInstanceId == null && (it.card.kind == CardKind.ARMADA_SHIP || it.card.kind == CardKind.ARMADA_SQUADRON) }
             val sizes = shipSizes
             val pawns = allShips.mapIndexed { i, e ->
                 com.legionforge.app.ui.screens.TabletopPawn(
@@ -229,7 +238,9 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         playEntry.savedStateHandle["tabletop_selected_unit"] = unitId
                         navController.popBackStack()
                     } else {
+                        // Déposer la sélection sur la destination créée, même si c'est un pion adverse.
                         navController.navigate(Routes.cardDetail(lid, unitId))
+                        navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", unitId)
                     }
                 },
                 round = tabletopRound,

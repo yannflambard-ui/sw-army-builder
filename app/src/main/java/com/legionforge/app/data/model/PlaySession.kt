@@ -42,6 +42,8 @@ data class PlaySessionSnapshot(
     val soloOppStates: Map<String, SyncedUnitState> = emptyMap(),
     val armadaRound: Int = 1,          // Armada : manche en cours
     val armadaPhase: String = "command", // Armada : phase (command/ship/squadron/status)
+    val armadaTurn: Int = 0,
+    val armadaWinner: Int? = null,
     // Mode 2 joueurs : état adverse (lecture seule), mode actif et identité, pour reprendre la partie.
     val twoPlayer: Boolean = false,
     val oppStates: Map<String, com.legionforge.app.data.nearby.SyncedUnitState> = emptyMap(),

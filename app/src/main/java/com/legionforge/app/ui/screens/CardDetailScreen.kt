@@ -540,6 +540,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // table `game_sessions` (Room), snapshot Gson idiome. Restaure UNIQUEMENT une partie en
     // cours (phase GAME) d'une liste solo ; retour au setup = purge (pas de reprise fantôme).
     val sessionDb = remember { com.legionforge.app.data.local.LegionForgeDatabase.getInstance(legionContext) }
+    var sessionRestored by remember(listId) { mutableStateOf(false) }
+    var savedOpponentId by remember(listId) { mutableStateOf<String?>(null) }
     LaunchedEffect(listId) {
         if (listId != null) {
             val ent = sessionDb.gameSessionDao().getByList(listId)
@@ -560,13 +562,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     playSyncVm.restoreOwnStates(snap.ownStates)
                     if (snap.twoPlayer) { twoPlayer = true; playSyncVm.restoreOppStates(snap.oppStates) }
                     soloOppStates = snap.soloOppStates
+                    savedOpponentId = snap.soloOppListId
                     if (!snap.twoPlayer) snap.soloOppListId?.let(vm::loadOpponentList)
+                    armadaTurn = snap.armadaTurn
+                    armadaWinner = snap.armadaWinner
                     armadaRound = snap.armadaRound
                     armadaPhase = ArmadaPhase.entries.firstOrNull { it.name == snap.armadaPhase } ?: ArmadaPhase.COMMAND
                 }
             }
         }
+        sessionRestored = true
     }
+    LaunchedEffect(soloOppList?.id) { soloOppList?.id?.let { savedOpponentId = it } }
     // Retour au setup ou nouvelle partie → supprime la session sauvegardée (pas de reprise fantôme).
     var prevPhase by remember { mutableStateOf<PlayPhase?>(null) }
     LaunchedEffect(phase) {
@@ -578,8 +585,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         }
     }
     // Auto-save débounced (solo, en GAME) dès qu'un état de partie change.
-    LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority, armadaRound, armadaPhase) {
-        if (phase == PlayPhase.GAME && listId != null) {
+    LaunchedEffect(round, vp, oppVp, turn, phase, gameResult, gameLog, ownStates, soloOppStates, passes, oppPasses, activeObjectives, commandDeck, roundCommand, discardedCommands, playedCommands, battleDeck, playPhase, priority, armadaRound, armadaPhase, armadaTurn, armadaWinner, savedOpponentId, sessionRestored, twoPlayer, oppStates) {
+        if (sessionRestored && phase == PlayPhase.GAME && listId != null) {
             kotlinx.coroutines.delay(120)
             val snap = com.legionforge.app.data.model.PlaySessionSnapshot(
                 listId = listId, gameSystem = vm.currentList.value?.gameSystem, phase = phase.name, playPhase = playPhase,
@@ -589,9 +596,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 battleRevealed = battleRevealed, missionRevealed = missionRevealed, bluePlayer = bluePlayer, modsLeft = modsLeft,
                 commandDeck = commandDeck.toList(), playedCommands = playedCommands.toList(), roundCommand = roundCommand,
                 discardedCommands = discardedCommands.toList(), soloOppRoundCommand = soloOppRoundCommand,
-                soloOppCommandDeck = soloOppCommandDeck.toList(), soloOppListId = vm.soloOppList.value?.id,
+                soloOppCommandDeck = soloOppCommandDeck.toList(), soloOppListId = savedOpponentId,
                 ownStates = ownStates, soloOppStates = soloOppStates,
-                armadaRound = armadaRound, armadaPhase = armadaPhase.name,
+                armadaRound = armadaRound, armadaPhase = armadaPhase.name, armadaTurn = armadaTurn, armadaWinner = armadaWinner,
                 twoPlayer = twoPlayer, oppStates = oppStates, playerId = myPlayerId
             )
             sessionDb.gameSessionDao().upsert(com.legionforge.app.data.model.GameSessionEntity(listId, vm.currentList.value?.gameSystem ?: "LEGION_V2", snap.toJson(), System.currentTimeMillis()))
@@ -1066,17 +1073,15 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     twoPlayer = twoPlayer,
                                     onAdvance = {
                                         if (!twoPlayer && !isLegion) {
-                                            // Les phases commande et statut ne demandent aucune activation ;
-                                            // la phase vaisseaux ne dépend pas des escadrons et inversement.
-                                            val requiredKind = when (armadaPhase) {
-                                                ArmadaPhase.SHIP -> CardKind.ARMADA_SHIP
-                                                ArmadaPhase.SQUADRON -> CardKind.ARMADA_SQUADRON
-                                                else -> null
-                                            }
-                                            val blocked = if (requiredKind == null) emptyList() else
-                                                playable.filter { it.card.kind == requiredKind && ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
-                                                oppPlayable.filter { it.card.kind == requiredKind && soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
-                                            if (blocked.isEmpty()) {
+                                            // La validation des phases est partagée avec les tests JVM.
+                                            fun pending(kind: CardKind): Int =
+                                                playable.count { it.card.kind == kind && ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
+                                                oppPlayable.count { it.card.kind == kind && soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
+                                            val advance = com.legionforge.app.domain.advanceArmadaPhase(
+                                                com.legionforge.app.domain.ArmadaRoundState(armadaRound, com.legionforge.app.domain.ArmadaRoundPhase.valueOf(armadaPhase.name)),
+                                                pending(CardKind.ARMADA_SHIP), pending(CardKind.ARMADA_SQUADRON)
+                                            )
+                                            if (advance !is com.legionforge.app.domain.ArmadaPhaseAdvance.Blocked) {
                                                 val crossing = armadaPhase == ArmadaPhase.STATUS
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
@@ -1098,7 +1103,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 }.also { np -> if (np == ArmadaPhase.SHIP || np == ArmadaPhase.SQUADRON) armadaTurn = 0 }
                                                 logEvent("Armada: manche R$armadaRound -> phase ${armadaPhase.name}")
                                             } else {
-                                                scope.launch { snackbarHostState.showSnackbar("${blocked.size} unité(s) à activer avant de passer la phase") }
+                                                scope.launch { snackbarHostState.showSnackbar("${(advance as com.legionforge.app.domain.ArmadaPhaseAdvance.Blocked).pendingActivations} unité(s) à activer avant de passer la phase") }
                                                 showBlockers = true
                                             }
                                         }
@@ -1369,7 +1374,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     if (curSystem == "ARMADA_V15") "Aucune flotte Armada adverse enregistrée" else "Aucune armée adverse de ce jeu enregistrée",
                     color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
                 sameSystem.forEach { l ->
-                    Surface(onClick = { vm.loadOpponentList(l.id); showOppPicker = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
+                    Surface(onClick = { savedOpponentId = l.id; vm.loadOpponentList(l.id); showOppPicker = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(l.name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Text("${l.factionId} • ${l.pointsLimit} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)

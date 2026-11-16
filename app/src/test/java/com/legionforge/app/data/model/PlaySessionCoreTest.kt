@@ -49,7 +49,7 @@ class PlaySessionCoreTest {
     @Test fun armadaFieldsPersistThroughJson() {
         // Manche + phase Armada + pile FIFO de cadrans survivent au round-trip (reprise solo).
         val snap = PlaySessionSnapshot(
-            listId = "flotte1", gameSystem = "ARMADA_V15", phase = "GAME", armadaRound = 5, armadaPhase = "ship",
+            listId = "flotte1", gameSystem = "ARMADA_V15", phase = "GAME", armadaRound = 5, armadaPhase = "ship", armadaTurn = 1, armadaWinner = 0, soloOppListId = "flotte2",
             ownStates = mapOf(
                 "S1" to SyncedUnitState("S1", activated = true, commandOrder = "NAVIGATE",
                     commandDialStack = listOf("COMMANDER_CLONE", "SQUADRON", "REPAIR"),
@@ -59,6 +59,9 @@ class PlaySessionCoreTest {
         val restored = PlaySessionSnapshot.fromJson(snap.toJson())
         assertEquals(5, restored.armadaRound)
         assertEquals("ship", restored.armadaPhase)
+        assertEquals(1, restored.armadaTurn)
+        assertEquals(0, restored.armadaWinner)
+        assertEquals("flotte2", restored.soloOppListId)
         assertEquals(listOf("COMMANDER_CLONE", "SQUADRON", "REPAIR"), restored.ownStates["S1"]?.commandDialStack)
         assertEquals("NAVIGATE", restored.ownStates["S1"]?.commandOrder)
         assertEquals(1, restored.ownStates["S1"]?.orderTokens?.get("NAVIGATE"))
