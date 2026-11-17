@@ -38,6 +38,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -383,7 +388,15 @@ fun TabletopScreen(
                                 hit == null -> { selectedId = null; targetId = null }
                                 selectedId == null -> { selectedId = hit.id; targetId = null; chosenAttackSector = null }
                                 hit.id == selectedId -> targetId = null
-                                positions.firstOrNull { it.id == selectedId }?.isOpp != hit.isOpp -> { targetId = hit.id; chosenAttackSector = null }
+                                positions.firstOrNull { it.id == selectedId }?.isOpp != hit.isOpp -> {
+                                    val att = positions.firstOrNull { it.id == selectedId }
+                                    val face = chosenAttackSector
+                                    if (att != null && face != null) {
+                                        val ang = Math.toDegrees(kotlin.math.atan2((hit.xMm - att.xMm).toDouble(), (att.yMm - hit.yMm).toDouble())).toFloat()
+                                        if (attackSectorFor(att, ang) == face) targetId = hit.id
+                                        else attackResult = "Hors de l'arc ${face.replace("front","avant").replace("left","bâbord").replace("right","tribord").replace("rear","arrière")} : choisis une cible dans l'arc affiché"
+                                    } else targetId = hit.id
+                                }
                                 else -> { selectedId = hit.id; targetId = null; chosenAttackSector = null; speedIdx = 0; bends = listOf(0, 0, 0, 0) }
                             }
                         }
@@ -486,7 +499,7 @@ fun TabletopScreen(
                     positions.firstOrNull { it.id == selectedId }?.let { p ->
                         val center = Offset(c.x + p.xMm * PX_PER_MM * scale, c.y + p.yMm * PX_PER_MM * scale)
                         rotate(degrees = p.headingDeg, pivot = center) {
-                            drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs)
+                            drawFiringArcs(center, ARC_RADIUS_MM * PX_PER_MM * scale, p.arcs, chosenAttackSector)
                         }
                     }
                 }
@@ -604,41 +617,30 @@ fun TabletopScreen(
                             if (sp.isSquadron) "Escadron · vitesse max ${sp.maxSpeed}" else "Vaisseau · vitesse max ${sp.maxSpeed}",
                             color = Color(0xFF8F9BAD), fontSize = 12.sp, maxLines = 1,
                         )
-                        // Vitesse : ◄ ► pilote speedIdx (le volet Manœuvre reste synchronisé)
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        // ── 1. Vitesse + coudes : matrice unique (colonne = vitesse, case = coude de la position) ──
+                        if (!sp.isSquadron) TabletopBendMatrix(
+                            pawn = sp, speedIdx = speedIdx, bends = effectiveBends,
+                            onSpeed = { v -> speedIdx = v },
+                            onCycle = { pos ->
+                                val j = pos - 1
+                                val cur = effectiveBends[j]
+                                val next = when (cur) { 0 -> 1; 1 -> -1; else -> 0 }
+                                bends = bends.toMutableList().also { it[j] = next }
+                            },
+                        ) else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◄ vitesse", color = Color(0xFFFFC857), fontSize = 14.sp) }
                             Text("Vitesse $speedIdx", color = Color(0xFF9EACBC), fontSize = 14.sp)
                             androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ►", color = Color(0xFFFFC857), fontSize = 14.sp) }
                         }
-                        if (!sp.isSquadron) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { val j = activeJoint - 1; bends = bends.toMutableList().also { it[j] = (it[j] - 1).coerceAtLeast(-jointMax(activeJoint)) } }) { Text("◀ Cran") }
-                            Text("Coude $activeJoint", color = Color.White)
-                            TextButton(onClick = { val j = activeJoint - 1; bends = bends.toMutableList().also { it[j] = (it[j] + 1).coerceAtMost(jointMax(activeJoint)) } }) { Text("Cran ▶") }
-                        }
-                        // Coudes : les 4 chips du volet Manœuvre
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                            androidx.compose.material3.TextButton(onClick = { bends = listOf(0, 0, 0, 0) }) { Text("⊘ droit", color = Color(0xFF9EACBC), fontSize = 13.sp) }
-                            for (j in 1..4) {
-                                JointChip(
-                                    label = "①②③④"[j - 1].toString(),
-                                    value = effectiveBends[j - 1],
-                                    max = jointMax(j),
-                                    active = activeJoint == j,
-                                    onTap = {
-                                        if (activeJoint == j && effectiveBends[j - 1] != 0) {
-                                            bends = bends.toMutableList().also { it[j - 1] = -it[j - 1] }
-                                        } else activeJoint = j
-                                    },
-                                    onReset = { bends = bends.toMutableList().also { it[j - 1] = 0 } },
-                                )
-                            }
-                        }
+                        // ── 2. Cadran de tir : choisir la face qui tire (l'arc s'affiche sur le plateau) ──
                         if (!sp.isSquadron && targetPawn != null) {
-                            Text("Zone attaquante : à confirmer selon les arcs", color = Color(0xFF9EACBC), fontSize = 12.sp)
+                            Text("Cadran de tir : quelle face tire ?", color = Color(0xFF9EACBC), fontSize = 12.sp)
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                 listOf("front" to "Avant", "left" to "Bâbord", "right" to "Tribord", "rear" to "Arrière").forEach { (sector, label) ->
-                                    TextButton(onClick = { chosenAttackSector = sector }) {
-                                        Text(label, color = if (sector == selectedSector) Color(0xFFFFC857) else Color.White, fontSize = 11.sp)
+                                    val on = chosenAttackSector == sector
+                                    Surface(onClick = { chosenAttackSector = if (on) null else sector }, shape = RoundedCornerShape(6.dp),
+                                        color = if (on) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
+                                        Text(label, Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = if (on) Color(0xFF0A0E15) else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -730,6 +732,70 @@ fun TabletopScreen(
             color = Color(0xFF9EACBC), fontSize = 11.sp,
             modifier = Modifier.padding(8.dp),
         )
+    }
+}
+
+/** Matrice vitesse × position du gabarit Tabletop. Colonne = vitesse ; case de la colonne choisie = coude de cette position (0 → +1 → -1 → 0). */
+@Composable
+private fun TabletopBendMatrix(pawn: TabletopPawn, speedIdx: Int, bends: List<Int>, onSpeed: (Int) -> Unit, onCycle: (Int) -> Unit) {
+    val chart = pawn.speedChart
+    if (chart.isEmpty()) return
+    val maxSpeed = pawn.maxSpeed.coerceAtLeast(1)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(30.dp))
+            (1..maxSpeed).forEach { v ->
+                val isSel = v == speedIdx
+                Surface(
+                    onClick = { onSpeed(if (isSel) 0 else v) },
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (isSel) Color(0xFFFFC857) else Color(0xFF2A3A4A),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
+                        Text("V$v", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+        for (pos in chart.size downTo 1) {
+            val posMap = chart[pos - 1]
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
+                    Text("$pos", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+                (1..maxSpeed).forEach { v ->
+                    val n = posMap[v] ?: -1 // -1 = hors triangle
+                    val isSel = v == speedIdx
+                    val bend = bends.getOrElse(pos - 1) { 0 }
+                    val text = when {
+                        n < 0 -> ""
+                        isSel && n > 0 && bend > 0 -> "→$bend"
+                        isSel && n > 0 && bend < 0 -> "←${-bend}"
+                        isSel && n > 0 -> "·"
+                        n == 0 -> "-"
+                        n == 1 -> "I"
+                        n == 2 -> "II"
+                        else -> "III"
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (n < 0) Color(0xFF800000) else Color.White,
+                        border = if (isSel) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFC857)) else null,
+                        modifier = Modifier.weight(1f).height(32.dp),
+                        onClick = {
+                            if (n >= 0) {
+                                if (!isSel) onSpeed(v) else if (n > 0) onCycle(pos)
+                            }
+                        },
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(text, color = if (n < 0) Color(0xFF800000) else Color(0xFF1B2B4B), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1094,7 +1160,7 @@ private const val DEPLOY_MAX_MM = 228.6f // distance 3 (9")
  * ANGLES NON VÉRIFIÉS : la RRG ne donne pas de degrés (arcs = lignes imprimées sur le pion).
  * Origine = centre du socle (écart négligeable avec le centre de coque).
  */
-private fun DrawScope.drawFiringArcs(center: Offset, r: Float, arcs: FiringArcs?) {
+private fun DrawScope.drawFiringArcs(center: Offset, r: Float, arcs: FiringArcs?, highlight: String? = null) {
     val tl = Offset(center.x - r, center.y - r)
     val sz = androidx.compose.ui.geometry.Size(2 * r, 2 * r)
     // Angles Compose : 0 = 3 h, sens horaire. Proue = -90.
@@ -1108,7 +1174,11 @@ private fun DrawScope.drawFiringArcs(center: Offset, r: Float, arcs: FiringArcs?
         Triple(-90f + f / 2 + fl, rr, Color(0x33F87171)), // arrière
         Triple(-90f + f / 2 + fl + rr, fl, Color(0x33A78BFA)), // bâbord
     )
-    sectors.forEach { (start, sweep, col) -> drawArc(col, start, sweep, useCenter = true, topLeft = tl, size = sz) }
+    // Face choisie sur le cadran : seul son arc est rempli ; sinon les 4 arcs (aperçu).
+    val keys = listOf("front", "right", "rear", "left")
+    sectors.forEachIndexed { i, (start, sweep, col) ->
+        if (highlight == null || keys[i] == highlight) drawArc(col, start, sweep, useCenter = true, topLeft = tl, size = sz)
+    }
     // bordures des arcs : bornes de chaque secteur
     val bounds = listOf(-90f - f / 2, -90f + f / 2, -90f + f / 2 + fl, -90f + f / 2 + fl + rr)
     bounds.forEach { a ->
