@@ -33,7 +33,6 @@ data class SyncedUnitState(
     val deployZone: Int? = null,       // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
     val orderReceived: Boolean? = null,  // Legion : a reçu un ordre ce round
     val bends: List<Int>? = null,        // Armada : coudes signés par articulation (1..4), null = droit
-    val shotsFired: Int? = null,         // Armada : tirs effectués cette manche (max 2)
 )
 
 /** Payload de synchronisation d'état de jeu (envoyé via Nearby). */

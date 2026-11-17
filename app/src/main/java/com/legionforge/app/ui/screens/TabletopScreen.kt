@@ -18,8 +18,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -220,9 +220,9 @@ fun TabletopScreen(
     // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau
     var sheetPawnId by remember { mutableStateOf<String?>(null) }
     var chosenAttackSector by remember { mutableStateOf<String?>(null) }
-    // Tirs par vaisseau cette manche (id -> nombre). Remis à zéro au changement de manche.
-    val shotsByPawn = remember { mutableStateMapOf<String, Int>() }
-    androidx.compose.runtime.LaunchedEffect(round) { shotsByPawn.clear() }
+    // Tirs par vaisseau cette manche : compteur partagé du ViewModel (même source que Play).
+    val shotsMap by com.legionforge.app.ui.viewmodel.ArmadaShotCounter.shots.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(round) { com.legionforge.app.ui.viewmodel.ArmadaShotCounter.reset() }
     androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
@@ -592,7 +592,7 @@ fun TabletopScreen(
                 modifier = Modifier.weight(1f).height(56.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857), contentColor = Color(0xFF0B1220)),
             ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
-            val shots = shotsByPawn[selPawn.id] ?: 0
+            val shots = shotsMap[selPawn.id] ?: 0
             Button(
                 enabled = shots < MAX_SHOTS_PER_ROUND,
                 onClick = { sheetPawnId = selPawn.id },
@@ -687,7 +687,7 @@ fun TabletopScreen(
                                     val crit = rolls.count { it.face.crit }
                                     val acc = ArmadaDiceRoller.accuracies(rolls)
                                     attackResult = "Touches $hits · critiques $crit · précisions $acc — appliquez défense, effets et dégâts manuellement"
-                                    shotsByPawn[att.id] = (shotsByPawn[att.id] ?: 0) + 1
+                                    com.legionforge.app.ui.viewmodel.ArmadaShotCounter.record(att.id)
                                     sheetPawnId = null
                                 }
                             },

@@ -1085,7 +1085,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 val crossing = armadaPhase == ArmadaPhase.STATUS
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
-                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap(), shotsFired = 0) } }
+                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) } }
                                                     soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1
                                                     else {

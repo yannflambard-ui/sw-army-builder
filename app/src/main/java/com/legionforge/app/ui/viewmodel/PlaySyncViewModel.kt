@@ -17,6 +17,11 @@ import kotlinx.coroutines.launch
 /** ViewModel du mode play 2 joueurs : sync live via Nearby. */
 class PlaySyncViewModel(application: Application) : AndroidViewModel(application) {
     private val gson = Gson()
+    /** Tirs Armada : compteur partagé par toute l'app (singleton), voir ArmadaShotCounter. */
+    val shotsThisRound get() = ArmadaShotCounter.shots
+    fun shotsOf(id: String): Int = ArmadaShotCounter.of(id)
+    fun recordShot(id: String) = ArmadaShotCounter.record(id)
+    fun resetShots() = ArmadaShotCounter.reset()
     private val sync = PlaySyncManager(application)
     private val journalDao by lazy { com.legionforge.app.data.local.LegionForgeDatabase.getInstance(application).playJournalDao() }
     // Partie en cours (clé du journal). Posée par l'écran de jeu.
@@ -193,4 +198,13 @@ class PlaySyncViewModel(application: Application) : AndroidViewModel(application
         sync.stop()
         super.onCleared()
     }
+}
+
+/** Compteur de tirs Armada par manche : singleton app, indépendant de la portée ViewModel (Play et Tabletop le voient). Non synchronisé. */
+object ArmadaShotCounter {
+    private val _shots = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Int>>(emptyMap())
+    val shots: kotlinx.coroutines.flow.StateFlow<Map<String, Int>> = _shots
+    fun of(id: String): Int = _shots.value[id] ?: 0
+    fun record(id: String) { _shots.value = _shots.value + (id to of(id) + 1) }
+    fun reset() { _shots.value = emptyMap() }
 }
