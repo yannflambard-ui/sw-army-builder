@@ -1085,7 +1085,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 val crossing = armadaPhase == ArmadaPhase.STATUS
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
-                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) } }
+                                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap(), shotsFired = 0) } }
                                                     soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1
                                                     else {
@@ -3253,7 +3253,7 @@ internal object ArmadaStatsParser {
 // Matrice de manœuvres Armada : triangulaire (X = vitesse 1..maxSpeed, Y = position).
 // Position 1 EN BAS, position max EN HAUT (inversé). Valeur : I = 1, II = 2, - = 0. Cases vides = bordeaux.
 @Composable
-private fun ManeuverMatrix(stats: ArmadaStats?, selectedSpeed: Int, onSelectSpeed: (Int) -> Unit) {
+private fun ManeuverMatrix(stats: ArmadaStats?, selectedSpeed: Int, bends: List<Int>, onSelectSpeed: (Int) -> Unit, onCycleBend: (Int, Int) -> Unit) {
     if (stats?.speedChart?.isNotEmpty() != true) return
     val maxSpeed = stats.maxSpeed
     val maxPos = stats.speedChart.size.coerceAtLeast(1)
@@ -3282,14 +3282,27 @@ private fun ManeuverMatrix(stats: ArmadaStats?, selectedSpeed: Int, onSelectSpee
                 Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
                     Text("$posLabel", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
+                val pos = maxPos - revIdx // numéro de position (1 = bas)
                 (1..maxSpeed).forEach { v ->
                     val n = posMap[v.toString()] ?: -1 // -1 = case vide (hors triangle)
-                    val cellColor = if (n < 0) Color(0xFF800000) else Color.White
-                    val cellText = when { n < 0 -> ""; n == 0 -> "-"; n == 1 -> "I"; n == 2 -> "II"; else -> "III" }
                     val isSel = v == selectedSpeed
+                    val bend = bends.getOrElse(pos - 1) { 0 }
+                    val cellColor = if (n < 0) Color(0xFF800000) else Color.White
+                    // Colonne sélectionnée : la case affiche le coude piloté (→1 / ←1 / ·). Autres colonnes : capacité (I/II/-).
+                    val cellText = when {
+                        n < 0 -> ""
+                        isSel && n > 0 && bend > 0 -> "→$bend"
+                        isSel && n > 0 && bend < 0 -> "←${-bend}"
+                        isSel && n > 0 -> "·"
+                        n == 0 -> "-"; n == 1 -> "I"; n == 2 -> "II"; else -> "III"
+                    }
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = cellColor,
+                        onClick = {
+                            if (n < 0) return@Surface
+                            if (!isSel) onSelectSpeed(v) else if (n > 0) onCycleBend(pos, bend)
+                        },
                         modifier = Modifier.weight(1f).height(32.dp),
                         border = if (isSel) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFC857)) else null
                     ) {
@@ -3385,8 +3398,15 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                 // ── matrice de manœuvres (repliable, repliée par défaut) ; pilote la vitesse ──
                 CollapsibleSection(stringResource(R.string.maneuver_matrix), initiallyExpanded = false) {
                     if (stats?.speedChart?.isNotEmpty() == true) {
-                        ManeuverMatrix(stats, selectedSpeed, { v ->
+                        ManeuverMatrix(stats, selectedSpeed, state.bends ?: listOf(0, 0, 0, 0), { v ->
                             set(state.copy(speed = if (speed == v) 0 else v))
+                        }, { pos, cur ->
+                            // cycle 0 -> +1 -> -1 -> 0 sur l'articulation de cette position
+                            val next = when (cur) { 0 -> 1; 1 -> -1; else -> 0 }
+                            val arr = (state.bends ?: listOf(0, 0, 0, 0)).toMutableList()
+                            while (arr.size < 4) arr.add(0)
+                            arr[pos - 1] = next
+                            set(state.copy(bends = arr))
                         })
                     } else {
                         Surface(shape = RoundedCornerShape(9.dp), color = Color(0xFF1F2C3D), modifier = Modifier.fillMaxWidth()) {

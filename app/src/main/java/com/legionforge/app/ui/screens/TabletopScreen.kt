@@ -58,6 +58,8 @@ import org.json.JSONObject
  * Échelle : 1 mm de table = [PX_PER_MM] px à zoom 1. Socles en mm (RRG 1.5.0).
  */
 private const val PX_PER_MM = 2.0f
+/** Tirs max par vaisseau et par manche (règle Armada). */
+private const val MAX_SHOTS_PER_ROUND = 2
 
 /** Pion de vaisseau sur le plateau. Position en mm, plateau centré sur (0,0). */
 data class TabletopPawn(
@@ -212,6 +214,9 @@ fun TabletopScreen(
     // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau
     var sheetPawnId by remember { mutableStateOf<String?>(null) }
     var chosenAttackSector by remember { mutableStateOf<String?>(null) }
+    // Tirs par vaisseau cette manche (id -> nombre). Remis à zéro au changement de manche.
+    val shotsByPawn = remember { mutableStateMapOf<String, Int>() }
+    androidx.compose.runtime.LaunchedEffect(round) { shotsByPawn.clear() }
     androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
@@ -553,24 +558,34 @@ fun TabletopScreen(
             }
         }
         attackResult?.let { Text(it, color = Color(0xFFFFC857), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
-        // Bouton d'action principal : compact, dans le pouce (la vitesse se pilote depuis le sheet)
-        if (selPawn != null && !selPawn.isSquadron && speedIdx > 0) Button(
-            enabled = true,
-            onClick = {
-                val mover = selPawn ?: return@Button
-                val out = resolveManeuver(mover, positions, speedIdx, effectiveBends)
-                positions = positions.map { p ->
-                    if (p.id == mover.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.heading) else p
-                }
-                speedIdx = 0
-                bends = listOf(0, 0, 0, 0)
-                attackResult = out.collidedWith?.let {
-                    "⚠ Chevauchement avec $it : vitesse réduite à ${out.speedUsed} (RRG 1032)"
-                }
-            },
-            modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp),
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857), contentColor = Color(0xFF0B1220)),
-        ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
+        // Boutons d'action du vaisseau sélectionné : Déplacer et Tirer, toujours visibles.
+        // Tirer est grisé (pas supprimé) quand le vaisseau a déjà tiré 2 fois cette manche.
+        if (selPawn != null && !selPawn.isSquadron) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                enabled = speedIdx > 0,
+                onClick = {
+                    val mover = selPawn ?: return@Button
+                    val out = resolveManeuver(mover, positions, speedIdx, effectiveBends)
+                    positions = positions.map { p ->
+                        if (p.id == mover.id) p.copy(xMm = out.xMm, yMm = out.yMm, headingDeg = out.heading) else p
+                    }
+                    speedIdx = 0
+                    bends = listOf(0, 0, 0, 0)
+                    attackResult = out.collidedWith?.let {
+                        "⚠ Chevauchement avec $it : vitesse réduite à ${out.speedUsed} (RRG 1032)"
+                    }
+                },
+                modifier = Modifier.weight(1f).height(56.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857), contentColor = Color(0xFF0B1220)),
+            ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
+            val shots = shotsByPawn[selPawn.id] ?: 0
+            Button(
+                enabled = shots < MAX_SHOTS_PER_ROUND,
+                onClick = { sheetPawnId = selPawn.id },
+                modifier = Modifier.weight(1f).height(56.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = Color(0xFF0B1220), disabledContainerColor = Color(0xFF3A3F4A), disabledContentColor = Color(0xFF8F9BAD)),
+            ) { Text(if (shots >= MAX_SHOTS_PER_ROUND) "Tir $shots/$MAX_SHOTS_PER_ROUND" else "Tirer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
+        }
         // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau.
         // Il pilote la vitesse, la manœuvre et l'attaque — le plateau reste visible au-dessus.
         if (sheetPawnId != null) {
@@ -669,6 +684,7 @@ fun TabletopScreen(
                                     val crit = rolls.count { it.face.crit }
                                     val acc = ArmadaDiceRoller.accuracies(rolls)
                                     attackResult = "Touches $hits · critiques $crit · précisions $acc — appliquez défense, effets et dégâts manuellement"
+                                    shotsByPawn[att.id] = (shotsByPawn[att.id] ?: 0) + 1
                                     sheetPawnId = null
                                 }
                             },
