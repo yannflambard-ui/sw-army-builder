@@ -289,7 +289,7 @@ fun LegionTabletopScreen(
                         SmallAction(stringResource(R.string.tabletop_cover, p.cover), p.cover > 0) {
                             onCoverChange(p.id, (p.cover + 1) % 3)
                         }
-                        SmallAction(stringResource(R.string.tabletop_dice), false) { showDice = true }
+                        SmallAction(stringResource(R.string.tabletop_dice), false, enabled = targetId != null) { showDice = true }
                     }
                     // Fiche Play = entrées de la liste LOCALE uniquement. Un pion adverse
                     // (id B:/opp_) n'y existe pas : l'ouvrir afficherait la mauvaise unité.
@@ -300,7 +300,8 @@ fun LegionTabletopScreen(
 
         // ── Feuille de dés compacte ──────────────────────────────────────────
         if (showDice) LegionCompactDiceSheet(
-            cover = pawns.firstOrNull { it.id == selectedId }?.cover ?: 0,
+            cover = pawns.firstOrNull { it.id == targetId }?.cover ?: 0,
+            targetName = pawns.firstOrNull { it.id == targetId }?.name ?: "",
             onClose = { showDice = false },
         )
 
@@ -329,12 +330,13 @@ fun LegionTabletopScreen(
 }
 
 @Composable
-private fun SmallAction(label: String, active: Boolean, onClick: () -> Unit) {
+private fun SmallAction(label: String, active: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
+        enabled = enabled,
         shape = RoundedCornerShape(6.dp),
-        color = if (active) LegionColors.Accent else LegionColors.Border,
-        modifier = Modifier.heightIn(min = LegionDims.TouchMin),
+        color = if (active) LegionColors.Accent else if (enabled) LegionColors.Border else LegionColors.SurfaceRaised,
+        modifier = Modifier.heightIn(min = LegionDims.TouchMin).widthIn(min = LegionDims.TouchMin),
     ) {
         Text(
             label,
@@ -371,13 +373,14 @@ private fun DrawScope.drawLegionBoard(
         drawLine(LegionColors.Border, Offset(0f, g), Offset(size.width, g), strokeWidth = 1.5f, alpha = 0.6f)
         g += inchPx
     }
-    // Anneaux de portée autour de l'unité sélectionnée (1..6").
+    // Bornes de bandes de portée (6" par segment, rulebook:648-664) autour de
+    // l'unité sélectionnée : R1=6", R2=12", R3=18", R4=24", R5=30".
     if (selected != null && (tool == LegionTool.RANGE || tool == LegionTool.ARC)) {
         val sc = toScreen(selected)
-        for (i in 1..6) {
+        for (i in 1..5) {
             drawCircle(
-                LegionColors.Accent.copy(alpha = 0.18f),
-                radius = LegionTabletopGeometry.rangeRingPx(i, scale),
+                LegionColors.Accent.copy(alpha = 0.22f),
+                radius = LegionTabletopGeometry.rangeRingPx(6 * i, scale),
                 center = sc,
                 style = Stroke(width = 1.5f),
             )
@@ -450,12 +453,13 @@ private fun DrawScope.drawLegionBoard(
 /** Feuille de dés compacte (peek), sans clavier ni saisie numérique. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LegionCompactDiceSheet(cover: Int, onClose: () -> Unit) {
+private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -> Unit) {
     var mode by remember { mutableStateOf("attack") }
     var red by remember { mutableIntStateOf(2) }
     var black by remember { mutableIntStateOf(0) }
     var white by remember { mutableIntStateOf(0) }
     var lastRoll by remember { mutableStateOf<List<String>>(emptyList()) }
+    var coverRoll by remember { mutableStateOf<List<String>>(emptyList()) }
 
     ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -463,8 +467,8 @@ private fun LegionCompactDiceSheet(cover: Int, onClose: () -> Unit) {
             Text(stringResource(R.string.tabletop_dice_note), color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
             if (cover > 0) Text(stringResource(R.string.tabletop_cover, cover), color = LegionColors.Warning, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(stringResource(R.string.tabletop_attack), mode == "attack") { mode = "attack"; black = 0; lastRoll = emptyList() }
-                FilterChip(stringResource(R.string.tabletop_defense), mode == "defense") { mode = "defense"; black = 0; lastRoll = emptyList() }
+                FilterChip(stringResource(R.string.tabletop_attack), mode == "attack") { mode = "attack"; black = 0; lastRoll = emptyList(); coverRoll = emptyList() }
+                FilterChip(stringResource(R.string.tabletop_defense), mode == "defense") { mode = "defense"; black = 0; lastRoll = emptyList(); coverRoll = emptyList() }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 LegionDieStepper("R", red, LegionColors.Danger) { red = it }
@@ -481,6 +485,9 @@ private fun LegionCompactDiceSheet(cover: Int, onClose: () -> Unit) {
                         if (mode == "attack") repeat(black) { add(com.legionforge.app.domain.LegionDiceRules.faces(mode, "black").random()) }
                         repeat(white) { add(com.legionforge.app.domain.LegionDiceRules.faces(mode, "white").random()) }
                     }
+                    // Couvert = 1 dé blanc par Hit de la réserve (rulebook 2262-2272).
+                    coverRoll = if (mode == "attack")
+                        com.legionforge.app.domain.LegionDiceRules.rollCoverPool(lastRoll) else emptyList()
                 },
                 Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -488,10 +495,16 @@ private fun LegionCompactDiceSheet(cover: Int, onClose: () -> Unit) {
             if (lastRoll.isNotEmpty()) {
                 Text(stringResource(R.string.tabletop_results, lastRoll.joinToString(" · ")), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
                 val successes = if (mode == "attack")
-                    com.legionforge.app.domain.LegionDiceRules.hitsAfterCover(lastRoll, cover)
+                    com.legionforge.app.domain.LegionDiceRules.hitsAfterCover(lastRoll, cover, coverRoll)
                 else lastRoll.count { com.legionforge.app.domain.LegionDiceRules.isSuccess(mode, it) }
                 Text(stringResource(R.string.tabletop_successes, successes), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                if (mode == "attack" && cover > 0) Text("Couvert appliqué : −$cover Hit(s) (− Crit)", color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
+                if (mode == "attack") {
+                    if (targetName.isNotBlank()) Text("Cible : $targetName", color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
+                    if (cover > 0) Text(
+                        "Couvert ${if (cover >= 2) "lourd" else "léger"} de la cible · dés: ${coverRoll.joinToString(" ")}",
+                        color = LegionColors.Warning, style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
         }
     }

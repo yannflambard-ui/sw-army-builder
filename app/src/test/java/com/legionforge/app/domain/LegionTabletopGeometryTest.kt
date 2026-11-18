@@ -133,17 +133,28 @@ class LegionBaseSizeTest {
     }
 }
 
-/** Couvert = annulation de Hits, pas de Crits (rulebook:2268-2272). */
+/** Couvert = pool de dés blancs (rulebook:2262-2272, exemple 2232-2237). */
 class LegionCoverPoolTest {
-    @Test fun `couvert annule hits pas crits`() {
-        val rolls = listOf("Hit", "Hit", "Hit", "Crit", "Surge")
-        assertEquals(4, LegionDiceRules.hitsAfterCover(rolls, 0))
-        assertEquals(3, LegionDiceRules.hitsAfterCover(rolls, 1))
-        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 2))
+    @Test fun `exemple source 3 hits heavy`() {
+        val rolls = listOf("Hit", "Hit", "Hit", "Crit")
+        // heavy (2) : Bloc OU Surge annulent. [Vide, Surge, Surge] => 2 Hits annulés.
+        // Reste 1 Hit + 1 Crit = 2.
+        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 2, listOf("Vide", "Surge", "Surge")))
     }
 
-    @Test fun `couvert ne peut pas annuler les crits`() {
+    @Test fun `leger annule seulement sur bloc`() {
+        val rolls = listOf("Hit", "Hit", "Crit")
+        assertEquals(3, LegionDiceRules.hitsAfterCover(rolls, 1, listOf("Surge", "Vide")))
+        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 1, listOf("Bloc", "Vide")))
+    }
+
+    @Test fun `crits jamais annules`() {
         val rolls = listOf("Hit", "Crit", "Crit")
-        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 5))
+        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 2, listOf("Bloc", "Bloc")))
+    }
+
+    @Test fun `pool auto un des par hit`() {
+        val rolls = listOf("Hit", "Hit", "Crit", "Hit")
+        assertEquals(3, LegionDiceRules.rollCoverPool(rolls).size)
     }
 }

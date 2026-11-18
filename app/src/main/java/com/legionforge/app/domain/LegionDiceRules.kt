@@ -32,14 +32,29 @@ object LegionDiceRules {
     }
 
     /**
-     * Résolution simplifiée d'un pool d'attaque avec couvert (rulebook:2268-2272) :
-     * chaque niveau de couvert annule 1 HIT (jamais de Crit). Les Surges ne sont
-     * PAS convertis ici (conversion = règle de carte/upgrade non modélisée).
+     * Couvert = pool de dés BLANCS DE DÉFENSE, pas une soustraction fixe
+     * (rulebook:2262-2272, exemple 2232-2237). Pour chaque Hit de la réserve
+     * d'attaque, le défenseur lance 1 dé blanc :
+     *  - couvert léger (1) : annule 1 Hit par face Bloc ;
+     *  - couvert lourd (2) : annule 1 Hit par face Bloc OU Surge.
+     * Les Crits ne sont JAMAIS annulés. Les Surges d'ATTAQUE restent à convertir
+     * (étape core de toute attaque ; le chart dépend de la carte — non modélisé ici).
+     *
+     * @param coverRolls une face par Hit (faces("defense","white").random()).
      */
-    fun hitsAfterCover(rolls: List<String>, cover: Int): Int {
+    fun hitsAfterCover(rolls: List<String>, cover: Int, coverRolls: List<String>): Int {
         val hits = rolls.count { it == "Hit" }
         val crits = rolls.count { it == "Crit" }
-        return (hits - cover.coerceAtLeast(0)).coerceAtLeast(0) + crits
+        val cancel = coverRolls.count { f ->
+            f == "Bloc" || (cover >= 2 && f == "Surge")
+        }
+        return (hits - cancel).coerceAtLeast(0) + crits
+    }
+
+    /** Lance automatiquement le pool de couvert (1 dé blanc par Hit de l'attaque). */
+    fun rollCoverPool(rolls: List<String>): List<String> {
+        val hits = rolls.count { it == "Hit" }
+        return List(hits) { faces("defense", "white").random() }
     }
 
     /** Nombre de faces du dé (8 attaque, 6 défense). */
