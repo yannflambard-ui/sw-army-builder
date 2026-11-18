@@ -76,10 +76,20 @@ class LegionV2Validator : RuleValidator {
         }
         val quotas = battleforce?.quotas?.takeIf { it.isNotEmpty() } ?: standardQuotas
         quotas.forEach { (rank, range) ->
-            val count = counts[rank] ?: 0
-            if (count !in range) {
+            val nonMercCount = counts[rank] ?: 0
+            val mercCount = mercByRank[rank] ?: 0
+            // rulebook:2810-2816, 2824-2827 : les mercenaires ne comptent PAS vers le
+            // minimum de rang, mais comptent vers le MAXIMUM combiné de ce rang.
+            val totalCount = nonMercCount + mercCount
+            val minOk = nonMercCount >= range.first
+            val maxOk = totalCount <= range.last
+            if (!minOk || !maxOk) {
                 val code = if (battleforce != null) "battleforce_quota_${rank.name.lowercase()}" else "quota_${rank.name.lowercase()}"
-                violations += violation(code, "${rank.toDisplay()} : quota ${range.first}–${range.last}, actuellement $count.")
+                val detail = if (!minOk)
+                    "${rank.toDisplay()} : minimum ${range.first} requis (hors mercenaires), actuellement $nonMercCount."
+                else
+                    "${rank.toDisplay()} : maximum ${range.last} autorisé, actuellement $totalCount (dont $mercCount mercenaire(s))."
+                violations += violation(code, detail)
             }
         }
         if (battleforce != null) {

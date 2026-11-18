@@ -426,7 +426,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val victoryOwn = stringResource(R.string.victory_own)
     val victoryOpp = stringResource(R.string.victory_opp)
     val victoryDraw = stringResource(R.string.victory_draw)
-    // La victoire à 12 VP est évaluée en fin d'End Phase (dans onNextRound ci-dessous),
+    // La victoire à 12 VP est évaluée en fin d'End Phase (dans onRoundChange, le vrai chemin),
     // PAS dès qu'un VP change (rulebook). Égalité 12-12 -> départage manuel (gameResult=null).
     var showCmdSheet by remember { mutableStateOf(false) }
     // Battle deck (Legion v2) : 9 cartes (3+3+3) + mission (carte révélée par catégorie).

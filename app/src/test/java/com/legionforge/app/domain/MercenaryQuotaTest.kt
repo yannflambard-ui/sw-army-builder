@@ -38,6 +38,25 @@ class MercenaryQuotaTest {
         assertTrue("max 1 mercenaire par rang hors Corps", r.violations.any { it.code == "mercenary_rank_special_forces" })
     }
 
+    @Test fun mercenariesCountTowardRankMaximums() {
+        // rulebook:2824-2827 : 3 SPECIAL_FORCES empire + 1 mercenaire SPECIAL_FORCES = 4 > 3.
+        // Le mercenaire ne compte pas vers le min mais compte vers le MAX combiné.
+        val cmd = unit("cmd", LegionRank.COMMANDER, "empire")
+        val c1 = unit("c1", LegionRank.CORPS, "empire")
+        val c2 = unit("c2", LegionRank.CORPS, "empire")
+        val c3 = unit("c3", LegionRank.CORPS, "empire")
+        val s1 = unit("s1", LegionRank.SPECIAL_FORCES, "empire")
+        val s2 = unit("s2", LegionRank.SPECIAL_FORCES, "empire")
+        val s3 = unit("s3", LegionRank.SPECIAL_FORCES, "empire")
+        val merc = unit("merc", LegionRank.SPECIAL_FORCES, "mercenary")
+        val r = LegionV2Validator().validate(list(
+            entry("1", cmd), entry("2", c1), entry("3", c2), entry("4", c3),
+            entry("5", s1), entry("6", s2), entry("7", s3), entry("8", merc)
+        ))
+        assertTrue("3 SF + 1 merc = 4 depasse le maximum 3", r.violations.any { it.code == "quota_special_forces" })
+        assertFalse("1 seul merc SF ne declenche pas le plafond specifique", r.violations.any { it.code == "mercenary_rank_special_forces" })
+    }
+
     @Test fun mandaloriansAreNotAFifthFaction() {
         val cmd = unit("cmd", LegionRank.COMMANDER, "empire")
         val c1 = unit("c1", LegionRank.CORPS, "empire")
