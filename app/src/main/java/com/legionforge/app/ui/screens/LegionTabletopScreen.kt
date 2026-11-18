@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextMeasurer
@@ -96,7 +97,22 @@ fun LegionTabletopScreen(
     var selectedId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var tool by remember { mutableStateOf(LegionTool.SELECT) }
-    var scale by remember { mutableFloatStateOf(2.2f) }
+    // Viewport synchrone (PAS via onSizeChanged, non déterministe en CI Roborazzi).
+    val cfg = LocalConfiguration.current
+    val densityF = LocalDensity.current.density
+    val vpW = (cfg.screenWidthDp * densityF).toInt().coerceAtLeast(1)
+    val vpH = (cfg.screenHeightDp * densityF).toInt().coerceAtLeast(1)
+    // Fit SYNCHRONE dès la 1re composition : déterministe en local comme en CI.
+    var scale by remember {
+        val padMm = 45f
+        val s = if (pawns.isEmpty()) 2.2f else {
+            val spanX = (pawns.maxOf { it.xMm } - pawns.minOf { it.xMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
+            val spanY = (pawns.maxOf { it.yMm } - pawns.minOf { it.yMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
+            minOf(vpW.toFloat() / spanX, vpH.toFloat() / spanY).coerceIn(0.6f, 4f)
+        }
+        mutableFloatStateOf(s)
+    }
+
     var pan by remember { mutableStateOf<Offset?>(null) } // null = pas encore cadré
     var measureEnd by remember { mutableStateOf<Offset?>(null) }
     var showDice by remember { mutableStateOf(false) }
@@ -111,8 +127,7 @@ fun LegionTabletopScreen(
 
     // Conversion plateau (mm, centré 0,0) -> écran (px).
     // Centre du viewport en px (millieu de l'ecran), resolu apres mesure.
-    var viewCenter by remember { mutableStateOf(Offset.Zero) }
-    var viewSize by remember { mutableStateOf(IntSize.Zero) }
+    var viewCenter by remember { mutableStateOf(Offset(vpW / 2f, vpH / 2f)) }
     fun effPan(): Offset = pan ?: run {
         if (pawns.isEmpty()) viewCenter else Offset(
             viewCenter.x - (pawns.maxOf { it.xMm } + pawns.minOf { it.xMm }) / 2f * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
@@ -135,17 +150,14 @@ fun LegionTabletopScreen(
         val spanY = (pawns.maxOf { it.yMm } - pawns.minOf { it.yMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
         return minOf(widthPx.toFloat() / spanX, heightPx.toFloat() / spanY).coerceIn(0.6f, 4f)
     }
+    // Fit SYNCHRONE : deterministe en local comme en CI (pas de race onSizeChanged).
+    LaunchedEffect(vpW, vpH, pawns) { scale = fitScale(vpW, vpH) }
 
     Box(Modifier.fillMaxSize().background(LegionColors.Background)) {
         // ── Plateau ──────────────────────────────────────────────────────────
         val textMeasurer = rememberTextMeasurer()
         Canvas(
-            Modifier.fillMaxSize().onSizeChanged { sz ->
-                viewCenter = Offset(sz.width / 2f, sz.height / 2f)
-                viewSize = sz
-                // FIT automatique au contenu : aucun pion hors champ, même en 360x640.
-                if (pan == null) scale = fitScale(sz.width, sz.height)
-            }.pointerInput(pawns, scale, effPan()) {
+            Modifier.fillMaxSize().pointerInput(pawns, scale, effPan()) {
                 detectTapGestures { at ->
                     val hit = pawns.lastOrNull { p ->
                         val c = toScreen(p)
@@ -196,7 +208,11 @@ fun LegionTabletopScreen(
                 }
                 Spacer(Modifier.width(4.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.tabletop_title, round), color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        if (cfg.screenWidthDp < 380) stringResource(R.string.tabletop_title_short, round)
+                        else stringResource(R.string.tabletop_title, round),
+                        color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium, maxLines = 1,
+                    )
                     Text(stringResource(R.string.tabletop_units_left, unitsLeft), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
                 }
                 IconButton(
@@ -213,7 +229,7 @@ fun LegionTabletopScreen(
                 }
                 IconButton(
                     onClick = {
-                        pan = null; scale = fitScale(viewSize.width, viewSize.height)
+                        pan = null; scale = fitScale(vpW, vpH)
                         selectedId = null; targetId = null
                         tool = LegionTool.SELECT; measureEnd = null; showDice = false
                     },

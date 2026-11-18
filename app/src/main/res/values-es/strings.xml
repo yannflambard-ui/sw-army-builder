@@ -289,4 +289,5 @@
     <string name="tabletop_results">Resultados: %1$s</string>
     <string name="tabletop_successes">%1$d acierto(s)</string>
     <string name="tabletop_wounds">%1$d/%2$d heridas · %3$d&quot; · base %4$s</string>
+    <string name="tabletop_title_short">Legion · R%1$d</string>
 </resources>
