@@ -438,7 +438,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var showBattleSheet by remember { mutableStateOf(false) }
     // Lanceur de dés (PR5) : pool d'attaque + résultats.
     var showDiceSheet by remember { mutableStateOf(false) }
-    var showDeploySheet by remember { mutableStateOf(false) }
     var showDeployment by remember { mutableStateOf(false) }  // déploiement des 2 armées (sheet)
     var showMenu by remember { mutableStateOf(false) }
     var setupStep by remember { mutableIntStateOf(1) }
@@ -675,7 +674,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 DropdownMenuItem(text = { Text("Pool d'ordres", color = Color.White) }, onClick = { showMenu = false; showPoolSheet = true })
                                 DropdownMenuItem(text = { Text("Battle deck", color = Color.White) }, onClick = { showMenu = false; showBattleSheet = true })
                                 }
-                                DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else LegionColors.TextTertiary) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
                                     DropdownMenuItem(text = { Text("Journal", color = Color.White) }, onClick = { showMenu = false; showLogSheet = true })
                                 }
                             }
@@ -826,11 +824,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SuccessSurface)) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Text("Déploiement de la flotte", color = LegionColors.Success, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                Text("Déployez vos vaisseaux (Zone 1 / Zone 2), puis lancez la partie.", color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                Text("Vaisseaux à distance 1-3 de votre bord, escadrons à 1-2 d'un vaisseau ami. Placez-les sur le plateau tabletop.", color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                                 Surface(onClick = { showDeployment = true }, shape = RoundedCornerShape(10.dp), color = LegionColors.SuccessSurface, modifier = Modifier.fillMaxWidth()) {
                                     Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text("Déployer les armées", color = LegionColors.Success, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        Text("Marquez la Zone 1 / Zone 2 de chaque vaisseau", color = LegionColors.TextTertiary, fontSize = 11.sp)
+                                        Text("Rappel RRG 1.6.0 · placement réel sur le plateau", color = LegionColors.TextTertiary, fontSize = 11.sp)
                                     }
                                 }
                                 // Lancer la partie : aucun battle/command deck requis pour Armada.
@@ -1220,9 +1218,6 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 unit = unit, state = unitState, children = children,
                                 isPrep = true, readOnly = readOnly,
                                 onOpen = { selectedUnit = unit },
-                                onCycleDeploy = if (readOnly) null else {
-                                    { onUnitChange(unit.instanceId, unitState.copy(deployZone = when (unitState.deployZone) { null -> 1; 1 -> 2; else -> null })) }
-                                },
                                 onCompare = {}
                             )
                         }
@@ -1363,23 +1358,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     if (showDiceSheet) {
         DiceRollerSheet(onClose = { showDiceSheet = false })
     }
-    if (showDeploySheet) {
-        DeploymentSheet(onClose = { showDeploySheet = false })
-    }
     if (showPoolSheet) {
         PoolSheet(orderPool, { rank, v -> orderPool = orderPool + (rank to v) }, onClose = { showPoolSheet = false })
     }
     // Déploiement des 2 armées (solo = les 2, 2 joueurs = la mienne).
     if (showDeployment) {
-        DeploymentSheet(
+        ArmadaDeploymentSheet(
             myUnits = playable, oppUnits = oppPlayable,
-            myStates = ownStates, oppStates = if (twoPlayer) oppStates else soloOppStates,
-            allMy = entries, allOpp = if (twoPlayer) oppEntries else soloOppEntries,
-            showOpp = !twoPlayer,
-            onCycleMy = { id -> playSyncVm.updateOwnState(id) { st -> st.copy(deployZone = when (st.deployZone) { null -> 1; 1 -> 2; else -> null }) } },
-            onCycleOpp = {
-                soloOppStates = soloOppStates + (it to ((soloOppStates[it] ?: SyncedUnitState(it)).copy(deployZone = when ((soloOppStates[it] ?: SyncedUnitState(it)).deployZone) { null -> 1; 1 -> 2; else -> null })))
-            },
             onOpenMy = { selectedUnit = it }, onOpenOpp = { selectedUnit = it },
             onClose = { showDeployment = false }
         )
@@ -1972,26 +1957,6 @@ internal fun CommandDeckSheet(
     }
 }
 
-// ── Sheet de déploiement (PR1) : ordre + zones ──────────────────────────
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun DeploymentSheet(onClose: () -> Unit) {
-    var first by remember { mutableStateOf("own") }  // qui déploie en premier
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.deploy), color = LegionColors.Success, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            // Ordre de déploiement (seule info de déploiement utile — les zones se marquent en tapant les unités de la liste).
-            Text(stringResource(R.string.deploy_order), color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Surface(onClick = { first = "own" }, shape = RoundedCornerShape(8.dp), color = if (first == "own") LegionColors.Success else LegionColors.Border, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_my_army), Modifier.padding(vertical = 10.dp), color = if (first == "own") LegionColors.Background else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                Spacer(Modifier.width(8.dp))
-                Surface(onClick = { first = "opp" }, shape = RoundedCornerShape(8.dp), color = if (first == "opp") LegionColors.Success else LegionColors.Border, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_opponent), Modifier.padding(vertical = 10.dp), color = if (first == "opp") LegionColors.Background else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-            }
-            Text("Marquez les unités déployées en les tapant dans la liste (Zone 1 / Zone 2).", color = LegionColors.TextTertiary, fontSize = 11.sp)
-        }
-    }
-}
-
 // ── Pool d'ordres (accessible via menu ⋮) ────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -2465,7 +2430,7 @@ internal fun UnitListRow(
     isPrep: Boolean,
     readOnly: Boolean,
     onOpen: () -> Unit,
-    onCycleDeploy: (() -> Unit)?,
+    onCycleDeploy: (() -> Unit)? = null,
     onCompare: () -> Unit
 ) {
     val totalPts = unit.card.points + children.sumOf { it.card.points * it.quantity }
@@ -2497,18 +2462,35 @@ internal fun UnitListRow(
             if (isWounded) { Text("$remaining/${maxHp ?: "?"}", color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) LegionColors.Danger else LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = LegionColors.Success, modifier = Modifier.size(16.dp)) }
             if (defeated) { Text("Vaincue", color = LegionColors.Danger, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-            if (isPrep && onCycleDeploy != null) {
-                Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> LegionColors.SuccessSurface; 2 -> LegionColors.Border; else -> LegionColors.Border }) {
-                    Text(if (deployZone == null) "Zone ?" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) LegionColors.TextSecondary else LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-            }
         }
     }
 }
 
 
 
-// ── Déploiement : LES 2 ARMÉES côte à côte, marquage Zone 1/2 par unité (plus de vue "une seule armée") ──
+// ── Déploiement Armada : rappel RRG 1.6.0, placement réel sur le plateau ──
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+internal fun ArmadaDeploymentSheet(
+    myUnits: List<ListEntry>, oppUnits: List<ListEntry>,
+    onOpenMy: (ListEntry) -> Unit, onOpenOpp: (ListEntry) -> Unit,
+    onClose: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp).verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Placement de la flotte", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Vaisseaux : distance 1-3 de votre bord long. Escadrons : distance 1-2 d'un vaisseau ami (peuvent être hors zone).", color = LegionColors.TextSecondary, fontSize = 11.sp)
+            Text("Placez ensuite les pions sur le plateau tabletop — c'est la source de vérité.", color = LegionColors.Warning, fontSize = 11.sp)
+            Text("MOI", color = LegionColors.Warning, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            myUnits.forEach { u -> Surface(onClick = { onOpenMy(u) }, shape = RoundedCornerShape(6.dp), color = LegionColors.SurfaceRaised, modifier = Modifier.fillMaxWidth()) { Text(u.card.name, Modifier.padding(10.dp), color = Color.White, fontSize = 12.sp) } }
+            if (oppUnits.isNotEmpty()) {
+                Text("ADVERSAIRE", color = LegionColors.Info, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                oppUnits.forEach { u -> Surface(onClick = { onOpenOpp(u) }, shape = RoundedCornerShape(6.dp), color = LegionColors.SurfaceRaised, modifier = Modifier.fillMaxWidth()) { Text(u.card.name, Modifier.padding(10.dp), color = Color.White, fontSize = 12.sp) } }
+            }
+        }
+    }
+}
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun DeploymentSheet(

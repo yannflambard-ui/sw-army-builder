@@ -177,6 +177,7 @@ fun LegionTabletopScreen(
     val livePan by rememberUpdatedState(effPan())
     val liveTool by rememberUpdatedState(tool)
     val liveOnMove by rememberUpdatedState(onMove)
+    val liveOnOpenPlay by rememberUpdatedState(onOpenPlay)
     fun toScreenLive(p: LegionPawn): Offset = Offset(
         livePan.x + p.xMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
         livePan.y + p.yMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
@@ -200,8 +201,12 @@ fun LegionTabletopScreen(
                     when {
                         hit == null -> { selectedId = null; targetId = null; measureEnd = null }
                         liveTool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
-                        selectedId == null -> selectedId = hit.id
-                        hit.id == selectedId -> { /* déjà sélectionné */ }
+                        liveTool == LegionTool.SELECT -> {
+                            // Tap sur un pion = sélection ET ouverture de la fiche dépliante
+                            // du mode Play (même écran, même contenu que l'utilisateur connaît).
+                            selectedId = hit.id
+                            liveOnOpenPlay(hit.id)
+                        }
                         else -> targetId = hit.id
                     }
                 }
@@ -301,9 +306,6 @@ fun LegionTabletopScreen(
                         }
                         SmallAction(stringResource(R.string.tabletop_dice), false, enabled = targetId != null) { showDice = true }
                     }
-                    // Fiche Play = entrées de la liste LOCALE uniquement. Un pion adverse
-                    // (id B:/opp_) n'y existe pas : l'ouvrir afficherait la mauvaise unité.
-                    if (!p.isOpp) SmallAction(stringResource(R.string.tabletop_open_play), false) { onOpenPlay(p.id) }
                 }
             }
         }

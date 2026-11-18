@@ -217,7 +217,20 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     pawns = legionState,
                     round = legionRound,
                     onBack = { navController.popBackStack() },
-                    onOpenPlay = { id -> navController.navigate(Routes.cardDetail(lid, id)) },
+                    onOpenPlay = { id ->
+                        // Ouvre la vraie fiche dépliante du mode Play. On dépose l'id dans
+                        // savedStateHandle pour résoudre aussi les pions adverses (B:/opp_).
+                        val playEntry = navController.previousBackStackEntry?.takeIf {
+                            it.destination.route == Routes.CARD_DETAIL
+                        }
+                        if (playEntry != null) {
+                            playEntry.savedStateHandle["tabletop_selected_unit"] = id
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(Routes.cardDetail(lid, id))
+                            navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", id)
+                        }
+                    },
                     onMove = { id, x, y, h -> legionState = legionState.map { if (it.id == id) it.copy(xMm = x, yMm = y, headingDeg = h) else it } },
                     onActivate = { id -> legionState = legionState.map { if (it.id == id) it.copy(activated = !it.activated) else it } },
                     onCoverChange = { id, c -> legionState = legionState.map { if (it.id == id) it.copy(cover = c.coerceIn(0, 2)) else it } },
