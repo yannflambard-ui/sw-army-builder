@@ -33,6 +33,10 @@ object LegionTabletopGeometry {
     /** Diamètre du socle en mm. */
     fun baseDiameterMm(size: String): Float = baseRadiusMm(size) * 2f
 
+    /** Total de blessures = seuil par figurine × effectif (rulebook:473-476). */
+    fun totalWounds(health: Int, miniCount: Int): Int =
+        health.coerceAtLeast(1) * miniCount.coerceAtLeast(1)
+
     /**
      * Distance bord-à-bord entre deux socles, en mm (rulebook:682-692 : la plus courte
      * distance possible, mesurée depuis les socles, miniature ignorée).

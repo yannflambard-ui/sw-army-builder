@@ -269,4 +269,24 @@
     <string name="activation">Activation</string>
     <string name="card_rules">Règles de la carte</string>
     <string name="search_prompt">Saisissez un nom, un mot-clé ou une règle pour rechercher toutes les cartes.</string>
+    <string name="tabletop_back">Retour</string>
+    <string name="tabletop_title">Tabletop Legion · Manche %1$d</string>
+    <string name="tabletop_units_left">%1$d unité(s) restante(s)</string>
+    <string name="tabletop_measure">Mesurer la portée</string>
+    <string name="tabletop_end_round">Fin</string>
+    <string name="tabletop_recenter">Recadrer</string>
+    <string name="tabletop_activate">Activer</string>
+    <string name="tabletop_rotate">Pivoter 90°</string>
+    <string name="tabletop_arc">Arc</string>
+    <string name="tabletop_cover">Couvert %1$d</string>
+    <string name="tabletop_dice">Dés</string>
+    <string name="tabletop_open_play">Fiche Play</string>
+    <string name="tabletop_roll">Lancer</string>
+    <string name="tabletop_roll_dice">Lancer de dés</string>
+    <string name="tabletop_dice_note">Attaque d8 · Défense d6 (faces FFG officielles)</string>
+    <string name="tabletop_attack">Attaque</string>
+    <string name="tabletop_defense">Défense</string>
+    <string name="tabletop_results">Résultats : %1$s</string>
+    <string name="tabletop_successes">%1$d succès</string>
+    <string name="tabletop_wounds">%1$d/%2$d blessures · %3$d&quot; · socle %4$s</string>
 </resources>

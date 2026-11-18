@@ -269,4 +269,24 @@
     <string name="card_rules">Kartenregeln</string>
     <string name="activation">Aktivierung</string>
     <string name="search_prompt">Name, Schlüsselwort oder Regel eingeben, um alle Karten zu durchsuchen.</string>
+    <string name="tabletop_back">Zurück</string>
+    <string name="tabletop_title">Legion Tabletop · Runde %1$d</string>
+    <string name="tabletop_units_left">%1$d Einheit(en) übrig</string>
+    <string name="tabletop_measure">Reichweite messen</string>
+    <string name="tabletop_end_round">Ende</string>
+    <string name="tabletop_recenter">Zentrieren</string>
+    <string name="tabletop_activate">Aktivieren</string>
+    <string name="tabletop_rotate">90° drehen</string>
+    <string name="tabletop_arc">Bogen</string>
+    <string name="tabletop_cover">Deckung %1$d</string>
+    <string name="tabletop_dice">Würfel</string>
+    <string name="tabletop_open_play">Karte öffnen</string>
+    <string name="tabletop_roll">Werfen</string>
+    <string name="tabletop_roll_dice">Würfel werfen</string>
+    <string name="tabletop_dice_note">Angriff d8 · Verteidigung d6 (FFG-Seiten)</string>
+    <string name="tabletop_attack">Angriff</string>
+    <string name="tabletop_defense">Verteidigung</string>
+    <string name="tabletop_results">Ergebnisse: %1$s</string>
+    <string name="tabletop_successes">%1$d Erfolg(e)</string>
+    <string name="tabletop_wounds">%1$d/%2$d Wunden · %3$d&quot; · %4$s Sockel</string>
 </resources>

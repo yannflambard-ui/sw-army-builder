@@ -267,4 +267,24 @@
     <string name="activation">Activation</string>
     <string name="card_rules">Règles de la carte</string>
     <string name="search_prompt">Type a name, keyword or rule to search all cards.</string>
+    <string name="tabletop_back">Back</string>
+    <string name="tabletop_title">Legion Tabletop · Round %1$d</string>
+    <string name="tabletop_units_left">%1$d unit(s) remaining</string>
+    <string name="tabletop_measure">Measure range</string>
+    <string name="tabletop_end_round">End</string>
+    <string name="tabletop_recenter">Recenter</string>
+    <string name="tabletop_activate">Activate</string>
+    <string name="tabletop_rotate">Rotate 90°</string>
+    <string name="tabletop_arc">Arc</string>
+    <string name="tabletop_cover">Cover %1$d</string>
+    <string name="tabletop_dice">Dice</string>
+    <string name="tabletop_open_play">Play card</string>
+    <string name="tabletop_roll">Roll</string>
+    <string name="tabletop_roll_dice">Roll dice</string>
+    <string name="tabletop_dice_note">Attack d8 · Defense d6 (official FFG faces)</string>
+    <string name="tabletop_attack">Attack</string>
+    <string name="tabletop_defense">Defense</string>
+    <string name="tabletop_results">Results: %1$s</string>
+    <string name="tabletop_successes">%1$d success(es)</string>
+    <string name="tabletop_wounds">%1$d/%2$d wounds · %3$d&quot; · %4$s base</string>
 </resources>

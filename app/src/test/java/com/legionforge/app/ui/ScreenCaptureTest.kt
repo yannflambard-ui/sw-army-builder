@@ -101,7 +101,32 @@ class LegionTabletopCaptureTest {
         )
         captureRoboImage("src/test/snapshots/legion-tabletop-411x891.png") {
             LegionForgeTheme {
-                LegionTabletopScreen(pawns = pawns, round = 2, unitsLeft = 5)
+                LegionTabletopScreen(pawns = pawns, round = 2, unitsLeft = 5,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {})
+            }
+        }
+    }
+}
+
+
+/** Plateau Legion sur petit écran (360x640). */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w360dp-h640dp-mdpi")
+class LegionTabletopCaptureSmallTest {
+    @Test
+    fun legion_tabletop_360x640() {
+        val pawns = listOf(
+            LegionPawn("a1", "B1 Battle Droids", -40f, -50f, baseSize = "small", maxWounds = 4, wounds = 4, speed = 2),
+            LegionPawn("a2", "General Grievous", 30f, -30f, baseSize = "large", maxWounds = 5, wounds = 3, speed = 2, canRotate = true),
+            LegionPawn("b1", "Clone Troopers", -20f, 60f, baseSize = "small", maxWounds = 4, wounds = 2, speed = 2, isOpp = true, cover = 1),
+        )
+        captureRoboImage("src/test/snapshots/legion-tabletop-360x640.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {})
             }
         }
     }

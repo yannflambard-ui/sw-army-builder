@@ -3,7 +3,11 @@ package com.legionforge.app.ui.nav
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.LaunchedEffect
 import com.legionforge.app.data.model.ListEntry
 import com.legionforge.app.data.model.ArmadaSlot
 import androidx.compose.ui.res.stringResource
@@ -159,12 +163,12 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 val legionPawns = legionEntries.mapIndexed { i, e ->
                     val st = com.legionforge.app.ui.screens.LegionStatsParser.parse(e.card.legionStats)
                     val isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")
-                    val rank = e.card.legionRank?.name ?: "CORPS"
-                    val baseSize = when (rank) {
-                        "HEAVY", "SPECIAL_FORCES" -> "large"
-                        "COMMANDER", "OPERATIVE" -> "medium"
-                        else -> "small"
-                    }
+                    // Taille de socle par TYPE d'unité (rulebook:298-303) : seuls les
+                    // véhicules/créatures/emplacements ont des socles crantés ; les
+                    // troopers (même commandants) sont sur petits socles ronds.
+                    val kw = st?.keywords.orEmpty().map { it.lowercase() }
+                    val notched = kw.any { k -> k.contains("vehicle") || k.contains("creature") || k.contains("emplacement") || k.contains("heavy trooper") }
+                    val baseSize = if (notched) "large" else "small"
                     com.legionforge.app.ui.screens.LegionPawn(
                         id = e.instanceId,
                         name = e.card.name,
@@ -172,19 +176,28 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         yMm = if (isOpp) -120f else 120f,
                         headingDeg = if (isOpp) 180f else 0f,
                         baseSize = baseSize,
-                        maxWounds = st?.health ?: 1,
-                        wounds = st?.health ?: 1,
+                        maxWounds = com.legionforge.app.domain.LegionTabletopGeometry.totalWounds(st?.health ?: 1, st?.miniCount ?: 1),
+                        wounds = com.legionforge.app.domain.LegionTabletopGeometry.totalWounds(st?.health ?: 1, st?.miniCount ?: 1),
                         speed = st?.speed ?: 1,
                         isOpp = isOpp,
                         canRotate = baseSize != "small",
                         imagePath = legionTokenMap[e.card.id]?.let { "legion_tokens/$it" } ?: e.card.imagePath(),
                     )
                 }
+                // État de plateau local : les interactions ne sont plus des no-op.
+                // (La synchronisation 2J complète via PlaySyncViewModel reste une dette documentée.)
+                var legionState by remember(lid) { mutableStateOf(legionPawns) }
+                var legionRound by remember(lid) { mutableIntStateOf(1) }
+                LaunchedEffect(legionPawns) { legionState = legionPawns }
                 com.legionforge.app.ui.screens.LegionTabletopScreen(
-                    pawns = legionPawns,
-                    round = 1,
+                    pawns = legionState,
+                    round = legionRound,
                     onBack = { navController.popBackStack() },
                     onOpenPlay = { id -> navController.navigate(Routes.cardDetail(lid, id)) },
+                    onMove = { id, x, y, h -> legionState = legionState.map { if (it.id == id) it.copy(xMm = x, yMm = y, headingDeg = h) else it } },
+                    onActivate = { id -> legionState = legionState.map { if (it.id == id) it.copy(activated = !it.activated) else it } },
+                    onCoverChange = { id, c -> legionState = legionState.map { if (it.id == id) it.copy(cover = c.coerceIn(0, 2)) else it } },
+                    onRoundChange = { legionRound = it },
                 )
                 return@composable
             }

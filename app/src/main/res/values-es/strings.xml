@@ -269,4 +269,24 @@
     <string name="card_rules">Reglas de la carta</string>
     <string name="activation">Activación</string>
     <string name="search_prompt">Escribe un nombre, palabra clave o regla para buscar todas las cartas.</string>
+    <string name="tabletop_back">Atrás</string>
+    <string name="tabletop_title">Legion Tabletop · Ronda %1$d</string>
+    <string name="tabletop_units_left">%1$d unidad(es) restantes</string>
+    <string name="tabletop_measure">Medir alcance</string>
+    <string name="tabletop_end_round">Fin</string>
+    <string name="tabletop_recenter">Recentrar</string>
+    <string name="tabletop_activate">Activar</string>
+    <string name="tabletop_rotate">Girar 90°</string>
+    <string name="tabletop_arc">Arco</string>
+    <string name="tabletop_cover">Cubierta %1$d</string>
+    <string name="tabletop_dice">Dados</string>
+    <string name="tabletop_open_play">Ficha</string>
+    <string name="tabletop_roll">Tirar</string>
+    <string name="tabletop_roll_dice">Tirar dados</string>
+    <string name="tabletop_dice_note">Ataque d8 · Defensa d6 (caras FFG)</string>
+    <string name="tabletop_attack">Ataque</string>
+    <string name="tabletop_defense">Defensa</string>
+    <string name="tabletop_results">Resultados: %1$s</string>
+    <string name="tabletop_successes">%1$d acierto(s)</string>
+    <string name="tabletop_wounds">%1$d/%2$d heridas · %3$d&quot; · base %4$s</string>
 </resources>

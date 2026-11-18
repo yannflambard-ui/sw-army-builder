@@ -73,3 +73,44 @@ class LegionTabletopGeometryTest {
         assertEquals(0f, LegionTabletopGeometry.angleDelta(0f, 360f), 0.001f)
     }
 }
+
+
+/** Tests des dés Legion — distributions vérifiées (FFG officiel, PAS le rulebook PDF). */
+class LegionDiceRulesTest {
+    @Test fun `attaque rouge 75 pourcent succes`() {
+        val f = LegionDiceRules.faces("attack", "red")
+        assertEquals(8, f.size)
+        assertEquals(5, f.count { it == "Hit" })
+        assertEquals(1, f.count { it == "Crit" })
+        assertEquals(6, f.count { LegionDiceRules.isSuccess("attack", it) })
+    }
+
+    @Test fun `attaque noir et blanc`() {
+        val b = LegionDiceRules.faces("attack", "black")
+        assertEquals(3, b.count { it == "Hit" })
+        assertEquals(3, b.count { it == "Vide" })
+        val w = LegionDiceRules.faces("attack", "white")
+        assertEquals(1, w.count { it == "Hit" })
+        assertEquals(5, w.count { it == "Vide" })
+    }
+
+    @Test fun `defense d6 pas de noir`() {
+        assertFalse(LegionDiceRules.legalColors("defense").contains("black"))
+        assertEquals(6, LegionDiceRules.sides("defense"))
+        val r = LegionDiceRules.faces("defense", "red")
+        assertEquals(3, r.count { it == "Bloc" })
+        assertEquals(1, r.count { it == "Surge" })
+        val w = LegionDiceRules.faces("defense", "white")
+        assertEquals(1, w.count { it == "Bloc" })
+        assertEquals(4, w.count { it == "Vide" })
+    }
+
+    @Test fun `wounds total sante fois effectif`() {
+        assertEquals(4, LegionTabletopGeometry.totalWounds(1, 4))
+        assertEquals(2, LegionTabletopGeometry.totalWounds(2, 1))
+    }
+
+    @Test fun `portee segment inches entiers`() {
+        assertEquals(2, LegionTabletopGeometry.rangeBand(38.1f))
+    }
+}
