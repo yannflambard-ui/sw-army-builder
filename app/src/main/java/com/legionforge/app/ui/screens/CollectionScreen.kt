@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +54,7 @@ fun CollectionScreen(onBack: () -> Unit, vm: ArmyBuilderViewModel = viewModel())
             )
         }
     ) { pad ->
-        Column(Modifier.fillMaxSize().background(Color(0xFF0A0E15)).padding(pad)) {
+        Column(Modifier.fillMaxSize().background(LegionColors.Background).padding(pad)) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -69,7 +70,7 @@ fun CollectionScreen(onBack: () -> Unit, vm: ArmyBuilderViewModel = viewModel())
                 )
                 Text(
                     "${ownedPacks.size} ${stringResource(R.string.my_collection_packs).lowercase()}",
-                    color = Color(0xFFFFC857),
+                    color = LegionColors.Accent,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -138,7 +139,7 @@ private fun PackRow(pack: CollectionPack, isOwned: Boolean, onToggle: () -> Unit
             }
             Checkbox(
                 checked = isOwned, onCheckedChange = { onToggle() },
-                colors = CheckboxDefaults.colors(checkedColor = if (isOwned) Color(0xFF77D9A7) else Color(0xFF2A3A4A), checkmarkColor = Color.Black)
+                colors = CheckboxDefaults.colors(checkedColor = if (isOwned) LegionColors.Success else LegionColors.Border, checkmarkColor = Color.Black)
             )
         }
     }
@@ -186,7 +187,7 @@ private fun CollectionRow(card: CardDefinition, isOwned: Boolean, onToggle: () -
                     if (card.kind.name == "LEGION_UNIT" && card.legionRank != null) {
                         Text(rankLabel(card.legionRank), color = rankColor(card.legionRank), style = MaterialTheme.typography.labelSmall)
                     }
-                    Text("${card.points} pts", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall)
+                    Text("${card.points} pts", color = LegionColors.Accent, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }

@@ -15,3 +15,4 @@ local.properties
 __pycache__/
 *.pyc
 app/github_token.properties
+app/release-keystore.properties

@@ -14,8 +14,8 @@ android {
         applicationId = "com.legionforge.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 329
-                                                versionName = "2.55.0"
+        versionCode = 330
+                                                versionName = "2.56.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -34,12 +34,27 @@ android {
                 keyPassword = "legionforge2026"
             }
         }
+        // Signature RELEASE pour le Google Play : keystore + credentials injectés par le
+        // workflow via release-keystore.properties (gitignored). NE JAMAIS committer de secret.
+        create("release") {
+            val propsFile = file("release-keystore.properties")
+            if (propsFile.exists()) {
+                val props = Properties().apply { load(propsFile.inputStream()) }
+                storeFile = file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (file("release-keystore.properties").exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
             signingConfig = signingConfigs.getByName("stable")

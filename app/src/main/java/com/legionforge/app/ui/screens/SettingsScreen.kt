@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import android.content.Context
 import android.content.res.Configuration
@@ -52,7 +53,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(stringResource(R.string.language),
-                color = Color(0xFFFFC857),
+                color = LegionColors.Accent,
                 style = MaterialTheme.typography.titleMedium)
 
             languages.forEach { lang ->
@@ -90,7 +91,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
 
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.my_collection),
-                color = Color(0xFFFFC857),
+                color = LegionColors.Accent,
                 style = MaterialTheme.typography.titleMedium)
             Card(
                 modifier = Modifier
@@ -105,7 +106,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
                 ) {
                     Text(stringResource(R.string.my_collection_desc),
                         color = Color.White, fontSize = 16.sp)
-                    Text("\u276F", color = Color(0xFFFFC857), fontSize = 18.sp)
+                    Text("\u276F", color = LegionColors.Accent, fontSize = 18.sp)
                 }
             }
 
@@ -124,7 +125,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
                     Checkbox(
                         checked = collectionOnly,
                         onCheckedChange = { CollectionRepository.setCollectionOnly(it) },
-                        colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFFC857), checkmarkColor = Color.Black)
+                        colors = CheckboxDefaults.colors(checkedColor = LegionColors.Accent, checkmarkColor = Color.Black)
                     )
                     Text(stringResource(R.string.collection_only_catalog),
                         color = Color.White, fontSize = 15.sp)

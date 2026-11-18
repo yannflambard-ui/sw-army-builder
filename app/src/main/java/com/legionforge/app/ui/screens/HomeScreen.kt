@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
@@ -57,15 +58,15 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
             },
                 actions = {
                     IconButton(onClick = onSettings) {
-                        Text("\u2699", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium)
+                        Text("\u2699", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium)
                     }
                 })
         }) { pad ->
-            Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF111827), Color(0xFF080B12)))).padding(pad).padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(LegionColors.Surface, Color(0xFF080B12)))).padding(pad).padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // Barre de recherche compacte, bien visible
-                Card(onClick = onSearch, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+                Card(onClick = onSearch, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("\uD83D\uDD0E", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium)
+                        Text("\uD83D\uDD0E", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.width(10.dp))
                         Text(stringResource(R.string.search_hint), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
                     }
@@ -75,25 +76,25 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
                     CompactGameTile(stringResource(R.string.game_armada), stringResource(R.string.armada_desc), GameSystem.ARMADA_V15, Modifier.weight(1f), onClick = { onNewList(GameSystem.ARMADA_V15) })
                 }
                 // Accès au wiki des règles officielles
-                Card(onClick = onWiki, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+                Card(onClick = onWiki, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("\uD83D\uDCD6", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium)
+                        Text("\uD83D\uDCD6", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.width(10.dp))
                         Text(stringResource(R.string.wiki_rules), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-            Text(stringResource(R.string.recent_lists), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.recent_lists), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge)
             if (lists.isEmpty()) Text(stringResource(R.string.saved_lists_hint), color = Color.LightGray)
             if (loading) {
                 Spacer(Modifier.height(40.dp))
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp), color = Color(0xFFFFC857))
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp), color = LegionColors.Accent)
                 Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.loading_catalog), color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Text(stringResource(R.string.loading_catalog), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
             }
             if (catalogError != null) {
-                Card(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF3B2224))) {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.DangerSurface)) {
                     Column(Modifier.padding(12.dp)) {
-                        Text(stringResource(R.string.catalog_error), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.catalog_error), color = LegionColors.Accent, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                         Text(catalogError ?: "", color = Color(0xFFFFC7B7), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -114,7 +115,7 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
 
 @Composable
 private fun CompactGameTile(title: String, subtitle: String, system: GameSystem, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+    Card(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 painter = painterResource(gameIconRes(system)),

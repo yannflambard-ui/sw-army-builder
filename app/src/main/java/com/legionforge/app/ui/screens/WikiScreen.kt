@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,15 +59,15 @@ fun WikiScreen(
         TopAppBar(
             title = { Text("WIKI DES RÈGLES", style = MaterialTheme.typography.titleMedium) },
             navigationIcon = { TextButton(onClick = onBack) { Text("<") } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15))
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = LegionColors.Background)
         )
     }) { pad ->
-        Column(Modifier.fillMaxSize().background(Color(0xFF0A0E15)).padding(pad).padding(horizontal = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxSize().background(LegionColors.Background).padding(pad).padding(horizontal = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Barre de recherche par mot-clé
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it; vm.searchWiki(it) },
-                placeholder = { Text("Mot-clé : boucliers, activation, attaque, vitesse…", color = Color(0xFF8A99A8), fontSize = 14.sp) },
+                placeholder = { Text("Mot-clé : boucliers, activation, attaque, vitesse…", color = LegionColors.TextTertiary, fontSize = 14.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -77,8 +78,8 @@ fun WikiScreen(
                 WikiGameChip("ARMADA", GameSystem.ARMADA_V15, Modifier.weight(1f), vm)
             }
             when {
-                searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color(0xFFFFC857), strokeWidth = 2.dp) }
-                query.isNotBlank() && results.isEmpty() -> Text("Aucune section pour « $query »", color = Color(0xFF8A99A8), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
+                searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = LegionColors.Accent, strokeWidth = 2.dp) }
+                query.isNotBlank() && results.isEmpty() -> Text("Aucune section pour « $query »", color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
                 query.isNotBlank() -> LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
                     items(results) { section -> WikiSectionRow(section, onClick = { selected = section }) }
                 }
@@ -122,9 +123,9 @@ private fun WikiSectionRow(section: WikiSectionEntity, onClick: () -> Unit) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Text(localizedTitle(section), color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Spacer(Modifier.width(8.dp))
-                Text(if (section.gameSystem == GameSystem.LEGION_V2.name) "LEGION" else "ARMADA", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                Text(if (section.gameSystem == GameSystem.LEGION_V2.name) "LEGION" else "ARMADA", color = LegionColors.Accent, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp), textAlign = androidx.compose.ui.text.style.TextAlign.End)
             }
-            Text(localizedContent(section).replace('\n', ' ').take(90) + "…", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Text(localizedContent(section).replace('\n', ' ').take(90) + "…", color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
     }
 }
@@ -143,11 +144,11 @@ fun RulePopup(section: WikiSectionEntity, onClose: () -> Unit) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(localizedTitle(section), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(if (section.gameSystem == GameSystem.LEGION_V2.name) "LEGION V2" else "ARMADA V1.5", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall)
+                        Text(if (section.gameSystem == GameSystem.LEGION_V2.name) "LEGION V2" else "ARMADA V1.5", color = LegionColors.Accent, style = MaterialTheme.typography.labelSmall)
                     }
                     TextButton(onClick = onClose) { Text("✕", color = Color.White, fontSize = 18.sp) }
                 }
-                HorizontalDivider(color = Color(0xFF2A3A4A))
+                HorizontalDivider(color = LegionColors.Border)
                 Text(
                     localizedContent(section),
                     color = Color(0xFFD5DCE6),
@@ -242,7 +243,7 @@ fun ClickableRulesText(
             }
             if (section != null) {
                 pushStringAnnotation(tag = "rule", annotation = section.id)
-                withStyle(SpanStyle(color = Color(0xFFFFC857), fontWeight = FontWeight.Bold)) {
+                withStyle(SpanStyle(color = LegionColors.Accent, fontWeight = FontWeight.Bold)) {
                     append(word)
                 }
                 pop()

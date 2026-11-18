@@ -70,11 +70,11 @@ Intégration : intercepter l'ouverture de la fiche → journal ; chips Récents/
 
 ## 🟠 P1 — Important
 
-### [ ] Collection personnelle (extensions / unités possédées)
+### [x] Collection personnelle (extensions / unités possédées) — LIVRÉ
 ```
 Jeu : Commun
 Priorité : P1 | Valeur joueur : Haute
-Données : collection (cardId) + filtre « ma collection » (pattern matchesFaction)
+État actuel : LIVRÉ — CollectionScreen (packs cochés), filtre « Ma collection » durci en 2.55.0 pour n'afficher que les cartes réellement possédées (liste honnête).
 Pourquoi : construire une liste honnête = ce qu'on possède vraiment.
 ```
 
@@ -91,7 +91,7 @@ Reste à enrichir (suite P1) : jeton Surge auto selon surgeAttack, Vehicle Damag
 ```
 > Killer feature Legion : ne plus rien mémoriser à la table.
 
-### [ ] Comparateur (unité vs unité / vaisseau vs vaisseau)
+### [x] Comparateur (unité vs unité / vaisseau vs vaisseau) — LIVRÉ (CardDetailScreen onCompare)
 ```
 Jeu : Commun
 Priorité : P1 | Complexité : Moyenne
@@ -131,7 +131,7 @@ Pourquoi : rappel des phases sans PDF.
 ## ❌ Rejeté (double filtre joueur × concepteur)
 
 - **Scanner de cartes** : CameraX + matcher visuel pour 666 cartes = coût élevé, gain marginal (recherche par nom suffit).
-- **Dice roller** : le jeu a ses dés physiques ; sans valeur de référence.
+- ~~**Dice roller** : le jeu a ses dés physiques ; sans valeur de référence.~~ → LIVRÉ (DiceRollerSheet + table Armada vérifiée 18/18, retiré du rejeté).
 - **Compte cloud / multi-joueurs / profil** : hors périmètre "compagnon de table", ajoute auth+serveur pour rien (app offline-first).
 - **KMP/iOS / reconstruction architecture** : casserait l'existant stable.
 
@@ -157,4 +157,4 @@ Ensemble ils transforment l'app d'un *catalogue* en *copilote de table*, sur des
 
 ---
 
-*Roadmap basée sur l'état du projet au 25/09/2026 — catalogue Legion V2 (0.5.x) + Armada enrichie.*
+*Roadmap recalibrée sur le code réel au 18/11/2026 — v2.55.0 (code 329). Legion V2 + Armada 1.5.*

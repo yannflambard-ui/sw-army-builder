@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -271,16 +272,16 @@ fun TabletopScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             androidx.compose.material3.IconButton(onClick = onBack) {
-                Text("←", color = Color(0xFFFFC857), fontSize = 22.sp)
+                Text("←", color = LegionColors.Accent, fontSize = 22.sp)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
-                Text("${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 11.sp, maxLines = 1)
+                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = LegionColors.Accent, fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+                Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 11.sp, maxLines = 1)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { showDeployment = !showDeployment }) { Text(if (showDeployment) "Masquer zones" else "Zones", fontSize = 11.sp) }
                 androidx.compose.material3.IconButton(onClick = { scale = fitScale; pan = Offset.Zero }) {
-                    Text("◎", color = Color(0xFFFFC857), fontSize = 22.sp)
+                    Text("◎", color = LegionColors.Accent, fontSize = 22.sp)
                 }
             }
         }
@@ -417,7 +418,7 @@ fun TabletopScreen(
                     }
                     for (i in 1 until pts.lastIndex) {
                         drawCircle(Color(0x44FFC857), radius = 9f, center = pts[i])
-                        drawCircle(Color(0xFFFFC857), radius = 3f, center = pts[i])
+                        drawCircle(LegionColors.Accent, radius = 3f, center = pts[i])
                     }
                     val ghost = resolveManeuver2(selPawn.xMm, selPawn.yMm, selPawn.headingDeg, speedIdx, effectiveBends)
                     val (gw, gh) = baseSizeMm(selPawn.sizeClass)
@@ -523,7 +524,7 @@ fun TabletopScreen(
                             }
                         }
                         if (p.id == selectedId || p.id == targetId) {
-                            drawRect(if (p.id == selectedId) Color(0xFFFFC857) else Color(0xFFF87171),
+                            drawRect(if (p.id == selectedId) LegionColors.Accent else Color(0xFFF87171),
                                 topLeft = Offset(center.x - wp / 2, center.y - hp / 2),
                                 size = androidx.compose.ui.geometry.Size(wp, hp),
                                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
@@ -571,7 +572,7 @@ fun TabletopScreen(
                 TextButton(onClick = { sheetPawnId = selPawn.id }) { Text("Actions") }
             }
         }
-        attackResult?.let { Text(it, color = Color(0xFFFFC857), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
+        attackResult?.let { Text(it, color = LegionColors.Accent, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
         // Boutons d'action du vaisseau sélectionné : Déplacer et Tirer, toujours visibles.
         // Tirer est grisé (pas supprimé) quand le vaisseau a déjà tiré 2 fois cette manche.
         if (selPawn != null && !selPawn.isSquadron) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -590,7 +591,7 @@ fun TabletopScreen(
                     }
                 },
                 modifier = Modifier.weight(1f).height(56.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857), contentColor = Color(0xFF0B1220)),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = LegionColors.Accent, contentColor = Color(0xFF0B1220)),
             ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
             val shots = shotsMap[selPawn.id] ?: 0
             Button(
@@ -607,12 +608,12 @@ fun TabletopScreen(
             if (sp != null) {
                 androidx.compose.material3.ModalBottomSheet(
                     onDismissRequest = { sheetPawnId = null },
-                    containerColor = Color(0xFF111827),
+                    containerColor = LegionColors.Surface,
                     sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
                 ) {
                     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(sp.name, color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
-                        Text("Tir et trajectoire indicatifs : vérifiez avec la réglette.", color = Color(0xFFFFC857), fontSize = 12.sp)
+                        Text(sp.name, color = LegionColors.Accent, fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+                        Text("Tir et trajectoire indicatifs : vérifiez avec la réglette.", color = LegionColors.Accent, fontSize = 12.sp)
                         Text(
                             if (sp.isSquadron) "Escadron · vitesse max ${sp.maxSpeed}" else "Vaisseau · vitesse max ${sp.maxSpeed}",
                             color = Color(0xFF8F9BAD), fontSize = 12.sp, maxLines = 1,
@@ -628,19 +629,19 @@ fun TabletopScreen(
                                 bends = bends.toMutableList().also { it[j] = next }
                             },
                         ) else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◄ vitesse", color = Color(0xFFFFC857), fontSize = 14.sp) }
-                            Text("Vitesse $speedIdx", color = Color(0xFF9EACBC), fontSize = 14.sp)
-                            androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ►", color = Color(0xFFFFC857), fontSize = 14.sp) }
+                            androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx - 1).coerceAtLeast(0) }) { Text("◄ vitesse", color = LegionColors.Accent, fontSize = 14.sp) }
+                            Text("Vitesse $speedIdx", color = LegionColors.TextSecondary, fontSize = 14.sp)
+                            androidx.compose.material3.TextButton(onClick = { speedIdx = (speedIdx + 1).coerceAtMost(maxSpeed) }) { Text("vitesse ►", color = LegionColors.Accent, fontSize = 14.sp) }
                         }
                         // ── 2. Cadran de tir : choisir la face qui tire (l'arc s'affiche sur le plateau) ──
                         if (!sp.isSquadron && targetPawn != null) {
-                            Text("Cadran de tir : quelle face tire ?", color = Color(0xFF9EACBC), fontSize = 12.sp)
+                            Text("Cadran de tir : quelle face tire ?", color = LegionColors.TextSecondary, fontSize = 12.sp)
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                 listOf("front" to "Avant", "left" to "Bâbord", "right" to "Tribord", "rear" to "Arrière").forEach { (sector, label) ->
                                     val on = chosenAttackSector == sector
                                     Surface(onClick = { chosenAttackSector = if (on) null else sector }, shape = RoundedCornerShape(6.dp),
-                                        color = if (on) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
-                                        Text(label, Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = if (on) Color(0xFF0A0E15) else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        color = if (on) LegionColors.Accent else LegionColors.Border) {
+                                        Text(label, Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = if (on) LegionColors.Background else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -650,7 +651,7 @@ fun TabletopScreen(
                                 color = Color.White, fontSize = 11.sp)
                         }
                         if (antiShipMissing) {
-                            Text("Dés anti-escadron imprimés : indique-les depuis la carte", color = Color(0xFFFFC857), fontSize = 12.sp)
+                            Text("Dés anti-escadron imprimés : indique-les depuis la carte", color = LegionColors.Accent, fontSize = 12.sp)
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                 listOf("N" to manualAntiDice.black, "B" to manualAntiDice.blue, "R" to manualAntiDice.red).forEach { (color, amount) ->
                                     TextButton(onClick = {
@@ -672,7 +673,7 @@ fun TabletopScreen(
                             else if (sp.sizeClass == "unknown" || targetPawn.sizeClass == "unknown") "Taille de socle inconnue : contrôle de portée indisponible."
                             else if (eligibleDice.isEmpty) "Aucun dé initial disponible à cette portée. Tir normal impossible."
                             else "Distance minimale socle : ${"%.0f".format(minRange)} mm · arc, zone et ligne de vue à vérifier. Effets spéciaux non gérés.",
-                            color = Color(0xFFFFC857), fontSize = 12.sp,
+                            color = LegionColors.Accent, fontSize = 12.sp,
                         )
                         androidx.compose.material3.Button(
                             onClick = {
@@ -703,7 +704,7 @@ fun TabletopScreen(
                         ) { Text("Attaquer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
                         // Fiche complète Play de ce pion.
                         androidx.compose.material3.TextButton(onClick = { sheetPawnId = null; onSelectPlayUnit(sp.id) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Ouvrir dans Play ↗", color = Color(0xFF38BDF8), fontSize = 13.sp, maxLines = 1)
+                            Text("Ouvrir dans Play ↗", color = LegionColors.Info, fontSize = 13.sp, maxLines = 1)
                         }
                     }
                 }
@@ -712,7 +713,7 @@ fun TabletopScreen(
         // Règle de distance : entre les deux pions sélectionnés (ou les deux premiers)
         if (currentAttackRolls.value.isNotEmpty() && selPawn != null && targetPawn != null) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Effet après jet :", color = Color(0xFF9EACBC), fontSize = 11.sp)
+                Text("Effet après jet :", color = LegionColors.TextSecondary, fontSize = 11.sp)
                 listOf("N" to ArmadaDieColor.BLACK, "B" to ArmadaDieColor.BLUE, "R" to ArmadaDieColor.RED).forEach { (label, die) ->
                     TextButton(onClick = {
                         val addition = when (die) {
@@ -737,7 +738,7 @@ fun TabletopScreen(
             if (selPawn != null && speedIdx > 0)
                 "V$speedIdx · $bendsSummary · cap final ${"%.1f".format(selPawn.headingDeg + effectiveBends.take(speedIdx).sum() * YAW_STEP_DEG)}° ≈ · ◄► plient le coude ${"①②③④"[activeJoint - 1]} · appui long = 0 · ${YAW_STEP_DEG}°/cran et ${SEGMENT_MM.toInt()} mm non sourcés"
             else infoLine(positions, selectedId, targetId, selectedSector),
-            color = Color(0xFF9EACBC), fontSize = 11.sp,
+            color = LegionColors.TextSecondary, fontSize = 11.sp,
             modifier = Modifier.padding(8.dp),
         )
     }
@@ -757,11 +758,11 @@ private fun TabletopBendMatrix(pawn: TabletopPawn, speedIdx: Int, bends: List<In
                 Surface(
                     onClick = { onSpeed(if (isSel) 0 else v) },
                     shape = RoundedCornerShape(6.dp),
-                    color = if (isSel) Color(0xFFFFC857) else Color(0xFF2A3A4A),
+                    color = if (isSel) LegionColors.Accent else LegionColors.Border,
                     modifier = Modifier.weight(1f),
                 ) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
-                        Text("V$v", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("V$v", color = if (isSel) LegionColors.Background else LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -770,7 +771,7 @@ private fun TabletopBendMatrix(pawn: TabletopPawn, speedIdx: Int, bends: List<In
             val posMap = chart[pos - 1]
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
-                    Text("$pos", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("$pos", color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 (1..maxSpeed).forEach { v ->
                     val n = posMap[v] ?: -1 // -1 = hors triangle
@@ -789,7 +790,7 @@ private fun TabletopBendMatrix(pawn: TabletopPawn, speedIdx: Int, bends: List<In
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = if (n < 0) Color(0xFF800000) else Color.White,
-                        border = if (isSel) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFC857)) else null,
+                        border = if (isSel) androidx.compose.foundation.BorderStroke(2.dp, LegionColors.Accent) else null,
                         modifier = Modifier.weight(1f).height(32.dp),
                         onClick = {
                             if (n >= 0) {
@@ -823,7 +824,7 @@ private fun JointChip(
         locked -> Color(0xFF55637A)
         value < 0 -> Color(0xFF7EC8FF)
         value > 0 -> Color(0xFFFFAE6B)
-        else -> Color(0xFF9EACBC)
+        else -> LegionColors.TextSecondary
     }
     val bg = if (active) Color(0x33FFC857) else Color(0x11FFFFFF)
     Box(
@@ -999,7 +1000,7 @@ fun DrawScope.drawGrid(c: Offset, scale: Float) {
 private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: Float, selected: Boolean, target: Boolean = false, round: Boolean = false) {
     val topLeft = Offset(center.x - w / 2, center.y - h / 2)
     val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = if (selected) 3f else 1.5f)
-    val border = if (target) Color(0xFFF87171) else if (selected) Color(0xFFFFC857) else Color(0xFF4A6080)
+    val border = if (target) Color(0xFFF87171) else if (selected) LegionColors.Accent else Color(0xFF4A6080)
     if (round) {
         // escadron (chasseur) : jeton rond, diamètre = plus petit côté
         val r = minOf(w, h) / 2
@@ -1010,7 +1011,7 @@ private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: F
     drawRect(Color(0xFF1E2A3A), topLeft, androidx.compose.ui.geometry.Size(w, h))
     drawRect(border, topLeft, androidx.compose.ui.geometry.Size(w, h), style = stroke)
     // proue : petit repère vers le haut du socle (heading 0)
-    drawLine(Color(0xFF77D9A7), center, Offset(center.x, topLeft.y + h * 0.1f), strokeWidth = 2f)
+    drawLine(LegionColors.Success, center, Offset(center.x, topLeft.y + h * 0.1f), strokeWidth = 2f)
 }
 
 /** Image de la carte au-dessus du socle (miniature). Le bitmap est chargé hors thread UI. */
@@ -1316,7 +1317,7 @@ private fun DiceColumn(label: String, color: Color, value: Int, enabled: Boolean
         ) { Text("−", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(12.dp).background(color, CircleShape))
-            Text(" $label", color = Color(0xFF9EACBC), fontSize = 12.sp)
+            Text(" $label", color = LegionColors.TextSecondary, fontSize = 12.sp)
         }
     }
 }

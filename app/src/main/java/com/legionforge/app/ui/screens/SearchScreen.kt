@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,23 +43,23 @@ fun SearchScreen(
         TopAppBar(
             title = { Text(stringResource(R.string.search_title), style = MaterialTheme.typography.titleMedium) },
             navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.back)) } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15))
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = LegionColors.Background)
         )
     }) { pad ->
-        Column(Modifier.fillMaxSize().background(Color(0xFF0A0E15)).padding(pad).padding(horizontal = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxSize().background(LegionColors.Background).padding(pad).padding(horizontal = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Barre de recherche compacte
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it; vm.searchCards(it) },
-                placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF8A99A8), fontSize = 12.sp) },
+                placeholder = { Text(stringResource(R.string.search_placeholder), color = LegionColors.TextTertiary, fontSize = 12.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 16.sp)
             )
             when {
-                searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color(0xFFFFC857), strokeWidth = 2.dp) }
-                results.isEmpty() && query.isNotBlank() -> Text(stringResource(R.string.no_results, query), color = Color(0xFF8A99A8), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
+                searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = LegionColors.Accent, strokeWidth = 2.dp) }
+                results.isEmpty() && query.isNotBlank() -> Text(stringResource(R.string.no_results, query), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
                 results.isNotEmpty() -> LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
                     items(results) { card ->
                         SearchResultRow(card, onClick = { selected = card })
@@ -72,7 +73,7 @@ fun SearchScreen(
     // Le clic sur une variante remplace la fiche affichée au lieu de refermer l'écran (cul-de-sac).
     selected?.let { sel ->
         val variants = results.filter { baseName(it) == baseName(sel) }
-        ModalBottomSheet(onDismissRequest = { selected = null }, containerColor = Color(0xFF111827)) {
+        ModalBottomSheet(onDismissRequest = { selected = null }, containerColor = LegionColors.Surface) {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp)
                     .verticalScroll(androidx.compose.foundation.rememberScrollState()),
@@ -82,22 +83,22 @@ fun SearchScreen(
                     CardArtwork(sel, Modifier.width(96.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(sel.displayName(), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("${kindLabel(sel)} • ${gameLabel(sel)} • ${sel.points} pts", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                        if (sel.unique) Text(stringResource(R.string.unique), color = Color(0xFFF59E0B), style = MaterialTheme.typography.labelSmall)
+                        Text("${kindLabel(sel)} • ${gameLabel(sel)} • ${sel.points} pts", color = LegionColors.Accent, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        if (sel.unique) Text(stringResource(R.string.unique), color = LegionColors.Warning, style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 val ls = remember(sel.id) { LegionStatsParser.parse(sel.legionStats) }
                 ls?.let { st ->
-                    Text("Vit ${st.speed} • Courage ${st.courage} • Santé ${st.health} • Déf ${st.defenseDie.uppercase()}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodyMedium)
-                    if (st.keywords.isNotEmpty()) Text(st.keywords.joinToString(" • "), color = Color(0xFF38BDF8), style = MaterialTheme.typography.labelSmall)
+                    Text("Vit ${st.speed} • Courage ${st.courage} • Santé ${st.health} • Déf ${st.defenseDie.uppercase()}", color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    if (st.keywords.isNotEmpty()) Text(st.keywords.joinToString(" • "), color = LegionColors.Info, style = MaterialTheme.typography.labelSmall)
                     st.weapons.forEach { w -> Text("${w.name} • portée ${w.rangeMin}-${w.rangeMax} • R${w.red} N${w.black} B${w.white}", color = Color(0xFFE5EAF0), style = MaterialTheme.typography.bodySmall) }
                 }
                 val armaStats = remember(sel.id) {
                     if (sel.gameSystem == GameSystem.ARMADA_V15) ArmadaStatsParser.parse(sel.shipStats, sel.kind) else null
                 }
                 armaStats?.let { st ->
-                    Text("Coque ${st.hull} • Vitesse ${st.maxSpeed} • Escadron ${st.squadron} • CMD ${st.command}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodyMedium)
-                    Text("Boucliers A${st.shieldFront} / AR${st.shieldRear} / Bâb${st.shieldPort} / Tri${st.shieldStarboard}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall)
+                    Text("Coque ${st.hull} • Vitesse ${st.maxSpeed} • Escadron ${st.squadron} • CMD ${st.command}", color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    Text("Boucliers A${st.shieldFront} / AR${st.shieldRear} / Bâb${st.shieldPort} / Tri${st.shieldStarboard}", color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
                 }
                 val rules = remember(sel.id) {
                     sel.effectText?.takeIf { it.isNotBlank() }
@@ -105,22 +106,22 @@ fun SearchScreen(
                         ?: sel.rulesText?.takeIf { it.isNotBlank() && !it.trim().startsWith("{") }
                 }
                 rules?.let {
-                    Text(stringResource(R.string.card_rules), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.card_rules), color = LegionColors.Accent, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     Text(it, color = Color(0xFFE5EAF0), style = MaterialTheme.typography.bodySmall)
                 }
                 if (variants.size > 1) {
-                    Text(stringResource(R.string.variants, variants.size), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.variants, variants.size), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
                     variants.forEach { v ->
                         Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (v.id == sel.id) Color(0xFF2A3A4A) else Color(0xFF192330)).clickable(role = Role.Button, onClickLabel = stringResource(R.string.variants, variants.size)) { selected = v }.padding(10.dp),
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (v.id == sel.id) LegionColors.Border else Color(0xFF192330)).clickable(role = Role.Button, onClickLabel = stringResource(R.string.variants, variants.size)) { selected = v }.padding(10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(v.displayName(), color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text("${kindLabel(v)} • ${gameLabel(v)}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall)
+                                Text("${kindLabel(v)} • ${gameLabel(v)}", color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
                             }
-                            Text("${v.points} pts", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text("${v.points} pts", color = LegionColors.Accent, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -138,13 +139,13 @@ private fun SearchResultRow(card: CardDefinition, onClick: () -> Unit) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(card.displayName(), color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(kindLabel(card), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    Text(gameLabel(card), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall)
+                    Text(kindLabel(card), color = LegionColors.Accent, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text(gameLabel(card), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Text("${card.points} pts", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text("${card.points} pts", color = LegionColors.Accent, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(6.dp))
-            Text("\u203A", color = Color(0xFF8A99A8), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("\u203A", color = LegionColors.TextTertiary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
     }
 }

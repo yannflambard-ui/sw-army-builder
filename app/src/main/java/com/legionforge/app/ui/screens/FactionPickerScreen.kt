@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +52,7 @@ fun FactionPickerScreen(system: GameSystem, onFactionSelected: (String) -> Unit,
     }.groupBy({ it.first }, { it.second })
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.choose_faction)) }) }) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item { Text(system.label(), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelLarge) }
+            item { Text(system.label(), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge) }
             items(groups.keys.sorted(), key = { it }) { faction ->
                 val count = groups[faction]?.count { it.kind == if (system == GameSystem.LEGION_V2) com.legionforge.app.data.model.CardKind.LEGION_UNIT else com.legionforge.app.data.model.CardKind.ARMADA_SHIP } ?: 0
                 Card(onClick = { onFactionSelected(faction) }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF192331))) {
@@ -63,20 +64,20 @@ fun FactionPickerScreen(system: GameSystem, onFactionSelected: (String) -> Unit,
                         )
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(faction.displayName(), style = MaterialTheme.typography.titleLarge, color = Color.White)
-                            Text(if (system == GameSystem.LEGION_V2) stringResource(R.string.faction_count_units, count) else stringResource(R.string.faction_count_ships, count), color = Color(0xFFFFC857))
+                            Text(if (system == GameSystem.LEGION_V2) stringResource(R.string.faction_count_units, count) else stringResource(R.string.faction_count_ships, count), color = LegionColors.Accent)
                         }
                     }
                 }
             }
             if (cards.isEmpty()) {
     if (loading) {
-        item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp), color = Color(0xFFFFC857)) }
+        item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp), color = LegionColors.Accent) }
         item { Text(stringResource(R.string.loading_catalog), color = Color.LightGray) }
     }
     if (error != null) {
-        item { Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF3B2224))) {
+        item { Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = LegionColors.DangerSurface)) {
             Column(Modifier.padding(12.dp)) {
-                Text(stringResource(R.string.catalog_error), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.catalog_error), color = LegionColors.Accent, style = MaterialTheme.typography.labelMedium)
                 Text(error ?: "", color = Color(0xFFFFC7B7), style = MaterialTheme.typography.bodySmall)
             }
         } }

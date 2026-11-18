@@ -1,0 +1,80 @@
+name: Release AAB (Google Play)
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: 'Notes de release (optionnel)'
+        required: false
+        default: ''
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>&1 | tail -5
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      # Le keystore de release est UNIQUE et doit être conservé précieusement :
+      # sans lui, aucune mise à jour future sur le Play Store n'est possible.
+      # Secrets requis (à configurer dans Settings > Secrets > Actions) :
+      #   RELEASE_KEYSTORE_B64   : keystore .jks encodé en base64
+      #   RELEASE_STORE_PASSWORD : mot de passe du store
+      #   RELEASE_KEY_ALIAS      : alias de la clé
+      #   RELEASE_KEY_PASSWORD   : mot de passe de la clé
+      - name: Decode release keystore
+        env:
+          KS: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+          SP: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KA: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KP: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KS" ] || [ -z "$SP" ] || [ -z "$KA" ] || [ -z "$KP" ]; then
+            echo "::error::Secrets de signature release manquants (RELEASE_KEYSTORE_B64, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD)."
+            exit 1
+          fi
+          echo "$KS" | base64 -d > app/release-keystore.jks
+          cat > app/release-keystore.properties <<EOF
+          storeFile=release-keystore.jks
+          storePassword=$SP
+          keyAlias=$KA
+          keyPassword=$KP
+          EOF
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Build signed release AAB
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Verify AAB is signed
+        run: |
+          AAB=$(find app/build/outputs/bundle/release -name '*.aab' | head -1)
+          echo "AAB: $AAB"
+          test -s "$AAB"
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: legion-forge-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+
+      # Le téléversement Google Play (fastlane supply / gh api) nécessite les credentials
+      # du compte Play Console (service account JSON). À configurer quand fournis.
+      # - name: Upload to Play Store
+      #   ...

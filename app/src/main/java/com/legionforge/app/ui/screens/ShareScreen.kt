@@ -1,4 +1,5 @@
 package com.legionforge.app.ui.screens
+import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -44,28 +45,28 @@ fun ShareScreen(
         TopAppBar(
             title = { Text(stringResource(R.string.share_title), style = MaterialTheme.typography.titleMedium) },
             navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.back)) } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0E15))
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = LegionColors.Background)
         )
     }) { pad ->
-        Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF111827), Color(0xFF080B12)))).padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(LegionColors.Surface, Color(0xFF080B12)))).padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // Choix du mode : Hôte ou Client
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { runWithPermission { vm.startHost() } }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (mode == ShareMode.ADVERTISING) Color(0xFFFFC857) else Color(0xFF1A2330))) {
-                    Text(stringResource(R.string.share_host), color = if (mode == ShareMode.ADVERTISING) Color(0xFF0A0E15) else Color.White, fontWeight = FontWeight.Bold)
+                Button(onClick = { runWithPermission { vm.startHost() } }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (mode == ShareMode.ADVERTISING) LegionColors.Accent else LegionColors.SurfaceRaised)) {
+                    Text(stringResource(R.string.share_host), color = if (mode == ShareMode.ADVERTISING) LegionColors.Background else Color.White, fontWeight = FontWeight.Bold)
                 }
-                Button(onClick = { runWithPermission { vm.startClient() } }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (mode == ShareMode.DISCOVERING) Color(0xFFFFC857) else Color(0xFF1A2330))) {
-                    Text(stringResource(R.string.share_client), color = if (mode == ShareMode.DISCOVERING) Color(0xFF0A0E15) else Color.White, fontWeight = FontWeight.Bold)
+                Button(onClick = { runWithPermission { vm.startClient() } }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (mode == ShareMode.DISCOVERING) LegionColors.Accent else LegionColors.SurfaceRaised)) {
+                    Text(stringResource(R.string.share_client), color = if (mode == ShareMode.DISCOVERING) LegionColors.Background else Color.White, fontWeight = FontWeight.Bold)
                 }
             }
 
             // Statut
             when (mode) {
-                ShareMode.ADVERTISING -> StatusLine(stringResource(R.string.share_hosting), Color(0xFFFFC857))
+                ShareMode.ADVERTISING -> StatusLine(stringResource(R.string.share_hosting), LegionColors.Accent)
                 ShareMode.DISCOVERING -> StatusLine(stringResource(R.string.share_discovering), Color(0xFF4FC3F7))
-                ShareMode.CONNECTED -> StatusLine(stringResource(R.string.share_connected), Color(0xFF77D9A7))
+                ShareMode.CONNECTED -> StatusLine(stringResource(R.string.share_connected), LegionColors.Success)
                 ShareMode.IDLE -> StatusLine("—", Color(0xFF8F9BAD))
             }
-            error?.let { StatusLine(it, Color(0xFFFF6B6B)) }
+            error?.let { StatusLine(it, LegionColors.Danger) }
 
             // Client : liste des hôtes découverts
             if (mode == ShareMode.DISCOVERING) {
@@ -73,10 +74,10 @@ fun ShareScreen(
                     Text(stringResource(R.string.share_no_endpoints), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
                 }
                 endpoints.forEach { ep ->
-                    Card(onClick = { runWithPermission { vm.connectTo(ep.endpointId) } }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2330))) {
+                    Card(onClick = { runWithPermission { vm.connectTo(ep.endpointId) } }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                         Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text(ep.name, color = Color.White, fontWeight = FontWeight.Bold)
-                            Text(stringResource(R.string.share_connect), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.share_connect), color = LegionColors.Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -84,20 +85,20 @@ fun ShareScreen(
 
             // Connecté : envoyer la liste
             if (mode == ShareMode.CONNECTED) {
-                Button(onClick = { vm.shareList(list, entries) }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFC857))) {
-                    Text(if (sent) stringResource(R.string.share_sent) else stringResource(R.string.share_send), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
+                Button(onClick = { vm.shareList(list, entries) }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = LegionColors.Accent)) {
+                    Text(if (sent) stringResource(R.string.share_sent) else stringResource(R.string.share_send), color = LegionColors.Background, fontWeight = FontWeight.Bold)
                 }
             }
 
             // Liste reçue : importer
             received?.let { payload ->
-                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A2A))) {
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SuccessSurface)) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(R.string.share_received), color = Color(0xFF77D9A7), fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.share_received), color = LegionColors.Success, fontWeight = FontWeight.Bold)
                         Text((payload.name as String?) ?: "", color = Color.White, style = MaterialTheme.typography.titleSmall)
                         Text("${payload.gameSystem} • ${payload.factionId} • ${payload.pointsLimit} pts • ${(payload.entries as List<ShareEntry>?)?.size ?: 0} entrées", color = Color(0xFF8F9BAD), fontSize = 11.sp)
-                        Button(onClick = { onImport(payload); vm.clearReceived() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF77D9A7))) {
-                            Text(stringResource(R.string.share_import), color = Color(0xFF0A0E15), fontWeight = FontWeight.Bold)
+                        Button(onClick = { onImport(payload); vm.clearReceived() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = LegionColors.Success)) {
+                            Text(stringResource(R.string.share_import), color = LegionColors.Background, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -106,7 +107,7 @@ fun ShareScreen(
             Spacer(Modifier.weight(1f))
             if (mode != ShareMode.IDLE) {
                 OutlinedButton(onClick = { vm.stop() }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.share_stop), color = Color(0xFFFF6B6B))
+                    Text(stringResource(R.string.share_stop), color = LegionColors.Danger)
                 }
             }
         }
