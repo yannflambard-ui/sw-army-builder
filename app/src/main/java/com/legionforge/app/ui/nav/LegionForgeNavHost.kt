@@ -144,6 +144,51 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
         composable(Routes.TABLETOP, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable
             androidx.compose.runtime.LaunchedEffect(lid) { vm.openList(lid) }
+
+            // ── Tabletop Legion : écran dédié, plateau de visualisation au-dessus du Play ──
+            if (vm.currentList.value?.gameSystem == com.legionforge.app.data.model.GameSystem.LEGION_V2.name) {
+                val legionCtx = androidx.compose.ui.platform.LocalContext.current.applicationContext
+                val legionTokenMap = remember {
+                    try {
+                        val txt = legionCtx.assets.open("legion_tokens/token_map.json").bufferedReader().use { it.readText() }
+                        val type = object : com.google.gson.reflect.TypeToken<Map<String, String>>() {}.type
+                        com.google.gson.Gson().fromJson<Map<String, String>>(txt, type) ?: emptyMap()
+                    } catch (_: Exception) { emptyMap<String, String>() }
+                }
+                val legionEntries = vm.entries.value.filter { it.parentInstanceId == null && it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT }
+                val legionPawns = legionEntries.mapIndexed { i, e ->
+                    val st = com.legionforge.app.ui.screens.LegionStatsParser.parse(e.card.legionStats)
+                    val isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")
+                    val rank = e.card.legionRank?.name ?: "CORPS"
+                    val baseSize = when (rank) {
+                        "HEAVY", "SPECIAL_FORCES" -> "large"
+                        "COMMANDER", "OPERATIVE" -> "medium"
+                        else -> "small"
+                    }
+                    com.legionforge.app.ui.screens.LegionPawn(
+                        id = e.instanceId,
+                        name = e.card.name,
+                        xMm = ((legionEntries.size - 1) - i * 1f) * 30f - (legionEntries.size - 1) * 30f / 2f,
+                        yMm = if (isOpp) -120f else 120f,
+                        headingDeg = if (isOpp) 180f else 0f,
+                        baseSize = baseSize,
+                        maxWounds = st?.health ?: 1,
+                        wounds = st?.health ?: 1,
+                        speed = st?.speed ?: 1,
+                        isOpp = isOpp,
+                        canRotate = baseSize != "small",
+                        imagePath = legionTokenMap[e.card.id]?.let { "legion_tokens/$it" } ?: e.card.imagePath(),
+                    )
+                }
+                com.legionforge.app.ui.screens.LegionTabletopScreen(
+                    pawns = legionPawns,
+                    round = 1,
+                    onBack = { navController.popBackStack() },
+                    onOpenPlay = { id -> navController.navigate(Routes.cardDetail(lid, id)) },
+                )
+                return@composable
+            }
+
             val ships = vm.entries.value.filter { it.parentInstanceId == null && (it.card.kind.name == "ARMADA_SHIP" || it.card.kind.name == "ARMADA_SQUADRON") }
             val playSyncVmTabletop: PlaySyncViewModel = viewModel()
             val appCtxT = androidx.compose.ui.platform.LocalContext.current.applicationContext
