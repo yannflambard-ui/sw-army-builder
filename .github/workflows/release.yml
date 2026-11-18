@@ -30,34 +30,24 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      # Le keystore de release est UNIQUE et doit être conservé précieusement :
-      # sans lui, aucune mise à jour future sur le Play Store n'est possible.
-      # Secrets requis (à configurer dans Settings > Secrets > Actions) :
-      #   RELEASE_KEYSTORE_B64   : keystore .jks encodé en base64
-      #   RELEASE_STORE_PASSWORD : mot de passe du store
-      #   RELEASE_KEY_ALIAS      : alias de la clé
-      #   RELEASE_KEY_PASSWORD   : mot de passe de la clé
-      - name: Decode release keystore
+      # Keystore stable = même clé que l'APK déjà diffusé sur le Drive.
+      # Secret LEGIONFORGE_KEYSTORE déjà présent dans le repo : aucun ajout nécessaire.
+      - name: Decode stable signing keystore
         env:
-          KS: ${{ secrets.RELEASE_KEYSTORE_B64 }}
-          SP: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          KA: ${{ secrets.RELEASE_KEY_ALIAS }}
-          KP: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KS: ${{ secrets.LEGIONFORGE_KEYSTORE }}
         run: |
-          if [ -z "$KS" ] || [ -z "$SP" ] || [ -z "$KA" ] || [ -z "$KP" ]; then
-            echo "::error::Secrets de signature release manquants (RELEASE_KEYSTORE_B64, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD)."
+          if [ -z "$KS" ]; then
+            echo "::error::Secret LEGIONFORGE_KEYSTORE manquant."
             exit 1
           fi
-          echo "$KS" | base64 -d > app/release-keystore.jks
-          cat > app/release-keystore.properties <<EOF
-          storeFile=release-keystore.jks
-          storePassword=$SP
-          keyAlias=$KA
-          keyPassword=$KP
-          EOF
+          echo "$KS" | base64 -d > app/keystore.jks
+          test -s app/keystore.jks
 
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
+
+      - name: Verify UI snapshots (Roborazzi)
+        run: ./gradlew :app:verifyRoborazziDebug --no-daemon
 
       - name: Build signed release AAB
         run: ./gradlew bundleRelease --no-daemon
@@ -67,6 +57,7 @@ jobs:
           AAB=$(find app/build/outputs/bundle/release -name '*.aab' | head -1)
           echo "AAB: $AAB"
           test -s "$AAB"
+          keytool -list -printcert -jarfile "$AAB" | grep -i 'Owner:' | head -1
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
@@ -74,7 +65,6 @@ jobs:
           name: legion-forge-release-aab
           path: app/build/outputs/bundle/release/*.aab
 
-      # Le téléversement Google Play (fastlane supply / gh api) nécessite les credentials
-      # du compte Play Console (service account JSON). À configurer quand fournis.
+      # Téléversement Play Console : à activer quand le compte de service sera fourni.
       # - name: Upload to Play Store
       #   ...

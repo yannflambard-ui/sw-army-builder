@@ -35,27 +35,16 @@ android {
                 keyPassword = "legionforge2026"
             }
         }
-        // Signature RELEASE pour le Google Play : keystore + credentials injectés par le
-        // workflow via release-keystore.properties (gitignored). NE JAMAIS committer de secret.
-        create("release") {
-            val propsFile = file("release-keystore.properties")
-            if (propsFile.exists()) {
-                val props = Properties().apply { load(propsFile.inputStream()) }
-                storeFile = file(props.getProperty("storeFile"))
-                storePassword = props.getProperty("storePassword")
-                keyAlias = props.getProperty("keyAlias")
-                keyPassword = props.getProperty("keyPassword")
-            }
-        }
+        // Signature RELEASE pour le Google Play : même keystore stable que l'APK
+        // diffusé (décrypté depuis LEGIONFORGE_KEYSTORE dans la CI). Indispensable
+        // pour que le Play Store accepte les mises à jour. Aucun secret nouveau.
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            if (file("release-keystore.properties").exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("stable")
         }
         debug {
             signingConfig = signingConfigs.getByName("stable")
