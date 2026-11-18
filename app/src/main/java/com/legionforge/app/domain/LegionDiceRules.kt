@@ -31,6 +31,17 @@ object LegionDiceRules {
             listOf("Hit", "Crit", "Surge", "Vide", "Vide", "Vide", "Vide", "Vide")
     }
 
+    /**
+     * Résolution simplifiée d'un pool d'attaque avec couvert (rulebook:2268-2272) :
+     * chaque niveau de couvert annule 1 HIT (jamais de Crit). Les Surges ne sont
+     * PAS convertis ici (conversion = règle de carte/upgrade non modélisée).
+     */
+    fun hitsAfterCover(rolls: List<String>, cover: Int): Int {
+        val hits = rolls.count { it == "Hit" }
+        val crits = rolls.count { it == "Crit" }
+        return (hits - cover.coerceAtLeast(0)).coerceAtLeast(0) + crits
+    }
+
     /** Nombre de faces du dé (8 attaque, 6 défense). */
     fun sides(mode: String): Int = if (mode == "defense") 6 else 8
 

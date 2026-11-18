@@ -160,19 +160,42 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     } catch (_: Exception) { emptyMap<String, String>() }
                 }
                 val legionEntries = vm.entries.value.filter { it.parentInstanceId == null && it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT }
-                val legionPawns = legionEntries.mapIndexed { i, e ->
+                // ── Adversaire 2J (Nearby) ou solo : fusionné dans le plateau ──
+                val legionSyncVm: PlaySyncViewModel = viewModel()
+                val legionOppJson by legionSyncVm.opponentListJson.collectAsState()
+                val legionSoloOpp by vm.soloOppEntries.collectAsState()
+                val legionOppEntries = remember(legionOppJson, vm.cards.value) {
+                    if (legionOppJson.isNullOrBlank()) emptyList() else {
+                        val opp = try {
+                            com.google.gson.Gson().fromJson(legionOppJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java)
+                        } catch (_: Exception) { null }
+                        (opp?.entries ?: emptyList()).mapNotNull { se ->
+                            vm.cards.value.firstOrNull { it.id == se.cardId }?.let { card ->
+                                ListEntry(
+                                    instanceId = se.instanceId?.let { "B:$it" } ?: "opp_${se.cardId}",
+                                    card = card,
+                                    parentInstanceId = null,
+                                    quantity = se.quantity,
+                                )
+                            }
+                        }.filter { it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT }
+                    }
+                }
+                val legionSoloEntries = legionSoloOpp.filter { it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT && it.parentInstanceId == null }
+                val allLegionEntries = legionEntries + legionOppEntries.ifEmpty { legionSoloEntries }
+                val legionPawns = allLegionEntries.mapIndexed { i, e ->
                     val st = com.legionforge.app.ui.screens.LegionStatsParser.parse(e.card.legionStats)
                     val isOpp = e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")
-                    // Taille de socle par TYPE d'unité (rulebook:298-303) : seuls les
-                    // véhicules/créatures/emplacements ont des socles crantés ; les
-                    // troopers (même commandants) sont sur petits socles ronds.
-                    val kw = st?.keywords.orEmpty().map { it.lowercase() }
-                    val notched = kw.any { k -> k.contains("vehicle") || k.contains("creature") || k.contains("emplacement") || k.contains("heavy trooper") }
-                    val baseSize = if (notched) "large" else "small"
+                    // Socle : règle officielle rulebook:298-303 via cardSubtype.
+                    // Seuls trooper/clone trooper/droid trooper/wookiee trooper sont
+                    // sur petits socles ; TOUT le reste est cranté (mandalorien,
+                    // emplacement, créature, véhicule...).
+                    val baseSize = if (com.legionforge.app.domain.LegionTabletopGeometry
+                        .isNotchedBase(e.card.cardSubtype)) "large" else "small"
                     com.legionforge.app.ui.screens.LegionPawn(
                         id = e.instanceId,
                         name = e.card.name,
-                        xMm = ((legionEntries.size - 1) - i * 1f) * 30f - (legionEntries.size - 1) * 30f / 2f,
+                        xMm = (i - (allLegionEntries.size - 1) / 2f) * 30f,
                         yMm = if (isOpp) -120f else 120f,
                         headingDeg = if (isOpp) 180f else 0f,
                         baseSize = baseSize,
@@ -185,7 +208,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     )
                 }
                 // État de plateau local : les interactions ne sont plus des no-op.
-                // (La synchronisation 2J complète via PlaySyncViewModel reste une dette documentée.)
+                // L'adversaire est fusionné via PlaySyncViewModel (Nearby) ou la liste
+                // solo. La persistance des positions x/y/heading reste à faire.
                 var legionState by remember(lid) { mutableStateOf(legionPawns) }
                 var legionRound by remember(lid) { mutableIntStateOf(1) }
                 LaunchedEffect(legionPawns) { legionState = legionPawns }
@@ -198,6 +222,14 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     onActivate = { id -> legionState = legionState.map { if (it.id == id) it.copy(activated = !it.activated) else it } },
                     onCoverChange = { id, c -> legionState = legionState.map { if (it.id == id) it.copy(cover = c.coerceIn(0, 2)) else it } },
                     onRoundChange = { legionRound = it },
+                    onWoundsChange = { id, w ->
+                        legionState = legionState.map { p ->
+                            if (p.id == id) {
+                                val nw = w.coerceIn(0, p.maxWounds)
+                                p.copy(wounds = nw, defeated = nw <= 0)
+                            } else p
+                        }
+                    },
                 )
                 return@composable
             }

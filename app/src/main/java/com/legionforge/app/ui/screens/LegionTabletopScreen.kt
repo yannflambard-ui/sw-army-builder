@@ -38,6 +38,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import com.legionforge.app.domain.LegionTabletopGeometry
 import com.legionforge.app.ui.theme.LegionColors
 import com.legionforge.app.ui.theme.LegionDims
@@ -89,6 +91,7 @@ fun LegionTabletopScreen(
     onCoverChange: (String, Int) -> Unit,
     onMove: (String, Float, Float, Float) -> Unit,
     onRoundChange: (Int) -> Unit,
+    onWoundsChange: (String, Int) -> Unit,
 ) {
     var selectedId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
@@ -109,6 +112,7 @@ fun LegionTabletopScreen(
     // Conversion plateau (mm, centré 0,0) -> écran (px).
     // Centre du viewport en px (millieu de l'ecran), resolu apres mesure.
     var viewCenter by remember { mutableStateOf(Offset.Zero) }
+    var viewSize by remember { mutableStateOf(IntSize.Zero) }
     fun effPan(): Offset = pan ?: run {
         if (pawns.isEmpty()) viewCenter else Offset(
             viewCenter.x - (pawns.maxOf { it.xMm } + pawns.minOf { it.xMm }) / 2f * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
@@ -124,12 +128,23 @@ fun LegionTabletopScreen(
         (at.y - effPan().y) / (LegionTabletopGeometry.LEGION_PX_PER_MM * scale),
     )
 
+    fun fitScale(widthPx: Int, heightPx: Int): Float {
+        if (pawns.isEmpty()) return 2.2f
+        val padMm = 45f
+        val spanX = (pawns.maxOf { it.xMm } - pawns.minOf { it.xMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
+        val spanY = (pawns.maxOf { it.yMm } - pawns.minOf { it.yMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
+        return minOf(widthPx.toFloat() / spanX, heightPx.toFloat() / spanY).coerceIn(0.6f, 4f)
+    }
+
     Box(Modifier.fillMaxSize().background(LegionColors.Background)) {
         // ── Plateau ──────────────────────────────────────────────────────────
         val textMeasurer = rememberTextMeasurer()
         Canvas(
             Modifier.fillMaxSize().onSizeChanged { sz ->
                 viewCenter = Offset(sz.width / 2f, sz.height / 2f)
+                viewSize = sz
+                // FIT automatique au contenu : aucun pion hors champ, même en 360x640.
+                if (pan == null) scale = fitScale(sz.width, sz.height)
             }.pointerInput(pawns, scale, effPan()) {
                 detectTapGestures { at ->
                     val hit = pawns.lastOrNull { p ->
@@ -198,7 +213,7 @@ fun LegionTabletopScreen(
                 }
                 IconButton(
                     onClick = {
-                        scale = 2.2f; pan = null
+                        pan = null; scale = fitScale(viewSize.width, viewSize.height)
                         selectedId = null; targetId = null
                         tool = LegionTool.SELECT; measureEnd = null; showDice = false
                     },
@@ -222,6 +237,8 @@ fun LegionTabletopScreen(
                     Text(p.name, color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     Text(stringResource(R.string.tabletop_wounds, p.wounds, p.maxWounds, p.speed, p.baseSize), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SmallAction("−", false) { onWoundsChange(p.id, p.wounds - 1) }
+                        SmallAction("+", false) { onWoundsChange(p.id, p.wounds + 1) }
                         SmallAction(stringResource(R.string.tabletop_activate), p.activated) { onActivate(p.id) }
                         if (p.canRotate) SmallAction(stringResource(R.string.tabletop_rotate), false) { onMove(p.id, p.xMm, p.yMm, (p.headingDeg + 90f) % 360f) }
                         if (!p.defeated && p.baseSize != "small") SmallAction(stringResource(R.string.tabletop_arc), tool == LegionTool.ARC) { tool = if (tool == LegionTool.ARC) LegionTool.SELECT else LegionTool.ARC }
@@ -236,7 +253,10 @@ fun LegionTabletopScreen(
         }
 
         // ── Feuille de dés compacte ──────────────────────────────────────────
-        if (showDice) LegionCompactDiceSheet(onClose = { showDice = false })
+        if (showDice) LegionCompactDiceSheet(
+            cover = pawns.firstOrNull { it.id == selectedId }?.cover ?: 0,
+            onClose = { showDice = false },
+        )
 
         // ── Aide mesure ──────────────────────────────────────────────────────
         if (tool == LegionTool.RANGE && target != null && selected != null) {
@@ -369,7 +389,7 @@ private fun DrawScope.drawLegionBoard(
         )
         drawText(
             textMeasurer = textMeasurer,
-            text = "${p.name} ${p.wounds}/${p.maxWounds}",
+            text = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " C${p.cover}" else "",
             topLeft = Offset(c.x - r + 3.dp.toPx(), c.y + r + 5.dp.toPx()),
             style = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
                 color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary),
@@ -384,7 +404,7 @@ private fun DrawScope.drawLegionBoard(
 /** Feuille de dés compacte (peek), sans clavier ni saisie numérique. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LegionCompactDiceSheet(onClose: () -> Unit) {
+private fun LegionCompactDiceSheet(cover: Int, onClose: () -> Unit) {
     var mode by remember { mutableStateOf("attack") }
     var red by remember { mutableIntStateOf(2) }
     var black by remember { mutableIntStateOf(0) }
@@ -395,6 +415,7 @@ private fun LegionCompactDiceSheet(onClose: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.tabletop_roll_dice), color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(stringResource(R.string.tabletop_dice_note), color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
+            if (cover > 0) Text(stringResource(R.string.tabletop_cover, cover), color = LegionColors.Warning, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(stringResource(R.string.tabletop_attack), mode == "attack") { mode = "attack"; black = 0; lastRoll = emptyList() }
                 FilterChip(stringResource(R.string.tabletop_defense), mode == "defense") { mode = "defense"; black = 0; lastRoll = emptyList() }
@@ -420,8 +441,11 @@ private fun LegionCompactDiceSheet(onClose: () -> Unit) {
             ) { Text(stringResource(R.string.tabletop_roll), fontSize = LegionType.Body, fontWeight = FontWeight.Bold) }
             if (lastRoll.isNotEmpty()) {
                 Text(stringResource(R.string.tabletop_results, lastRoll.joinToString(" · ")), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
-                val successes = lastRoll.count { com.legionforge.app.domain.LegionDiceRules.isSuccess(mode, it) }
+                val successes = if (mode == "attack")
+                    com.legionforge.app.domain.LegionDiceRules.hitsAfterCover(lastRoll, cover)
+                else lastRoll.count { com.legionforge.app.domain.LegionDiceRules.isSuccess(mode, it) }
                 Text(stringResource(R.string.tabletop_successes, successes), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                if (mode == "attack" && cover > 0) Text("Couvert appliqué : −$cover Hit(s) (− Crit)", color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
             }
         }
     }

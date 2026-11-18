@@ -33,6 +33,22 @@ object LegionTabletopGeometry {
     /** Diamètre du socle en mm. */
     fun baseDiameterMm(size: String): Float = baseRadiusMm(size) * 2f
 
+    /**
+     * Socle PTIT vs CRANTÉ — règle officielle (rulebook:298-303) :
+     * « Troopers, Clone Troopers, Droid Troopers, and Wookiee Troopers are on
+     * small bases. Everything else is on notched bases of various sizes. »
+     * Mandalorian/Emplacement/Creature Troopers et Heavy Droid Troopers sont
+     * DONC crantés (piège : le mot "trooper" ne suffit pas).
+     */
+    private val SMALL_BASE_SUBTYPES = setOf(
+        "trooper", "clone trooper", "droid trooper", "wookiee trooper",
+    )
+
+    fun isNotchedBase(cardSubtype: String?): Boolean {
+        val s = cardSubtype?.trim()?.lowercase() ?: return true
+        return s !in SMALL_BASE_SUBTYPES
+    }
+
     /** Total de blessures = seuil par figurine × effectif (rulebook:473-476). */
     fun totalWounds(health: Int, miniCount: Int): Int =
         health.coerceAtLeast(1) * miniCount.coerceAtLeast(1)
@@ -62,10 +78,15 @@ object LegionTabletopGeometry {
         return if (abs(value - whole) < 1e-4f) "${whole}\"" else "${value}\""
     }
 
-    /** Bande de portée 1..N d'une distance en mm (1" = 25,4 mm). 0 si au contact. */
+    /**
+     * Bande de portée 1..N. Le ruler Legion est fait de segments de 6 POUCES
+     * (rulebook range ruler ; legion.takras.net/range) : R1 = 0-6", R2 = 6-12",
+     * R3 = 12-18". PAS 1 pouce par bande. 0 si au contact.
+     */
     fun rangeBand(mm: Float): Int {
         val inches = mmToInches(mm)
-        return kotlin.math.ceil(inches.toDouble()).toInt().coerceAtLeast(0)
+        if (inches <= 0f) return 0
+        return kotlin.math.ceil(inches / 6.0).toInt().coerceAtLeast(1)
     }
 
     /**

@@ -29,12 +29,14 @@ class LegionTabletopGeometryTest {
         assertEquals(0f, LegionTabletopGeometry.edgeDistanceMm(0f, 0f, 12.5f, 25f, 0f, 12.5f), 0.001f)
     }
 
-    @Test fun `bandes de portee`() {
+    @Test fun `bandes de portee 6 pouces par segment`() {
         assertEquals(0, LegionTabletopGeometry.rangeBand(0f))
-        assertEquals(1, LegionTabletopGeometry.rangeBand(25.4f))
-        assertEquals(2, LegionTabletopGeometry.rangeBand(50.8f))
-        assertEquals(6, LegionTabletopGeometry.rangeBand(152.4f))
-        assertEquals(7, LegionTabletopGeometry.rangeBand(152.5f))
+        assertEquals(1, LegionTabletopGeometry.rangeBand(25.4f))       // 1"
+        assertEquals(1, LegionTabletopGeometry.rangeBand(152.4f))     // 6" → R1
+        assertEquals(2, LegionTabletopGeometry.rangeBand(152.5f))     // >6" → R2
+        assertEquals(2, LegionTabletopGeometry.rangeBand(304.8f))     // 12" → R2
+        assertEquals(3, LegionTabletopGeometry.rangeBand(304.9f))     // >12" → R3
+        assertEquals(3, LegionTabletopGeometry.rangeBand(457.2f))     // 18" → R3
     }
 
     @Test fun `arrondi au demi pouce`() {
@@ -110,7 +112,38 @@ class LegionDiceRulesTest {
         assertEquals(2, LegionTabletopGeometry.totalWounds(2, 1))
     }
 
-    @Test fun `portee segment inches entiers`() {
-        assertEquals(2, LegionTabletopGeometry.rangeBand(38.1f))
+    @Test fun `portee segment 6 pouces`() {
+        assertEquals(1, LegionTabletopGeometry.rangeBand(38.1f)) // 1,5" toujours dans R1
+    }
+}
+
+/** Socles : règle officielle rulebook:298-303 (liste blanche des petits socles). */
+class LegionBaseSizeTest {
+    @Test fun `troopers sur petits socles`() {
+        listOf("trooper", "Clone Trooper", "droid trooper", "Wookiee Trooper").forEach {
+            assertFalse("$it doit etre un petit socle", LegionTabletopGeometry.isNotchedBase(it))
+        }
+    }
+
+    @Test fun `tout le reste est crante`() {
+        listOf("repulsor vehicle", "ground vehicle", "emplacement trooper",
+               "creature trooper", "heavy droid trooper", "mandalorian trooper", null).forEach {
+            assertTrue("$it doit etre crante", LegionTabletopGeometry.isNotchedBase(it))
+        }
+    }
+}
+
+/** Couvert = annulation de Hits, pas de Crits (rulebook:2268-2272). */
+class LegionCoverPoolTest {
+    @Test fun `couvert annule hits pas crits`() {
+        val rolls = listOf("Hit", "Hit", "Hit", "Crit", "Surge")
+        assertEquals(4, LegionDiceRules.hitsAfterCover(rolls, 0))
+        assertEquals(3, LegionDiceRules.hitsAfterCover(rolls, 1))
+        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 2))
+    }
+
+    @Test fun `couvert ne peut pas annuler les crits`() {
+        val rolls = listOf("Hit", "Crit", "Crit")
+        assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 5))
     }
 }

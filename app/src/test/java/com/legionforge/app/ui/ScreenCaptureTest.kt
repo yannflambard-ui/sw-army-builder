@@ -103,7 +103,7 @@ class LegionTabletopCaptureTest {
             LegionForgeTheme {
                 LegionTabletopScreen(pawns = pawns, round = 2, unitsLeft = 5,
                     onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
-                    onMove = { _, _, _, _ -> }, onRoundChange = {})
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> })
             }
         }
     }
@@ -126,7 +126,7 @@ class LegionTabletopCaptureSmallTest {
             LegionForgeTheme {
                 LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
                     onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
-                    onMove = { _, _, _, _ -> }, onRoundChange = {})
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> })
             }
         }
     }
