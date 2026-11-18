@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ master, main ]
   workflow_dispatch:
+    inputs:
+      build_aab:
+        description: 'Générer aussi l AAB signé (format Play Store)'
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build:
@@ -66,9 +72,11 @@ jobs:
 
       # ── AAB signé pour le Play Store (même keystore stable que l'APK) ──
       - name: Build signed release AAB
+        if: inputs.build_aab
         run: ./gradlew bundleRelease --no-daemon
 
       - name: Verify AAB signature
+        if: inputs.build_aab
         run: |
           AAB=$(find app/build/outputs/bundle/release -name '*.aab' | head -1)
           test -s "$AAB"
@@ -76,6 +84,7 @@ jobs:
           keytool -list -printcert -jarfile "$AAB" | grep -i 'Owner:' | head -1
 
       - name: Upload signed AAB
+        if: inputs.build_aab
         uses: actions/upload-artifact@v4
         with:
           name: legion-forge-release-aab
