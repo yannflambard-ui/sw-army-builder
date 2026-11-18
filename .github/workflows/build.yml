@@ -45,6 +45,19 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
 
+      # ── Garde-fou visuel : comparer les écrans aux goldens Roborazzi (sans appareil) ──
+      - name: Verify UI snapshots (Roborazzi)
+        run: ./gradlew :app:verifyRoborazziDebug --no-daemon
+
+      - name: Upload UI snapshots + report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legion-forge-ui-snapshots
+          path: |
+            app/src/test/snapshots/*.png
+            app/build/reports/roborazzi/**
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

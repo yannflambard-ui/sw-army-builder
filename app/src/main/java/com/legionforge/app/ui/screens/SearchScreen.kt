@@ -11,6 +11,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,22 +45,31 @@ fun SearchScreen(
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(stringResource(R.string.search_title), style = MaterialTheme.typography.titleMedium) },
-            navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.back)) } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = LegionColors.Background)
         )
     }) { pad ->
-        Column(Modifier.fillMaxSize().background(LegionColors.Background).padding(pad).padding(horizontal = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxSize().background(LegionColors.Background).padding(pad).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Barre de recherche compacte
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it; vm.searchCards(it) },
                 placeholder = { Text(stringResource(R.string.search_placeholder), color = LegionColors.TextTertiary, fontSize = 12.sp) },
                 singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = LegionColors.Accent) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 16.sp)
             )
             when {
+                query.isBlank() && results.isEmpty() -> Column(
+                    Modifier.fillMaxWidth().padding(top = 48.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = LegionColors.TextTertiary, modifier = Modifier.size(48.dp))
+                    Text(stringResource(R.string.search_prompt), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodyMedium)
+                }
                 searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = LegionColors.Accent, strokeWidth = 2.dp) }
                 results.isEmpty() && query.isNotBlank() -> Text(stringResource(R.string.no_results, query), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
                 results.isNotEmpty() -> LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(bottom = 20.dp)) {

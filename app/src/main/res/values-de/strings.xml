@@ -268,4 +268,5 @@
     <string name="setup_incomplete">Battle-Deck 3+3+3 + Hand mit 7 erforderlich</string>
     <string name="card_rules">Kartenregeln</string>
     <string name="activation">Aktivierung</string>
+    <string name="search_prompt">Name, Schlüsselwort oder Regel eingeben, um alle Karten zu durchsuchen.</string>
 </resources>

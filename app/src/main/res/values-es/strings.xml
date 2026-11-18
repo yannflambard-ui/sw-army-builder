@@ -268,4 +268,5 @@
     <string name="setup_incomplete">Se requiere mazo de batalla 3+3+3 + mano de 7</string>
     <string name="card_rules">Reglas de la carta</string>
     <string name="activation">Activación</string>
+    <string name="search_prompt">Escribe un nombre, palabra clave o regla para buscar todas las cartas.</string>
 </resources>

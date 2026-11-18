@@ -25,6 +25,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,7 +62,7 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
             },
                 actions = {
                     IconButton(onClick = onSettings) {
-                        Text("\u2699", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings), tint = LegionColors.Accent)
                     }
                 })
         }) { pad ->
@@ -66,9 +70,9 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
                 // Barre de recherche compacte, bien visible
                 Card(onClick = onSearch, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("\uD83D\uDD0E", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.Search, contentDescription = null, tint = LegionColors.Accent)
                         Spacer(Modifier.width(10.dp))
-                        Text(stringResource(R.string.search_hint), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.search_hint), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -78,13 +82,13 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
                 // Accès au wiki des règles officielles
                 Card(onClick = onWiki, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("\uD83D\uDCD6", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium)
+                        Icon(Icons.Default.Info, contentDescription = null, tint = LegionColors.Accent)
                         Spacer(Modifier.width(10.dp))
-                        Text(stringResource(R.string.wiki_rules), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.wiki_rules), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             Text(stringResource(R.string.recent_lists), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge)
-            if (lists.isEmpty()) Text(stringResource(R.string.saved_lists_hint), color = Color.LightGray)
+            if (lists.isEmpty()) Text(stringResource(R.string.saved_lists_hint), color = LegionColors.TextSecondary)
             if (loading) {
                 Spacer(Modifier.height(40.dp))
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp), color = LegionColors.Accent)
@@ -103,12 +107,12 @@ fun HomeScreen(onNewList: (GameSystem) -> Unit, onOpenList: (String) -> Unit, on
                 OutlinedButton(onClick = { onOpenList(list.id) }, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.fillMaxWidth()) {
                         Text(list.name, color = Color.White)
-                        Text("${GameSystem.valueOf(list.gameSystem).label()} • ${list.factionId} • ${list.pointsLimit} pts", color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
+                        Text("${GameSystem.valueOf(list.gameSystem).label()} • ${list.factionId} • ${list.pointsLimit} pts", color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text(stringResource(R.string.offline_mode), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.offline_mode), color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -123,6 +127,8 @@ private fun CompactGameTile(title: String, subtitle: String, system: GameSystem,
                 modifier = Modifier.fillMaxWidth().height(96.dp),
                 contentScale = ContentScale.Fit
             )
+            Text(title, color = LegionColors.TextPrimary, style = MaterialTheme.typography.labelLarge)
+            Text(subtitle, color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
         }
     }
 }

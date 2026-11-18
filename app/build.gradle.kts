@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+    id("io.github.takahirom.roborazzi")
 }
 
 import java.util.Properties
@@ -14,8 +15,8 @@ android {
         applicationId = "com.legionforge.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 332
-                                                versionName = "2.56.2"
+        versionCode = 333
+                                                versionName = "2.57.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -79,6 +80,11 @@ android {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
 
+    // Roborazzi : ressources Android necessaires a stringResource/painterResource sous Robolectric.
+    testOptions {
+        unitTests { isIncludeAndroidResources = true }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -111,6 +117,11 @@ dependencies {
         implementation("com.google.android.gms:play-services-nearby:19.2.0")
 
     testImplementation("junit:junit:4.13.2")
+    // Roborazzi 1.47.0 : dernier compatible Kotlin 1.9 (1.48+ exige Kotlin 2.0).
+    testImplementation("androidx.test:core:1.6.1")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.47.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.47.0")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
