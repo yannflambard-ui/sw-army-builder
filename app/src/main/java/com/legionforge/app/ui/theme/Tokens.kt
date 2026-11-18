@@ -25,7 +25,7 @@ object LegionColors {
     // Texte
     val TextPrimary = Color(0xFFFFFFFF)
     val TextSecondary = Color(0xFF9EACBC)
-    val TextTertiary = Color(0xFF5A6A7A)
+    val TextTertiary = Color(0xFF8A99A8)
 
     // Statuts
     val Success = Color(0xFF77D9A7)

@@ -2,6 +2,8 @@ package com.legionforge.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -48,7 +50,7 @@ fun SearchScreen(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it; vm.searchCards(it) },
-                placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF5A6A7A), fontSize = 12.sp) },
+                placeholder = { Text(stringResource(R.string.search_placeholder), color = Color(0xFF8A99A8), fontSize = 12.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -56,7 +58,7 @@ fun SearchScreen(
             )
             when {
                 searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color(0xFFFFC857), strokeWidth = 2.dp) }
-                results.isEmpty() && query.isNotBlank() -> Text(stringResource(R.string.no_results, query), color = Color(0xFF5A6A7A), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
+                results.isEmpty() && query.isNotBlank() -> Text(stringResource(R.string.no_results, query), color = Color(0xFF8A99A8), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
                 results.isNotEmpty() -> LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
                     items(results) { card ->
                         SearchResultRow(card, onClick = { selected = card })
@@ -66,19 +68,51 @@ fun SearchScreen(
         }
     }
 
-    // Bottom sheet : variantes du même nom de base + fiche de la carte sélectionnée
+    // Bottom sheet : FICHE COMPLÈTE de la carte (info en 2 s) + variantes du même nom de base.
+    // Le clic sur une variante remplace la fiche affichée au lieu de refermer l'écran (cul-de-sac).
     selected?.let { sel ->
         val variants = results.filter { baseName(it) == baseName(sel) }
-        AlertDialog(
-            onDismissRequest = { selected = null },
-            containerColor = Color(0xFF192330),
-            title = { Text(baseName(sel), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        ModalBottomSheet(onDismissRequest = { selected = null }, containerColor = Color(0xFF111827)) {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+                    CardArtwork(sel, Modifier.width(96.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(sel.displayName(), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("${kindLabel(sel)} • ${gameLabel(sel)} • ${sel.points} pts", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        if (sel.unique) Text(stringResource(R.string.unique), color = Color(0xFFF59E0B), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                val ls = remember(sel.id) { LegionStatsParser.parse(sel.legionStats) }
+                ls?.let { st ->
+                    Text("Vit ${st.speed} • Courage ${st.courage} • Santé ${st.health} • Déf ${st.defenseDie.uppercase()}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodyMedium)
+                    if (st.keywords.isNotEmpty()) Text(st.keywords.joinToString(" • "), color = Color(0xFF38BDF8), style = MaterialTheme.typography.labelSmall)
+                    st.weapons.forEach { w -> Text("${w.name} • portée ${w.rangeMin}-${w.rangeMax} • R${w.red} N${w.black} B${w.white}", color = Color(0xFFE5EAF0), style = MaterialTheme.typography.bodySmall) }
+                }
+                val armaStats = remember(sel.id) {
+                    if (sel.gameSystem == GameSystem.ARMADA_V15) ArmadaStatsParser.parse(sel.shipStats, sel.kind) else null
+                }
+                armaStats?.let { st ->
+                    Text("Coque ${st.hull} • Vitesse ${st.maxSpeed} • Escadron ${st.squadron} • CMD ${st.command}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.bodyMedium)
+                    Text("Boucliers A${st.shieldFront} / AR${st.shieldRear} / Bâb${st.shieldPort} / Tri${st.shieldStarboard}", color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall)
+                }
+                val rules = remember(sel.id) {
+                    sel.effectText?.takeIf { it.isNotBlank() }
+                        ?: readableUpgradeText(sel.rulesText)
+                        ?: sel.rulesText?.takeIf { it.isNotBlank() && !it.trim().startsWith("{") }
+                }
+                rules?.let {
+                    Text(stringResource(R.string.card_rules), color = Color(0xFFFFC857), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text(it, color = Color(0xFFE5EAF0), style = MaterialTheme.typography.bodySmall)
+                }
+                if (variants.size > 1) {
                     Text(stringResource(R.string.variants, variants.size), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall)
                     variants.forEach { v ->
                         Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (v.id == sel.id) Color(0xFF2A3A4A) else Color(0xFF0A0E15)).clickable { onCardClick(v); selected = null }.padding(10.dp),
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (v.id == sel.id) Color(0xFF2A3A4A) else Color(0xFF192330)).clickable(role = Role.Button, onClickLabel = stringResource(R.string.variants, variants.size)) { selected = v }.padding(10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -90,9 +124,8 @@ fun SearchScreen(
                         }
                     }
                 }
-            },
-            confirmButton = { TextButton(onClick = { selected = null }) { Text(stringResource(R.string.close), color = Color(0xFFFFC857)) } }
-        )
+            }
+        }
     }
 }
 
@@ -111,7 +144,7 @@ private fun SearchResultRow(card: CardDefinition, onClick: () -> Unit) {
             }
             Text("${card.points} pts", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(6.dp))
-            Text("\u203A", color = Color(0xFF5A6A7A), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("\u203A", color = Color(0xFF8A99A8), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
     }
 }

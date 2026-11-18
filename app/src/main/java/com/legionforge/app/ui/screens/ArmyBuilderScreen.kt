@@ -107,18 +107,17 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                     var out = list.filter { rk == null || (if (game == GameSystem.LEGION_V2) it.legionRank?.name == rk else it.kind.name == rk) }
                         .filter { mp == null || it.points <= mp }
                         .filter { kw == null || it.name.contains(kw, ignoreCase = true) || (it.rulesText ?: "").contains(kw, ignoreCase = true) || (it.legionStats ?: "").contains(kw, ignoreCase = true) || (it.shipStats ?: "").contains(kw, ignoreCase = true) }
-                    // Filtre "Ma collection" : n'affiche que les cartes possédées. Les UPGRADES
-                    // suivent l'unité/vaisseau sélectionné (on possède sa boîte = on a ses upgrades),
-                    // donc elles ne sont filtrées que si le parent n'est pas possédé — ce cas est
-                    // déjà exclu car le parent ne serait pas dans le catalogue. On ne filtre donc que
-                    // les cartes standalone (unités/vaisseaux/escadrons/commandants).
-                    if (collectionOnly) out = out.filter {
-                        it.kind == CardKind.LEGION_UPGRADE || it.kind == CardKind.ARMADA_UPGRADE || it.id in ownedCards
-                    }
+                    // Filtre "Ma collection" : liste HONNÊTE (ROADMAP.md:4) — n'afficher que
+                    // les cartes réellement possédées (union des packs cochés + cartes individuelles).
+                    // Les upgrades NE sont PAS tous inclus par hypothèse : les boîtes partielles et
+                    // les upgrades neutres ne sont possédés que s'ils figurent dans ownedCards.
+                    if (collectionOnly) out = out.filter { it.id in ownedCards }
                     out
                 }
     // Bouton play global : actif (vert) uniquement si la liste est valide.
-    val listValid = validation.violations.isEmpty() && entries.isNotEmpty()
+    // Le validateur distingue les violations bloquantes des avertissements (ex. points_limit
+    // Armada en partie libre). Seules les violations BLOQUANTES doivent desactiver le bouton Jeu.
+    val listValid = validation.valid && entries.isNotEmpty()
     val firstPlayable = entries.firstOrNull { it.parentInstanceId == null && (it.card.kind == CardKind.LEGION_UNIT || it.card.kind == CardKind.ARMADA_SHIP) }
     Scaffold(topBar = {
         TopAppBar(title = {
@@ -261,14 +260,14 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                             Text(stringResource(R.string.filter_rank), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
                             Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 ranks.forEach { (r, abbr) ->
-                                    FilterChip(selected = filterRank == r, onClick = { filterRank = if (filterRank == r) null else r }, label = { Text(abbr, fontSize = 10.sp) })
+                                    FilterChip(selected = filterRank == r, onClick = { filterRank = if (filterRank == r) null else r }, label = { Text(abbr, fontSize = 11.sp) })
                                 }
                             }
                             HorizontalDivider(color = Color(0xFF2A3A4A), modifier = Modifier.padding(vertical = 6.dp))
                             Text(stringResource(R.string.filter_max_pts), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
                             Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 listOf(25, 50, 100).forEach { maxPts ->
-                                    FilterChip(selected = filterMaxPts == maxPts, onClick = { filterMaxPts = if (filterMaxPts == maxPts) null else maxPts }, label = { Text("≤$maxPts", fontSize = 10.sp) })
+                                    FilterChip(selected = filterMaxPts == maxPts, onClick = { filterMaxPts = if (filterMaxPts == maxPts) null else maxPts }, label = { Text("≤$maxPts", fontSize = 11.sp) })
                                 }
                             }
                             HorizontalDivider(color = Color(0xFF2A3A4A), modifier = Modifier.padding(vertical = 6.dp))
@@ -276,7 +275,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                             HorizontalDivider(color = Color(0xFF2A3A4A), modifier = Modifier.padding(vertical = 6.dp))
                             Text(stringResource(R.string.my_collection), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
                             Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FilterChip(selected = collectionOnly, onClick = { com.legionforge.app.data.repository.CollectionRepository.setCollectionOnly(!collectionOnly) }, label = { Text(stringResource(R.string.my_collection), fontSize = 11.sp) }, leadingIcon = if (collectionOnly) { { Text("\u2713", fontSize = 10.sp) } } else null)
+                                FilterChip(selected = collectionOnly, onClick = { com.legionforge.app.data.repository.CollectionRepository.setCollectionOnly(!collectionOnly) }, label = { Text(stringResource(R.string.my_collection), fontSize = 11.sp) }, leadingIcon = if (collectionOnly) { { Text("\u2713", fontSize = 11.sp) } } else null)
                                 Text("(${ownedCards.size})", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall)
                             }
                             if (filterRank != null || filterMaxPts != null || filterKeyword != null || collectionOnly) {
@@ -320,6 +319,22 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
     // Aperçu plein écran de l'image : clic sur une carte l'ouvre, clic sur l'image la referme.
     previewCard?.let { card ->
         ImagePreviewDialog(card = card, onClose = { previewCard = null })
+    }
+    // Import Nearby : alerte si des cartes étaient absentes du catalogue local (liste incomplète).
+    val missing by viewModel.importMissingCards.collectAsState()
+    if (missing.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissImportMissing() },
+            containerColor = Color(0xFF192330),
+            title = { Text("Import incomplet", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "${missing.size} carte(s) absente(s) du catalogue local n'ont pas pu être importées : ${missing.take(6).joinToString(", ")}${if (missing.size > 6) "…" else ""}. Mettez l'application à jour puis réimportez la liste.",
+                    color = Color(0xFFE5EAF0), style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = { TextButton(onClick = { viewModel.dismissImportMissing() }) { Text("OK", color = Color(0xFFFFC857)) } }
+        )
     }
 }
 
@@ -533,7 +548,7 @@ private fun CatalogCard(card: CardDefinition, entries: List<ListEntry>, preselec
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                 ) { Text("+", fontWeight = FontWeight.Bold) }
-                Text("$alreadyCount", color = if (alreadyCount > 0) Color(0xFFFFC857) else Color(0xFF5A6A7A), style = MaterialTheme.typography.labelSmall)
+                Text("$alreadyCount", color = if (alreadyCount > 0) Color(0xFFFFC857) else Color(0xFF8A99A8), style = MaterialTheme.typography.labelSmall)
             }
         }
     }

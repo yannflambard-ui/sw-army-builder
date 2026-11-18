@@ -52,7 +52,14 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             nearby.receivedPayload.collect { json ->
                 if (json != null) {
-                    _receivedList.value = try { FleetShareCodec.normalize(gson.fromJson(json, ShareListPayload::class.java)) } catch (_: Exception) { null }
+                    // Deux protocoles partagent le même canal Nearby (singleton). Une payload de
+                    // SYNCHRO 2J (PlaySyncPayload, champ "type") ne doit PAS être importée comme
+                    // une liste : sans ce garde-fou, Gson applique les défauts Kotlin et crée une
+                    // "liste reçue" vide importable. On rejette toute payload portant un "type".
+                    val isSync = try { org.json.JSONObject(json).has("type") } catch (_: Exception) { false }
+                    if (!isSync) {
+                        _receivedList.value = try { FleetShareCodec.normalize(gson.fromJson(json, ShareListPayload::class.java)) } catch (_: Exception) { null }
+                    }
                 }
             }
         }

@@ -275,7 +275,7 @@ fun TabletopScreen(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
-                Text("${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 10.sp, maxLines = 1)
+                Text("${"%.0f".format(scale * 100)}%", color = Color(0xFF9EACBC), fontSize = 11.sp, maxLines = 1)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { showDeployment = !showDeployment }) { Text(if (showDeployment) "Masquer zones" else "Zones", fontSize = 11.sp) }
@@ -479,7 +479,7 @@ fun TabletopScreen(
                         val angle = selectedTarget?.let { t -> Math.toDegrees(kotlin.math.atan2((t.xMm - sel.xMm).toDouble(), (sel.yMm - t.yMm).toDouble())).toFloat() }
                         val bag = if (selectedTarget?.isSquadron == true) sel.antiSquadron
                             else sel.attack?.sector(angle?.let { attackSectorFor(sel, it) } ?: "front")
-                        drawRangeRings(sc, scale, if (sel.isSquadron) null else bag, sel.isSquadron, false)
+                        drawRangeRings(sc, scale, if (sel.isSquadron) null else bag, sel.isSquadron, sel.snipe)
                     }
                 }
                 // Triangle de flanc attaqué (attaquant → cible)
@@ -683,10 +683,15 @@ fun TabletopScreen(
                                     if (blackDice + blueDice + redDice == 0 || blackDice > allowed.black || blueDice > allowed.blue || redDice > allowed.red) return@Button
                                     val rolls = ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
                                     currentAttackRolls.value = rolls
-                                    val hits = rolls.sumOf { it.face.squadron }
-                                    val crit = rolls.count { it.face.crit }
+                                    // TabletopPawn : isSquadron distingue escadron ( fighter ) de vaisseau.
+                                    val attackerIsShip = !att.isSquadron
+                                    val targetIsShip = !tgt.isSquadron
+                                    // RRG : le critique ne compte que vaisseau contre vaisseau (damage() le sait).
+                                    val hits = ArmadaDiceRoller.damage(rolls, attackerIsShip, targetIsShip)
+                                    val critCount = if (attackerIsShip && targetIsShip) rolls.count { it.face.crit } else 0
+                                    val critPart = if (critCount > 0) " · critiques $critCount" else ""
                                     val acc = ArmadaDiceRoller.accuracies(rolls)
-                                    attackResult = "Touches $hits · critiques $crit · précisions $acc — appliquez défense, effets et dégâts manuellement"
+                                    attackResult = "Dégâts $hits$critPart · précisions $acc — appliquez défense, effets et dégâts manuellement"
                                     com.legionforge.app.ui.viewmodel.ArmadaShotCounter.record(att.id)
                                     sheetPawnId = null
                                 }
@@ -717,10 +722,13 @@ fun TabletopScreen(
                         }
                         val rolls = currentAttackRolls.value + addition
                         currentAttackRolls.value = rolls
-                        val hits = rolls.sumOf { it.face.squadron }
-                        val crit = rolls.count { it.face.crit }
+                        val attackerIsShip = selPawn?.isSquadron == false
+                        val targetIsShip = targetPawn?.isSquadron == false
+                        val hits = ArmadaDiceRoller.damage(rolls, attackerIsShip, targetIsShip)
+                        val critCount = if (attackerIsShip && targetIsShip) rolls.count { it.face.crit } else 0
+                        val critPart = if (critCount > 0) " · critiques $critCount" else ""
                         val acc = ArmadaDiceRoller.accuracies(rolls)
-                        attackResult = "Touches $hits · critiques $crit · précisions $acc — appliquez défense, effets et dégâts manuellement"
+                        attackResult = "Dégâts $hits$critPart · précisions $acc — appliquez défense, effets et dégâts manuellement"
                     }) { Text("+$label", fontSize = 12.sp) }
                 }
             }
@@ -753,7 +761,7 @@ private fun TabletopBendMatrix(pawn: TabletopPawn, speedIdx: Int, bends: List<In
                     modifier = Modifier.weight(1f),
                 ) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
-                        Text("V$v", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("V$v", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -762,7 +770,7 @@ private fun TabletopBendMatrix(pawn: TabletopPawn, speedIdx: Int, bends: List<In
             val posMap = chart[pos - 1]
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
-                    Text("$pos", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("$pos", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 (1..maxSpeed).forEach { v ->
                     val n = posMap[v] ?: -1 // -1 = hors triangle
@@ -1238,7 +1246,12 @@ private fun tabletopEligibleDice(att: TabletopPawn, tgt: TabletopPawn, distanceM
         tgt.isSquadron -> att.antiSquadron ?: manualAnti
         else -> att.attack?.sector(sector)
     } ?: return ArmadaDiceBag()
-    if (att.isSquadron) return if (distanceMm <= SQUADRON_RANGE_MM.toDouble()) bag else ArmadaDiceBag()
+    if (att.isSquadron) {
+        // Snipe (RRG) : portée 2 avec dés NOIRS seulement. Escadron normal : portée 1.
+        val maxD = if (att.snipe) SNIPE_RANGE_MM else SQUADRON_RANGE_MM
+        if (distanceMm > maxD.toDouble()) return ArmadaDiceBag()
+        return if (att.snipe) ArmadaDiceBag(black = bag.black) else bag
+    }
     val filtered = com.legionforge.app.domain.filterPossibleShipAttackDice(
         com.legionforge.app.domain.ArmadaRangeDice(bag.black, bag.blue, bag.red), distanceMm)
     return ArmadaDiceBag(black = filtered.black, blue = filtered.blue, red = filtered.red)

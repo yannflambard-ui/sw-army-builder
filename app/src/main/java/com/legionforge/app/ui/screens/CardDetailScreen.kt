@@ -406,7 +406,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val myPip = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
         val oppPip = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
         if (myPip != null && oppPip != null) {
-            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..8).random() <= 2
+            // Regle v2 (rulebook:1415-1417) : departage au des de defense rouge (3 faces Bloc/8).
+            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..8).random() <= 3
             turn = if (myHasPrio) "own" else "opp"
         }
     }
@@ -418,13 +419,8 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     val victoryOwn = stringResource(R.string.victory_own)
     val victoryOpp = stringResource(R.string.victory_opp)
     val victoryDraw = stringResource(R.string.victory_draw)
-    LaunchedEffect(vp, oppVp, round) {
-        if (gameResult == null) {
-            if (vp >= 12 && vp > oppVp) gameResult = victoryOwn
-            else if (oppVp >= 12 && oppVp > vp) gameResult = victoryOpp
-            else if (round > 5) gameResult = when { vp > oppVp -> victoryOwn; oppVp > vp -> victoryOpp; else -> null }
-        }
-    }
+    // La victoire à 12 VP est évaluée en fin d'End Phase (dans onNextRound ci-dessous),
+    // PAS dès qu'un VP change (rulebook). Égalité 12-12 -> départage manuel (gameResult=null).
     var showCmdSheet by remember { mutableStateOf(false) }
     // Battle deck (Legion v2) : 9 cartes (3+3+3) + mission (carte révélée par catégorie).
     val battleCards = remember { loadBattleCards(legionContext) }
@@ -497,13 +493,33 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     // Au début de partie, le joueur dont l'armée a le MOINS d'unités reçoit (différence − 1)
     // jetons de passe ; passer une unité coûte 1 jeton. Armées de taille égale → 0 jeton.
     fun grantPassPool() {
-        val myUnits = playable.size
-        val oppUnits = oppPlayable.size
+        // Regle v2 (rulebook:1457-1462) : on compte les unites NON VAINCUES des deux camps.
+        val myUnits = playable.count { ownStates[it.instanceId]?.defeated != true }
+        val oppUnits = oppPlayable.count { (if (twoPlayer) oppStates else soloOppStates)[it.instanceId]?.defeated != true }
         val diff = if (myUnits > oppUnits) myUnits - oppUnits else oppUnits - myUnits
         val tokens = (diff - 1).coerceAtLeast(0)
         if (myUnits < oppUnits) { passes = tokens; oppPasses = 0 }
         else if (oppUnits < myUnits) { oppPasses = tokens; passes = 0 }
         else { passes = 0; oppPasses = 0 }
+    }
+    // Score officiel Armada (RRG « Scoring ») : points de la flotte adverse DÉTRUITE,
+    // base + upgrades même défaussés. Délègue au domaine pur testé en JVM.
+    fun armadaFleetScore(
+        roots: List<ListEntry>,
+        allEntries: List<ListEntry>,
+        states: Map<String, SyncedUnitState>,
+    ): Long {
+        val units = roots.map { e ->
+            val upPts = if (e.card.kind == CardKind.ARMADA_SHIP)
+                allEntries.filter { it.parentInstanceId == e.instanceId }.sumOf { it.card.points }
+            else 0
+            com.legionforge.app.domain.ArmadaScoringUnit(
+                basePoints = e.card.points,
+                upgradePoints = upPts,
+                destroyed = states[e.instanceId]?.defeated == true,
+            )
+        }
+        return com.legionforge.app.domain.armadaScore(units, 0)
     }
     // Verrou de fin de round : toutes les unités non vaincues des 2 armées doivent avoir activé.
     fun soloRoundDone(): Boolean =
@@ -620,14 +636,14 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 if (!twoPlayer) { viewingArmy = null; playSyncVm.stop() }
                             }, shape = RoundedCornerShape(8.dp), color = if (twoPlayer) Color(0xFFFFC857) else Color(0xFF2A3A4A), modifier = Modifier.padding(end = 4.dp)) {
                                 Box(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                    Text(stringResource(R.string.play_2players), color = if (twoPlayer) Color(0xFF0A0E15) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(stringResource(R.string.play_2players), color = if (twoPlayer) Color(0xFF0A0E15) else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                             // Bouton Armées : revient à la liste des armées (quand on est dans une armée).
                             if (twoPlayer && viewingArmy != null) {
                                 Surface(onClick = { viewingArmy = null }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1A2330), modifier = Modifier.padding(end = 4.dp)) {
                                     Box(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                        Text("Armées", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        Text("Armées", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -650,7 +666,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 DropdownMenuItem(text = { Text("Pool d'ordres", color = Color.White) }, onClick = { showMenu = false; showPoolSheet = true })
                                 DropdownMenuItem(text = { Text("Battle deck", color = Color.White) }, onClick = { showMenu = false; showBattleSheet = true })
                                 }
-                                DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else Color(0xFF5A6A7A)) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
+                                DropdownMenuItem(text = { Text(if (phase == PlayPhase.PREP) "Réglages setup" else "Réglages setup (verrouillés)", color = if (phase == PlayPhase.PREP) Color.White else Color(0xFF8A99A8)) }, enabled = phase == PlayPhase.PREP, onClick = { showMenu = false; showDeploySheet = true })
                                     DropdownMenuItem(text = { Text("Journal", color = Color.White) }, onClick = { showMenu = false; showLogSheet = true })
                                 }
                             }
@@ -665,7 +681,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     Surface(onClick = { showCmdSheet = true }, shape = RoundedCornerShape(10.dp), color = if (commandDeck.isNotEmpty()) Color(0xFF1E3A2A) else Color(0xFF2A3A4A)) {
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFFFC857), modifier = Modifier.size(18.dp))
-                            Text("CMD ${commandDeck.size}", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text("CMD ${commandDeck.size}", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -805,7 +821,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Surface(onClick = { showDeployment = true }, shape = RoundedCornerShape(10.dp), color = Color(0xFF1E3A2A), modifier = Modifier.fillMaxWidth()) {
                                     Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text("Déployer les armées", color = Color(0xFF77D9A7), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        Text("Marquez la Zone 1 / Zone 2 de chaque vaisseau", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                                        Text("Marquez la Zone 1 / Zone 2 de chaque vaisseau", color = Color(0xFF8F9BAD), fontSize = 11.sp)
                                     }
                                 }
                                 // Lancer la partie : aucun battle/command deck requis pour Armada.
@@ -860,8 +876,18 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 if (advancing && !soloRoundDone()) {
                                     scope.launch { snackbarHostState.showSnackbar("Fin de round refusée : il reste des unités à activer") }
                                 } else {
-                                    playedCommands = emptySet()
-                                    orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
+                                    // Fin d'End Phase : évaluer la victoire 12 VP (rulebook), à l'avancement
+                                    // de round réel (onRoundChange = le bouton "+" du dashboard).
+                                    if (gameResult == null && advancing && (vp >= 12 || oppVp >= 12)) {
+                                        gameResult = when {
+                                            vp > oppVp -> victoryOwn
+                                            oppVp > vp -> victoryOpp
+                                            else -> null // égalité 12-12 : départage manuel
+                                        }
+                                    }
+                                    if (gameResult == null) {
+                                        playedCommands = emptySet()
+                                        orderPool = mapOf("commander" to 0, "corps" to 0, "special" to 0, "support" to 0, "heavy" to 0)
                                     if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
                                     roundCommand = null
                                     ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
@@ -870,6 +896,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     round = r
                                     grantPassPool()  // Pass Pool recalculé à chaque Command Phase (règle v2)
                                     pushGameState()
+                                    }
                                 }
                             }
                         },
@@ -1015,21 +1042,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             onRound = { r -> round = r },
                             onVP = { side, delta -> if (side == "A") vp = (vp + delta).coerceIn(0, 12) else oppVp = (oppVp + delta).coerceIn(0, 12); pushGameState() },
                             onToggleObjective = { name -> activeObjectives = if (name in activeObjectives) activeObjectives - name else activeObjectives + name; pushGameState() },
-                            onNextRound = {
-                                // Verrou fin de round (règle v2) : en solo, on n'avance que si toutes les unités
-                                // non vaincues ont activé (même garde que le bouton "+" du dashboard).
-                                if (!soloRoundDone()) {
-                                    scope.launch { snackbarHostState.showSnackbar("Fin de round refusée : il reste des unités à activer") }
-                                } else {
-                                    if (roundCommand != null) { discardedCommands = discardedCommands + roundCommand!!; commandDeck = commandDeck - roundCommand!! }
-                                    roundCommand = null
-                                    round += 1
-                                    grantPassPool()  // Pass Pool recalculé à chaque Command Phase (règle v2)
-                                    pushGameState()
-                                    ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> roundCleanup(st) } }
-                                    if (!twoPlayer) soloOppStates = soloOppStates.mapValues { (_, st) -> roundCleanup(st) }
-                                }
-                            },
+                            // onNextRound n'est pas câblé dans MissionDashboard (code mort historique).
+                            // La victoire 12VP est évaluée dans onRoundChange, le vrai chemin d'avancement.
+                            onNextRound = {},
                             onJournal = { showLogSheet = true },
                             onToken = { id, tk, delta ->
                                 if (id in ownStates) {
@@ -1089,9 +1104,11 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                     soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1
                                                     else {
-                                                        val myScore = oppPlayable.filter { soloOppStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
-                                                        val oppScore = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }
-                                                        armadaWinner = if (myScore > oppScore) 0 else 1  // égalité → 2e joueur
+                                                        val myScore = armadaFleetScore(oppPlayable, oppEntries, soloOppStates)
+                                                        val oppScore = armadaFleetScore(playable, entries, ownStates)
+                                                        val dec = com.legionforge.app.domain.armadaScoreWinner(myScore, oppScore)
+                                                        // armadaScoreWinner : FIRST = joueur local, SECOND = adverse (départage à l'adverse en égalité).
+                                                        armadaWinner = if (dec == com.legionforge.app.domain.ArmadaPlayer.FIRST) 0 else 1
                                                         logEvent("Armada: fin de partie — VOUS $myScore pts / ADVERSAIRE $oppScore pts (gagnant ${if (myScore > oppScore) "vous" else "adversaire"})")
                                                     }
                                                 }
@@ -1141,8 +1158,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                         }
                         // Overlay de fin de partie (score officiel : points de flotte adverse détruits).
                         if (armadaWinner != null) {
-                            val myScore = oppPlayable.filter { (if (twoPlayer) oppStates else soloOppStates)[it.instanceId]?.defeated == true }.sumOf { it.card.points }.toString()
-                            val oppScore = playable.filter { ownStates[it.instanceId]?.defeated == true }.sumOf { it.card.points }.toString()
+                            val oppStatesHere = if (twoPlayer) oppStates else soloOppStates
+                            val myScore = armadaFleetScore(oppPlayable, oppEntries, oppStatesHere).toString()
+                            val oppScore = armadaFleetScore(playable, entries, ownStates).toString()
                             val winner = if (armadaWinner == 0) "VOUS" else "ADVERSAIRE"
                             Box(Modifier.fillMaxSize().background(Color(0xE60A0E15))) {
                                 Column(Modifier.align(Alignment.Center).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -1504,14 +1522,14 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
         // Qui joue, dans la même ligne que les phases (pas de ligne séparée).
         if (!twoPlayer && (armadaPhase == ArmadaPhase.SHIP || armadaPhase == ArmadaPhase.SQUADRON)) {
             Text("Tour : ${if (armadaTurn == 1) "ADVERSAIRE" else "VOUS"}",
-                color = if (armadaTurn == 1) Color(0xFF38BDF8) else Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                color = if (armadaTurn == 1) Color(0xFF38BDF8) else Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf(ArmadaPhase.COMMAND to "Commande", ArmadaPhase.SHIP to "Vaisseaux", ArmadaPhase.SQUADRON to "Escadrons", ArmadaPhase.STATUS to "Fin de manche").forEach { (ph, lbl) ->
                 Surface(shape = RoundedCornerShape(6.dp), modifier = Modifier.weight(1f),
                     color = if (ph == armadaPhase) Color(0xFFFFC857) else Color(0xFF2A3A4A)) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
-                        Text(lbl, color = if (ph == armadaPhase) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(lbl, color = if (ph == armadaPhase) Color(0xFF0A0E15) else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1545,7 +1563,7 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
     Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = Color(0xFF1A2330)) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(unit.card.displayName(), color = if (defeated) Color(0xFF5A6A7A) else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).alpha(if (defeated) 0.6f else 1f))
+                Text(unit.card.displayName(), color = if (defeated) Color(0xFF8A99A8) else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).alpha(if (defeated) 0.6f else 1f))
                 Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(start = 6.dp))
                 Spacer(Modifier.width(8.dp))
                 // Silhouette du vaisseau : on n'affiche que le coin BAS-GAUCHE de la carte (où se trouve la petite
@@ -1586,8 +1604,8 @@ private fun StatBadge(glyph: String, value: String, tint: Color) {
     Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFF0F1720),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2A3A4A))) {
         Row(Modifier.padding(horizontal = 6.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(glyph, color = tint, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text(value, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(glyph, color = tint, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(value, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1596,8 +1614,8 @@ private fun StatBadge(glyph: String, value: String, tint: Color) {
 private fun ArmadaChip(color: Color, glyph: String = "", text: String = "") {
     Surface(shape = RoundedCornerShape(6.dp), color = color) {
         Row(Modifier.padding(horizontal = 5.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            if (glyph.isNotEmpty()) Text(glyph, color = Color(0xFF0A0E15), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            if (text.isNotEmpty()) Text(text, color = Color(0xFF0A0E15), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            if (glyph.isNotEmpty()) Text(glyph, color = Color(0xFF0A0E15), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            if (text.isNotEmpty()) Text(text, color = Color(0xFF0A0E15), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1815,7 +1833,7 @@ internal fun BattleDeckSheet(
                 Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("$label ($sel/3)", color = Color(0xFFB4BFCE), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(8.dp))
-                    Text("→ ${rev.takeIf { !it.isNullOrEmpty() } ?: "—"}", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("→ ${rev.takeIf { !it.isNullOrEmpty() } ?: "—"}", color = Color(0xFFFFC857), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (deckComplete(cat)) Surface(onClick = { onCycleReveal(cat) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A)) { Text("↻", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = Color(0xFFFFC857), fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                 }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1894,7 +1912,7 @@ internal fun CommandDeckSheet(
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text(standingOrders.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text("✓ obligatoire", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("✓ obligatoire", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1960,7 +1978,7 @@ internal fun DeploymentSheet(onClose: () -> Unit) {
                 Spacer(Modifier.width(8.dp))
                 Surface(onClick = { first = "opp" }, shape = RoundedCornerShape(8.dp), color = if (first == "opp") Color(0xFF77D9A7) else Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text(stringResource(R.string.play_opponent), Modifier.padding(vertical = 10.dp), color = if (first == "opp") Color(0xFF0A0E15) else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
             }
-            Text("Marquez les unités déployées en les tapant dans la liste (Zone 1 / Zone 2).", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+            Text("Marquez les unités déployées en les tapant dans la liste (Zone 1 / Zone 2).", color = Color(0xFF8A99A8), fontSize = 11.sp)
         }
     }
 }
@@ -2048,7 +2066,7 @@ internal fun MissionBuilderSheet(
                         } else {
                             val opts = catCards(cat)
                             if (opts.isNotEmpty()) {
-                                Surface(onClick = { onReveal(key, opts.first().name) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF1E3A2A)) { Text("Révéler", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                                Surface(onClick = { onReveal(key, opts.first().name) }, shape = RoundedCornerShape(6.dp), color = Color(0xFF1E3A2A)) { Text("Révéler", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                             }
                         }
                     }
@@ -2060,11 +2078,11 @@ internal fun MissionBuilderSheet(
                 Text("$label : $left restante(s)", color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 if (left > 0) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Surface(onClick = { onMod(p, "objective") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Obj", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = { onMod(p, "secondary") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Sec", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = { onMod(p, "advantage") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Adv", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = { onMod(p, "steal") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF3B2224), modifier = Modifier.weight(1f)) { Text("Voler blue", Modifier.padding(vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = { onMod(p, "pass") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Passer", Modifier.padding(vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "objective") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Obj", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "secondary") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Sec", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "advantage") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Adv", Modifier.padding(vertical = 6.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "steal") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF3B2224), modifier = Modifier.weight(1f)) { Text("Voler blue", Modifier.padding(vertical = 6.dp), color = Color(0xFFFFC7B7), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+                        Surface(onClick = { onMod(p, "pass") }, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.weight(1f)) { Text("Passer", Modifier.padding(vertical = 6.dp), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
                     }
                 }
             }
@@ -2087,14 +2105,14 @@ internal fun DashSlot(title: String, name: String, color: Color, modifier: Modif
                         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Fit)
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                        Text(name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                     }
                 }
             }
         }
         // Texte SOUS le cadre.
         Text(title, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false, modifier = Modifier.padding(top = 2.dp))
-        Text(name, color = Color(0xFFE2E8F0), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = 13.sp, modifier = Modifier.heightIn(min = 26.dp))
+        Text(name, color = Color(0xFFE2E8F0), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, lineHeight = 13.sp, modifier = Modifier.heightIn(min = 26.dp))
     }
 }
 
@@ -2231,10 +2249,10 @@ internal fun CommandHand(
     Surface(Modifier.fillMaxWidth().navigationBarsPadding(), shape = RoundedCornerShape(14.dp), color = Color(0xEE0F172A), shadowElevation = 8.dp, border = if (highlight) BorderStroke(2.dp, Color(0xFFFFC857)) else null) {
         Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("MAIN DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
+                Text("MAIN DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
                 Text(
                     if (played != null) "Jouée : ${played.name}" else "Tapez une carte pour ce round",
-                    color = if (played != null) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    color = if (played != null) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -2242,8 +2260,8 @@ internal fun CommandHand(
                     val isSel = card.id == roundCommand
                     Surface(onClick = { onSelect(card) }, shape = RoundedCornerShape(8.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, Color(0xFFF59E0B)) else BorderStroke(1.dp, Color(0xFF2A3A4A))) {
                         Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Box(Modifier.size(16.dp).clip(CircleShape).background(if (isSel) Color(0xFFF59E0B) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text("${card.pip}", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFF59E0B), fontSize = 9.sp, fontWeight = FontWeight.Bold) }
-                            Text(card.name, color = if (isSel) Color(0xFFFFC857) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Box(Modifier.size(16.dp).clip(CircleShape).background(if (isSel) Color(0xFFF59E0B) else Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text("${card.pip}", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                            Text(card.name, color = if (isSel) Color(0xFFFFC857) else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -2265,7 +2283,9 @@ internal fun DiceRollerSheet(onClose: () -> Unit) {
     fun rollDie(color: String): Pair<String, Color> {
         val faces = if (mode == "defense") {
             when (color) {
-                "red" -> listOf("block", "block", "surge", "blank", "blank", "blank", "blank", "blank")
+                // De rouge de defense : 3 faces Bloc / 8 (rulebook:336-342).
+                "red" -> listOf("block", "block", "block", "surge", "blank", "blank", "blank", "blank")
+                // Branche noir préexistante (hors dés de défense officiels Legion) laissée inchangée.
                 "black" -> listOf("block", "block", "surge", "blank", "blank", "blank", "blank", "blank")
                 else -> listOf("block", "surge", "blank", "blank", "blank", "blank", "blank", "blank")
             }
@@ -2278,7 +2298,7 @@ internal fun DiceRollerSheet(onClose: () -> Unit) {
         }
         val face = faces.random()
         val c = when (face) {
-            "hit" -> Color(0xFFFF6B6B); "crit" -> Color(0xFFFFC857); "block" -> Color(0xFF77D9A7); "surge" -> Color(0xFF4FC3F7); else -> Color(0xFF5A6A7A)
+            "hit" -> Color(0xFFFF6B6B); "crit" -> Color(0xFFFFC857); "block" -> Color(0xFF77D9A7); "surge" -> Color(0xFF4FC3F7); else -> Color(0xFF8A99A8)
         }
         return face to c
     }
@@ -2359,7 +2379,7 @@ internal fun DeckCardThumb(
             AsyncImage(model = source, contentDescription = name, modifier = Modifier.fillMaxWidth().height(134.dp), contentScale = ContentScale.Fit)
         } else {
             Box(Modifier.fillMaxWidth().height(134.dp), contentAlignment = Alignment.Center) {
-                Text(name, color = if (dimmed) Color(0xFF5A6A7A) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.padding(6.dp))
+                Text(name, color = if (dimmed) Color(0xFF8A99A8) else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.padding(6.dp))
             }
         }
         if (selected) {
@@ -2367,7 +2387,7 @@ internal fun DeckCardThumb(
         }
         if (badge != null) {
             Box(Modifier.padding(4.dp).clip(CircleShape).background(Color(0xFF0A0E15).copy(alpha = 0.85f)).padding(horizontal = 6.dp, vertical = 2.dp), contentAlignment = Alignment.Center) {
-                Text(badge, color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(badge, color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -2467,18 +2487,18 @@ internal fun UnitListRow(
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
                 Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text("${totalPts} pts • ${unit.card.legionRank?.name ?: ""}", color = Color(0xFF8F9BAD), fontSize = 10.sp, maxLines = 1)
+                Text("${totalPts} pts • ${unit.card.legionRank?.name ?: ""}", color = Color(0xFF8F9BAD), fontSize = 11.sp, maxLines = 1)
                 // Jauge de vie uniquement si l'unité est blessée (sinon bruit visuel en déploiement).
                 if (isWounded) {
                     LinearProgressIndicator(progress = { (remaining!!.toFloat() / (maxHp ?: 1)).coerceIn(0f, 1f) }, modifier = Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
                 }
             }
-            if (isWounded) { Text("$remaining/${maxHp ?: "?"}", color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) Color(0xFFFF6B6B) else Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            if (isWounded) { Text("$remaining/${maxHp ?: "?"}", color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) Color(0xFFFF6B6B) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = Color(0xFF77D9A7), modifier = Modifier.size(16.dp)) }
-            if (defeated) { Text("Vaincue", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+            if (defeated) { Text("Vaincue", color = Color(0xFFFF6B6B), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             if (isPrep && onCycleDeploy != null) {
                 Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> Color(0xFF1E3A2A); 2 -> Color(0xFF2A3A4A); else -> Color(0xFF3A3A4A) }) {
-                    Text(if (deployZone == null) "Zone ?" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(if (deployZone == null) "Zone ?" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) Color(0xFF9EACBC) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -2510,7 +2530,7 @@ internal fun DeploymentSheet(
                 UnitListRow(unit, st, allMy.filter { it.parentInstanceId == unit.instanceId }, isPrep = true, readOnly = false,
                     onOpen = { onOpenMy(unit) }, onCycleDeploy = { onCycleMy(unit.instanceId) }, onCompare = {})
             }
-            if (myUnits.isEmpty()) Text("Aucune unité à déployer", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+            if (myUnits.isEmpty()) Text("Aucune unité à déployer", color = Color(0xFF8A99A8), fontSize = 11.sp)
             Spacer(Modifier.height(4.dp))
             if (showOpp) {
                 Text("ADVERSAIRE", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -2519,7 +2539,7 @@ internal fun DeploymentSheet(
                     UnitListRow(unit, st, allOpp.filter { it.parentInstanceId == unit.instanceId }, isPrep = true, readOnly = false,
                         onOpen = { onOpenOpp(unit) }, onCycleDeploy = { onCycleOpp(unit.instanceId) }, onCompare = {})
                 }
-                if (oppUnits.isEmpty()) Text("Aucune armée adverse chargée (choisissez-la dans le setup)", color = Color(0xFF5A6A7A), fontSize = 11.sp)
+                if (oppUnits.isEmpty()) Text("Aucune armée adverse chargée (choisissez-la dans le setup)", color = Color(0xFF8A99A8), fontSize = 11.sp)
             }
         }
     }
@@ -2591,21 +2611,21 @@ internal fun UnitActivationCell(
                     modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
                     contentScale = ContentScale.Fit)
             } else {
-                Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(4.dp)) }
+                Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(4.dp)) }
             }
             // Jauge coque en bas.
             if (remaining != null && maxHp != null) {
                 LinearProgressIndicator(progress = { (remaining.toFloat() / maxHp).coerceIn(0f, 1f) }, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp), color = if (remaining <= maxHp / 2) Color(0xFFFF6B6B) else Color(0xFF77D9A7), trackColor = Color(0xFF2A3A4A))
             }
             // Nom en surimpression bas.
-            Text(unit.card.name, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xAA0A0E15)).padding(horizontal = 4.dp, vertical = 2.dp))
+            Text(unit.card.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xAA0A0E15)).padding(horizontal = 4.dp, vertical = 2.dp))
             // Badge état en haut-droit (symbole + couleur pour daltonisme).
             if (activated) {
-                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEF5350), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEF5350), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             } else if (defeated) {
-                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✕", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✕", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             } else if (activable) {
-                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2E7D32), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("●", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF66BB6A), fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2E7D32), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("●", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF66BB6A), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             }
         }
     }
@@ -2636,7 +2656,7 @@ internal fun UnitActivationStrip(
                         modifier = Modifier.fillMaxSize().alpha(if (defeated) 0.3f else if (activated) 0.6f else 1f),
                         contentScale = ContentScale.Fit)
                 } else {
-                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(2.dp)) }
+                    Box(Modifier.fillMaxSize().background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text(unit.card.name, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(2.dp)) }
                 }
                 // Symbole d'état (daltonisme) : ✓ activée, ✕ vaincue, ● activable.
                 Text(if (activated) "✓" else if (defeated) "✕" else "●", color = borderColor, fontSize = 12.sp, fontWeight = FontWeight.Bold,
@@ -2693,7 +2713,7 @@ internal fun CommandSelectionPanel(
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("1. CARTE DE COMMANDEMENT DU ROUND", color = Color(0xFFF59E0B), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("choisissez votre carte", color = Color(0xFF94A3B8), fontSize = 10.sp)
+                Text("choisissez votre carte", color = Color(0xFF94A3B8), fontSize = 11.sp)
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(hand, key = { it.id }) { card ->
@@ -2701,7 +2721,7 @@ internal fun CommandSelectionPanel(
                     Surface(onClick = { onSelect(card.id) }, shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, Color(0xFFF59E0B)) else BorderStroke(1.dp, Color(0xFF2A3A4A))) {
                         Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("PIP ${card.pip}", color = Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            Text(card.name, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(card.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -2728,7 +2748,7 @@ internal fun CommandHandSheet(
         Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("CHOISISSEZ VOTRE CARTE DE COMMANDEMENT", color = Color(0xFFF59E0B), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
-                Text(if (roundCommand != null) "Jouée : ${hand.firstOrNull { it.id == roundCommand }?.name ?: ""}" else "", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(if (roundCommand != null) "Jouée : ${hand.firstOrNull { it.id == roundCommand }?.name ?: ""}" else "", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
             hand.forEach { card ->
                 val isSel = card.id == roundCommand
@@ -2740,7 +2760,7 @@ internal fun CommandHandSheet(
                         Column(Modifier.weight(1f)) {
                             Text(card.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Text("PIP ${card.pip}${if (isSel) " ✓ jouée" else ""}", color = if (isSel) Color(0xFFF59E0B) else Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("PIP ${card.pip}${if (isSel) " ✓ jouée" else ""}", color = if (isSel) Color(0xFFF59E0B) else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -2767,7 +2787,7 @@ internal fun CampRow(
                 Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) Color(0xFF77D9A7) else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             if (units.isEmpty()) {
-                Text("Aucune unité", color = Color(0xFF5A6A7A), fontSize = 10.sp)
+                Text("Aucune unité", color = Color(0xFF8A99A8), fontSize = 11.sp)
             } else {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(units, key = { it.instanceId }) { unit ->
@@ -2802,36 +2822,36 @@ internal fun CampRow(
                                     AsyncImage(model = "file:///android_asset/$artPath", contentDescription = unit.card.name,
                                         modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                                 } else {
-                                    Text(unit.card.name, color = Color.White, fontSize = 7.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp))
+                                    Text(unit.card.name, color = Color.White, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(2.dp))
                                 }
                                 if (panicking) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C), modifier = Modifier.align(Alignment.TopCenter).padding(2.dp)) {
-                                        Text("PANIQUE", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = Color.White, fontSize = 6.sp, fontWeight = FontWeight.Bold)
+                                        Text("PANIQUE", Modifier.padding(horizontal = 3.dp, vertical = 1.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
-                            Text(unit.card.name, color = if (defeated) Color(0xFF5A6A7A) else Color(0xFFE2E8F0), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            Text(unit.card.name, color = if (defeated) Color(0xFF8A99A8) else Color(0xFFE2E8F0), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                             if (onOrder != null && !defeated) {
                                 val ordered = st.orderReceived == true
                                 Surface(onClick = { onOrder.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = if (ordered) Color(0xFF3A3320) else Color(0xFF1E293B)) {
-                                    Text(if (ordered) "📨 Ordre reçu" else "📨 Ordre", Modifier.padding(vertical = 3.dp), color = if (ordered) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                    Text(if (ordered) "📨 Ordre reçu" else "📨 Ordre", Modifier.padding(vertical = 3.dp), color = if (ordered) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 }
                             }
                             if (activable) {
                                 Surface(onClick = { onActivate?.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = Color(0xFF1E3A2A)) {
-                                    Text("▶ Activer", Modifier.padding(vertical = 3.dp), color = Color(0xFF77D9A7), fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                    Text("▶ Activer", Modifier.padding(vertical = 3.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 }
                             }
                             if (onWound != null) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2A3A4A), modifier = Modifier.clickable { if ((st.wounds ?: 0) > 0) onWound?.invoke(unit.instanceId, -1) }) {
-                                        Text("−", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                        Text("−", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFB71C1C)) {
-                                        Text("❤ ${st.wounds ?: 0}", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                        Text("❤ ${st.wounds ?: 0}", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                     Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF1E3A2A), modifier = Modifier.clickable { onWound?.invoke(unit.instanceId, 1) }) {
-                                        Text("+", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                        Text("+", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -2860,12 +2880,12 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                 val tie = pMy != null && pOpp != null && pMy == pOpp
                 val hasPrio = turn == "own"
                 val prioText = if (tie) "PIP $pMy = $pOpp — égalité  →  ${if (hasPrio) "MOI" else "ADV"} (dé)" else "${if (hasPrio) "MOI" else "ADV"} ⚑ priorité"
-                Text(prioText, color = if (hasPrio) Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(prioText, color = if (hasPrio) Color(0xFFF59E0B) else Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 activeObjectives.forEach {
                     Surface(shape = CircleShape, color = Color(0xFF1E3A2A), border = BorderStroke(1.dp, Color(0xFF77D9A7))) {
-                        Text("●", Modifier.padding(5.dp), color = Color(0xFF77D9A7), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                        Text("●", Modifier.padding(5.dp), color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -3030,7 +3050,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val activated = state.activated ?: false
             Surface(onClick = { set(state.copy(activated = !activated)) }, shape = RoundedCornerShape(10.dp), color = if (activated) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (activated) Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp)) else Box(Modifier.size(18.dp).border(2.dp, Color(0xFF5A6A7A), CircleShape))
+                    if (activated) Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF77D9A7), modifier = Modifier.size(18.dp)) else Box(Modifier.size(18.dp).border(2.dp, Color(0xFF8A99A8), CircleShape))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (activated) R.string.legion_activated else R.string.legion_not_activated), color = if (activated) Color(0xFF77D9A7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
@@ -3039,7 +3059,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val defeated = state.defeated ?: false
             Surface(onClick = { set(state.copy(defeated = !defeated)) }, shape = RoundedCornerShape(10.dp), color = if (defeated) Color(0xFF3B2224) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(if (defeated) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (defeated) Color(0xFFFF6B6B) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    Icon(if (defeated) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (defeated) Color(0xFFFF6B6B) else Color(0xFF8A99A8), modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (defeated) R.string.legion_defeated else R.string.legion_active), color = if (defeated) Color(0xFFFFC7B7) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
@@ -3048,7 +3068,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val promoted = state.promoted ?: false
             Surface(onClick = { set(state.copy(promoted = !promoted)) }, shape = RoundedCornerShape(10.dp), color = if (promoted) Color(0xFF1E3A2A) else Color(0xFF2A3A4A), modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Star, contentDescription = null, tint = if (promoted) Color(0xFFFFC857) else Color(0xFF5A6A7A), modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.Star, contentDescription = null, tint = if (promoted) Color(0xFFFFC857) else Color(0xFF8A99A8), modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(if (promoted) R.string.legion_promoted else R.string.legion_promote), color = if (promoted) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
@@ -3066,7 +3086,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             val cover = state.cover ?: 0
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.legion_cover), color = Color(0xFF9EACBC), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                Stepper("$cover", { if (cover > 0) set(state.copy(cover = cover - 1)) }, { if (cover < 2) set(state.copy(cover = cover + 1)) }, valueColor = if (cover > 0) Color(0xFF77D9A7) else Color(0xFF5A6A7A), valueWidth = 30.dp)
+                Stepper("$cover", { if (cover > 0) set(state.copy(cover = cover - 1)) }, { if (cover < 2) set(state.copy(cover = cover + 1)) }, valueColor = if (cover > 0) Color(0xFF77D9A7) else Color(0xFF8A99A8), valueWidth = 30.dp)
             }
             // Dégâts de véhicule (immobilisé, arme détruite) — véhicules uniquement.
             if (unit.card.cardSubtype?.contains("vehicle") == true) {
@@ -3077,7 +3097,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         val active = key in vd
                         Surface(onClick = { set(state.copy(vehicleDamage = if (active) vd - key else vd + key)) }, shape = RoundedCornerShape(8.dp), color = if (active) Color(0xFF3B2224) else Color(0xFF2A3A4A)) {
                             Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(if (active) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (active) Color(0xFFFF6B6B) else Color(0xFF5A6A7A), modifier = Modifier.size(12.dp))
+                                Icon(if (active) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (active) Color(0xFFFF6B6B) else Color(0xFF8A99A8), modifier = Modifier.size(12.dp))
                                 Spacer(Modifier.width(4.dp))
                                 Text(label, color = if (active) Color(0xFFFFC7B7) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
@@ -3125,7 +3145,7 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
 internal fun StatChip(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, color = color, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Text(label, color = Color(0xFF9EACBC), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 @Composable
@@ -3270,7 +3290,7 @@ private fun ManeuverMatrix(stats: ArmadaStats?, selectedSpeed: Int, bends: List<
                     modifier = Modifier.weight(1f)
                 ) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
-                        Text("V$v", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("V$v", color = if (isSel) Color(0xFF0A0E15) else Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -3280,7 +3300,7 @@ private fun ManeuverMatrix(stats: ArmadaStats?, selectedSpeed: Int, bends: List<
             val posLabel = maxPos - revIdx
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
-                    Text("$posLabel", color = Color(0xFFFFC857), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("$posLabel", color = Color(0xFFFFC857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 val pos = maxPos - revIdx // numéro de position (1 = bas)
                 (1..maxSpeed).forEach { v ->
@@ -3377,7 +3397,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CardArtwork(unit.card, Modifier.width(52.dp).clickable { showCard = true })
                     Column(Modifier.weight(1f)) { Text(unit.card.displayName(), color = Color.White, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis); Text("${stringResource(R.string.kind_ship)}  •  ${unit.card.factionId.replace('-', ' ').replaceFirstChar { it.uppercase() }}", color = Color(0xFFFFC857), style = MaterialTheme.typography.labelSmall) }
-                    if (isHuge) Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF3A2050)) { Text("HUGE", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color(0xFFD7A6FF), fontSize = 9.sp, fontWeight = FontWeight.Bold) }
+                    if (isHuge) Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF3A2050)) { Text("HUGE", Modifier.padding(horizontal = 6.dp, vertical = 1.dp), color = Color(0xFFD7A6FF), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                     Text("${unit.card.points}", color = Color(0xFFFFC857), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 if (stats != null) ShipStatsBlock(stats)
@@ -3411,10 +3431,10 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     } else {
                         Surface(shape = RoundedCornerShape(9.dp), color = Color(0xFF1F2C3D), modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(stringResource(R.string.cadrans), color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.cadrans), color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.weight(1f))
-                                Text("🛡 ${sF}/${sP}/${sS}/${sR}", color = Color(0xFF4FC3F7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                Text("⚄ ${(stats?.attackFront?.sum() ?: 0)}", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text("🛡 ${sF}/${sP}/${sS}/${sR}", color = Color(0xFF4FC3F7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("⚄ ${(stats?.attackFront?.sum() ?: 0)}", color = Color(0xFFFF6B6B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -3441,7 +3461,11 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         onPush = { name -> set(state.copy(commandDialStack = com.legionforge.app.data.model.ArmadaCommandStack.push(state.commandDialStack, name, maxOrderStock))) },
                         onReveal = {
                             val (h, rest) = com.legionforge.app.data.model.ArmadaCommandStack.reveal(state.commandDialStack)
-                            if (h != null && !state.commandDialRevealed) set(state.copy(commandDialStack = rest, commandOrder = h, commandDialRevealed = true))
+                            if (h != null && !state.commandDialRevealed) {
+                                // RRG : révéler un cadran crédite 1 pion d'ordre de ce type (credit()).
+                                val credited = com.legionforge.app.data.model.ArmadaCommandStack.credit(state.orderTokens, h)
+                                set(state.copy(commandDialStack = rest, commandOrder = h, commandDialRevealed = true, orderTokens = credited))
+                            }
                         },
                         onSpend = { if (commandOrder != null) set(state.copy(orderTokens = com.legionforge.app.data.model.ArmadaCommandStack.spend(orderTokens, commandOrder.name))) }
                     )
@@ -3453,7 +3477,9 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                         orderTokens = orderTokens,
                         maxStock = maxOrderStock,
                         onIncOrder = { name ->
-                            if (orderTokens.values.sum() < maxOrderStock) set(state.copy(orderTokens = orderTokens + (name to (orderTokens[name] ?: 0) + 1)))
+                            // RRG : 1 copie MAX par type de pion d'ordre ; un doublon est défaussé.
+                            val already = (orderTokens[name] ?: 0) > 0
+                            if (!already && orderTokens.values.sum() < maxOrderStock) set(state.copy(orderTokens = orderTokens + (name to 1)))
                         },
                         onDecOrder = { name -> set(state.copy(orderTokens = orderTokens + (name to ((orderTokens[name] ?: 0) - 1).coerceAtLeast(0)))) },
                         wikiSections = wikiSections,
@@ -3678,7 +3704,7 @@ internal fun EffectsPanel(
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // Effect list
         if (effects.isEmpty()) {
-            Text(stringResource(R.string.no_effects), color = Color(0xFF5A6A7A), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.no_effects), color = Color(0xFF8A99A8), style = MaterialTheme.typography.bodySmall)
         } else {
             effects.forEach { eff ->
                 val (icon, iconColor) = when {
@@ -3706,7 +3732,7 @@ internal fun EffectsPanel(
                                         model = "file:///android_asset/$iconPath",
                                         contentDescription = eff.label,
                                         modifier = Modifier.size(18.dp),
-                                        colorFilter = ColorFilter.tint(if (eff.used) Color(0xFF5A6A7A) else iconColor)
+                                        colorFilter = ColorFilter.tint(if (eff.used) Color(0xFF8A99A8) else iconColor)
                                     )
                                 } else {
                                     val fallbackIcon = when (eff.type) {
@@ -3715,19 +3741,19 @@ internal fun EffectsPanel(
                                         EffectType.CRIT -> Icons.Filled.Warning
                                         else -> Icons.Filled.Info
                                     }
-                                    Icon(fallbackIcon, contentDescription = eff.label, tint = if (eff.used) Color(0xFF5A6A7A) else iconColor, modifier = Modifier.size(16.dp))
+                                    Icon(fallbackIcon, contentDescription = eff.label, tint = if (eff.used) Color(0xFF8A99A8) else iconColor, modifier = Modifier.size(16.dp))
                                 }
                             }
                             Spacer(Modifier.width(8.dp))
                             // Texte en weight(1f)+maxLines : ne peut plus écraser la colonne droite -> les pts restent horizontaux.
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(eff.label, color = if (eff.used) Color(0xFF5A6A7A) else Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = if (eff.type == EffectType.CRIT) FontWeight.Bold else FontWeight.Normal, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                    if (eff.used) { Spacer(Modifier.width(6.dp)); Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A)) { Text(stringResource(R.string.activated), Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF5A6A7A), fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+                                    Text(eff.label, color = if (eff.used) Color(0xFF8A99A8) else Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = if (eff.type == EffectType.CRIT) FontWeight.Bold else FontWeight.Normal, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    if (eff.used) { Spacer(Modifier.width(6.dp)); Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A)) { Text(stringResource(R.string.activated), Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF8A99A8), fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
                                 }
                                 Text(
                                     when (eff.type) { EffectType.COMMANDER -> stringResource(R.string.effect_commander); EffectType.UPGRADE -> stringResource(R.string.effect_upgrade); EffectType.CRIT -> stringResource(R.string.effect_crit); EffectType.ABILITY -> stringResource(R.string.effect_ability) },
-                                    color = (if (eff.used) Color(0xFF5A6A7A) else iconColor).copy(alpha = 0.6f), fontSize = 10.sp
+                                    color = (if (eff.used) Color(0xFF8A99A8) else iconColor).copy(alpha = 0.6f), fontSize = 11.sp
                                 )
                             }
                             Spacer(Modifier.width(8.dp))
@@ -3822,7 +3848,7 @@ internal fun DefenseTokenDisc(def: ArmadaDefenseToken, used: Boolean, onClick: (
         Text(
             def.label,
             color = ringColor,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             modifier = if (onWikiClick != null) Modifier.clickable { onWikiClick() } else Modifier
         )
@@ -3846,7 +3872,7 @@ internal fun StatChip(label: String, value: Int, color: Color, modifier: Modifie
     Surface(shape = RoundedCornerShape(8.dp), color = color.copy(alpha = 0.15f), modifier = modifier) {
         Column(Modifier.padding(vertical = 6.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(display ?: "$value", color = color, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-            Text(label, color = color.copy(alpha = 0.8f), fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(label, color = color.copy(alpha = 0.8f), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
         }
     }
 }
@@ -4018,7 +4044,7 @@ internal fun CommandWheelPanel(
                 ActiveDialCompact(active, activeTokens, onSpend, onUnset)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     DialQueueRow(stack, capacity, onReveal, revealAllowed)
-                    Text("File ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 9.sp, fontWeight = FontWeight.Medium)
+                    Text("File ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
             }
             Divider(color = Color(0xFF2A3A4A))
@@ -4030,11 +4056,11 @@ internal fun CommandWheelPanel(
                 }
             }
             if (stack.isEmpty()) {
-                Text("File vide : choisis un ordre ci-dessus", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                Text("File vide : choisis un ordre ci-dessus", color = Color(0xFF8F9BAD), fontSize = 11.sp)
             } else if (revealAllowed) {
-                Text("Touchez le 1er cadran de la file pour le révéler (FIFO) · +1 pion", color = Color(0xFF8F9BAD), fontSize = 10.sp)
+                Text("Touchez le 1er cadran de la file pour le révéler (FIFO) · +1 pion", color = Color(0xFF8F9BAD), fontSize = 11.sp)
             } else {
-                Text("Cadran déjà révélé cette manche", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text("Cadran déjà révélé cette manche", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -4054,7 +4080,7 @@ private fun ActiveDialCompact(active: ArmadaCommandOrder?, activeTokens: Int, on
                 when {
                     active == null -> Text("?", color = Color(0xFF6A7A8A), fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     active.hasIcon() -> AsyncImage(model = "file:///android_asset/tokens/${active.iconFile}", contentDescription = active.label, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                    else -> Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    else -> Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -4104,7 +4130,7 @@ private fun DialPoseButton(order: ArmadaCommandOrder, enabled: Boolean, onClick:
             if (order.hasIcon()) {
                 AsyncImage(model = "file:///android_asset/tokens/${order.iconFile}", contentDescription = order.label, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
             } else {
-                Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -4177,11 +4203,11 @@ internal fun CommandDialButton(order: ArmadaCommandOrder, selected: Boolean, onC
                         contentScale = ContentScale.Fit
                     )
                 } else {
-                    Box(Modifier.fillMaxSize().clip(CircleShape).background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 9.sp, fontWeight = FontWeight.Bold) }
+                    Box(Modifier.fillMaxSize().clip(CircleShape).background(Color(0xFF2A3A4A)), contentAlignment = Alignment.Center) { Text("FIRE", color = Color(0xFFFF6B6B), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                 }
             }
         }
-        Text(order.label, color = if (selected) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 9.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text(order.label, color = if (selected) Color(0xFFFFC857) else Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
     }
 }
 
@@ -4206,11 +4232,11 @@ internal fun OrderTokenDisc(order: ArmadaCommandOrder, count: Int, onWikiClick: 
         }
         // Compteur de stock sous le pion (empilable, max total = niveau de commande).
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(20.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(20.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
             Text("$count", color = Color(0xFF77D9A7), fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(20.dp))
-            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(20.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(20.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
         }
-        Text(order.label, color = Color(0xFF9EACBC), fontSize = 8.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text(order.label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
     }
 }
 
@@ -4254,7 +4280,7 @@ internal fun SquadronActivationToken(activated: Boolean, onToggle: () -> Unit) {
         Text(
             if (activated) "ACTIF" else "INACTIF",
             color = faceLight,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable { onToggle() }
         )
@@ -4308,7 +4334,7 @@ internal fun TokenSection(tokens: List<String>, onAdd: (String) -> Unit, onRemov
         categories.forEach { (cat, catLabel) ->
             val catTokens = allTokens.filter { it.category == cat }
             if (catTokens.isEmpty()) return@forEach
-            Text(catLabel, color = Color(0xFF5A6A7A), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+            Text(catLabel, color = Color(0xFF8A99A8), fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 catTokens.forEach { t ->
                     val count = tokens.count { it == t.label }
@@ -4316,7 +4342,7 @@ internal fun TokenSection(tokens: List<String>, onAdd: (String) -> Unit, onRemov
                 }
             }
         }
-        Text(stringResource(R.string.tap_token), color = Color(0xFF5A6A7A), style = MaterialTheme.typography.labelSmall)
+        Text(stringResource(R.string.tap_token), color = Color(0xFF8A99A8), style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -4336,12 +4362,12 @@ internal fun LegionTokenDisc(label: String, color: Color, symbol: String, count:
             }
             if (count > 0) {
                 Box(Modifier.align(Alignment.TopEnd).size(16.dp).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
-                    Text("$count", color = Color(0xFF0A0E15), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text("$count", color = Color(0xFF0A0E15), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
         Spacer(Modifier.height(3.dp))
-        Text(label, color = color, fontSize = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text(label, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
@@ -4353,9 +4379,9 @@ internal data class LegionToken(val label: String, val color: Color, val symbol:
 internal fun StateChip(label: String, active: Boolean, color: Color) {
     Surface(shape = RoundedCornerShape(8.dp), color = if (active) color.copy(alpha = 0.22f) else Color(0xFF1E2A3A)) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(if (active) Icons.Filled.Check else Icons.Filled.Close, contentDescription = null, tint = if (active) color else Color(0xFF5A6A7A), modifier = Modifier.size(12.dp))
+            Icon(if (active) Icons.Filled.Check else Icons.Filled.Close, contentDescription = null, tint = if (active) color else Color(0xFF8A99A8), modifier = Modifier.size(12.dp))
             Spacer(Modifier.width(4.dp))
-            Text(label, color = if (active) color else Color(0xFF5A6A7A), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(label, color = if (active) color else Color(0xFF8A99A8), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -4387,18 +4413,18 @@ internal fun Stepper(value: String, onDec: () -> Unit, onInc: () -> Unit, size: 
 @Composable
 internal fun ScoreStepper(label: String, vp: Int, kills: Int, onVpInc: () -> Unit, onVpDec: () -> Unit, onKillInc: () -> Unit, onKillDec: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = Color(0xFF9EACBC), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = Color(0xFF9EACBC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Surface(onClick = onVpDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onVpDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("$vp VP", color = Color(0xFFFFC857), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text("$kills ✕", color = Color(0xFF77D9A7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text("$kills ✕", color = Color(0xFF77D9A7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
-            Surface(onClick = onVpInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onVpInc, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(40.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) } }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Surface(onClick = onKillDec, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
-            Surface(onClick = onKillInc, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp)) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onKillDec, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
+            Surface(onClick = onKillInc, shape = RoundedCornerShape(6.dp), color = Color(0xFF2A3A4A), modifier = Modifier.size(28.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
         }
     }
 }
@@ -4417,7 +4443,7 @@ internal fun PassCounter(value: Int, onInc: () -> Unit, onDec: () -> Unit) {
 @Composable
 internal fun HullCounter(value: Int, max: Int, onInc: () -> Unit, onDec: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(stringResource(R.string.hull), color = Color(0xFFFF8A80), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.hull), color = Color(0xFFFF8A80), fontSize = 11.sp, fontWeight = FontWeight.Bold)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Surface(onClick = onDec, shape = CircleShape, color = Color(0xFF2A3A4A), modifier = Modifier.size(44.dp)) { Box(contentAlignment = Alignment.Center) { Text("-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) } }
             Text("$value/$max", color = Color(0xFFFF8A80), fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(56.dp))

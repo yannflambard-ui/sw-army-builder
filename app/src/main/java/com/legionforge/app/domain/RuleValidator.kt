@@ -62,7 +62,18 @@ class LegionV2Validator : RuleValidator {
         val effectiveLimit = list.pointsLimit + (battleforce?.extraPoints ?: 0)
         if (total > effectiveLimit) violations += violation("points_limit", "Total $total pts supérieur à la limite $effectiveLimit pts.")
         val units = list.entries.filter { it.card.kind == CardKind.LEGION_UNIT }
-        val counts = units.groupBy { it.card.legionRank }.mapValues { (_, entries) -> entries.sumOf(ListEntry::quantity) }
+        // Règle v2 (rulebook:2810-2816) : les Mercenaires (dont les Mandaloriens, sous-faction)
+        // ne comptent PAS vers les minimums de rang, mais comptent vers les maximums.
+        fun isMerc(c: CardDefinition) = c.factionId == "mercenary" || c.factionId == "mandalorians"
+        val nonMercUnits = units.filter { !isMerc(it.card) }
+        val counts = nonMercUnits.groupBy { it.card.legionRank }.mapValues { (_, entries) -> entries.sumOf(ListEntry::quantity) }
+        // Limite de Mercenaires par rang : max 2 Corps, 1 pour chaque autre rang.
+        val mercByRank = units.filter { isMerc(it.card) }
+            .groupBy { it.card.legionRank }.mapValues { (_, es) -> es.sumOf(ListEntry::quantity) }
+        mercByRank.forEach { (rank, count) ->
+            val max = if (rank == LegionRank.CORPS) 2 else 1
+            if (count > max) violations += violation("mercenary_rank_${rank?.name?.lowercase()}", "Maximum $max mercenaire(s) de rang ${rank?.toDisplay()} autorisé(s), actuellement $count.")
+        }
         val quotas = battleforce?.quotas?.takeIf { it.isNotEmpty() } ?: standardQuotas
         quotas.forEach { (rank, range) ->
             val count = counts[rank] ?: 0
@@ -72,7 +83,7 @@ class LegionV2Validator : RuleValidator {
             }
         }
         if (battleforce != null) {
-            val outsiders = units.map { it.card.factionId }.filter { it != "mercenary" }.toSet() - setOf(battleforce.factionId)
+            val outsiders = units.map { it.card.factionId }.filter { it != "mercenary" && it != "mandalorians" && it != "neutral" }.toSet() - setOf(battleforce.factionId)
             if (outsiders.isNotEmpty()) violations += violation(
                 "battleforce_faction",
                 "La Battle Force « ${battleforce.name} » est limitée à la faction ${battleforce.factionId} (présentes : ${outsiders.joinToString(", ")})."
@@ -83,7 +94,8 @@ class LegionV2Validator : RuleValidator {
         if (list.entries.any { it.card.gameSystem != gameSystem }) violations += violation("mixed_games", "La liste contient une carte d'un autre système.")
         if (legionEntries.any { it.quantity < 1 }) violations += violation("invalid_quantity", "Chaque entrée doit avoir une quantité d'au moins 1.")
         if (units.filter { it.card.unique }.groupBy { it.card.id }.any { (_, same) -> same.sumOf { it.quantity } > 1 }) violations += violation("unique_duplicate", "Une unité unique ne peut être sélectionnée qu'une fois.")
-        val factionIds = units.map { it.card.factionId }.filter { it != "mercenary" }.distinct()
+        val factionIds = units.map { it.card.factionId }
+            .filter { it != "mercenary" && it != "mandalorians" && it != "neutral" }.distinct()
         if (factionIds.size > 1) violations += violation("mixed_factions", "Une armée ne peut pas mélanger plusieurs factions principales.")
         if (units.filter { it.card.unique }.groupBy { it.card.name }.any { (_, same) -> same.sumOf { it.quantity } > 1 }) violations += violation("unique_title_duplicate", "Une unité avec titre unique ne peut apparaître qu'une fois.")
         val individualUpgradeSlotCounts = mutableMapOf<String, Int>()

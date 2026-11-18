@@ -45,6 +45,10 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
     private val _searching = MutableStateFlow(false)
     val searching: StateFlow<Boolean> = _searching.asStateFlow()
     private var searchCollector: kotlinx.coroutines.Job? = null
+    // Cartes absentes du catalogue lors d'un import Nearby (liste importée incomplète).
+    private val _importMissingCards = MutableStateFlow<List<String>>(emptyList())
+    val importMissingCards: StateFlow<List<String>> = _importMissingCards.asStateFlow()
+    fun dismissImportMissing() { _importMissingCards.value = emptyList() }
 
     // ── Wiki des règles officielles ──
     private val _wikiSections = MutableStateFlow<List<WikiSectionEntity>>(emptyList())
@@ -332,7 +336,12 @@ class ArmyBuilderViewModel(application: Application) : AndroidViewModel(applicat
                 // les vaisseaux et commandants, propres à la faction, étaient alors ignorés).
                 val cards = repository.observeCards(system, payload.factionId).first()
                 val fleet = FleetShareCodec.rebuild(payload, cards) { UUID.randomUUID().toString() }
-                fleet.missingCardIds.forEach { android.util.Log.w("Import", "carte absente du catalogue: $it") }
+                if (fleet.missingCardIds.isNotEmpty()) {
+                    fleet.missingCardIds.forEach { android.util.Log.w("Import", "carte absente du catalogue: $it") }
+                    // Remonter a l'utilisateur : sans ca la liste importee est creee incomplete
+                    // et validation semble OK alors que des cartes manquent.
+                    _importMissingCards.value = fleet.missingCardIds
+                }
                 _entries.value = fleet.entries
                 persistAndValidate()
                 onImported(list.id)

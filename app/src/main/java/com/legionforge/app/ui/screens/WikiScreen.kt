@@ -66,7 +66,7 @@ fun WikiScreen(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it; vm.searchWiki(it) },
-                placeholder = { Text("Mot-clé : boucliers, activation, attaque, vitesse…", color = Color(0xFF5A6A7A), fontSize = 14.sp) },
+                placeholder = { Text("Mot-clé : boucliers, activation, attaque, vitesse…", color = Color(0xFF8A99A8), fontSize = 14.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -78,7 +78,7 @@ fun WikiScreen(
             }
             when {
                 searching -> Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color(0xFFFFC857), strokeWidth = 2.dp) }
-                query.isNotBlank() && results.isEmpty() -> Text("Aucune section pour « $query »", color = Color(0xFF5A6A7A), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
+                query.isNotBlank() && results.isEmpty() -> Text("Aucune section pour « $query »", color = Color(0xFF8A99A8), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 12.dp))
                 query.isNotBlank() -> LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(bottom = 20.dp)) {
                     items(results) { section -> WikiSectionRow(section, onClick = { selected = section }) }
                 }

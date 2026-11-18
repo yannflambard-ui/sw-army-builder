@@ -76,7 +76,10 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
         composable(Routes.SEARCH) {
             SearchScreen(
                 onBack = { navController.popBackStack() },
-                onCardClick = { navController.popBackStack() },
+                // La fiche complète est désormais affichée dans la bottom sheet de SearchScreen
+                // (image + stats + texte de règle + variantes). Ne pas quitter l'écran ici :
+                // l'ancien popBackStack() refermait la recherche sans jamais montrer la carte.
+                onCardClick = { /* fiche gérée localement par SearchScreen */ },
                 vm = vm
             )
         }

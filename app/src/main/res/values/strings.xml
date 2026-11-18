@@ -106,7 +106,7 @@
     <string name="search_title">SEARCH</string>
     <string name="search_placeholder">Name, keyword, rule, weapon…</string>
     <string name="no_results">No results for « %1$s »</string>
-    <string name="variants">%1$d variant(s) — tap to open</string>
+    <string name="variants">%1$d variant(s) — tap to view</string>
     <string name="close">Close</string>
 
     <!-- Card detail (play mode) -->
@@ -265,4 +265,5 @@
     <string name="back_to_setup">Retour au Setup</string>
     <string name="setup_incomplete">Battle deck 3+3+3 + main de 7 requis</string>
     <string name="activation">Activation</string>
+    <string name="card_rules">Règles de la carte</string>
 </resources>

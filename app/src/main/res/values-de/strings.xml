@@ -106,7 +106,7 @@
     <string name="search_title">SUCHEN</string>
     <string name="search_placeholder">Name, Stichwort, Regel, Waffe…</string>
     <string name="no_results">Keine Ergebnisse für « %1$s »</string>
-    <string name="variants">%1$d Variante(n) — zum Öffnen tippen</string>
+    <string name="variants">%1$d Variante(n) — zum Anzeigen tippen</string>
     <string name="close">Schließen</string>
 
     <!-- Card detail (play mode) -->
@@ -266,4 +266,6 @@
     <string name="start_game">Spiel starten</string>
     <string name="back_to_setup">Zurück zum Setup</string>
     <string name="setup_incomplete">Battle-Deck 3+3+3 + Hand mit 7 erforderlich</string>
+    <string name="card_rules">Kartenregeln</string>
+    <string name="activation">Aktivierung</string>
 </resources>
