@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
@@ -49,16 +51,26 @@ import com.legionforge.app.ui.theme.LegionType
 /**
  * Mode Tabletop Legion — plateau 2D tactile.
  *
- * Couche de VISUALISATION au-dessus du mode Play : réutilise les données synchronisées
- * (wounds, cover, defeated, tokens) sans dupliquer le moteur de règles.
+ * ⚠ ÉTAT LOCAL NON SYNCHRONISÉ entre appareils. L'adversaire est affiché (Nearby/solo)
+ * mais les déplacements, activations, couverts et blessures ne sont PAS transmis à
+ * l'autre joueur. Les positions ne sont PAS persistées. A utiliser « à côté de la table ».
  *
- * Règles appliquées (voir expert règles v2.6) :
- * - socles ronds 25/40/50 mm, mesure en pouces (1" = 25,4 mm), bord-à-bord ;
- * - arc avant 90° (APPROXIMATION : le rulebook ne chiffre pas d'angle) ;
- * - couvert manuel aucun/léger/lourd (0/1/2).
+ * RÈGLES APPLIQUÉES (sources vérifiées) :
+ * - bandes de portée = segments de réglette de 6" (rulebook:648-664 ; legion.takras.net/range) ;
+ *   mesure bord-à-bord en pouces (1" = 25,4 mm, convention d'échelle) ;
+ * - socles : petits = trooper/clone/droid/wookiee, tout le reste cranté (rulebook:298-303) ;
+ *   modélisés en DISQUES (approximation : l'empreinte crantée et ses 4 arcs ne sont pas dessinés) ;
+ * - arc avant 90° = APPROXIMATION d'affichage, PAS une restriction de tir (la règle ne
+ *   chiffre aucun angle ; les socles crantés ont front/sides/rear, rulebook:2686-2689) ;
+ * - couvert 0/1/2 saisi manuellement ; annule 1 Hit par niveau, jamais de Crit
+ *   (rulebook:2268-2272) ; la LOS dépendant du terrain reste à arbitrer (rulebook:2226-2260) ;
+ * - dés : attaque d8 / défense d6, faces FFG (LegionDiceRules).
  *
- * Reste MANUEL (arbitrage joueur) : LOS 3D, nature du terrain, lancer des dés physiques,
- * keywords de cartes, scoring.
+ * RESTE MANUEL — NON IMPLÉMENTÉ (arbitrage joueur) :
+ * LOS/terrain 3D, mêlée et contact de socles, cohésion, conversion des Surges
+ * (selon les keywords/upgrades de carte), jetons Aim/Dodge/Surge/Standby/Suppression,
+ * tour d'activation, victoire/VP et départage (rulebook:1332-1339), keywords de cartes.
+ * La feuille de dés est un CALCULATEUR DE POOL, pas une résolution d'attaque complète.
  */
 data class LegionPawn(
     val id: String,
@@ -153,20 +165,36 @@ fun LegionTabletopScreen(
     // Fit SYNCHRONE : deterministe en local comme en CI (pas de race onSizeChanged).
     LaunchedEffect(vpW, vpH, pawns) { scale = fitScale(vpW, vpH) }
 
+    // Réfs STABLES pour le pointerInput : sans cela, pawns/scale/effPan changent
+    // à chaque frame de drag, ce qui redémarre detectDragGestures et casse le geste.
+    val livePawns by rememberUpdatedState(pawns)
+    val liveScale by rememberUpdatedState(scale)
+    val livePan by rememberUpdatedState(effPan())
+    val liveTool by rememberUpdatedState(tool)
+    val liveOnMove by rememberUpdatedState(onMove)
+    fun toScreenLive(p: LegionPawn): Offset = Offset(
+        livePan.x + p.xMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
+        livePan.y + p.yMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
+    )
+    fun screenToMmLive(at: Offset): Pair<Float, Float> = Pair(
+        (at.x - livePan.x) / (LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale),
+        (at.y - livePan.y) / (LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale),
+    )
+
     Box(Modifier.fillMaxSize().background(LegionColors.Background)) {
         // ── Plateau ──────────────────────────────────────────────────────────
         val textMeasurer = rememberTextMeasurer()
         Canvas(
-            Modifier.fillMaxSize().pointerInput(pawns, scale, effPan()) {
+            Modifier.fillMaxSize().testTag("legion_board").pointerInput(Unit) {
                 detectTapGestures { at ->
-                    val hit = pawns.lastOrNull { p ->
-                        val c = toScreen(p)
-                        val r = maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, scale) + 8f, LegionDims.TouchMin.toPx() / 2f)
+                    val hit = livePawns.lastOrNull { p ->
+                        val c = toScreenLive(p)
+                        val r = maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, liveScale) + 8f, LegionDims.TouchMin.toPx() / 2f)
                         (at - c).getDistance() <= r
                     }
                     when {
                         hit == null -> { selectedId = null; targetId = null; measureEnd = null }
-                        tool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
+                        liveTool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
                         selectedId == null -> selectedId = hit.id
                         hit.id == selectedId -> { /* déjà sélectionné */ }
                         else -> targetId = hit.id
@@ -174,22 +202,22 @@ fun LegionTabletopScreen(
                 }
                 detectDragGestures(
                     onDragStart = { at ->
-                        val hit = pawns.lastOrNull { p ->
-                            val c = toScreen(p)
-                            (at - c).getDistance() <= maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, scale) + 8f, LegionDims.TouchMin.toPx() / 2f)
+                        val hit = livePawns.lastOrNull { p ->
+                            val c = toScreenLive(p)
+                            (at - c).getDistance() <= maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, liveScale) + 8f, LegionDims.TouchMin.toPx() / 2f)
                         }
-                        if (hit != null && tool == LegionTool.SELECT) selectedId = hit.id
+                        if (hit != null && liveTool == LegionTool.SELECT) selectedId = hit.id
                     },
                     onDrag = { change, delta ->
                         change.consume()
-                        val hit = selectedId?.let { id -> pawns.firstOrNull { it.id == id } }
-                        if (hit != null && tool == LegionTool.SELECT) {
-                            val (mx, my) = screenToMm(change.position)
-                            onMove(hit.id, mx, my, hit.headingDeg)
+                        val hit = selectedId?.let { id -> livePawns.firstOrNull { it.id == id } }
+                        if (hit != null && liveTool == LegionTool.SELECT) {
+                            val (mx, my) = screenToMmLive(change.position)
+                            liveOnMove(hit.id, mx, my, hit.headingDeg)
                         } else {
-                            pan = effPan() + delta
+                            pan = livePan + delta
                         }
-                        if (tool == LegionTool.RANGE) measureEnd = change.position
+                        if (liveTool == LegionTool.RANGE) measureEnd = change.position
                     },
                 )
             }
@@ -223,7 +251,7 @@ fun LegionTabletopScreen(
                 }
                 Surface(onClick = { onRoundChange(round + 1) }, shape = RoundedCornerShape(LegionDims.Radius), color = LegionColors.Accent, modifier = Modifier.heightIn(min = LegionDims.TouchMin)) {
                     Row(Modifier.padding(horizontal = LegionDims.SpaceS), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, tint = LegionColors.Background, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.ArrowForward, contentDescription = null, tint = LegionColors.Background, modifier = Modifier.size(18.dp))
                         Text(stringResource(R.string.tabletop_end_round), color = LegionColors.Background, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
                 }
@@ -263,7 +291,9 @@ fun LegionTabletopScreen(
                         }
                         SmallAction(stringResource(R.string.tabletop_dice), false) { showDice = true }
                     }
-                    SmallAction(stringResource(R.string.tabletop_open_play), false) { onOpenPlay(p.id) }
+                    // Fiche Play = entrées de la liste LOCALE uniquement. Un pion adverse
+                    // (id B:/opp_) n'y existe pas : l'ouvrir afficherait la mauvaise unité.
+                    if (!p.isOpp) SmallAction(stringResource(R.string.tabletop_open_play), false) { onOpenPlay(p.id) }
                 }
             }
         }
@@ -405,7 +435,7 @@ private fun DrawScope.drawLegionBoard(
         )
         drawText(
             textMeasurer = textMeasurer,
-            text = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " C${p.cover}" else "",
+            text = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " Couv${p.cover}" else "",
             topLeft = Offset(c.x - r + 3.dp.toPx(), c.y + r + 5.dp.toPx()),
             style = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
                 color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary),

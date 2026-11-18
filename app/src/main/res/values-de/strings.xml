@@ -273,7 +273,7 @@
     <string name="tabletop_title">Legion Tabletop · Runde %1$d</string>
     <string name="tabletop_units_left">%1$d Einheit(en) übrig</string>
     <string name="tabletop_measure">Reichweite messen</string>
-    <string name="tabletop_end_round">Ende</string>
+    <string name="tabletop_end_round">Rundenende</string>
     <string name="tabletop_recenter">Zentrieren</string>
     <string name="tabletop_activate">Aktivieren</string>
     <string name="tabletop_rotate">90° drehen</string>

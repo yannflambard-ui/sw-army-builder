@@ -273,7 +273,7 @@
     <string name="tabletop_title">Legion Tabletop · Ronda %1$d</string>
     <string name="tabletop_units_left">%1$d unidad(es) restantes</string>
     <string name="tabletop_measure">Medir alcance</string>
-    <string name="tabletop_end_round">Fin</string>
+    <string name="tabletop_end_round">Fin ronda</string>
     <string name="tabletop_recenter">Recentrar</string>
     <string name="tabletop_activate">Activar</string>
     <string name="tabletop_rotate">Girar 90°</string>

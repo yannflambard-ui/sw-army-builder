@@ -271,7 +271,7 @@
     <string name="tabletop_title">Legion Tabletop · Round %1$d</string>
     <string name="tabletop_units_left">%1$d unit(s) remaining</string>
     <string name="tabletop_measure">Measure range</string>
-    <string name="tabletop_end_round">End</string>
+    <string name="tabletop_end_round">End round</string>
     <string name="tabletop_recenter">Recenter</string>
     <string name="tabletop_activate">Activate</string>
     <string name="tabletop_rotate">Rotate 90°</string>
