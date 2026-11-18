@@ -49,6 +49,12 @@ object LegionTabletopGeometry {
         return s !in SMALL_BASE_SUBTYPES
     }
 
+    /** Applique une nouvelle valeur de blessures : bornage 0..max et defeated dérivé. */
+    fun applyWounds(current: Int, max: Int, newWounds: Int): Pair<Int, Boolean> {
+        val w = newWounds.coerceIn(0, max.coerceAtLeast(0))
+        return w to (w <= 0)
+    }
+
     /** Total de blessures = seuil par figurine × effectif (rulebook:473-476). */
     fun totalWounds(health: Int, miniCount: Int): Int =
         health.coerceAtLeast(1) * miniCount.coerceAtLeast(1)

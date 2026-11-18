@@ -225,8 +225,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     onWoundsChange = { id, w ->
                         legionState = legionState.map { p ->
                             if (p.id == id) {
-                                val nw = w.coerceIn(0, p.maxWounds)
-                                p.copy(wounds = nw, defeated = nw <= 0)
+                                val (nw, dead) = com.legionforge.app.domain.LegionTabletopGeometry.applyWounds(p.wounds, p.maxWounds, w)
+                                p.copy(wounds = nw, defeated = dead)
                             } else p
                         }
                     },

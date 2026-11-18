@@ -158,3 +158,16 @@ class LegionCoverPoolTest {
         assertEquals(3, LegionDiceRules.rollCoverPool(rolls).size)
     }
 }
+
+/** Blessures : bornage 0..max et defeated dérivé (garde-fou anti-régression). */
+class LegionWoundsTest {
+    @Test fun `blessures bornees et defeated`() {
+        assertEquals(0f to true, LegionTabletopGeometry.applyWounds(4, 4, -1).let { it.first.toFloat() to it.second })
+        val dead = LegionTabletopGeometry.applyWounds(4, 4, 0)
+        assertEquals(0, dead.first); assertTrue(dead.second)
+        val alive = LegionTabletopGeometry.applyWounds(4, 4, 1)
+        assertEquals(1, alive.first); assertFalse(alive.second)
+        val clamped = LegionTabletopGeometry.applyWounds(2, 4, 99)
+        assertEquals(4, clamped.first); assertFalse(clamped.second)
+    }
+}

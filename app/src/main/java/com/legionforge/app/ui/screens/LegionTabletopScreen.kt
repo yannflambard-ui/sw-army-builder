@@ -163,7 +163,10 @@ fun LegionTabletopScreen(
         return minOf(widthPx.toFloat() / spanX, heightPx.toFloat() / spanY).coerceIn(0.6f, 4f)
     }
     // Fit SYNCHRONE : deterministe en local comme en CI (pas de race onSizeChanged).
-    LaunchedEffect(vpW, vpH, pawns) { scale = fitScale(vpW, vpH) }
+    // Clé = IDENTITÉ des pions, PAS leurs positions : sans cela, chaque onMove
+    // redéclenche le fit et la transformation bouge pendant le drag.
+    val pawnIds = pawns.joinToString("|") { it.id }
+    LaunchedEffect(vpW, vpH, pawnIds) { scale = fitScale(vpW, vpH) }
 
     // Réfs STABLES pour le pointerInput : sans cela, pawns/scale/effPan changent
     // à chaque frame de drag, ce qui redémarre detectDragGestures et casse le geste.
