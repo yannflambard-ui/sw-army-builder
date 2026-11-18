@@ -12,7 +12,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
@@ -228,7 +227,7 @@ fun LegionTabletopScreen(
                         }
                         if (liveTool == LegionTool.RANGE) measureEnd = change.position
                     },
-                    onDragEnd = { dragPan = null },
+                    onDragEnd = { if (dragPan != null) pan = dragPan; dragPan = null },
                     onDragCancel = { dragPan = null },
                 )
             }
