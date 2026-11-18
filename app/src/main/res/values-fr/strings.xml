@@ -290,4 +290,8 @@
     <string name="tabletop_successes">%1$d succès</string>
     <string name="tabletop_wounds">%1$d/%2$d blessures · %3$d&quot; · socle %4$s</string>
     <string name="tabletop_title_short">Legion · M%1$d</string>
+    <string name="tabletop_target">Cible : %1$s</string>
+    <string name="tabletop_cover_light">léger</string>
+    <string name="tabletop_cover_heavy">lourd</string>
+    <string name="tabletop_cover_pool">Couvert %1$s de la cible · dés : %2$s</string>
 </resources>

@@ -45,6 +45,7 @@ object LegionDiceRules {
     fun hitsAfterCover(rolls: List<String>, cover: Int, coverRolls: List<String>): Int {
         val hits = rolls.count { it == "Hit" }
         val crits = rolls.count { it == "Crit" }
+        if (cover <= 0) return hits + crits // aucun couvert => rien n'est annulé
         val cancel = coverRolls.count { f ->
             f == "Bloc" || (cover >= 2 && f == "Surge")
         }

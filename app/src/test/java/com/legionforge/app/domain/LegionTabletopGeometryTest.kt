@@ -153,6 +153,18 @@ class LegionCoverPoolTest {
         assertEquals(2, LegionDiceRules.hitsAfterCover(rolls, 2, listOf("Bloc", "Bloc")))
     }
 
+    @Test fun `cover zero n annule rien`() {
+        assertEquals(4, LegionDiceRules.hitsAfterCover(
+            listOf("Hit", "Hit", "Hit", "Crit"), 0, listOf("Bloc", "Vide", "Vide")))
+    }
+
+    @Test fun `anneaux de bandes 6 pouces`() {
+        val r = { i: Int -> LegionTabletopGeometry.rangeRingPx(6 * i, 1f) }
+        assertEquals(r(1) * 2, r(2), 0.01f)
+        assertEquals(r(1) * 3, r(3), 0.01f)
+        assertEquals(r(1) * 5, r(5), 0.01f)
+    }
+
     @Test fun `pool auto un des par hit`() {
         val rolls = listOf("Hit", "Hit", "Crit", "Hit")
         assertEquals(3, LegionDiceRules.rollCoverPool(rolls).size)

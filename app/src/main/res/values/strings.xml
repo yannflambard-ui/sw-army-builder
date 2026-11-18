@@ -288,4 +288,8 @@
     <string name="tabletop_successes">%1$d success(es)</string>
     <string name="tabletop_wounds">%1$d/%2$d wounds · %3$d&quot; · %4$s base</string>
     <string name="tabletop_title_short">Legion · R%1$d</string>
+    <string name="tabletop_target">Target: %1$s</string>
+    <string name="tabletop_cover_light">light</string>
+    <string name="tabletop_cover_heavy">heavy</string>
+    <string name="tabletop_cover_pool">%1$s cover of the target · dice: %2$s</string>
 </resources>

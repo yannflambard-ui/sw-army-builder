@@ -126,6 +126,9 @@ fun LegionTabletopScreen(
     }
 
     var pan by remember { mutableStateOf<Offset?>(null) } // null = pas encore cadré
+    // Translation figée pendant le drag d'un pion : effPan() recalculerait sinon
+    // la bounding-box à chaque frame et la coordonnée mm dériverait sous le doigt.
+    var dragPan by remember { mutableStateOf<Offset?>(null) }
     var measureEnd by remember { mutableStateOf<Offset?>(null) }
     var showDice by remember { mutableStateOf(false) }
     val density = LocalDensity.current
@@ -140,7 +143,7 @@ fun LegionTabletopScreen(
     // Conversion plateau (mm, centré 0,0) -> écran (px).
     // Centre du viewport en px (millieu de l'ecran), resolu apres mesure.
     var viewCenter by remember { mutableStateOf(Offset(vpW / 2f, vpH / 2f)) }
-    fun effPan(): Offset = pan ?: run {
+    fun effPan(): Offset = dragPan ?: pan ?: run {
         if (pawns.isEmpty()) viewCenter else Offset(
             viewCenter.x - (pawns.maxOf { it.xMm } + pawns.minOf { it.xMm }) / 2f * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
             viewCenter.y - (pawns.maxOf { it.yMm } + pawns.minOf { it.yMm }) / 2f * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
@@ -209,7 +212,10 @@ fun LegionTabletopScreen(
                             val c = toScreenLive(p)
                             (at - c).getDistance() <= maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, liveScale) + 8f, LegionDims.TouchMin.toPx() / 2f)
                         }
-                        if (hit != null && liveTool == LegionTool.SELECT) selectedId = hit.id
+                        if (hit != null && liveTool == LegionTool.SELECT) {
+                            selectedId = hit.id
+                            dragPan = livePan // figer la translation pendant le geste
+                        }
                     },
                     onDrag = { change, delta ->
                         change.consume()
@@ -222,6 +228,8 @@ fun LegionTabletopScreen(
                         }
                         if (liveTool == LegionTool.RANGE) measureEnd = change.position
                     },
+                    onDragEnd = { dragPan = null },
+                    onDragCancel = { dragPan = null },
                 )
             }
         ) {
@@ -489,7 +497,7 @@ private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -
                         repeat(white) { add(com.legionforge.app.domain.LegionDiceRules.faces(mode, "white").random()) }
                     }
                     // Couvert = 1 dé blanc par Hit de la réserve (rulebook 2262-2272).
-                    coverRoll = if (mode == "attack")
+                    coverRoll = if (mode == "attack" && cover > 0)
                         com.legionforge.app.domain.LegionDiceRules.rollCoverPool(lastRoll) else emptyList()
                 },
                 Modifier.fillMaxWidth().height(56.dp),
@@ -502,9 +510,9 @@ private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -
                 else lastRoll.count { com.legionforge.app.domain.LegionDiceRules.isSuccess(mode, it) }
                 Text(stringResource(R.string.tabletop_successes, successes), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 if (mode == "attack") {
-                    if (targetName.isNotBlank()) Text("Cible : $targetName", color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
+                    if (targetName.isNotBlank()) Text(stringResource(R.string.tabletop_target, targetName), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
                     if (cover > 0) Text(
-                        "Couvert ${if (cover >= 2) "lourd" else "léger"} de la cible · dés: ${coverRoll.joinToString(" ")}",
+                        stringResource(R.string.tabletop_cover_pool, stringResource(if (cover >= 2) R.string.tabletop_cover_heavy else R.string.tabletop_cover_light), coverRoll.joinToString(" ")),
                         color = LegionColors.Warning, style = MaterialTheme.typography.labelSmall,
                     )
                 }

@@ -290,4 +290,8 @@
     <string name="tabletop_successes">%1$d Erfolg(e)</string>
     <string name="tabletop_wounds">%1$d/%2$d Wunden · %3$d&quot; · %4$s Sockel</string>
     <string name="tabletop_title_short">Legion · R%1$d</string>
+    <string name="tabletop_target">Ziel: %1$s</string>
+    <string name="tabletop_cover_light">leicht</string>
+    <string name="tabletop_cover_heavy">schwer</string>
+    <string name="tabletop_cover_pool">%1$s Deckung des Ziels · Würfel: %2$s</string>
 </resources>
