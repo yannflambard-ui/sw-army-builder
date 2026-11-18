@@ -125,7 +125,7 @@ fun SearchScreen(
                     Text(stringResource(R.string.variants, variants.size), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
                     variants.forEach { v ->
                         Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (v.id == sel.id) LegionColors.Border else Color(0xFF192330)).clickable(role = Role.Button, onClickLabel = stringResource(R.string.variants, variants.size)) { selected = v }.padding(10.dp),
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (v.id == sel.id) LegionColors.Border else LegionColors.SurfaceRaised).clickable(role = Role.Button, onClickLabel = stringResource(R.string.variants, variants.size)) { selected = v }.padding(10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -144,7 +144,7 @@ fun SearchScreen(
 
 @Composable
 private fun SearchResultRow(card: CardDefinition, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             // Image de la carte directement (au lieu du petit résumé texte).
             CardArtwork(card, Modifier.width(64.dp))

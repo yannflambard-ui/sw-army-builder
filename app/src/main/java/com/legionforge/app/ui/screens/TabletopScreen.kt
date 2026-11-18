@@ -264,7 +264,7 @@ fun TabletopScreen(
         (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath } + pawns.mapNotNull { it.figurePath } + pawns.mapNotNull { it.tokenPath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
     }
 
-    Column(Modifier.fillMaxSize().background(Color(0xFF0B1220))) {
+    Column(Modifier.fillMaxSize().background(LegionColors.Background)) {
         // Top bar : retour (icône) · manche + zoom · recentrer (icône). Tout en maxLines=1.
         Row(
             Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 8.dp),
@@ -591,14 +591,14 @@ fun TabletopScreen(
                     }
                 },
                 modifier = Modifier.weight(1f).height(56.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = LegionColors.Accent, contentColor = Color(0xFF0B1220)),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = LegionColors.Accent, contentColor = LegionColors.Background),
             ) { Text(if (speedIdx > 0) "Déplacer V$speedIdx" else "Déplacer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
             val shots = shotsMap[selPawn.id] ?: 0
             Button(
                 enabled = shots < MAX_SHOTS_PER_ROUND,
                 onClick = { sheetPawnId = selPawn.id },
                 modifier = Modifier.weight(1f).height(56.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = Color(0xFF0B1220), disabledContainerColor = Color(0xFF3A3F4A), disabledContentColor = Color(0xFF8F9BAD)),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = LegionColors.Background, disabledContainerColor = Color(0xFF3A3F4A), disabledContentColor = LegionColors.TextTertiary),
             ) { Text(if (shots >= MAX_SHOTS_PER_ROUND) "Tir $shots/$MAX_SHOTS_PER_ROUND" else "Tirer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
         }
         // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau.
@@ -616,7 +616,7 @@ fun TabletopScreen(
                         Text("Tir et trajectoire indicatifs : vérifiez avec la réglette.", color = LegionColors.Accent, fontSize = 12.sp)
                         Text(
                             if (sp.isSquadron) "Escadron · vitesse max ${sp.maxSpeed}" else "Vaisseau · vitesse max ${sp.maxSpeed}",
-                            color = Color(0xFF8F9BAD), fontSize = 12.sp, maxLines = 1,
+                            color = LegionColors.TextTertiary, fontSize = 12.sp, maxLines = 1,
                         )
                         // ── 1. Vitesse + coudes : matrice unique (colonne = vitesse, case = coude de la position) ──
                         if (!sp.isSquadron) TabletopBendMatrix(
@@ -700,7 +700,7 @@ fun TabletopScreen(
                             enabled = selPawn != null && targetPawn != null && selPawn.isOpp != targetPawn.isOpp &&
                                 (blackDice + blueDice + redDice) > 0 && blackDice <= eligibleDice.black && blueDice <= eligibleDice.blue && redDice <= eligibleDice.red,
                             modifier = Modifier.fillMaxWidth().height(56.dp),
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = Color(0xFF0B1220)),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFF87171), contentColor = LegionColors.Background),
                         ) { Text("Attaquer", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1) }
                         // Fiche complète Play de ce pion.
                         androidx.compose.material3.TextButton(onClick = { sheetPawnId = null; onSelectPlayUnit(sp.id) }, modifier = Modifier.fillMaxWidth()) {
@@ -1004,11 +1004,11 @@ private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: F
     if (round) {
         // escadron (chasseur) : jeton rond, diamètre = plus petit côté
         val r = minOf(w, h) / 2
-        drawCircle(Color(0xFF1E2A3A), r, center)
+        drawCircle(LegionColors.SurfaceRaised, r, center)
         drawCircle(border, r, center, style = stroke)
         return
     }
-    drawRect(Color(0xFF1E2A3A), topLeft, androidx.compose.ui.geometry.Size(w, h))
+    drawRect(LegionColors.SurfaceRaised, topLeft, androidx.compose.ui.geometry.Size(w, h))
     drawRect(border, topLeft, androidx.compose.ui.geometry.Size(w, h), style = stroke)
     // proue : petit repère vers le haut du socle (heading 0)
     drawLine(LegionColors.Success, center, Offset(center.x, topLeft.y + h * 0.1f), strokeWidth = 2f)

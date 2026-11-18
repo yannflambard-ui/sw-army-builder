@@ -55,7 +55,7 @@ fun FactionPickerScreen(system: GameSystem, onFactionSelected: (String) -> Unit,
             item { Text(system.label(), color = LegionColors.Accent, style = MaterialTheme.typography.labelLarge) }
             items(groups.keys.sorted(), key = { it }) { faction ->
                 val count = groups[faction]?.count { it.kind == if (system == GameSystem.LEGION_V2) com.legionforge.app.data.model.CardKind.LEGION_UNIT else com.legionforge.app.data.model.CardKind.ARMADA_SHIP } ?: 0
-                Card(onClick = { onFactionSelected(faction) }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF192331))) {
+                Card(onClick = { onFactionSelected(faction) }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                     Row(Modifier.padding(18.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(factionIconRes(faction)),

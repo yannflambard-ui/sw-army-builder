@@ -97,7 +97,7 @@ fun CollectionScreen(onBack: () -> Unit, vm: ArmyBuilderViewModel = viewModel())
 private fun PackList(packs: List<CollectionPack>, ownedPacks: Set<String>, q: String) {
     if (packs.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.no_packs), color = Color.Gray)
+            Text(stringResource(R.string.no_packs), color = LegionColors.TextTertiary)
         }
         return
     }
@@ -119,7 +119,7 @@ private fun PackRow(pack: CollectionPack, isOwned: Boolean, onToggle: () -> Unit
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onToggle),
-        color = if (isOwned) Color(0xFF2A3A1E) else Color(0xFF141B26)
+        color = if (isOwned) Color(0xFF2A3A1E) else LegionColors.Surface
     ) {
         Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             val imgSrc = pack.imageName?.let { "file:///android_asset/cards/packs/$it" }
@@ -135,7 +135,7 @@ private fun PackRow(pack: CollectionPack, isOwned: Boolean, onToggle: () -> Unit
             Column(Modifier.weight(1f)) {
                 Text(pack.name, color = Color.White, style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text("${pack.cards.size} cartes", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.labelSmall)
+                Text("${pack.cards.size} cartes", color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
             }
             Checkbox(
                 checked = isOwned, onCheckedChange = { onToggle() },
@@ -170,7 +170,7 @@ private fun CollectionRow(card: CardDefinition, isOwned: Boolean, onToggle: () -
             .padding(vertical = 3.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onToggle),
-        color = if (isOwned) accent.copy(alpha = 0.12f) else Color(0xFF141B26)
+        color = if (isOwned) accent.copy(alpha = 0.12f) else LegionColors.Surface
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(
@@ -183,7 +183,7 @@ private fun CollectionRow(card: CardDefinition, isOwned: Boolean, onToggle: () -
                 Text(card.displayName(), color = Color.White, style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(kindLabel(card.kind), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.labelSmall)
+                    Text(kindLabel(card.kind), color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
                     if (card.kind.name == "LEGION_UNIT" && card.legionRank != null) {
                         Text(rankLabel(card.legionRank), color = rankColor(card.legionRank), style = MaterialTheme.typography.labelSmall)
                     }

@@ -139,7 +139,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (listValid) Color(0xFF1E7A3C) else LegionColors.Border,
-                        contentColor = if (listValid) Color.White else Color(0xFF718096)
+                        contentColor = if (listValid) Color.White else LegionColors.TextTertiary
                     )
                 ) {
                                     Text("\u25B6", fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -169,7 +169,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
         Column(Modifier.fillMaxSize().background(LegionColors.Background).padding(pad)) {
             val total = validation.totalPoints
             val limit = list?.pointsLimit ?: if (game == GameSystem.LEGION_V2) 1000 else 400
-            Card(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+            Card(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                 Column(Modifier.padding(9.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
@@ -289,7 +289,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
                         items(additions, key = { it.id }) { card -> CatalogCard(card, entries, selectedParentId, onAdd = { parent, slot -> viewModel.add(card, parent, slot) }, onPreview = { previewCard = card }) }
                                 }
             }
-            Text(stringResource(R.string.offline_catalog_note), Modifier.align(Alignment.CenterHorizontally).padding(bottom = 6.dp), color = Color(0xFF718096), style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.offline_catalog_note), Modifier.align(Alignment.CenterHorizontally).padding(bottom = 6.dp), color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
         }
     }
     if (renameOpen) {
@@ -314,7 +314,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
             dismissButton = {
                 TextButton(onClick = { renameOpen = false }) { Text(stringResource(R.string.cancel), color = LegionColors.TextSecondary) }
             },
-            containerColor = Color(0xFF192330)
+            containerColor = LegionColors.SurfaceRaised
         )
     }
     // Aperçu plein écran de l'image : clic sur une carte l'ouvre, clic sur l'image la referme.
@@ -326,7 +326,7 @@ fun ArmyBuilderScreen(listId: String, onBack: () -> Unit, onPlayCard: (String, S
     if (missing.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissImportMissing() },
-            containerColor = Color(0xFF192330),
+            containerColor = LegionColors.SurfaceRaised,
             title = { Text("Import incomplet", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
@@ -354,7 +354,7 @@ private fun ImagePreviewDialog(card: CardDefinition, onClose: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(card.displayName(), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                    Surface(onClick = onClose, modifier = Modifier.clip(RoundedCornerShape(14.dp)), shape = RoundedCornerShape(14.dp), color = Color(0xFF18212D)) {
+                    Surface(onClick = onClose, modifier = Modifier.clip(RoundedCornerShape(14.dp)), shape = RoundedCornerShape(14.dp), color = LegionColors.Surface) {
                         if (source != null) {
                             AsyncImage(
                                 model = source,
@@ -363,12 +363,12 @@ contentDescription = stringResource(R.string.icon_desc, card.displayName()),
                                 contentScale = ContentScale.Fit
                             )
                         } else {
-                            Box(Modifier.fillMaxWidth().aspectRatio(cardAspectRatio(card)).background(Brush.linearGradient(listOf(Color(0xFF253344), Color(0xFF111820)))), contentAlignment = Alignment.Center) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(cardAspectRatio(card)).background(Brush.linearGradient(listOf(LegionColors.SurfaceRaised, Color(0xFF111820)))), contentAlignment = Alignment.Center) {
                                 Text(stringResource(R.string.no_image), color = Color(0xFF8494A8), style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
-                    Text(stringResource(R.string.click_to_close), color = Color(0xFF718096), style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.click_to_close), color = LegionColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -448,7 +448,7 @@ private fun BuilderEntryCard(entry: ListEntry, isChild: Boolean = false, accentC
         .then(if (isSelectable) Modifier.clickable { onSelectParent() } else Modifier)
         .then(if (isChild) Modifier.padding(start = 28.dp) else Modifier),
         shape = RoundedCornerShape(if (isChild) 10.dp else 15.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isChild) Color(0xFF1E2A3A) else Color(0xFF18212D))) {
+        colors = CardDefaults.cardColors(containerColor = if (isChild) LegionColors.SurfaceRaised else LegionColors.Surface)) {
         Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             CardArtwork(entry.card, Modifier.width(if (entry.card.kind == CardKind.LEGION_UNIT) 96.dp else 64.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -493,7 +493,7 @@ private fun CatalogCard(card: CardDefinition, entries: List<ListEntry>, preselec
     val alreadyAdded = entries.any { it.card.id == card.id && (card.unique || card.kind == CardKind.COMMANDER) }
     val compatibleSlotFull = isUpgrade && eligibleSlots.isNotEmpty() && eligibleSlots.all { slot -> eligibleTargets.all { target -> (slotCounts[target.instanceId to slot] ?: 0) >= target.card.allowedUpgradeSlots.count { it == slot } } }
     val alreadyCount = entries.filter { it.card.id == card.id }.sumOf { it.quantity }
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF18212D))) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(15.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.Surface)) {
             Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(11.dp), verticalAlignment = Alignment.CenterVertically) {
                 CardArtwork(card, Modifier.width(if (card.kind == CardKind.LEGION_UNIT) 88.dp else 58.dp).clickable { onPreview() })
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -515,7 +515,7 @@ private fun CatalogCard(card: CardDefinition, entries: List<ListEntry>, preselec
                 if (card.kind == CardKind.LEGION_UNIT && card.legionRank != null) {
                     Text(rankLabel(card.legionRank), color = rankColor(card.legionRank), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
-                Text("${factionLabel(card.factionId)} • ${if (card.unique) stringResource(R.string.unique) else stringResource(R.string.standard)}", maxLines = 1, color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall)
+                Text("${factionLabel(card.factionId)} • ${if (card.unique) stringResource(R.string.unique) else stringResource(R.string.standard)}", maxLines = 1, color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 if (requiresTarget && eligibleTargets.isNotEmpty()) {
                     // Quand un parent est déjà sélectionné, le catalogue est scoped à ce parent :
                     // le sélecteur "Pour :" est redondant, on l'affiche seulement sans présélection.
@@ -568,8 +568,8 @@ fun CardArtwork(card: CardDefinition, modifier: Modifier = Modifier) {
     val ratio = cardAspectRatio(card)
     val sized = modifier.aspectRatio(ratio)
     if (source != null) AsyncImage(model = source, contentDescription = stringResource(R.string.icon_desc, card.displayName()), modifier = sized, contentScale = ContentScale.Crop)
-    else Card(sized, shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF253344))) {
-        Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF253344), Color(0xFF111820)))), contentAlignment = Alignment.Center) {
+    else Card(sized, shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
+        Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(LegionColors.SurfaceRaised, Color(0xFF111820)))), contentAlignment = Alignment.Center) {
             Text(card.displayName().split(' ').take(2).joinToString("\n"), color = Color(0xFF8494A8), style = MaterialTheme.typography.labelSmall)
         }
     }

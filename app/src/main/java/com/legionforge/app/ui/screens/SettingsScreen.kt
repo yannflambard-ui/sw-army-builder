@@ -68,7 +68,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
                             activity?.recreate()
                         },
                     colors = CardDefaults.cardColors(
-                        containerColor = if (selected) Color(0xFFFFB800).copy(alpha = 0.2f) else Color(0xFF192331)
+                        containerColor = if (selected) Color(0xFFFFB800).copy(alpha = 0.2f) else LegionColors.SurfaceRaised
                     )
                 ) {
                     Row(
@@ -97,7 +97,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onCollection),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF192331))
+                colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)
             ) {
                 Row(
                     Modifier.fillMaxWidth().padding(18.dp),
@@ -116,7 +116,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { CollectionRepository.setCollectionOnly(!collectionOnly) },
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF192331))
+                colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)
             ) {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
@@ -134,7 +134,7 @@ fun SettingsScreen(onBack: () -> Unit, onCollection: () -> Unit = {}) {
 
             Spacer(Modifier.height(12.dp))
             Text(stringResource(R.string.more_options),
-                color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

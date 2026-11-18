@@ -64,14 +64,14 @@ fun ShareScreen(
                 ShareMode.ADVERTISING -> StatusLine(stringResource(R.string.share_hosting), LegionColors.Accent)
                 ShareMode.DISCOVERING -> StatusLine(stringResource(R.string.share_discovering), Color(0xFF4FC3F7))
                 ShareMode.CONNECTED -> StatusLine(stringResource(R.string.share_connected), LegionColors.Success)
-                ShareMode.IDLE -> StatusLine("—", Color(0xFF8F9BAD))
+                ShareMode.IDLE -> StatusLine("—", LegionColors.TextTertiary)
             }
             error?.let { StatusLine(it, LegionColors.Danger) }
 
             // Client : liste des hôtes découverts
             if (mode == ShareMode.DISCOVERING) {
                 if (endpoints.isEmpty()) {
-                    Text(stringResource(R.string.share_no_endpoints), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.share_no_endpoints), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall)
                 }
                 endpoints.forEach { ep ->
                     Card(onClick = { runWithPermission { vm.connectTo(ep.endpointId) } }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
@@ -96,7 +96,7 @@ fun ShareScreen(
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.share_received), color = LegionColors.Success, fontWeight = FontWeight.Bold)
                         Text((payload.name as String?) ?: "", color = Color.White, style = MaterialTheme.typography.titleSmall)
-                        Text("${payload.gameSystem} • ${payload.factionId} • ${payload.pointsLimit} pts • ${(payload.entries as List<ShareEntry>?)?.size ?: 0} entrées", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                        Text("${payload.gameSystem} • ${payload.factionId} • ${payload.pointsLimit} pts • ${(payload.entries as List<ShareEntry>?)?.size ?: 0} entrées", color = LegionColors.TextTertiary, fontSize = 11.sp)
                         Button(onClick = { onImport(payload); vm.clearReceived() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = LegionColors.Success)) {
                             Text(stringResource(R.string.share_import), color = LegionColors.Background, fontWeight = FontWeight.Bold)
                         }

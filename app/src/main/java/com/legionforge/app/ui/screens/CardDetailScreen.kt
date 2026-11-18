@@ -695,7 +695,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             }
         }
     }) { pad ->
-        if (playable.isEmpty()) { Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) { Text(stringResource(R.string.add_units_play), color = Color.Gray) }; return@Scaffold }
+        if (playable.isEmpty()) { Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) { Text(stringResource(R.string.add_units_play), color = LegionColors.TextTertiary) }; return@Scaffold }
         Box(Modifier.fillMaxSize().padding(pad)) {
             // ── ÉCRAN DE PARTIE : setup + features de jeu (solo ou 2 joueurs) ──
             if (viewingArmy == null) {
@@ -709,7 +709,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     // Connexion Nearby (2 joueurs uniquement) : panneau si pas connecté, sinon indicateur.
                     if (twoPlayer && syncMode != ShareMode.CONNECTED) {
                         val endpoints by playSyncVm.endpoints.collectAsState()
-                        Text(stringResource(R.string.play_2p_guidance), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 4.dp))
+                        Text(stringResource(R.string.play_2p_guidance), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 4.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { runWithPermission { playSyncVm.startHost() } }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = if (syncMode == ShareMode.ADVERTISING) LegionColors.Accent else LegionColors.SurfaceRaised)) {
                                 Text(stringResource(R.string.play_host), color = if (syncMode == ShareMode.ADVERTISING) LegionColors.Background else Color.White, fontWeight = FontWeight.Bold)
@@ -719,7 +719,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                         }
                         if (syncMode == ShareMode.DISCOVERING) {
-                            if (endpoints.isEmpty()) Text(stringResource(R.string.share_no_endpoints), color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                            if (endpoints.isEmpty()) Text(stringResource(R.string.share_no_endpoints), color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall)
                             endpoints.forEach { ep ->
                                 Card(onClick = { runWithPermission { playSyncVm.connectTo(ep.endpointId) } }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
                                     Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -741,7 +741,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     if (!twoPlayer) {
                         Surface(onClick = { showOppPicker = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = LegionColors.SurfaceRaised) {
                             Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Info, contentDescription = null, tint = LegionColors.Accent, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Filled.Info, contentDescription = "Choisir l'armée adverse", tint = LegionColors.Accent, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(if (soloOppList != null) "Armée adverse : ${soloOppList?.name}" else "Choisir l'armée adverse (solo)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                                 Text("Choisir", color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -766,7 +766,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Battle deck (construction 3+3+3).
                                 Surface(onClick = { showBattleSheet = true }, shape = RoundedCornerShape(10.dp), color = LegionColors.Border, modifier = Modifier.fillMaxWidth()) {
                                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Filled.Info, contentDescription = null, tint = LegionColors.Accent, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.setup_battle_deck), tint = LegionColors.Accent, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
                                         Text(stringResource(R.string.setup_battle_deck), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                         Spacer(Modifier.weight(1f))
@@ -776,7 +776,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Command deck (main de 7).
                                 Surface(onClick = { showCmdSheet = true }, shape = RoundedCornerShape(10.dp), color = LegionColors.Border, modifier = Modifier.fillMaxWidth()) {
                                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Filled.Star, contentDescription = null, tint = LegionColors.Accent, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.setup_command_deck), tint = LegionColors.Accent, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
                                         Text(stringResource(R.string.setup_command_deck), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                         Spacer(Modifier.weight(1f))
@@ -788,7 +788,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 // Round 0 / Build a Mission (v2.6) : détermination blue + révélation + modifications.
                                 Surface(onClick = { showMissionSheet = true }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = LegionColors.SuccessSurface) {
                                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Filled.Info, contentDescription = null, tint = LegionColors.Success, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Filled.Info, contentDescription = "Build a Mission", tint = LegionColors.Success, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
                                         Text("Round 0 — Build a Mission", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                                         Text(if (bluePlayer != null) "✓" else "→", color = LegionColors.Success, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -805,7 +805,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     if (listId != null) scope.launch { sessionDb.gameSessionDao().delete(listId) }
                                     phase = PlayPhase.GAME
                                 }, enabled = battleComplete && cmdComplete, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = if (battleComplete && cmdComplete) LegionColors.Success else LegionColors.Border)) {
-                                    Text(if (battleComplete && cmdComplete) stringResource(R.string.start_game) else stringResource(R.string.setup_incomplete), color = if (battleComplete && cmdComplete) LegionColors.Background else Color(0xFF8F9BAD), fontWeight = FontWeight.Bold)
+                                    Text(if (battleComplete && cmdComplete) stringResource(R.string.start_game) else stringResource(R.string.setup_incomplete), color = if (battleComplete && cmdComplete) LegionColors.Background else LegionColors.TextTertiary, fontWeight = FontWeight.Bold)
                                 }
                                 }
                                 // Navigation (wizard).
@@ -828,7 +828,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 Surface(onClick = { showDeployment = true }, shape = RoundedCornerShape(10.dp), color = LegionColors.SuccessSurface, modifier = Modifier.fillMaxWidth()) {
                                     Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text("Déployer les armées", color = LegionColors.Success, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                        Text("Marquez la Zone 1 / Zone 2 de chaque vaisseau", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                                        Text("Marquez la Zone 1 / Zone 2 de chaque vaisseau", color = LegionColors.TextTertiary, fontSize = 11.sp)
                                     }
                                 }
                                 // Lancer la partie : aucun battle/command deck requis pour Armada.
@@ -975,7 +975,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                         twoPlayer -> "0 unité reçue — la liste adverse n'est pas encore arrivée"
                                         else -> "Choisissez une armée adverse dans le menu setup pour lancer le mode play"
                                     },
-                                    color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodyMedium)
+                                    color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodyMedium)
                                 if (twoPlayer) {
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Button(onClick = { playSyncVm.requestList() }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = LegionColors.Border)) {
@@ -1149,7 +1149,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 }
                             } else {
                                 item {
-                                    Text(if (twoPlayer) "En attente de la flotte adverse..." else "Aucune armée adverse (choisissez-la dans le setup)", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
+                                    Text(if (twoPlayer) "En attente de la flotte adverse..." else "Aucune armée adverse (choisissez-la dans le setup)", color = LegionColors.TextTertiary, fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
                                 }
                             }
                             }
@@ -1205,7 +1205,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
             val onUnitChange: (String, SyncedUnitState) -> Unit = if (isOpp) { _, _ -> } else { id, next -> playSyncVm.setOwnState(id, next) }
             if (listEntries.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(if (isOpp) "Armée adverse vide (aucune unité reçue)" else stringResource(R.string.add_units_play), color = Color.Gray)
+                    Text(if (isOpp) "Armée adverse vide (aucune unité reçue)" else stringResource(R.string.add_units_play), color = LegionColors.TextTertiary)
                 }
             } else {
                 if (phase == PlayPhase.PREP) {
@@ -1397,12 +1397,12 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 val sameSystem = allLists.filter { it.gameSystem == curSystem }
                 if (sameSystem.isEmpty()) Text(
                     if (curSystem == "ARMADA_V15") "Aucune flotte Armada adverse enregistrée" else "Aucune armée adverse de ce jeu enregistrée",
-                    color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                    color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall)
                 sameSystem.forEach { l ->
                     Surface(onClick = { savedOpponentId = l.id; vm.loadOpponentList(l.id); showOppPicker = false }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = LegionColors.SurfaceRaised) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(l.name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            Text("${l.factionId} • ${l.pointsLimit} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                            Text("${l.factionId} • ${l.pointsLimit} pts", color = LegionColors.TextTertiary, fontSize = 11.sp)
                         }
                     }
                 }
@@ -1536,7 +1536,7 @@ internal fun ArmadaRoundBar(armadaRound: Int, armadaPhase: ArmadaPhase, twoPlaye
                 Surface(shape = RoundedCornerShape(6.dp), modifier = Modifier.weight(1f),
                     color = if (ph == armadaPhase) LegionColors.Accent else LegionColors.Border) {
                     Box(Modifier.padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
-                        Text(lbl, color = if (ph == armadaPhase) LegionColors.Background else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(lbl, color = if (ph == armadaPhase) LegionColors.Background else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1571,7 +1571,7 @@ internal fun ArmadaFleetTile(unit: ListEntry, state: SyncedUnitState?, onClick: 
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(unit.card.displayName(), color = if (defeated) LegionColors.TextTertiary else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).alpha(if (defeated) 0.6f else 1f))
-                Text("${unit.card.points} pts", color = Color(0xFF8F9BAD), fontSize = 11.sp, modifier = Modifier.padding(start = 6.dp))
+                Text("${unit.card.points} pts", color = LegionColors.TextTertiary, fontSize = 11.sp, modifier = Modifier.padding(start = 6.dp))
                 Spacer(Modifier.width(8.dp))
                 // Silhouette du vaisseau : on n'affiche que le coin BAS-GAUCHE de la carte (où se trouve la petite
                 // silhouette). Cadrage Fit dans une grande boîte ancrée bas-gauche -> on montre cette zone quelle que
@@ -1635,14 +1635,14 @@ private fun revealGlyph(name: String?): String = when (name) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BlockedShipsSheet(ships: List<ListEntry>, onClose: () -> Unit, onSelect: (ListEntry) -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color(0xFF141B26)) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
         Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
             Text("Vaisseaux à activer", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             if (ships.isEmpty()) {
-                Text("Aucun — manche prête", color = Color(0xFF8F9BAD), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                Text("Aucun — manche prête", color = LegionColors.TextTertiary, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             } else {
                 ships.forEach { unit ->
-                    Surface(onClick = { onSelect(unit) }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp), shape = RoundedCornerShape(10.dp), color = Color(0xFF1E293B)) {
+                    Surface(onClick = { onSelect(unit) }, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp), shape = RoundedCornerShape(10.dp), color = LegionColors.SurfaceRaised) {
                         Row(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(unit.card.displayName(), color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.width(6.dp))
@@ -1838,7 +1838,7 @@ internal fun BattleDeckSheet(
                 val rev = revealed[cat]
                 // En-tête compact : label + count + mission + bouton ↻ sur une ligne.
                 Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("$label ($sel/3)", color = Color(0xFFB4BFCE), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("$label ($sel/3)", color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(8.dp))
                     Text("→ ${rev.takeIf { !it.isNullOrEmpty() } ?: "—"}", color = LegionColors.Accent, fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (deckComplete(cat)) Surface(onClick = { onCycleReveal(cat) }, shape = RoundedCornerShape(6.dp), color = LegionColors.Border) { Text("↻", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = LegionColors.Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
@@ -1928,7 +1928,7 @@ internal fun CommandDeckSheet(
                 val pipCards = cards.filter { it.pip == pip }
                 if (pipCards.isEmpty()) return@forEach
                 val sel = selectedCount(pip)
-                Text("PIP $pip  ($sel/2)", color = Color(0xFFB4BFCE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                Text("PIP $pip  ($sel/2)", color = LegionColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     pipCards.forEach { c ->
                         val inDeck = c.id in deck
@@ -2017,7 +2017,7 @@ internal fun GameLogSheet(log: List<String>, onClose: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Journal de partie", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             if (log.isEmpty()) {
-                Text("Aucun événement enregistré", color = Color(0xFF8F9BAD), style = MaterialTheme.typography.bodySmall)
+                Text("Aucun événement enregistré", color = LegionColors.TextTertiary, style = MaterialTheme.typography.bodySmall)
             } else {
                 Column(Modifier.fillMaxWidth().heightIn(max = 320.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     log.forEach { e -> Text(e, color = Color(0xFFD5DEE8), fontSize = 12.sp) }
@@ -2062,7 +2062,7 @@ internal fun MissionBuilderSheet(
                 Surface(onClick = { onSetBlue("opp") }, shape = RoundedCornerShape(8.dp), color = if (bluePlayer == "opp") Color(0xFF4FC3F7) else LegionColors.Border, modifier = Modifier.weight(1f)) { Text("ADV", Modifier.padding(vertical = 8.dp), color = if (bluePlayer == "opp") LegionColors.Background else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
             }
             listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
-                Text("$label — révélation", color = Color(0xFFB4BFCE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                Text("$label — révélation", color = LegionColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
                 listOf("objective" to "Objectif", "secondary" to "Secondaire", "advantage" to "Avantage").forEach { (cat, clabel) ->
                     val key = "${p}_$cat"
                     val cur = missionRevealed[key]
@@ -2079,7 +2079,7 @@ internal fun MissionBuilderSheet(
                     }
                 }
             }
-            Text("Modifications (2 chacun)", color = Color(0xFFB4BFCE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+            Text("Modifications (2 chacun)", color = LegionColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
             listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
                 val left = modsLeft[p] ?: 0
                 Text("$label : $left restante(s)", color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -2193,7 +2193,7 @@ internal fun MissionDashboard(
                     Surface(onClick = { onVPChange(2, 1) }, shape = CircleShape, color = LegionColors.SuccessSurface, modifier = Modifier.size(32.dp).minimumInteractiveComponentSize()) { Box(contentAlignment = Alignment.Center) { Text("+", color = LegionColors.Success, fontSize = 12.sp, fontWeight = FontWeight.Bold) } }
                 }
                 // Menus secondaires (réglages mission, journal) regroupés dans un tiroir du bas.
-                Surface(onClick = { menuOpen = true }, shape = RoundedCornerShape(8.dp), color = Color(0xFF1E293B), modifier = Modifier.defaultMinSize(32.dp)) {
+                Surface(onClick = { menuOpen = true }, shape = RoundedCornerShape(8.dp), color = LegionColors.SurfaceRaised, modifier = Modifier.defaultMinSize(32.dp)) {
                     Text("☰ Menu", Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = LegionColors.TextSecondary, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                 }
             }
@@ -2237,7 +2237,7 @@ internal fun MissionDashboard(
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Text("■ MOI   ■ ADV   ■ les 2", color = Color(0xFF7A828A), fontSize = 11.sp, maxLines = 1, softWrap = false)
+                    Text("■ MOI   ■ ADV   ■ les 2", color = LegionColors.TextTertiary, fontSize = 11.sp, maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -2259,13 +2259,13 @@ internal fun CommandHand(
                 Text("MAIN DE COMMANDEMENT", color = LegionColors.Warning, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.weight(1f))
                 Text(
                     if (played != null) "Jouée : ${played.name}" else "Tapez une carte pour ce round",
-                    color = if (played != null) LegionColors.Success else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis
+                    color = if (played != null) LegionColors.Success else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(hand, key = { it.id }) { card ->
                     val isSel = card.id == roundCommand
-                    Surface(onClick = { onSelect(card) }, shape = RoundedCornerShape(8.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, LegionColors.Warning) else BorderStroke(1.dp, LegionColors.Border)) {
+                    Surface(onClick = { onSelect(card) }, shape = RoundedCornerShape(8.dp), color = if (isSel) Color(0xFF3A2E12) else LegionColors.SurfaceRaised, border = if (isSel) BorderStroke(2.dp, LegionColors.Warning) else BorderStroke(1.dp, LegionColors.Border)) {
                         Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Box(Modifier.size(16.dp).clip(CircleShape).background(if (isSel) LegionColors.Warning else LegionColors.Border), contentAlignment = Alignment.Center) { Text("${card.pip}", color = if (isSel) LegionColors.Background else LegionColors.Warning, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                             Text(card.name, color = if (isSel) LegionColors.Accent else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -2379,7 +2379,7 @@ internal fun DeckCardThumb(
     Box(
         Modifier.width(96.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (selected) LegionColors.SuccessSurface else if (dimmed) Color(0xFF11151D) else Color(0xFF192330))
+            .background(if (selected) LegionColors.SuccessSurface else if (dimmed) Color(0xFF11151D) else LegionColors.SurfaceRaised)
             .clickable(onClick = onClick)
     ) {
         if (source != null) {
@@ -2421,7 +2421,7 @@ internal fun DeckCardZoom(
         androidx.compose.material3.Surface(
             modifier = Modifier.fillMaxWidth(0.96f).verticalScroll(rememberScrollState()),
             shape = RoundedCornerShape(18.dp),
-            color = Color(0xFF192330)
+            color = LegionColors.SurfaceRaised
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(title, color = LegionColors.Accent, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -2494,7 +2494,7 @@ internal fun UnitListRow(
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
                 Text(unit.card.name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text("${totalPts} pts • ${unit.card.legionRank?.name ?: ""}", color = Color(0xFF8F9BAD), fontSize = 11.sp, maxLines = 1)
+                Text("${totalPts} pts • ${unit.card.legionRank?.name ?: ""}", color = LegionColors.TextTertiary, fontSize = 11.sp, maxLines = 1)
                 // Jauge de vie uniquement si l'unité est blessée (sinon bruit visuel en déploiement).
                 if (isWounded) {
                     LinearProgressIndicator(progress = { (remaining!!.toFloat() / (maxHp ?: 1)).coerceIn(0f, 1f) }, modifier = Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = if ((remaining ?: 0) <= (maxHp ?: 1) / 2) LegionColors.Danger else LegionColors.Success, trackColor = LegionColors.Border)
@@ -2504,7 +2504,7 @@ internal fun UnitListRow(
             if (activated) { Icon(Icons.Filled.CheckCircle, contentDescription = "Activée", tint = LegionColors.Success, modifier = Modifier.size(16.dp)) }
             if (defeated) { Text("Vaincue", color = LegionColors.Danger, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             if (isPrep && onCycleDeploy != null) {
-                Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> LegionColors.SuccessSurface; 2 -> LegionColors.Border; else -> Color(0xFF3A3A4A) }) {
+                Surface(onClick = onCycleDeploy, shape = RoundedCornerShape(6.dp), color = when (deployZone) { 1 -> LegionColors.SuccessSurface; 2 -> LegionColors.Border; else -> LegionColors.Border }) {
                     Text(if (deployZone == null) "Zone ?" else "Zone $deployZone", Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = if (deployZone == null) LegionColors.TextSecondary else LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
@@ -2529,7 +2529,7 @@ internal fun DeploymentSheet(
     ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp).verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Déploiement — Zone 1 / Zone 2", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Tapez le bouton Zone de chaque unité pour l'assigner à une zone de déploiement", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+            Text("Tapez le bouton Zone de chaque unité pour l'assigner à une zone de déploiement", color = LegionColors.TextTertiary, fontSize = 11.sp)
             // MOI
             Text("MOI", color = LegionColors.Warning, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             myUnits.forEach { unit ->
@@ -2608,7 +2608,7 @@ internal fun UnitActivationCell(
     val artPath = unit.card.imagePath()
     Card(
         onClick = { if (activable) onActivate(unit.instanceId) else onOpen(unit) },
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) LegionColors.Danger else if (defeated) Color(0xFF3A3A4A) else Color.Transparent, RoundedCornerShape(10.dp)),
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.4f).border(if (activated) 2.dp else if (defeated) 1.dp else 0.dp, if (activated) LegionColors.Danger else if (defeated) LegionColors.Border else Color.Transparent, RoundedCornerShape(10.dp)),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)
     ) {
@@ -2630,7 +2630,7 @@ internal fun UnitActivationCell(
             if (activated) {
                 Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEF5350), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✓", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             } else if (defeated) {
-                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✕", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                Surface(shape = RoundedCornerShape(4.dp), color = LegionColors.Border, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("✕", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             } else if (activable) {
                 Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF2E7D32), modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) { Text("●", Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = Color(0xFF66BB6A), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
             }
@@ -2654,7 +2654,7 @@ internal fun UnitActivationStrip(
             val artPath = unit.card.imagePath()
             val borderColor = when {
                 activated -> LegionColors.Success
-                defeated -> Color(0xFF3A3A4A)
+                defeated -> LegionColors.Border
                 else -> Color(0xFF66BB6A)
             }
             Box(Modifier.width(96.dp).aspectRatio(1.4f).clip(RoundedCornerShape(8.dp)).border(2.dp, borderColor, RoundedCornerShape(8.dp)).clickable { onOpen(unit) }) {
@@ -2696,7 +2696,7 @@ internal fun BattlefieldView(
     onToggleObjective: (String) -> Unit = {}, onNextRound: () -> Unit = {},
     onJournal: () -> Unit = {}
 ) {
-    Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B)))).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0F172A), LegionColors.SurfaceRaised))).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // P0 (audit experts) : MOI d'abord = la seule surface d'action (activer/blessures/ordres).
         // L'adversaire est lecture seule / consulté ponctuellement → relégué dessous. Évite qu'il
         // pousse le camp actif hors écran (le bug 'j'arrive pas à activer mes unités').
@@ -2725,7 +2725,7 @@ internal fun CommandSelectionPanel(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(hand, key = { it.id }) { card ->
                     val isSel = card.id == selected
-                    Surface(onClick = { onSelect(card.id) }, shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, LegionColors.Warning) else BorderStroke(1.dp, LegionColors.Border)) {
+                    Surface(onClick = { onSelect(card.id) }, shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else LegionColors.SurfaceRaised, border = if (isSel) BorderStroke(2.dp, LegionColors.Warning) else BorderStroke(1.dp, LegionColors.Border)) {
                         Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("PIP ${card.pip}", color = LegionColors.Warning, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             Text(card.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -2759,7 +2759,7 @@ internal fun CommandHandSheet(
             }
             hand.forEach { card ->
                 val isSel = card.id == roundCommand
-                Surface(onClick = { onSelect(card) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else Color(0xFF1E293B), border = if (isSel) BorderStroke(2.dp, LegionColors.Warning) else BorderStroke(1.dp, LegionColors.Border)) {
+                Surface(onClick = { onSelect(card) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = if (isSel) Color(0xFF3A2E12) else LegionColors.SurfaceRaised, border = if (isSel) BorderStroke(2.dp, LegionColors.Warning) else BorderStroke(1.dp, LegionColors.Border)) {
                     Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Box(Modifier.size(26.dp).clip(CircleShape).background(if (isSel) LegionColors.Warning else LegionColors.Border), contentAlignment = Alignment.Center) {
                             Text(card.pip, color = if (isSel) LegionColors.Background else LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -2767,7 +2767,7 @@ internal fun CommandHandSheet(
                         Column(Modifier.weight(1f)) {
                             Text(card.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Text("PIP ${card.pip}${if (isSel) " ✓ jouée" else ""}", color = if (isSel) LegionColors.Warning else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("PIP ${card.pip}${if (isSel) " ✓ jouée" else ""}", color = if (isSel) LegionColors.Warning else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -2791,7 +2791,7 @@ internal fun CampRow(
                 Text(label, color = if (isActive) campColor else LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 val nonDefeated = units.count { u -> states[u.instanceId]?.defeated != true }
                 val activated = units.count { u -> states[u.instanceId]?.activated == true }
-                Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) LegionColors.Success else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("$activated/$nonDefeated activées", color = if (activated >= nonDefeated && nonDefeated > 0) LegionColors.Success else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             if (units.isEmpty()) {
                 Text("Aucune unité", color = LegionColors.TextTertiary, fontSize = 11.sp)
@@ -2811,13 +2811,13 @@ internal fun CampRow(
                         val stateColor = when {
                             panicking -> Color(0xFFFF5252)
                             activated -> LegionColors.Success
-                            defeated -> Color(0xFF3A3A4A)
+                            defeated -> LegionColors.Border
                             else -> campColor
                         }
                         val scale = animateFloatAsState(if (activable) 1.06f else 1f, label = "tileScale")
                         Column(Modifier.width(104.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Box(Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(6.dp))
-                                .background(if (defeated) LegionColors.SurfaceRaised else Color(0xFF1E293B))
+                                .background(if (defeated) LegionColors.SurfaceRaised else LegionColors.SurfaceRaised)
                                 .border(2.dp, stateColor, RoundedCornerShape(6.dp))
                                 .graphicsLayer { this.scaleX = scale.value; this.scaleY = scale.value; this.alpha = if (defeated) 0.35f else if (activated) 0.6f else 1f }
                                 .combinedClickable(
@@ -2840,7 +2840,7 @@ internal fun CampRow(
                             Text(unit.card.name, color = if (defeated) LegionColors.TextTertiary else Color(0xFFE2E8F0), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                             if (onOrder != null && !defeated) {
                                 val ordered = st.orderReceived == true
-                                Surface(onClick = { onOrder.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = if (ordered) Color(0xFF3A3320) else Color(0xFF1E293B)) {
+                                Surface(onClick = { onOrder.invoke(unit.instanceId) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(5.dp), color = if (ordered) Color(0xFF3A3320) else LegionColors.SurfaceRaised) {
                                     Text(if (ordered) "📨 Ordre reçu" else "📨 Ordre", Modifier.padding(vertical = 3.dp), color = if (ordered) LegionColors.Accent else LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 }
                             }
@@ -3025,8 +3025,8 @@ internal fun LegionUnitPage(unit: ListEntry, children: List<ListEntry>, allEntri
             }
             if (!stats?.surgeAttack.isNullOrBlank() || !stats?.surgeDefense.isNullOrBlank()) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.surge_attack, surgeLabel(stats?.surgeAttack)), color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall)
-                    Text(stringResource(R.string.surge_defense, surgeLabel(stats?.surgeDefense)), color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.surge_attack, surgeLabel(stats?.surgeAttack)), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.surge_defense, surgeLabel(stats?.surgeDefense)), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
             }
             if (stats?.keywords?.isNotEmpty() == true) {
@@ -3399,7 +3399,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
 
     Column(Modifier.fillMaxSize().background(LegionColors.Background).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         // ── ship card (zone du haut compacte, reprise de la vue condensée) ──
-        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
             Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CardArtwork(unit.card, Modifier.width(52.dp).clickable { showCard = true })
@@ -3408,7 +3408,7 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                     Text("${unit.card.points}", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 if (stats != null) ShipStatsBlock(stats)
-                else if (!unit.card.rulesText.isNullOrBlank()) ClickableRulesText(unit.card.rulesText, wikiSections, onRuleClick, color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                else if (!unit.card.rulesText.isNullOrBlank()) ClickableRulesText(unit.card.rulesText, wikiSections, onRuleClick, color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2)
                 // ── résumé coque (avec +/-) + vitesse + bouton +DGT CRIT (toujours visible) ──
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     HullCounter(hull, maxHp, { if (hull < maxHp) set(state.copy(hull = hull + 1)) }, { if (hull > 0) set(state.copy(hull = hull - 1)) })
@@ -3562,7 +3562,7 @@ internal fun CommanderPage(unit: ListEntry, wikiSections: List<WikiSectionEntity
     var showCard by remember(unit.instanceId) { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().background(LegionColors.Background).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         CardBlock(unit, emptyList(), unit.card.points, wikiSections, onRuleClick, onCardClick = { showCard = true })
-        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+        Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.fleet_command), color = LegionColors.Accent, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
@@ -3630,7 +3630,7 @@ internal fun CardZoomOverlay(card: CardDefinition, show: Boolean, onDismiss: () 
         androidx.compose.material3.Surface(
             modifier = Modifier.fillMaxWidth(0.96f).verticalScroll(rememberScrollState()),
             shape = RoundedCornerShape(18.dp),
-            color = Color(0xFF192330)
+            color = LegionColors.SurfaceRaised
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(card.displayName(), color = LegionColors.Accent, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
@@ -3648,7 +3648,7 @@ internal fun CardZoomOverlay(card: CardDefinition, show: Boolean, onDismiss: () 
 
 @Composable
 internal fun CardBlock(unit: ListEntry, children: List<ListEntry>, totalPts: Int, wikiSections: List<WikiSectionEntity> = emptyList(), onRuleClick: (WikiSectionEntity) -> Unit = {}, onCardClick: (() -> Unit)? = null) {
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 if (onCardClick != null) CardArtwork(unit.card, Modifier.width(96.dp).clickable { onCardClick() })
@@ -3660,7 +3660,7 @@ internal fun CardBlock(unit: ListEntry, children: List<ListEntry>, totalPts: Int
                 }
                 Text("${unit.card.points} pts", color = LegionColors.Accent, style = MaterialTheme.typography.titleLarge)
             }
-            if (!unit.card.rulesText.isNullOrBlank()) ClickableRulesText(unit.card.rulesText, wikiSections, onRuleClick, color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall, maxLines = 6)
+            if (!unit.card.rulesText.isNullOrBlank()) ClickableRulesText(unit.card.rulesText, wikiSections, onRuleClick, color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 6)
             if (children.isNotEmpty()) {
                 HorizontalDivider(color = LegionColors.Border, modifier = Modifier.padding(vertical = 4.dp))
                 children.forEach { c -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Row(modifier = Modifier.weight(1f)) { Text("+ ", color = LegionColors.Success, fontWeight = FontWeight.Bold); Text(c.card.displayName(), color = Color.White, style = MaterialTheme.typography.bodyMedium) }; Text("${c.card.points}", color = LegionColors.Accent, style = MaterialTheme.typography.labelMedium) } }
@@ -3688,7 +3688,7 @@ internal fun CollapsibleSection(
     val canCollapse = collapsible && LocalSectionsCollapsible.current
     var expanded by remember(title) { mutableStateOf(initiallyExpanded) }
     val open = !canCollapse || expanded
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Column {
             Row(
                 Modifier.fillMaxWidth().then(if (canCollapse) Modifier.clickable { expanded = !expanded } else Modifier).padding(horizontal = 16.dp, vertical = 14.dp),
@@ -3724,17 +3724,17 @@ internal fun EffectsPanel(
                     eff.type == EffectType.UPGRADE -> if (eff.slot != null) slotBadge(eff.slot) else ("U" to Color(0xFF4FC3F7))
                     eff.type == EffectType.COMMANDER -> "C" to LegionColors.Accent
                     eff.type == EffectType.CRIT -> "\u26A1" to LegionColors.Danger
-                    else -> "?" to Color.Gray
+                    else -> "?" to LegionColors.TextTertiary
                 }
                 Surface(
                                     onClick = { onToggleUsed(eff) },
                                     shape = RoundedCornerShape(12.dp),
-                                    color = when { eff.used -> Color(0xFF1A1A2A); eff.type == EffectType.CRIT -> LegionColors.DangerSurface; eff.type == EffectType.ABILITY -> LegionColors.SuccessSurface; else -> Color(0xFF1E2A3A) },
+                                    color = when { eff.used -> Color(0xFF1A1A2A); eff.type == EffectType.CRIT -> LegionColors.DangerSurface; eff.type == EffectType.ABILITY -> LegionColors.SuccessSurface; else -> LegionColors.SurfaceRaised },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                     Column(Modifier.padding(8.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(24.dp).clip(CircleShape).background(if (eff.used) Color(0xFF3A3A4A) else Color(0xFF1E2A3A)), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(24.dp).clip(CircleShape).background(if (eff.used) LegionColors.Border else LegionColors.SurfaceRaised), contentAlignment = Alignment.Center) {
                                 val iconPath = when {
                                     eff.type == EffectType.UPGRADE && eff.slot != null -> slotIconPath(eff.slot)
                                     eff.type == EffectType.COMMANDER -> "icons/upg_commander.webp"
@@ -3762,7 +3762,7 @@ internal fun EffectsPanel(
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(eff.label, color = if (eff.used) LegionColors.TextTertiary else Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = if (eff.type == EffectType.CRIT) FontWeight.Bold else FontWeight.Normal, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                    if (eff.used) { Spacer(Modifier.width(6.dp)); Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF3A3A4A)) { Text(stringResource(R.string.activated), Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
+                                    if (eff.used) { Spacer(Modifier.width(6.dp)); Surface(shape = RoundedCornerShape(4.dp), color = LegionColors.Border) { Text(stringResource(R.string.activated), Modifier.padding(horizontal = 5.dp, vertical = 2.dp), color = LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold) } }
                                 }
                                 Text(
                                     when (eff.type) { EffectType.COMMANDER -> stringResource(R.string.effect_commander); EffectType.UPGRADE -> stringResource(R.string.effect_upgrade); EffectType.CRIT -> stringResource(R.string.effect_crit); EffectType.ABILITY -> stringResource(R.string.effect_ability) },
@@ -3780,7 +3780,7 @@ internal fun EffectsPanel(
                             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                                 if (eff.pts > 0) Text("${eff.pts} pts", color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 Surface(onClick = { selectedEffect = if (selectedEffect == eff) null else eff }, shape = RoundedCornerShape(6.dp), color = LegionColors.Border) {
-                                    Icon(if (selectedEffect == eff) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = LegionColors.TextSecondary, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
+                                    Icon(if (selectedEffect == eff) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = "Déplier l'effet", tint = LegionColors.TextSecondary, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).size(16.dp))
                                 }
                             }
                         }
@@ -3795,12 +3795,12 @@ internal fun EffectsPanel(
                                                         if (eff.desc.isNotBlank()) {
                                                             Spacer(Modifier.height(6.dp))
                                                             Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = LegionColors.Background) {
-                                                                Text(stripLeadingName(eff.desc, eff.label), Modifier.padding(12.dp), color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall)
+                                                                Text(stripLeadingName(eff.desc, eff.label), Modifier.padding(12.dp), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                                                             }
                                                         }
                                                     } else {
                                                         Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp), color = LegionColors.Background) {
-                                                            Text(stripLeadingName(eff.desc, eff.label), Modifier.padding(12.dp), color = Color(0xFFB4BFCE), style = MaterialTheme.typography.bodySmall)
+                                                            Text(stripLeadingName(eff.desc, eff.label), Modifier.padding(12.dp), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                                                         }
                                                     }
                             if (eff.type == EffectType.CRIT) {
@@ -3819,7 +3819,7 @@ internal fun EffectsPanel(
 internal fun CritSelectorDropdown(crits: List<CritCard>, expanded: Boolean, onDismiss: () -> Unit, onSelect: (CritCard) -> Unit) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         crits.forEach { crit ->
-            DropdownMenuItem(text = { Column { Text(crit.name, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text(crit.effect.take(60)+"...", fontSize = 11.sp, color = Color.Gray) } }, onClick = { onSelect(crit) })
+            DropdownMenuItem(text = { Column { Text(crit.name, fontWeight = FontWeight.Bold, fontSize = 14.sp); Text(crit.effect.take(60)+"...", fontSize = 11.sp, color = LegionColors.TextTertiary) } }, onClick = { onSelect(crit) })
         }
     }
 }
@@ -3843,7 +3843,7 @@ internal fun DefenseTokenDisc(def: ArmadaDefenseToken, used: Boolean, onClick: (
             Surface(
                 onClick = onClick,
                 shape = CircleShape,
-                color = Color(0xFF192330),
+                color = LegionColors.SurfaceRaised,
                 modifier = Modifier.size(52.dp),
                 border = androidx.compose.foundation.BorderStroke(3.dp, ringColor)
             ) {
@@ -3918,7 +3918,7 @@ internal fun AttackDiceRow(dice: List<Int>?, vertical: Boolean = false) {
     val black = dice.getOrNull(2) ?: 0
     val total = blue + red + black
     // Ordre d'affichage : rouge, bleu, noir. Un losange par dé.
-    val colors = listOf(LegionColors.Danger, Color(0xFF4FC3F7), Color(0xFF3A3A4A))
+    val colors = listOf(LegionColors.Danger, Color(0xFF4FC3F7), LegionColors.Border)
     val counts = listOf(red, blue, black)
     // Construit la liste des losanges (un par dé) dans l'ordre rouge/bleu/noir.
     val all = buildList { counts.forEachIndexed { i, c -> repeat(c) { add(colors[i]) } } }
@@ -4051,14 +4051,14 @@ internal fun CommandWheelPanel(
 ) {
     val active = commandOrder
     val activeTokens = active?.let { orderTokens[it.name] ?: 0 } ?: 0
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Ligne 1 (compacte) : cadran actif (gauche) + file de cadrans (droite).
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ActiveDialCompact(active, activeTokens, onSpend, onUnset)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     DialQueueRow(stack, capacity, onReveal, revealAllowed)
-                    Text("File ${stack.size}/${capacity}", color = Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Text("File ${stack.size}/${capacity}", color = LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
             }
             Divider(color = LegionColors.Border)
@@ -4077,9 +4077,9 @@ internal fun CommandWheelPanel(
                 }
             }
             if (stack.isEmpty()) {
-                Text("File vide : choisis un ordre ci-dessus", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                Text("File vide : choisis un ordre ci-dessus", color = LegionColors.TextTertiary, fontSize = 11.sp)
             } else if (revealAllowed) {
-                Text("Touchez le 1er cadran de la file pour le révéler (FIFO) · +1 pion", color = Color(0xFF8F9BAD), fontSize = 11.sp)
+                Text("Touchez le 1er cadran de la file pour le révéler (FIFO) · +1 pion", color = LegionColors.TextTertiary, fontSize = 11.sp)
             } else {
                 Text("Cadran déjà révélé cette manche", color = LegionColors.Success, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
@@ -4106,7 +4106,7 @@ private fun ActiveDialCompact(active: ArmadaCommandOrder?, activeTokens: Int, on
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(active?.label ?: "Aucun ordre", color = if (active != null) Color.White else Color(0xFF8F9BAD), fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2)
+            Text(active?.label ?: "Aucun ordre", color = if (active != null) Color.White else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2)
             if (active != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("$activeTokens ●", color = LegionColors.Success, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -4144,9 +4144,9 @@ private fun DialQueueRow(stack: List<String>, capacity: Int, onReveal: () -> Uni
 // Bouton de pose : icône seule compacte (40dp), désactivé/grisé quand la file est pleine.
 @Composable
 private fun DialPoseButton(order: ArmadaCommandOrder, enabled: Boolean, onClick: () -> Unit) {
-    Surface(onClick = onClick, shape = CircleShape, color = if (enabled) LegionColors.SuccessSurface else Color(0xFF192330),
+    Surface(onClick = onClick, shape = CircleShape, color = if (enabled) LegionColors.SuccessSurface else LegionColors.SurfaceRaised,
         modifier = Modifier.size(40.dp).alpha(if (enabled) 1f else 0.4f),
-        border = BorderStroke(1.dp, Color(0xFF3A4A5A))) {
+        border = BorderStroke(1.dp, LegionColors.Border)) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(3.dp)) {
             if (order.hasIcon()) {
                 AsyncImage(model = "file:///android_asset/tokens/${order.iconFile}", contentDescription = order.label, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
@@ -4159,9 +4159,9 @@ private fun DialPoseButton(order: ArmadaCommandOrder, enabled: Boolean, onClick:
 
 @Composable
 private fun DialDisc(order: ArmadaCommandOrder, size: Dp, isHead: Boolean, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
-    Surface(shape = CircleShape, color = Color(0xFF192330),
+    Surface(shape = CircleShape, color = LegionColors.SurfaceRaised,
         modifier = (if (onClick != null) modifier.clickable(enabled = true, onClick = onClick) else modifier).size(size),
-        border = BorderStroke(if (isHead) 3.dp else 1.dp, if (isHead) LegionColors.Accent else Color(0xFF3A4A5A))) {
+        border = BorderStroke(if (isHead) 3.dp else 1.dp, if (isHead) LegionColors.Accent else LegionColors.Border)) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(3.dp)) {
             if (order.hasIcon()) {
                 AsyncImage(model = "file:///android_asset/tokens/${order.iconFile}", contentDescription = order.label, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
@@ -4182,7 +4182,7 @@ internal fun OrderTokensCard(
     wikiSections: List<WikiSectionEntity> = emptyList(),
     onRuleClick: (WikiSectionEntity) -> Unit = {}
 ) {
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                 // Compteur de pions compact (le titre est déjà dans l'en-tête du menu repliable).
@@ -4211,9 +4211,9 @@ internal fun CommandDialButton(order: ArmadaCommandOrder, selected: Boolean, onC
         Surface(
             onClick = { if (enabled) onClick() },
             shape = CircleShape,
-            color = if (selected) LegionColors.Border else Color(0xFF192330),
+            color = if (selected) LegionColors.Border else LegionColors.SurfaceRaised,
             modifier = Modifier.size(size),
-            border = androidx.compose.foundation.BorderStroke(if (selected) 3.dp else 2.dp, if (enabled) ringColor else Color(0xFF3A4A5A))
+            border = androidx.compose.foundation.BorderStroke(if (selected) 3.dp else 2.dp, if (enabled) ringColor else LegionColors.Border)
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(4.dp)) {
                 if (order.hasIcon()) {
@@ -4238,7 +4238,7 @@ internal fun OrderTokenDisc(order: ArmadaCommandOrder, count: Int, onWikiClick: 
         Surface(
             onClick = onWikiClick,
             shape = CircleShape,
-            color = Color(0xFF192330),
+            color = LegionColors.SurfaceRaised,
             modifier = Modifier.size(52.dp),
             border = androidx.compose.foundation.BorderStroke(3.dp, LegionColors.Success)
         ) {
@@ -4398,9 +4398,9 @@ internal data class LegionToken(val label: String, val color: Color, val symbol:
 // Badge d'état auto (Blessé / Supprimé / Paniqué) : actif = coloré, sinon grisé.
 @Composable
 internal fun StateChip(label: String, active: Boolean, color: Color) {
-    Surface(shape = RoundedCornerShape(8.dp), color = if (active) color.copy(alpha = 0.22f) else Color(0xFF1E2A3A)) {
+    Surface(shape = RoundedCornerShape(8.dp), color = if (active) color.copy(alpha = 0.22f) else LegionColors.SurfaceRaised) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(if (active) Icons.Filled.Check else Icons.Filled.Close, contentDescription = null, tint = if (active) color else LegionColors.TextTertiary, modifier = Modifier.size(12.dp))
+            Icon(if (active) Icons.Filled.Check else Icons.Filled.Close, contentDescription = label, tint = if (active) color else LegionColors.TextTertiary, modifier = Modifier.size(12.dp))
             Spacer(Modifier.width(4.dp))
             Text(label, color = if (active) color else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }

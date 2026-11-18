@@ -118,7 +118,7 @@ private fun localizedContent(section: WikiSectionEntity): String =
 
 @Composable
 private fun WikiSectionRow(section: WikiSectionEntity, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF192330))) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = LegionColors.SurfaceRaised)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Text(localizedTitle(section), color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
@@ -138,7 +138,7 @@ fun RulePopup(section: WikiSectionEntity, onClose: () -> Unit) {
         Surface(
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.7f),
             shape = RoundedCornerShape(18.dp),
-            color = Color(0xFF192330)
+            color = LegionColors.SurfaceRaised
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -192,7 +192,7 @@ fun ClickableRulesText(
     wikiSections: List<WikiSectionEntity>,
     onRuleClick: (WikiSectionEntity) -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = Color(0xFFB4BFCE),
+    color: Color = LegionColors.TextSecondary,
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodySmall,
     maxLines: Int = Int.MAX_VALUE
 ) {
