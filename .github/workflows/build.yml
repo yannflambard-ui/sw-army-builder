@@ -64,6 +64,23 @@ jobs:
           name: legion-forge-debug
           path: app/build/outputs/apk/debug/app-debug.apk
 
+      # ── AAB signé pour le Play Store (même keystore stable que l'APK) ──
+      - name: Build signed release AAB
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Verify AAB signature
+        run: |
+          AAB=$(find app/build/outputs/bundle/release -name '*.aab' | head -1)
+          test -s "$AAB"
+          echo "AAB: $AAB"
+          keytool -list -printcert -jarfile "$AAB" | grep -i 'Owner:' | head -1
+
+      - name: Upload signed AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: legion-forge-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+
       # ── Release notes GitHub : notes générées à chaque build master/main ──
       - name: Create GitHub Release with release notes
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
