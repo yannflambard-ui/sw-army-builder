@@ -413,8 +413,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         val myPip = roundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
         val oppPip = oppRoundCommand?.let { id -> cmdCards.firstOrNull { it.id == id }?.pip?.toIntOrNull() }
         if (myPip != null && oppPip != null) {
-            // Regle v2 (rulebook:1415-1417) : departage au des de defense rouge (3 faces Bloc/8).
-            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..8).random() <= 3
+            // Regle v2 (rulebook:1415-1417) : departage au des de defense ROUGE = d6.
+            // Faces FFG verifiees : 3 Bloc / 1 Surge / 2 Blank sur 6 => 3/6 = 50% de Bloc.
+            // (l ancien code utilisait un d8 inexistant, 3/8 = 37,5%)
+            val myHasPrio = if (myPip < oppPip) true else if (myPip > oppPip) false else (1..6).random() <= 3
             turn = if (myHasPrio) "own" else "opp"
         }
     }
@@ -2288,20 +2290,12 @@ internal fun DiceRollerSheet(onClose: () -> Unit) {
     var mode by remember { mutableStateOf("attack") }  // "attack" | "defense"
     // Faces des dés : attaque (hit/crit/surge/blank) ou défense (block/surge/blank).
     fun rollDie(color: String): Pair<String, Color> {
-        val faces = if (mode == "defense") {
-            when (color) {
-                // De rouge de defense : 3 faces Bloc / 8 (rulebook:336-342).
-                "red" -> listOf("block", "block", "block", "surge", "blank", "blank", "blank", "blank")
-                // Branche noir préexistante (hors dés de défense officiels Legion) laissée inchangée.
-                "black" -> listOf("block", "block", "surge", "blank", "blank", "blank", "blank", "blank")
-                else -> listOf("block", "surge", "blank", "blank", "blank", "blank", "blank", "blank")
-            }
-        } else {
-            when (color) {
-                "red" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
-                "black" -> listOf("hit", "hit", "crit", "surge", "blank", "blank", "blank", "blank")
-                else -> listOf("hit", "crit", "surge", "blank", "blank", "blank", "blank", "blank")
-            }
+        // Source UNIQUE de vérité : attaque d8 / défense d6, faces FFG vérifiées.
+        // Le dé noir n'existe PAS en défense → repli sur blanc si demandé par l'UI.
+        val legalColors = com.legionforge.app.domain.LegionDiceRules.legalColors(mode)
+        val safeColor = if (legalColors.contains(color)) color else "white"
+        val faces = com.legionforge.app.domain.LegionDiceRules.faces(mode, safeColor).map {
+            when (it) { "Bloc" -> "block"; "Hit" -> "hit"; "Crit" -> "crit"; "Surge" -> "surge"; else -> "blank" }
         }
         val face = faces.random()
         val c = when (face) {
@@ -2555,7 +2549,8 @@ internal fun DeploymentSheet(
 // ── Ralliement (règle v2, RALLY STEP) : 1 dé blanc défense par suppression ; 1 suppression retirée par d ou e.
 // Retourne l'état après ralliement ET activation (activated=true, ordre consommé).
 // Faces du dé blanc de défense (même table que rollDie, mode défense). Résultat d/e = block ou surge.
-private val WHITE_DEFENSE_FACES = listOf("block", "surge", "blank", "blank", "blank", "blank", "blank", "blank")
+// Dé BLANC DE DÉFENSE = d6 : 1 Bloc + 1 Surge + 4 Blank (2/6 = 33,3%).
+private val WHITE_DEFENSE_FACES = listOf("block", "surge", "blank", "blank", "blank", "blank")
 internal fun rallyState(st: SyncedUnitState): SyncedUnitState {
     val n = st.suppressions ?: 0
     if (n <= 0) return st.copy(activated = true, orderReceived = false)
