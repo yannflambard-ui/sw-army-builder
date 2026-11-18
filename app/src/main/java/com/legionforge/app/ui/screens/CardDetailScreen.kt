@@ -4070,7 +4070,8 @@ internal fun CommandWheelPanel(
                 }
             }
             // RRG Command Phase : la file se recharge à la valeur de commande chaque manche.
-            if (stack.size < capacity) {
+            // Masqué si un cadran est déjà révélé (évite un double-révélage dans la même manche).
+            if (active == null && stack.size < capacity) {
                 TextButton(onClick = onRecharge, modifier = Modifier.fillMaxWidth().minimumInteractiveComponentSize()) {
                     Text("Recharger la file (${stack.size}/$capacity)", color = LegionColors.Accent, fontSize = 11.sp)
                 }
