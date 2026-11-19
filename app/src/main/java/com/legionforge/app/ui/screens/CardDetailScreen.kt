@@ -1458,10 +1458,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     }
     // Round 0 / Build a Mission (v2.6).
     if (showMissionSheet) {
-        MissionBuilderSheet(
+        MissionBuilderSheetV2(
             battleCards = battleCards, battleDeck = battleDeck,
             bluePlayer = bluePlayer, blueRoll = blueRoll, missionRevealed = missionRevealed, modsLeft = modsLeft, modsTurn = modsTurn,
-            onSetBlue = { bluePlayer = it },
+            onZoom = { name, path -> missionZoom = name to path },
             onRollBlue = {
                 var a: List<String>; var b: List<String>; var c: Int
                 do {
@@ -1473,25 +1473,61 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 bluePlayer = if (c < 0) "own" else "opp"
                 modsTurn = bluePlayer!!  // le Blue Player modifie en premier (rulebook:1240)
             },
-            onReveal = { key, name -> missionRevealed = missionRevealed + (key to name) },
+            onInitialReveal = { blueFirstType ->
+                // Révélation initiale ordonnée via le domaine (rulebook:1200-1204).
+                val MB = com.legionforge.app.domain.LegionMissionBuilder
+                val blue = bluePlayer ?: return@MissionBuilderSheetV2
+                val opp = if (blue == "own") "opp" else "own"
+                val otherType = if (blueFirstType == "objective") "secondary" else "objective"
+                fun draw(side: String, type: String): String? =
+                    battleCards.filter { it.category == type && it.name in battleDeck }.map { it.name }.shuffled().firstOrNull()
+                val r = missionRevealed.toMutableMap()
+                draw(blue, blueFirstType)?.let { r[MB.KEY_OBJECTIVE.takeIf { blueFirstType == "objective" } ?: MB.KEY_SECONDARY] = it }
+                draw(opp, otherType)?.let { r[MB.KEY_OBJECTIVE.takeIf { otherType == "objective" } ?: MB.KEY_SECONDARY] = it }
+                draw(blue, "advantage")?.let { r[MB.KEY_ADV_OWN.takeIf { blue == "own" } ?: MB.KEY_ADV_OPP] = it }
+                draw(opp, "advantage")?.let { r[MB.KEY_ADV_OPP.takeIf { opp == "opp" } ?: MB.KEY_ADV_OWN] = it }
+                missionRevealed = r
+            },
             onMod = { p, opt ->
-                if (p != modsTurn) return@MissionBuilderSheet  // alternance : joueur inactif verrouillé
+                if (p != modsTurn) return@MissionBuilderSheetV2  // camp inactif verrouillé
+                val MB = com.legionforge.app.domain.LegionMissionBuilder
                 when (opt) {
-                    "objective", "map", "secondary", "advantage" -> {
-                        val key = if (opt == "map") "map" else "${p}_$opt"
-                        val opts = battleCards.filter { it.category == opt && it.name in battleDeck }.map { it.name }.distinct()
-                        if (opts.isNotEmpty()) {
-                            val cur = missionRevealed[key]
-                            val idx = opts.indexOf(cur).coerceAtLeast(0)
-                            missionRevealed = missionRevealed + (key to opts[(idx + 1) % opts.size])
-                        }
+                    "objective" -> {
+                        // Objectif = espace PARTAGÉ, tiré du deck de p (rulebook:1200-1207).
+                        val opts = battleCards.filter { it.category == "objective" && it.name in battleDeck }.map { it.name }
+                        val cur = missionRevealed[MB.KEY_OBJECTIVE]
+                        val idx = opts.indexOf(cur).coerceAtLeast(0)
+                        if (opts.isNotEmpty()) missionRevealed = missionRevealed + (MB.KEY_OBJECTIVE to opts[(idx + 1) % opts.size])
                     }
-                    "steal" -> bluePlayer = p  // MIS-4: le joueur qui vole devient blue
+                    "secondary" -> {
+                        val opts = battleCards.filter { it.category == "secondary" && it.name in battleDeck }.map { it.name }
+                        val cur = missionRevealed[MB.KEY_SECONDARY]
+                        val idx = opts.indexOf(cur).coerceAtLeast(0)
+                        if (opts.isNotEmpty()) missionRevealed = missionRevealed + (MB.KEY_SECONDARY to opts[(idx + 1) % opts.size])
+                    }
+                    "advantage" -> {
+                        // Avantage PROPRE.
+                        val key = if (p == "own") MB.KEY_ADV_OWN else MB.KEY_ADV_OPP
+                        val opts = battleCards.filter { it.category == "advantage" && it.name in battleDeck }.map { it.name }
+                        val cur = missionRevealed[key]
+                        val idx = opts.indexOf(cur).coerceAtLeast(0)
+                        if (opts.isNotEmpty()) missionRevealed = missionRevealed + (key to opts[(idx + 1) % opts.size])
+                    }
+                    "opp_advantage" -> {
+                        // Règle officielle : modifier l'Avantage de l'adversaire (rulebook:1230-1234).
+                        val key = if (p == "own") MB.KEY_ADV_OPP else MB.KEY_ADV_OWN
+                        val opts = battleCards.filter { it.category == "advantage" && it.name in battleDeck }.map { it.name }
+                        val cur = missionRevealed[key]
+                        val idx = opts.indexOf(cur).coerceAtLeast(0)
+                        if (opts.isNotEmpty()) missionRevealed = missionRevealed + (key to opts[(idx + 1) % opts.size])
+                    }
+                    "become_blue" -> bluePlayer = p  // déplacer le jeton Blue (règle officielle)
                     "pass" -> {}
                 }
                 modsLeft = modsLeft + (p to ((modsLeft[p] ?: 0) - 1).coerceAtLeast(0))
                 modsTurn = if (p == "own") "opp" else "own"  // blue en premier puis alternance
             },
+            onStart = { showMissionSheet = false },
             onClose = { showMissionSheet = false }
         )
     }
@@ -2048,86 +2084,6 @@ internal fun GameLogSheet(log: List<String>, onClose: () -> Unit) {
     }
 }
 
-// ── Round 0 / Build a Mission (v2.6) : blue player + révélation + modifications ──
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun MissionBuilderSheet(
-    battleCards: List<LegionBattleCard>,
-    battleDeck: Set<String>,
-    bluePlayer: String?,
-    blueRoll: Pair<List<String>, List<String>>? = null,
-    missionRevealed: Map<String, String>,
-    modsLeft: Map<String, Int>,
-    modsTurn: String = "own",
-    onSetBlue: (String) -> Unit,
-    onRollBlue: () -> Unit = {},
-    onReveal: (String, String) -> Unit,
-    onMod: (String, String) -> Unit,
-    onClose: () -> Unit
-) {
-    val deckCards = battleCards.filter { it.name in battleDeck }
-    fun catCards(cat: String) = deckCards.filter { it.category == cat }
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("ROUND 0 — BUILD A MISSION", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Modifications : tour de ${if (modsTurn == "own") "MOI" else "ADV"} · ${modsLeft["own"] ?: 0}/${modsLeft["opp"] ?: 0} restantes", color = LegionColors.Warning, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Text("Blue Player — 4 dés noirs chacun (rulebook:1221-1227)", color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Button(onClick = onRollBlue, modifier = Modifier.fillMaxWidth().height(44.dp), colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = LegionColors.Accent, contentColor = LegionColors.Background)) {
-                Text("Lancer pour le Blue Player", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-            if (blueRoll != null) {
-                Text("MOI  ${blueRoll!!.first.joinToString(" ")}   |   ADV  ${blueRoll!!.second.joinToString(" ")}", color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                val cmp = com.legionforge.app.domain.LegionDiceRules.compareBlueRoll(blueRoll!!.first, blueRoll!!.second)
-                Text(
-                    if (cmp == 0) "Égalité — relancez" else "Blue Player : ${if (cmp < 0) "MOI" else "ADV"}",
-                    color = if (cmp == 0) LegionColors.Warning else Color(0xFF4FC3F7), fontSize = 12.sp, fontWeight = FontWeight.Bold
-                )
-            }
-            listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
-                Text("$label — révélation", color = LegionColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-                listOf("objective" to "Objectif", "map" to "Carte (territoire)", "secondary" to "Secondaire", "advantage" to "Avantage").forEach { (cat, clabel) ->
-                    val key = "${p}_$cat"
-                    val cur = missionRevealed[key]
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(clabel, color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        if (cur != null) {
-                            Text(cur, color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
-                        } else {
-                            val opts = catCards(cat)
-                            if (opts.isNotEmpty()) {
-                                Surface(onClick = { onReveal(key, opts.first().name) }, shape = RoundedCornerShape(6.dp), color = LegionColors.SuccessSurface) { Text("Révéler", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = LegionColors.Success, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
-                            }
-                        }
-                    }
-                }
-            }
-            Text("Modifications (2 chacun)", color = LegionColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-            listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
-                val left = modsLeft[p] ?: 0
-                val active = p == modsTurn && left > 0
-                val inactiveLabel = if (!active && left > 0) "  · tour adverse" else ""
-                Text("$label : $left restante(s)$inactiveLabel", color = if (active) LegionColors.Warning else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                if (left > 0) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        val bg = if (active) LegionColors.Border else LegionColors.SurfaceRaised
-                        val fg = if (active) Color.White else LegionColors.TextTertiary
-                        val clk: () -> Unit = if (active) { { onMod(p, "objective") } } else { {} }
-                        val clk2: () -> Unit = if (active) { { onMod(p, "secondary") } } else { {} }
-                        val clk3: () -> Unit = if (active) { { onMod(p, "advantage") } } else { {} }
-                        val clk4: () -> Unit = if (active) { { onMod(p, "steal") } } else { {} }
-                        val clk5: () -> Unit = if (active) { { onMod(p, "pass") } } else { {} }
-                        Surface(onClick = clk, shape = RoundedCornerShape(6.dp), color = bg, modifier = Modifier.weight(1f).minimumInteractiveComponentSize()) { Text("Obj", Modifier.padding(vertical = 6.dp), color = fg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = clk2, shape = RoundedCornerShape(6.dp), color = bg, modifier = Modifier.weight(1f).minimumInteractiveComponentSize()) { Text("Sec", Modifier.padding(vertical = 6.dp), color = fg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = clk3, shape = RoundedCornerShape(6.dp), color = bg, modifier = Modifier.weight(1f).minimumInteractiveComponentSize()) { Text("Adv", Modifier.padding(vertical = 6.dp), color = fg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = clk4, shape = RoundedCornerShape(6.dp), color = if (active) LegionColors.DangerSurface else LegionColors.SurfaceRaised, modifier = Modifier.weight(1f).minimumInteractiveComponentSize()) { Text("Voler blue", Modifier.padding(vertical = 6.dp), color = if (active) Color(0xFFFFC7B7) else LegionColors.TextTertiary, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                        Surface(onClick = clk5, shape = RoundedCornerShape(6.dp), color = bg, modifier = Modifier.weight(1f).minimumInteractiveComponentSize()) { Text("Passer", Modifier.padding(vertical = 6.dp), color = fg, fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                    }
-                }
-            }
-        }
-    }
-}
-
 // ── Emplacement de carte du Mission Dashboard (slots Iron Squadron) ──
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
@@ -2184,10 +2140,12 @@ internal fun MissionDashboard(
     modifier: Modifier = Modifier
 ) {
     // Mission en jeu (règles v2) : 1 Objectif + 1 Secondaire + 1 Avantage/joueur + les 2 cartes de commandement. La Map est appariée à l'Objectif.
-    val objName = missionRevealed["own_objective"] ?: missionRevealed["opp_objective"]
-    val secName = missionRevealed["own_secondary"] ?: missionRevealed["opp_secondary"]
-    val advOwn = missionRevealed["own_advantage"]
-    val advOpp = missionRevealed["opp_advantage"]
+    // Modèle conforme (rulebook:1200-1207) : Objectif + Secondaire partagés, Avantages par joueur.
+    val MB = com.legionforge.app.domain.LegionMissionBuilder
+    val objName = missionRevealed[MB.KEY_OBJECTIVE]
+    val secName = missionRevealed[MB.KEY_SECONDARY]
+    val advOwn = missionRevealed[MB.KEY_ADV_OWN]
+    val advOpp = missionRevealed[MB.KEY_ADV_OPP]
     // Map card appariée à l'Objectif (rulebook:1181-1185) : révélation dédiée, pas un doublon de l'objectif.
     val maps = objectives.filter { it.category == "map" }
     val objectiveMaps = maps.filter { it.imageAssetPath != null }
