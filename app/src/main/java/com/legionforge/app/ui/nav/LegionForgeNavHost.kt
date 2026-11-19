@@ -210,14 +210,62 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         faction = e.card.factionId,
                     )
                 }
-                // État de plateau local : les interactions ne sont plus des no-op.
-                // L'adversaire est fusionné via PlaySyncViewModel (Nearby) ou la liste
-                // solo. La persistance des positions x/y/heading reste à faire.
+                // État de plateau local : positions/round/couvert persistés dans le
+                // snapshot de session, pour ne pas "sauter" en quittant l'écran.
+                val boardDao = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(legionCtx).gameSessionDao()
                 var legionState by remember(lid) { mutableStateOf(legionPawns) }
                 var legionRound by remember(lid) { mutableIntStateOf(1) }
                 var terrainCard by remember(lid) { mutableStateOf<com.legionforge.app.ui.screens.TerrainCard?>(null) }
                 var showTerrainPicker by remember(lid) { mutableStateOf(false) }
-                LaunchedEffect(legionPawns) { legionState = legionPawns }
+                // Cartes de mission du bandeau (vraies images) + sélection par emplacement.
+                val battleCards = remember { com.legionforge.app.ui.screens.loadBattleCards(legionCtx) }
+                val battleBitmaps = remember(battleCards) {
+                    battleCards.mapNotNull { c -> c.imagePath()?.let { p -> p to com.legionforge.app.ui.screens.loadLegionAssetBitmap(legionCtx, p) } }
+                        .filter { it.second != null }.associate { it.first to it.second!! }
+                }
+                var missionSlot by remember(lid) { mutableStateOf<String?>(null) }
+                var missionSel by remember(lid) { mutableStateOf<Map<String, String>>(emptyMap()) }
+                LaunchedEffect(lid, legionPawns) {
+                    val saved = runCatching { boardDao.getByList(lid)?.snapshot?.let { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(it) } }.getOrNull()
+                    val pos = saved?.tabletopUnits ?: emptyMap()
+                    // Applique les positions sauvegardées ; nouveau pawn sans position garde sa place par défaut.
+                    legionState = legionPawns.map { pawn ->
+                        pos[pawn.id]?.let { pawn.copy(xMm = it.x, yMm = it.y, headingDeg = it.heading,
+                            wounds = pawn.wounds, cover = pawn.cover) } ?: pawn
+                    }
+                    legionRound = saved?.round ?: 1
+                    missionSel = saved?.tabletopMissions ?: emptyMap()
+                }
+                // Sauvegarde à chaque changement d'état du plateau.
+                LaunchedEffect(legionState, legionRound) {
+                    if (legionState.isEmpty()) return@LaunchedEffect
+                    val existing = runCatching { boardDao.getByList(lid)?.snapshot?.let { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(it) } }.getOrNull()
+                    val positions = legionState.associate { p ->
+                        p.id to com.legionforge.app.data.model.TabletopUnitPos(p.xMm, p.yMm, p.headingDeg)
+                    }
+                    val snap = if (existing != null) existing.copy(
+                        listId = lid, round = legionRound, tabletopUnits = positions, tabletopMissions = missionSel,
+                    ) else com.legionforge.app.data.model.PlaySessionSnapshot(
+                        listId = lid, gameSystem = "LEGION_V2", round = legionRound, tabletopUnits = positions, tabletopMissions = missionSel,
+                    )
+                    runCatching {
+                        boardDao.upsert(com.legionforge.app.data.model.GameSessionEntity(lid, "LEGION_V2", snap.toJson(), System.currentTimeMillis()))
+                    }
+                }
+                // Résoudre les cartes sélectionnées par nom -> objet, avec défaut par catégorie.
+                val missionLabelsForRail = listOf("primary", "map", "secondary")
+                fun catFor(slot: String) = when (slot) {
+                    "primary" -> "objective"
+                    "map" -> "map"
+                    "secondary" -> "secondary"
+                    else -> "objective"
+                }
+                val selectedMissionCards = missionLabelsForRail.associateWith { slot ->
+                    val name = missionSel[slot]
+                    val cat = catFor(slot)
+                    battleCards.firstOrNull { it.name == name && it.category == cat }
+                        ?: battleCards.firstOrNull { it.category == cat }
+                }
                 androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
                 com.legionforge.app.ui.screens.LegionTabletopScreen(
                     pawns = legionState,
@@ -246,6 +294,9 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     },
                     terrainCard = terrainCard,
                     onPickTerrain = { showTerrainPicker = true },
+                    missionCards = selectedMissionCards,
+                    missionBitmaps = battleBitmaps,
+                    onPickMissionCard = { slot -> missionSlot = slot },
                 )
                 if (showTerrainPicker) {
                     com.legionforge.app.ui.screens.TerrainPickerSheet(
@@ -268,6 +319,20 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         nameNone = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_none),
                         title = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_title),
                         coverHint = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_cover),
+                    )
+                }
+                if (missionSlot != null) {
+                    val slot = missionSlot!!
+                    com.legionforge.app.ui.screens.MissionCardPickerSheet(
+                        title = when (slot) {
+                            "primary" -> androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.rail_primary)
+                            "map" -> androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.rail_map)
+                            else -> androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.rail_secondary)
+                        },
+                        cards = battleCards.filter { it.category == catFor(slot) },
+                        current = selectedMissionCards[slot],
+                        onPick = { card -> missionSel = missionSel + (slot to card.name); missionSlot = null },
+                        onDismiss = { missionSlot = null },
                     )
                 }
                 }

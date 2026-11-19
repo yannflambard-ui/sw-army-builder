@@ -54,8 +54,9 @@ class LegionTabletopInteractionTest {
     }
 
     @Test
-    fun tap_sur_un_pion_ouvre_la_fiche_play() {
-        // Garde-fou : le pinch ne doit PAS voler le tap (regression 2.71).
+    fun tap_sur_un_pion_selectionne_sans_quitter_le_tabletop() {
+        // Le tap doit sélectionner localement (menu bas) et NE PAS appeler
+        // onOpenPlay, qui naviguerait vers CARD_DETAIL et quitterait le plateau.
         var openedId: String? = null
         compose.setContent {
             LegionForgeTheme {
@@ -73,7 +74,7 @@ class LegionTabletopInteractionTest {
             up()
         }
         compose.waitForIdle()
-        assertTrue("tap sur le pion doit ouvrir sa fiche Play", openedId == "a1")
+        assertTrue("tap ne doit PAS ouvrir la fiche Play", openedId == null)
     }
 
     @Test

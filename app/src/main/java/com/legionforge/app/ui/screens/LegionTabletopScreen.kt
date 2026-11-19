@@ -120,6 +120,9 @@ fun LegionTabletopScreen(
     showMissionRail: Boolean = true,
     victoryPoints: Int = 0,
     onPickTerrain: (() -> Unit)? = null,
+    missionCards: Map<String, LegionBattleCard?> = emptyMap(),
+    missionBitmaps: Map<String, androidx.compose.ui.graphics.ImageBitmap> = emptyMap(),
+    onPickMissionCard: ((String) -> Unit)? = null,
 ) {
     var selectedId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
@@ -301,7 +304,10 @@ fun LegionTabletopScreen(
                                 when {
                                     hit == null -> { selectedId = null; targetId = null; measureEnd = null }
                                     liveTool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
-                                    liveTool == LegionTool.SELECT -> { selectedId = hit.id; liveOnOpenPlay(hit.id) }
+                                    // Tap = sélection locale UNIQUEMENT : le menu dépliant
+                                    // s'ouvre en bas SANS quitter le plateau (onOpenPlay
+                                    // navigue vers CARD_DETAIL et faisait quitter le mode tabletop).
+                                    liveTool == LegionTool.SELECT -> { selectedId = hit.id }
                                     else -> targetId = hit.id
                                 }
                             }
@@ -365,7 +371,9 @@ fun LegionTabletopScreen(
             }
             // Bandeau des cartes de mission, AU-DESSUS du plateau (hors Canvas).
             if (showMissionRail) {
-                MissionCardRail(round = round, victoryPoints = victoryPoints, labels = missionLabels)
+                MissionCardRail(round = round, victoryPoints = victoryPoints, labels = missionLabels,
+                    selectedCards = missionCards, cardBitmaps = missionBitmaps,
+                    onPickCard = { slot -> onPickMissionCard?.invoke(slot) })
             }
         }
 
@@ -391,6 +399,7 @@ fun LegionTabletopScreen(
                             onCoverChange(p.id, (p.cover + 1) % 3)
                         }
                         SmallAction(stringResource(R.string.tabletop_dice), false, enabled = targetId != null) { showDice = true }
+                        SmallAction(stringResource(R.string.tabletop_open_play), false) { onOpenPlay(p.id) }
                     }
                 }
             }

@@ -10,6 +10,9 @@ import com.legionforge.app.data.nearby.SyncedUnitState
  * NE capture PAS l'état 2 joueurs (sync Nearby éphémère : VP/round/tour re-synchronisés en live).
  * Séparé et testable : `toJson()`/`fromJson()` font un round-trip sans dépendance Room/UI.
  */
+/** Position d'une unité sur le plateau tabletop Legion (persistée entre les sorties d'écran). */
+data class TabletopUnitPos(val x: Float = 0f, val y: Float = 0f, val heading: Float = 0f)
+
 data class PlaySessionSnapshot(
     val schemaVersion: Int = 1,
     val listId: String? = null,
@@ -47,7 +50,9 @@ data class PlaySessionSnapshot(
     // Mode 2 joueurs : état adverse (lecture seule), mode actif et identité, pour reprendre la partie.
     val twoPlayer: Boolean = false,
     val oppStates: Map<String, com.legionforge.app.data.nearby.SyncedUnitState> = emptyMap(),
-    val playerId: String = "A"
+    val playerId: String = "A",
+    val tabletopUnits: Map<String, TabletopUnitPos> = emptyMap(), // positions plateau Legion
+    val tabletopMissions: Map<String, String> = emptyMap(), // slot bandeau -> nom carte (objective/map/secondary)
 ) {
     fun toJson(): String = GSON.toJson(this)
 

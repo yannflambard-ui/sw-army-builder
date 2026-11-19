@@ -9,6 +9,8 @@ import com.legionforge.app.ui.screens.SearchScreen
 import com.legionforge.app.ui.screens.LegionPawn
 import com.legionforge.app.ui.screens.LegionTabletopScreen
 import com.legionforge.app.ui.screens.TerrainCards
+import com.legionforge.app.ui.screens.loadBattleCards
+import com.legionforge.app.ui.screens.loadLegionAssetBitmap
 import com.legionforge.app.ui.theme.LegionForgeTheme
 import com.legionforge.app.ui.viewmodel.ArmyBuilderViewModel
 import org.junit.Test
@@ -180,6 +182,33 @@ class LegionTabletopTerrainCaptureTest {
                     onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
                     onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
                     terrainCard = TerrainCards.MONUMENT, victoryPoints = 6)
+            }
+        }
+    }
+}
+
+/** Bandeau avec les VRAIES cartes de mission (images). */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-mdpi")
+class LegionMissionCardsCaptureTest {
+    @Test
+    fun legion_bandeau_vraies_cartes() {
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        val cards = loadBattleCards(ctx)
+        val bitmaps = cards.mapNotNull { c -> c.imagePath()?.let { p -> p to loadLegionAssetBitmap(ctx, p) } }
+            .filter { it.second != null }.associate { it.first to it.second!! }
+        val primary = cards.firstOrNull { it.category == "objective" }
+        val map = cards.firstOrNull { it.category == "map" }
+        val secondary = cards.firstOrNull { it.category == "secondary" }
+        val pawns = listOf(LegionPawn("a1", "B1 Battle Droids", -60f, -80f, baseSize = "small", maxWounds = 4, wounds = 4))
+        captureRoboImage("src/test/snapshots/legion-mission-cards.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 2, unitsLeft = 1,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    missionCards = mapOf("primary" to primary, "map" to map, "secondary" to secondary),
+                    missionBitmaps = bitmaps, victoryPoints = 6)
             }
         }
     }

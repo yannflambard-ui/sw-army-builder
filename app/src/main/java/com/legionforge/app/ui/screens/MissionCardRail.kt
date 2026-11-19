@@ -1,7 +1,9 @@
 package com.legionforge.app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,23 +25,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.legionforge.app.ui.theme.LegionColors
-import com.legionforge.app.ui.theme.LegionDims
 import com.legionforge.app.ui.theme.LegionType
 
 /**
  * Bandeau des 5 cartes de mission au-dessus du plateau (HORS du Canvas), façon
- * playmat IRON SQUADRON : 4 cartes portrait + 1 carte paysage au centre,
- * compteur de tours 1-5 et piste de points de victoire 1-12.
+ * playmat IRON SQUADRON. Les emplacements Objectif/Map/Secondaire affichent la
+ * VRAIE carte choisie (image), cliquable pour en changer.
  */
 @Composable
 fun MissionCardRail(
     round: Int,
     victoryPoints: Int = 0,
     labels: Map<String, String>,
+    selectedCards: Map<String, LegionBattleCard?> = emptyMap(),
+    cardBitmaps: Map<String, ImageBitmap> = emptyMap(),
+    onPickCard: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scroll = rememberScrollState()
@@ -57,27 +64,35 @@ fun MissionCardRail(
                 val (c1, c2) = MissionCardRailData.colors(slot.kind)
                 val w = if (slot.wide) 96.dp else 62.dp
                 val h = if (slot.wide) 62.dp else 84.dp
+                val card = selectedCards[slot.label]
+                val clickable = card != null || slot.kind == MissionCardKind.COMMAND || slot.kind == MissionCardKind.COMMAND2
+                val bmp = card?.imagePath()?.let { cardBitmaps[it] }
                 Box(
                     Modifier.size(w, h)
                         .shadow(4.dp, RoundedCornerShape(6.dp))
                         .background(Brush.verticalGradient(listOf(c1, c2)), RoundedCornerShape(6.dp))
                         .border(2.dp, Color(0xFFBFC4C8), RoundedCornerShape(6.dp))
+                        .then(if (clickable) Modifier.clickable { onPickCard(slot.label) } else Modifier)
                         .padding(4.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        labels[slot.label] ?: slot.label,
-                        color = Color.White,
-                        fontSize = LegionType.Caption,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        lineHeight = LegionType.Caption * 1.1f,
-                    )
+                    if (bmp != null) {
+                        Image(bmp, contentDescription = card?.name, contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize())
+                    } else {
+                        Text(
+                            card?.name ?: labels[slot.label] ?: slot.label,
+                            color = Color.White,
+                            fontSize = LegionType.Caption,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            lineHeight = LegionType.Caption * 1.1f,
+                        )
+                    }
                 }
             }
         }
         Spacer(Modifier.height(4.dp))
-        // Compteur de tours 1-5 + piste VP (compact, sous la carte centrale).
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(labels["round"] ?: "ROUND", color = LegionColors.TextSecondary, fontSize = LegionType.Caption)
             (1..5).forEach { n ->

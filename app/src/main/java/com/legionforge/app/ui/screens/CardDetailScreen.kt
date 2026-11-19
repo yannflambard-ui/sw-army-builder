@@ -1824,11 +1824,11 @@ internal fun loadCommandCards(context: android.content.Context): List<LegionComm
     } catch (_: Exception) { emptyList() }
 }
 
-internal data class LegionBattleCard(val category: String, val name: String, val imageAssetPath: String? = null, val imageAssetPathFr: String? = null) {
+data class LegionBattleCard(val category: String, val name: String, val imageAssetPath: String? = null, val imageAssetPathFr: String? = null) {
     fun imagePath(): String? = if (java.util.Locale.getDefault().language == "fr") imageAssetPathFr ?: imageAssetPath else imageAssetPath
 }
 
-internal fun loadBattleCards(context: android.content.Context): List<LegionBattleCard> {
+fun loadBattleCards(context: android.content.Context): List<LegionBattleCard> {
     return try {
         val s = context.assets.open("battle_cards.json").bufferedReader().use { it.readText() }
         val arr = org.json.JSONObject(s).getJSONArray("cards")
