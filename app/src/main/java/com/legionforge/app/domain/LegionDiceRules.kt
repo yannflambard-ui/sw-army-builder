@@ -64,4 +64,29 @@ object LegionDiceRules {
     /** Succès = Hit ou Crit en attaque, Bloc en défense. */
     fun isSuccess(mode: String, face: String): Boolean =
         if (mode == "defense") face == "Bloc" else face == "Hit" || face == "Crit"
+
+
+    /**
+     * Détermination du Blue Player (rulebook:1221-1227) : chaque joueur lance 4 dés
+     * d'attaque NOIRS. Compare Hits, puis Crits, puis Surges ; en cas d'égalité
+     * persistante on relance les deux (répété jusqu'à départage).
+     * @return -1 si "own" gagne, +1 si "opp" gagne, 0 en cas d'égalité (appelant : reroll).
+     */
+    fun compareBlueRoll(own: List<String>, opp: List<String>): Int {
+        fun score(roll: List<String>) = Triple(
+            roll.count { it == "Hit" },
+            roll.count { it == "Crit" },
+            roll.count { it == "Surge" }
+        )
+        val a = score(own); val b = score(opp)
+        return when {
+            a.first != b.first -> if (a.first > b.first) -1 else 1
+            a.second != b.second -> if (a.second > b.second) -1 else 1
+            a.third != b.third -> if (a.third > b.third) -1 else 1
+            else -> 0
+        }
+    }
+
+    /** Jet complet d'un joueur : 4 dés noirs d'attaque. */
+    fun rollBluePlayer(): List<String> = List(4) { faces("attack", "black").random() }
 }

@@ -62,7 +62,7 @@ import org.json.JSONObject
  * règle de distance. Aucun contrôle de règle (choix utilisateur : arcs et distance
  * affichés, décision laissée au joueur).
  *
- * Échelle : 1 mm de table = [PX_PER_MM] px à zoom 1. Socles en mm (RRG 1.5.0).
+ * Échelle : 1 mm de table = [PX_PER_MM] px à zoom 1. Socles en mm (RRG 1.6.0).
  */
 private const val PX_PER_MM = 2.0f
 /** Tirs max par vaisseau et par manche (règle Armada). */
@@ -119,7 +119,7 @@ data class ArmadaAttack(
 }
 
 /**
- * Portée maximale d'une zone de coque (RRG 1.5.0 p.7) : close si uniquement des dés noirs,
+ * Portée maximale d'une zone de coque (RRG 1.6.0 p.7) : close si uniquement des dés noirs,
  * medium s'il y a au moins un dé bleu, long s'il y a au moins un dé rouge.
  * Renvoie le rayon en mm depuis le bord du socle, et les couleurs jouables.
  */
@@ -133,7 +133,7 @@ fun attackRange(bag: ArmadaDiceBag): Pair<Float, List<String>> = when {
 /** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
 data class FiringArcs(val front: Float, val flank: Float, val rear: Float)
 
-/** Dimensions de socle (mm), RRG 1.5.0. Les flottilles n'ont pas de taille tranchée : pion neutre. */
+/** Dimensions de socle (mm), RRG 1.6.0. Les flottilles n'ont pas de taille tranchée : pion neutre. */
 fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
     "small" -> 43f to 71f
     "medium" -> 63f to 102f
@@ -221,9 +221,11 @@ fun TabletopScreen(
     // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau
     var sheetPawnId by remember { mutableStateOf<String?>(null) }
     var chosenAttackSector by remember { mutableStateOf<String?>(null) }
+    // Secteurs de coque déjà utilisés ce round, par vaisseau (RRG : 2 zones distinctes).
+    var usedSectors by remember { mutableStateOf<Map<String, List<String>>>(emptyMap()) }
     // Tirs par vaisseau cette manche : compteur partagé du ViewModel (même source que Play).
     val shotsMap by com.legionforge.app.ui.viewmodel.ArmadaShotCounter.shots.collectAsState()
-    androidx.compose.runtime.LaunchedEffect(round) { com.legionforge.app.ui.viewmodel.ArmadaShotCounter.reset() }
+    androidx.compose.runtime.LaunchedEffect(round) { com.legionforge.app.ui.viewmodel.ArmadaShotCounter.reset(); usedSectors = emptyMap() }
     androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(0) }
@@ -639,9 +641,10 @@ fun TabletopScreen(
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                                 listOf("front" to "Avant", "left" to "Bâbord", "right" to "Tribord", "rear" to "Arrière").forEach { (sector, label) ->
                                     val on = chosenAttackSector == sector
-                                    Surface(onClick = { chosenAttackSector = if (on) null else sector }, shape = RoundedCornerShape(6.dp),
-                                        color = if (on) LegionColors.Accent else LegionColors.Border) {
-                                        Text(label, Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = if (on) LegionColors.Background else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    val used = usedSectors[sp.id].orEmpty().contains(sector)
+                                    Surface(onClick = { if (!used) chosenAttackSector = if (on) null else sector }, shape = RoundedCornerShape(6.dp),
+                                        color = if (used) LegionColors.SurfaceRaised else if (on) LegionColors.Accent else LegionColors.Border) {
+                                        Text(if (used) "$label ✓" else label, Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = if (used) LegionColors.TextTertiary else if (on) LegionColors.Background else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -694,6 +697,9 @@ fun TabletopScreen(
                                     val acc = ArmadaDiceRoller.accuracies(rolls)
                                     attackResult = "Dégâts $hits$critPart · précisions $acc — appliquez défense, effets et dégâts manuellement"
                                     com.legionforge.app.ui.viewmodel.ArmadaShotCounter.record(att.id)
+                                    // RRG : 2 tirs max par vaisseau, depuis 2 zones de coque distinctes.
+                                    usedSectors = usedSectors + (att.id to (usedSectors[att.id].orEmpty() + listOfNotNull(chosenAttackSector)))
+                                    chosenAttackSector = null
                                     sheetPawnId = null
                                 }
                             },
@@ -963,7 +969,7 @@ fun DrawScope.drawAttackedFlank(
 }
 
 /**
- * Anneaux de portée d'un vaisseau sélectionné (RRG 1.5.0 p.7/9).
+ * Anneaux de portée d'un vaisseau sélectionné (RRG 1.6.0 p.7/9).
  * Trois cercles concentriques depuis le bord du socle : noir = Close, bleu = Medium, rouge = Long.
  * Pour un escadron : un seul cercle (distance 1, ou 2 avec Snipe).
  */
@@ -1134,7 +1140,7 @@ fun loadShipSizes(context: Context): Map<String, String> = try {
 private const val ARC_RADIUS_MM = 400f
 
 /**
- * Portées d'attaque (RRG 1.5.0 p.7/9). La règle de portée fait 1 pied (304,8 mm) et se lit
+ * Portées d'attaque (RRG 1.6.0 p.7/9). La règle de portée fait 1 pied (304,8 mm) et se lit
  * depuis le point le plus proche du SOCLE attaquant (jamais le centre).
  * Les bandes de la règle physique sont INÉGALES ; mesures relevées :
  *  - Close  ≈ 0..124 mm : dés NOIRS + bleus + rouges

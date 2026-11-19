@@ -1,199 +1,269 @@
 {
- "schemaVersion": 1,
- "cards": [
-  {
-   "category": "objective",
-   "name": "Recover the Research",
-   "imageAssetPath": "cards/swl/battle/recover-the-research.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/recover-the-research.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Intercept Signals",
-   "imageAssetPath": "cards/swl/battle/intercept-signals.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/intercept-signals.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Breakthrough",
-   "imageAssetPath": "cards/swl/battle/breakthrough.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/breakthrough.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Bunker Assault",
-   "imageAssetPath": "cards/swl/battle/bunker-assault.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/bunker-assault.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Close the Pocket",
-   "imageAssetPath": "cards/swl/battle/close-the-pocket.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/close-the-pocket.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Marked Targets",
-   "imageAssetPath": "cards/swl/battle/marked-targets.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/marked-targets.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Bring Them to Heel",
-   "imageAssetPath": "cards/swl/battle/bring-them-to-heel.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/bring-them-to-heel.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Sweep and Clear",
-   "imageAssetPath": "cards/swl/battle/sweep-and-clear.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/sweep-and-clear.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Surface Scan",
-   "imageAssetPath": "cards/swl/battle/surface-scan.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/surface-scan.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Destroy Enemy Base",
-   "imageAssetPath": "cards/swl/battle/destroy-enemy-base.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/destroy-enemy-base.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Recon Mission",
-   "imageAssetPath": "cards/swl/battle/recon-mission.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/recon-mission.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Contact, Contact!",
-   "imageAssetPath": "cards/swl/battle/contact-contact.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Payload",
-   "imageAssetPath": "cards/swl/battle/payload.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Cauldron",
-   "imageAssetPath": "cards/swl/battle/cauldron.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Outflank",
-   "imageAssetPath": "cards/swl/battle/outflank.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/outflank.webp"
-  },
-  {
-   "category": "objective",
-   "name": "Shifting Priorities",
-   "imageAssetPath": "cards/swl/battle/shifting-priorities.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/shifting-priorities.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Failed Negotiations",
-   "imageAssetPath": "cards/swl/battle/failed-negotiations.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Supply Run",
-   "imageAssetPath": "cards/swl/battle/supply-run.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/supply-run.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Retrieve the Data",
-   "imageAssetPath": "cards/swl/battle/retrieve-the-data.webp"
-  },
-  {
-   "category": "secondary",
-   "name": "Align the Relay",
-   "imageAssetPath": "cards/swl/battle/align-the-relay.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Advanced Intel",
-   "imageAssetPath": "cards/swl/battle/advanced-intel.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/advanced-intel.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Cunning Deployment",
-   "imageAssetPath": "cards/swl/battle/cunning-deployment.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/cunning-deployment.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Fortified Position",
-   "imageAssetPath": "cards/swl/battle/fortified-position.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/fortified-position.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Garrison",
-   "imageAssetPath": "cards/swl/battle/garrison.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/garrison.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Ordnance",
-   "imageAssetPath": "cards/swl/battle/ordnance.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/ordnance.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Strafing Run",
-   "imageAssetPath": "cards/swl/battle/strafing-run.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/strafing-run.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Command Override",
-   "imageAssetPath": "cards/swl/battle/command-override.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/command-override.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Armored Assault",
-   "imageAssetPath": "cards/swl/battle/armored-assault.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "No Time to Lose",
-   "imageAssetPath": "cards/swl/battle/no-time-to-lose.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/no-time-to-lose.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Scrambled Orders",
-   "imageAssetPath": "cards/swl/battle/scrambled-orders.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Extreme Discipline",
-   "imageAssetPath": "cards/swl/battle/extreme-discipline.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Black Ops",
-   "imageAssetPath": "cards/swl/battle/black-ops.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/black-ops.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Rapid Deployment",
-   "imageAssetPath": "cards/swl/battle/rapid-deployment.webp"
-  },
-  {
-   "category": "advantage",
-   "name": "Coordinated Strike",
-   "imageAssetPath": "cards/swl/battle/coordinated-strike.webp",
-   "imageAssetPathFr": "cards/swl/battle/fr/coordinated-strike.webp"
-  }
- ]
+  "schemaVersion": 1,
+  "cards": [
+    {
+      "category": "objective",
+      "name": "Recover the Research",
+      "imageAssetPath": "cards/swl/battle/recover-the-research.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/recover-the-research.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Intercept Signals",
+      "imageAssetPath": "cards/swl/battle/intercept-signals.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/intercept-signals.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Breakthrough",
+      "imageAssetPath": "cards/swl/battle/breakthrough.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/breakthrough.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Bunker Assault",
+      "imageAssetPath": "cards/swl/battle/bunker-assault.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/bunker-assault.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Close the Pocket",
+      "imageAssetPath": "cards/swl/battle/close-the-pocket.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/close-the-pocket.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Marked Targets",
+      "imageAssetPath": "cards/swl/battle/marked-targets.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/marked-targets.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Bring Them to Heel",
+      "imageAssetPath": "cards/swl/battle/bring-them-to-heel.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/bring-them-to-heel.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Sweep and Clear",
+      "imageAssetPath": "cards/swl/battle/sweep-and-clear.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/sweep-and-clear.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Surface Scan",
+      "imageAssetPath": "cards/swl/battle/surface-scan.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/surface-scan.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Destroy Enemy Base",
+      "imageAssetPath": "cards/swl/battle/destroy-enemy-base.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/destroy-enemy-base.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Recon Mission",
+      "imageAssetPath": "cards/swl/battle/recon-mission.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/recon-mission.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Contact, Contact!",
+      "imageAssetPath": "cards/swl/battle/contact-contact.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Payload",
+      "imageAssetPath": "cards/swl/battle/payload.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Cauldron",
+      "imageAssetPath": "cards/swl/battle/cauldron.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Outflank",
+      "imageAssetPath": "cards/swl/battle/outflank.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/outflank.webp"
+    },
+    {
+      "category": "objective",
+      "name": "Shifting Priorities",
+      "imageAssetPath": "cards/swl/battle/shifting-priorities.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/shifting-priorities.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Failed Negotiations",
+      "imageAssetPath": "cards/swl/battle/failed-negotiations.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Supply Run",
+      "imageAssetPath": "cards/swl/battle/supply-run.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/supply-run.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Retrieve the Data",
+      "imageAssetPath": "cards/swl/battle/retrieve-the-data.webp"
+    },
+    {
+      "category": "secondary",
+      "name": "Align the Relay",
+      "imageAssetPath": "cards/swl/battle/align-the-relay.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Advanced Intel",
+      "imageAssetPath": "cards/swl/battle/advanced-intel.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/advanced-intel.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Cunning Deployment",
+      "imageAssetPath": "cards/swl/battle/cunning-deployment.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/cunning-deployment.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Fortified Position",
+      "imageAssetPath": "cards/swl/battle/fortified-position.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/fortified-position.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Garrison",
+      "imageAssetPath": "cards/swl/battle/garrison.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/garrison.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Ordnance",
+      "imageAssetPath": "cards/swl/battle/ordnance.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/ordnance.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Strafing Run",
+      "imageAssetPath": "cards/swl/battle/strafing-run.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/strafing-run.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Command Override",
+      "imageAssetPath": "cards/swl/battle/command-override.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/command-override.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Armored Assault",
+      "imageAssetPath": "cards/swl/battle/armored-assault.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "No Time to Lose",
+      "imageAssetPath": "cards/swl/battle/no-time-to-lose.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/no-time-to-lose.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Scrambled Orders",
+      "imageAssetPath": "cards/swl/battle/scrambled-orders.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Extreme Discipline",
+      "imageAssetPath": "cards/swl/battle/extreme-discipline.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Black Ops",
+      "imageAssetPath": "cards/swl/battle/black-ops.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/black-ops.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Rapid Deployment",
+      "imageAssetPath": "cards/swl/battle/rapid-deployment.webp"
+    },
+    {
+      "category": "advantage",
+      "name": "Coordinated Strike",
+      "imageAssetPath": "cards/swl/battle/coordinated-strike.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/coordinated-strike.webp"
+    },
+    {
+      "category": "map",
+      "name": "Recover the Research",
+      "imageAssetPath": "cards/swl/battle/recover-the-research.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/recover-the-research.webp",
+      "mapForObjective": "Recover the Research"
+    },
+    {
+      "category": "map",
+      "name": "Intercept Signals",
+      "imageAssetPath": "cards/swl/battle/intercept-signals.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/intercept-signals.webp",
+      "mapForObjective": "Intercept Signals"
+    },
+    {
+      "category": "map",
+      "name": "Breakthrough",
+      "imageAssetPath": "cards/swl/battle/breakthrough.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/breakthrough.webp",
+      "mapForObjective": "Breakthrough"
+    },
+    {
+      "category": "map",
+      "name": "Bunker Assault",
+      "imageAssetPath": "cards/swl/battle/bunker-assault.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/bunker-assault.webp",
+      "mapForObjective": "Bunker Assault"
+    },
+    {
+      "category": "map",
+      "name": "Close the Pocket",
+      "imageAssetPath": "cards/swl/battle/close-the-pocket.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/close-the-pocket.webp",
+      "mapForObjective": "Close the Pocket"
+    },
+    {
+      "category": "map",
+      "name": "Contact, Contact!",
+      "imageAssetPath": "cards/swl/battle/contact-contact.webp",
+      "imageAssetPathFr": null,
+      "mapForObjective": "Contact, Contact!"
+    },
+    {
+      "category": "map",
+      "name": "Payload",
+      "imageAssetPath": "cards/swl/battle/payload.webp",
+      "imageAssetPathFr": null,
+      "mapForObjective": "Payload"
+    },
+    {
+      "category": "map",
+      "name": "Cauldron",
+      "imageAssetPath": "cards/swl/battle/cauldron.webp",
+      "imageAssetPathFr": null,
+      "mapForObjective": "Cauldron"
+    },
+    {
+      "category": "map",
+      "name": "Outflank",
+      "imageAssetPath": "cards/swl/battle/outflank.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/outflank.webp",
+      "mapForObjective": "Outflank"
+    },
+    {
+      "category": "map",
+      "name": "Shifting Priorities",
+      "imageAssetPath": "cards/swl/battle/shifting-priorities.webp",
+      "imageAssetPathFr": "cards/swl/battle/fr/shifting-priorities.webp",
+      "mapForObjective": "Shifting Priorities"
+    }
+  ]
 }

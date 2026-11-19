@@ -259,6 +259,9 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var armadaRound by remember { mutableIntStateOf(1) }
     var armadaPhase by remember { mutableStateOf(ArmadaPhase.COMMAND) }
     var armadaTurn by remember { mutableStateOf(0) }   // 0 = moi (1er joueur), 1 = adversaire — activation alternée
+    // Points d'objectif / jetons de victoire Armada (distincts du compteur VP Legion 0..12).
+    var armadaObjectivePoints by remember { mutableIntStateOf(0) }
+    var armadaObjectivePointsOpp by remember { mutableIntStateOf(0) }
     var armadaWinner by remember { mutableStateOf<Int?>(null) }  // 0 = VOUS, 1 = ADVERSAIRE (score & fin de partie) ; null = en cours
     var showBlockers by remember { mutableStateOf(false) }
     // Tour d'activation courant (PR3) : "own" ou "opp".
@@ -452,8 +455,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     var passArmed by remember { mutableStateOf(false) }  // double confirmation du bouton Passer
     var missionZoom by remember { mutableStateOf<Pair<String, String?>?>(null) }  // (nom, image) carte mission en grand (long-press)
     var bluePlayer by remember { mutableStateOf<String?>(null) }  // "own" | "opp"
+    var blueRoll by remember { mutableStateOf<Pair<List<String>, List<String>>?>(null) }  // jets own/opp pour déterminer le blue
     var missionRevealed by remember { mutableStateOf<Map<String, String>>(emptyMap()) }  // "own_objective" -> nom
     var modsLeft by remember { mutableStateOf<Map<String, Int>>(mapOf("own" to 2, "opp" to 2)) }
+    var modsTurn by remember { mutableStateOf<String>("own") }  // alternance stricte des modifications Round 0
     // Refonte liste/détail : unité sélectionnée pour le détail, sélection comparée, sheet comparé.
     var selectedUnit by remember { mutableStateOf<ListEntry?>(null) }
     var compareSel by remember { mutableStateOf<List<ListEntry>>(emptyList()) }
@@ -516,6 +521,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
         roots: List<ListEntry>,
         allEntries: List<ListEntry>,
         states: Map<String, SyncedUnitState>,
+        objectivePoints: Int = 0,
     ): Long {
         val units = roots.map { e ->
             val upPts = if (e.card.kind == CardKind.ARMADA_SHIP)
@@ -527,7 +533,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                 destroyed = states[e.instanceId]?.defeated == true,
             )
         }
-        return com.legionforge.app.domain.armadaScore(units, 0)
+        return com.legionforge.app.domain.armadaScore(units, objectivePoints)
     }
     // Verrou de fin de round : toutes les unités non vaincues des 2 armées doivent avoir activé.
     fun soloRoundDone(): Boolean =
@@ -796,7 +802,10 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                 }
                                 // Lancer la partie (garde-fou : battle deck 3+3+3 complet + main de 7).
                                 val battleComplete = listOf("objective", "secondary", "advantage").all { cat -> battleCards.count { it.category == cat && it.name in battleDeck } >= 3 }
-                                val cmdComplete = commandDeck.size + 1 >= 7 // +1 = Standing Orders auto-ajouté (7e carte de la main)
+                                // Main v2 exacte : 6 cartes + Standing Orders auto = 2×pip1, 2×pip2, 2×pip3.
+                                val deckPips = cmdCards.filter { it.id in commandDeck && it.pip != "4" }.map { it.pip }
+                                val cmdComplete = commandDeck.none { id -> cmdCards.firstOrNull { it.id == id }?.pip == "4" } &&
+                                    listOf("1", "2", "3").all { pip -> deckPips.count { it == pip } == 2 }
                                 Button(onClick = {
                                     grantPassPool()
                                     // Nouvelle partie = état frais : reset des unités + purge de la session (pas d'ordres/états de la partie précédente).
@@ -1088,17 +1097,26 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                     Text("▦ Ouvrir le plateau Tabletop", color = LegionColors.Accent)
                                 }
                             }
+                            // RRG 1.6.0 Scoring : points d'objectif / jetons de victoire saisis manuellement.
+                            item {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Jetons objectif — VOUS: $armadaObjectivePoints / ADV: $armadaObjectivePointsOpp", color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                    CircleShield(value = armadaObjectivePoints, onDec = { armadaObjectivePoints = (armadaObjectivePoints - 1).coerceAtLeast(0) }, onInc = { armadaObjectivePoints += 1 })
+                                    CircleShield(value = armadaObjectivePointsOpp, onDec = { armadaObjectivePointsOpp = (armadaObjectivePointsOpp - 1).coerceAtLeast(0) }, onInc = { armadaObjectivePointsOpp += 1 })
+                                }
+                            }
                             item {
                                 ArmadaRoundBar(
                                     armadaRound = armadaRound, armadaPhase = armadaPhase,
                                     armadaTurn = armadaTurn,
                                     twoPlayer = twoPlayer,
                                     onAdvance = {
-                                        if (!twoPlayer && !isLegion) {
-                                            // La validation des phases est partagée avec les tests JVM.
+                                        if (!isLegion) {
+                                            // Validation partagée avec les tests JVM. En 2J on lit oppStates.
+                                            val oppStAdvance = if (twoPlayer) oppStates else soloOppStates
                                             fun pending(kind: CardKind): Int =
                                                 playable.count { it.card.kind == kind && ownStates[it.instanceId]?.defeated != true && ownStates[it.instanceId]?.activated != true } +
-                                                oppPlayable.count { it.card.kind == kind && soloOppStates[it.instanceId]?.defeated != true && soloOppStates[it.instanceId]?.activated != true }
+                                                oppPlayable.count { it.card.kind == kind && oppStAdvance[it.instanceId]?.defeated != true && oppStAdvance[it.instanceId]?.activated != true }
                                             val advance = com.legionforge.app.domain.advanceArmadaPhase(
                                                 com.legionforge.app.domain.ArmadaRoundState(armadaRound, com.legionforge.app.domain.ArmadaRoundPhase.valueOf(armadaPhase.name)),
                                                 pending(CardKind.ARMADA_SHIP), pending(CardKind.ARMADA_SQUADRON)
@@ -1108,11 +1126,13 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                                                 if (crossing) {
                                                     // Fin de manche : reset activation + cadrans de toute la flotte (moi + adverse solo).
                                                     ownStates.keys.forEach { id -> playSyncVm.updateOwnState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) } }
-                                                    soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) }
+                                                    if (twoPlayer) oppStates.keys.forEach { id -> playSyncVm.updateOppState(id) { st -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) } }
+                                                    else soloOppStates = soloOppStates.mapValues { (_, st) -> st.copy(activated = false, commandOrder = null, commandDialRevealed = false, defTokens = emptyMap()) }
                                                     if (armadaRound < 6) armadaRound += 1
                                                     else {
-                                                        val myScore = armadaFleetScore(oppPlayable, oppEntries, soloOppStates)
-                                                        val oppScore = armadaFleetScore(playable, entries, ownStates)
+                                                        val oppStEnd = if (twoPlayer) oppStates else soloOppStates
+                                                        val myScore = armadaFleetScore(oppPlayable, if (twoPlayer) oppEntries else soloOppEntries, oppStEnd, armadaObjectivePoints)
+                                                        val oppScore = armadaFleetScore(playable, entries, ownStates, armadaObjectivePointsOpp)
                                                         val dec = com.legionforge.app.domain.armadaScoreWinner(myScore, oppScore)
                                                         // armadaScoreWinner : FIRST = joueur local, SECOND = adverse (départage à l'adverse en égalité).
                                                         armadaWinner = if (dec == com.legionforge.app.domain.ArmadaPlayer.FIRST) 0 else 1
@@ -1154,20 +1174,30 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                             }
                             }
                         }
-                        // Fin immédiate : une flotte sans vaisseaux survivants → partie finie (solo).
-                        LaunchedEffect(ownStates, soloOppStates, armadaWinner) {
-                            if (phase == PlayPhase.GAME && !isLegion && !twoPlayer && armadaWinner == null) {
-                                val ownShips = playable.filter { it.card.kind == CardKind.ARMADA_SHIP }
-                                val enemyShips = oppPlayable.filter { it.card.kind == CardKind.ARMADA_SHIP }
-                                if (ownShips.isNotEmpty() && ownShips.all { ownStates[it.instanceId]?.defeated == true }) armadaWinner = 1
-                                else if (enemyShips.isNotEmpty() && enemyShips.all { soloOppStates[it.instanceId]?.defeated == true }) armadaWinner = 0
+                        // Fin immédiate RRG 1.6.0 : seuls les VAISSEAUX comptent (escadrons/flottilles ignorés).
+                        // Départage au score en destruction simultanée. Fonctionnel en 2J.
+                        LaunchedEffect(ownStates, soloOppStates, oppStates, playable, oppPlayable, armadaWinner, armadaRound, armadaPhase) {
+                            if (phase == PlayPhase.GAME && !isLegion && armadaWinner == null) {
+                                val oppSt = if (twoPlayer) oppStates else soloOppStates
+                                val alive = { list: kotlin.collections.List<ListEntry>, st: Map<String, SyncedUnitState> ->
+                                    list.count { it.card.kind == CardKind.ARMADA_SHIP && st[it.instanceId]?.defeated != true }
+                                }
+                                val myAlive = alive(playable, ownStates)
+                                val oppAlive = alive(oppPlayable, oppSt)
+                                if (myAlive == 0 || oppAlive == 0) {
+                                    val mySc = armadaFleetScore(oppPlayable, if (twoPlayer) oppEntries else soloOppEntries, oppSt, armadaObjectivePoints)
+                                    val oppSc = armadaFleetScore(playable, entries, ownStates, armadaObjectivePointsOpp)
+                                    val w = com.legionforge.app.domain.armadaEliminationWinner(myAlive, oppAlive, mySc, oppSc)
+                                    // FIRST = joueur local (0), SECOND = adverse (1)
+                                    armadaWinner = when (w) { com.legionforge.app.domain.ArmadaPlayer.FIRST -> 0; com.legionforge.app.domain.ArmadaPlayer.SECOND -> 1; else -> null }
+                                }
                             }
                         }
                         // Overlay de fin de partie (score officiel : points de flotte adverse détruits).
                         if (armadaWinner != null) {
                             val oppStatesHere = if (twoPlayer) oppStates else soloOppStates
-                            val myScore = armadaFleetScore(oppPlayable, oppEntries, oppStatesHere).toString()
-                            val oppScore = armadaFleetScore(playable, entries, ownStates).toString()
+                            val myScore = armadaFleetScore(oppPlayable, oppEntries, oppStatesHere, armadaObjectivePoints).toString()
+                            val oppScore = armadaFleetScore(playable, entries, ownStates, armadaObjectivePointsOpp).toString()
                             val winner = if (armadaWinner == 0) "VOUS" else "ADVERSAIRE"
                             Box(Modifier.fillMaxSize().background(Color(0xE60A0E15))) {
                                 Column(Modifier.align(Alignment.Center).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -1429,13 +1459,25 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
     if (showMissionSheet) {
         MissionBuilderSheet(
             battleCards = battleCards, battleDeck = battleDeck,
-            bluePlayer = bluePlayer, missionRevealed = missionRevealed, modsLeft = modsLeft,
+            bluePlayer = bluePlayer, blueRoll = blueRoll, missionRevealed = missionRevealed, modsLeft = modsLeft, modsTurn = modsTurn,
             onSetBlue = { bluePlayer = it },
+            onRollBlue = {
+                var a: List<String>; var b: List<String>; var c: Int
+                do {
+                    a = com.legionforge.app.domain.LegionDiceRules.rollBluePlayer()
+                    b = com.legionforge.app.domain.LegionDiceRules.rollBluePlayer()
+                    c = com.legionforge.app.domain.LegionDiceRules.compareBlueRoll(a, b)
+                } while (c == 0)
+                blueRoll = a to b
+                bluePlayer = if (c < 0) "own" else "opp"
+                modsTurn = bluePlayer!!  // le Blue Player modifie en premier (rulebook:1240)
+            },
             onReveal = { key, name -> missionRevealed = missionRevealed + (key to name) },
             onMod = { p, opt ->
+                if (p != modsTurn) return@MissionBuilderSheet  // alternance : joueur inactif verrouillé
                 when (opt) {
-                    "objective", "secondary", "advantage" -> {
-                        val key = "${p}_$opt"
+                    "objective", "map", "secondary", "advantage" -> {
+                        val key = if (opt == "map") "map" else "${p}_$opt"
                         val opts = battleCards.filter { it.category == opt && it.name in battleDeck }.map { it.name }.distinct()
                         if (opts.isNotEmpty()) {
                             val cur = missionRevealed[key]
@@ -1447,6 +1489,7 @@ fun CardDetailScreen(entries: List<ListEntry>, initialIndex: Int = 0, onBack: ()
                     "pass" -> {}
                 }
                 modsLeft = modsLeft + (p to ((modsLeft[p] ?: 0) - 1).coerceAtLeast(0))
+                modsTurn = if (p == "own") "opp" else "own"  // blue en premier puis alternance
             },
             onClose = { showMissionSheet = false }
         )
@@ -2011,9 +2054,12 @@ internal fun MissionBuilderSheet(
     battleCards: List<LegionBattleCard>,
     battleDeck: Set<String>,
     bluePlayer: String?,
+    blueRoll: Pair<List<String>, List<String>>? = null,
     missionRevealed: Map<String, String>,
     modsLeft: Map<String, Int>,
+    modsTurn: String = "own",
     onSetBlue: (String) -> Unit,
+    onRollBlue: () -> Unit = {},
     onReveal: (String, String) -> Unit,
     onMod: (String, String) -> Unit,
     onClose: () -> Unit
@@ -2023,14 +2069,22 @@ internal fun MissionBuilderSheet(
     ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Surface) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("ROUND 0 — BUILD A MISSION", color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Blue Player (détermine qui commence)", color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Surface(onClick = { onSetBlue("own") }, shape = RoundedCornerShape(8.dp), color = if (bluePlayer == "own") Color(0xFF4FC3F7) else LegionColors.Border, modifier = Modifier.weight(1f)) { Text("MOI", Modifier.padding(vertical = 8.dp), color = if (bluePlayer == "own") LegionColors.Background else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                Surface(onClick = { onSetBlue("opp") }, shape = RoundedCornerShape(8.dp), color = if (bluePlayer == "opp") Color(0xFF4FC3F7) else LegionColors.Border, modifier = Modifier.weight(1f)) { Text("ADV", Modifier.padding(vertical = 8.dp), color = if (bluePlayer == "opp") LegionColors.Background else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
+            Text("Modifications : tour de ${if (modsTurn == "own") "MOI" else "ADV"} · ${modsLeft["own"] ?: 0}/${modsLeft["opp"] ?: 0} restantes", color = LegionColors.Warning, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text("Blue Player — 4 dés noirs chacun (rulebook:1221-1227)", color = LegionColors.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Button(onClick = onRollBlue, modifier = Modifier.fillMaxWidth().height(44.dp), colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = LegionColors.Accent, contentColor = LegionColors.Background)) {
+                Text("Lancer pour le Blue Player", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+            if (blueRoll != null) {
+                Text("MOI  ${blueRoll!!.first.joinToString(" ")}   |   ADV  ${blueRoll!!.second.joinToString(" ")}", color = LegionColors.TextSecondary, fontSize = 10.sp)
+                val cmp = com.legionforge.app.domain.LegionDiceRules.compareBlueRoll(blueRoll!!.first, blueRoll!!.second)
+                Text(
+                    if (cmp == 0) "Égalité — relancez" else "Blue Player : ${if (cmp < 0) "MOI" else "ADV"}",
+                    color = if (cmp == 0) LegionColors.Warning else Color(0xFF4FC3F7), fontSize = 12.sp, fontWeight = FontWeight.Bold
+                )
             }
             listOf("own" to "MOI", "opp" to "ADV").forEach { (p, label) ->
                 Text("$label — révélation", color = LegionColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-                listOf("objective" to "Objectif", "secondary" to "Secondaire", "advantage" to "Avantage").forEach { (cat, clabel) ->
+                listOf("objective" to "Objectif", "map" to "Carte (territoire)", "secondary" to "Secondaire", "advantage" to "Avantage").forEach { (cat, clabel) ->
                     val key = "${p}_$cat"
                     val cur = missionRevealed[key]
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
@@ -2124,7 +2178,10 @@ internal fun MissionDashboard(
     val secName = missionRevealed["own_secondary"] ?: missionRevealed["opp_secondary"]
     val advOwn = missionRevealed["own_advantage"]
     val advOpp = missionRevealed["opp_advantage"]
-    val mapName = objName
+    // Map card appariée à l'Objectif (rulebook:1181-1185) : révélation dédiée, pas un doublon de l'objectif.
+    val maps = objectives.filter { it.category == "map" }
+    val objectiveMaps = maps.filter { it.imageAssetPath != null }
+    val mapName = missionRevealed["map"] ?: objName
     var menuOpen by remember { mutableStateOf(false) }
     Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = Color(0xFF16212E), border = BorderStroke(1.dp, LegionColors.Warning)) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2180,7 +2237,7 @@ internal fun MissionDashboard(
             // ── Cartes mission (toujours visibles, en miniatures) ──
             val objCard = objectives.firstOrNull { it.name == objName }
             val secCard = objectives.firstOrNull { it.name == secName }
-            val mapCard = objectives.firstOrNull { it.name == mapName }
+            val mapCard = objectiveMaps.firstOrNull { it.name == mapName } ?: maps.firstOrNull { it.name == mapName }
             LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 item { DashSlot("CMD", cmdMine?.name ?: "?", Color(0xFF6B7280), Modifier.width(72.dp), imagePath = cmdMine?.imagePath(), onClick = onOpenCommandHand, onLongClick = cmdMine?.let { { onZoomMission(it.name, it.imagePath()) } }) }
                 item { DashSlot("OBJECTIF", objName ?: "—", LegionColors.Danger, Modifier.width(72.dp), imagePath = objCard?.imagePath(), onClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } }, onLongClick = objCard?.let { { onZoomMission(it.name, it.imagePath()) } }) }
@@ -3447,7 +3504,9 @@ internal fun ArmadaShipPage(unit: ListEntry, children: List<ListEntry>, allEntri
                             // Remplit la file à la capacité avec les ordres standards en cycle (RRG).
                             val orders = ArmadaCommandOrder.entries.map { it.name }
                             val replenished = (0 until maxOrderStock).map { orders[it % orders.size] }
-                            set(state.copy(commandDialStack = replenished, commandDialRevealed = false))
+                            // Le drapeau n'est réarmé QU'en fin de manche (reset global), jamais ici :
+                            // sinon onUnset + recharge → 2e révélation/credit dans la même manche.
+                            set(state.copy(commandDialStack = replenished))
                         },
                         onReveal = {
                             val (h, rest) = com.legionforge.app.data.model.ArmadaCommandStack.reveal(state.commandDialStack)
@@ -4048,7 +4107,7 @@ internal fun CommandWheelPanel(
             }
             // RRG Command Phase : la file se recharge à la valeur de commande chaque manche.
             // Masqué si un cadran est déjà révélé (évite un double-révélage dans la même manche).
-            if (active == null && stack.size < capacity) {
+            if (revealAllowed && active == null && stack.size < capacity) {
                 TextButton(onClick = onRecharge, modifier = Modifier.fillMaxWidth().minimumInteractiveComponentSize()) {
                     Text("Recharger la file (${stack.size}/$capacity)", color = LegionColors.Accent, fontSize = 11.sp)
                 }
