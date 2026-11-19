@@ -4,6 +4,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.geometry.Offset
 import com.legionforge.app.ui.screens.LegionPawn
 import com.legionforge.app.ui.screens.LegionTabletopScreen
 import com.legionforge.app.ui.theme.LegionForgeTheme
@@ -48,6 +51,55 @@ class LegionTabletopInteractionTest {
         }
         compose.onNodeWithText("End round").performClick()
         assertTrue("onRoundChange(2) doit être appelé", nextRound == 2)
+    }
+
+    @Test
+    fun tap_sur_un_pion_ouvre_la_fiche_play() {
+        // Garde-fou : le pinch ne doit PAS voler le tap (regression 2.71).
+        var openedId: String? = null
+        compose.setContent {
+            LegionForgeTheme {
+                LegionTabletopScreen(
+                    pawns = listOf(pawn()), round = 1,
+                    onBack = {}, onOpenPlay = { openedId = it }, onActivate = {},
+                    onCoverChange = { _, _ -> }, onMove = { _, _, _, _ -> },
+                    onRoundChange = {}, onWoundsChange = { _, _ -> },
+                )
+            }
+        }
+        compose.onNodeWithTag("legion_board").performTouchInput {
+            // Le pion est en (0,0) mm = centre du viewport ; tap court sans deplacement.
+            down(Offset(center.x, center.y))
+            up()
+        }
+        compose.waitForIdle()
+        assertTrue("tap sur le pion doit ouvrir sa fiche Play", openedId == "a1")
+    }
+
+    @Test
+    fun pinch_ne_declenche_pas_la_fiche() {
+        // Un pinch (2 doigts) ne doit PAS etre interprete comme un tap sur un pion.
+        var opened = false
+        compose.setContent {
+            LegionForgeTheme {
+                LegionTabletopScreen(
+                    pawns = listOf(pawn()), round = 1,
+                    onBack = {}, onOpenPlay = { opened = true }, onActivate = {},
+                    onCoverChange = { _, _ -> }, onMove = { _, _, _, _ -> },
+                    onRoundChange = {}, onWoundsChange = { _, _ -> },
+                )
+            }
+        }
+        compose.onNodeWithTag("legion_board").performTouchInput {
+            down(0, Offset(center.x - 60f, center.y))
+            down(1, Offset(center.x + 60f, center.y))
+            moveTo(0, Offset(center.x - 100f, center.y))
+            moveTo(1, Offset(center.x + 100f, center.y))
+            up(0)
+            up(1)
+        }
+        compose.waitForIdle()
+        assertTrue("pinch ne doit pas ouvrir la fiche", !opened)
     }
 
     @Test

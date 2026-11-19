@@ -5,9 +5,8 @@ import com.legionforge.app.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +28,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
@@ -188,66 +189,103 @@ fun LegionTabletopScreen(
         val textMeasurer = rememberTextMeasurer()
         Canvas(
             Modifier.fillMaxSize().testTag("legion_board").pointerInput(Unit) {
-                // Pinch-zoom (2 doigts) : absent auparavant sur Legion. Gardé figé pendant
-                // le drag d'un pion (dragPan != null) pour ne pas faire dériver la coordonnée mm.
-                detectTransformGestures { centroid, panChange, zoom, _ ->
-                    if (dragPan == null && (zoom != 1f || panChange != androidx.compose.ui.geometry.Offset.Zero)) {
-                        val old = scale
-                        val next = (scale * zoom).coerceIn(0.25f, 6f)
-                        val base = pan ?: viewCenter
-                        // Le plateau sous le centroid reste sous le centroid après zoom :
-                        // pan' = centroid - (centroid - pan) * (next/old) + panChange
-                        val ratio = next / old
-                        pan = androidx.compose.ui.geometry.Offset(
-                            centroid.x - (centroid.x - base.x) * ratio + panChange.x,
-                            centroid.y - (centroid.y - base.y) * ratio + panChange.y,
-                        )
-                        scale = next
-                    }
-                }
-                detectTapGestures { at ->
-                    val hit = livePawns.lastOrNull { p ->
-                        val c = toScreenLive(p)
-                        val r = maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, liveScale) + 8f, LegionDims.TouchMin.toPx() / 2f)
-                        (at - c).getDistance() <= r
-                    }
-                    when {
-                        hit == null -> { selectedId = null; targetId = null; measureEnd = null }
-                        liveTool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
-                        liveTool == LegionTool.SELECT -> {
-                            // Tap sur un pion = sélection ET ouverture de la fiche dépliante
-                            // du mode Play (même écran, même contenu que l'utilisateur connaît).
-                            selectedId = hit.id
-                            liveOnOpenPlay(hit.id)
-                        }
-                        else -> targetId = hit.id
-                    }
-                }
-                detectDragGestures(
-                    onDragStart = { at ->
-                        val hit = livePawns.lastOrNull { p ->
-                            val c = toScreenLive(p)
-                            (at - c).getDistance() <= maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, liveScale) + 8f, LegionDims.TouchMin.toPx() / 2f)
-                        }
-                        if (hit != null && liveTool == LegionTool.SELECT) {
-                            selectedId = hit.id
-                            dragPan = livePan // figer la translation pendant le geste
-                        }
-                    },
-                    onDrag = { change, delta ->
-                        change.consume()
-                        val hit = selectedId?.let { id -> livePawns.firstOrNull { it.id == id } }
-                        if (hit != null && liveTool == LegionTool.SELECT) {
-                            val (mx, my) = screenToMmLive(change.position)
-                            liveOnMove(hit.id, mx, my, hit.headingDeg)
+                // Geste UNIQUE : 1 doigt = tap/drag, 2 doigts = pinch-zoom.
+                // Les detect* en parallele se volaient les evenements : avec
+                // detectTransformGestures en premier, le tap sur un pion n'arrivait
+                // jamais a detectTapGestures -> "je ne peux pas cliquer sur les unites".
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var lastPos = down.position
+                    var moved = false
+                    var pinching = false
+                    var lastDist = 0f
+                    var dragPawnId: String? = null
+
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        val pressed = event.changes.filter { it.pressed }
+
+                        if (pressed.size >= 2) {
+                            // ── PINCH (2 doigts) ──
+                            pinching = true
+                            dragPawnId = null
+                            dragPan = null
+                            val a = pressed[0].position
+                            val b = pressed[1].position
+                            val cen = Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f)
+                            val dist = (a - b).getDistance()
+                            if (lastDist > 0f && dist > 0f) {
+                                val oldS = liveScale
+                                val next = (oldS * (dist / lastDist)).coerceIn(0.25f, 6f)
+                                val base = livePan
+                                val ratio = next / oldS
+                                pan = Offset(
+                                    cen.x - (cen.x - base.x) * ratio,
+                                    cen.y - (cen.y - base.y) * ratio,
+                                )
+                                scale = next
+                            }
+                            lastDist = dist
+                            lastPos = cen
+                            pressed.forEach { it.consume() }
+                        } else if (pressed.size == 1) {
+                            val c = pressed[0]
+                            if (pinching) { // un doigt relache apres pinch : on attend la fin
+                                lastDist = 0f
+                                c.consume()
+                                continue
+                            }
+                            val delta = c.position - lastPos
+                            if (delta.getDistance() > 2f) moved = true
+                            if (moved) {
+                                // ── DRAG (1 doigt) ──
+                                if (dragPawnId == null && liveTool == LegionTool.SELECT) {
+                                    val hit = livePawns.lastOrNull { pl ->
+                                        (down.position - toScreenLive(pl)).getDistance() <= maxOf(
+                                            LegionTabletopGeometry.baseRadiusPx(pl.baseSize, liveScale) + 8f,
+                                            LegionDims.TouchMin.toPx() / 2f,
+                                        )
+                                    }
+                                    if (hit != null) {
+                                        dragPawnId = hit.id
+                                        selectedId = hit.id
+                                        dragPan = livePan // figer la translation pendant le geste
+                                    }
+                                }
+                                val dp = dragPawnId?.let { id -> livePawns.firstOrNull { it.id == id } }
+                                if (dp != null && liveTool == LegionTool.SELECT) {
+                                    val (mx, my) = screenToMmLive(c.position)
+                                    liveOnMove(dp.id, mx, my, dp.headingDeg)
+                                } else {
+                                    pan = livePan + delta
+                                }
+                                if (liveTool == LegionTool.RANGE) measureEnd = c.position
+                            }
+                            lastPos = c.position
+                            c.consume()
                         } else {
-                            pan = livePan + delta
+                            // ── FIN DU GESTE ──
+                            if (!pinching && !moved) {
+                                // TAP : ouvrir la fiche du pion touche.
+                                val hit = livePawns.lastOrNull { pl ->
+                                    (down.position - toScreenLive(pl)).getDistance() <= maxOf(
+                                        LegionTabletopGeometry.baseRadiusPx(pl.baseSize, liveScale) + 8f,
+                                        LegionDims.TouchMin.toPx() / 2f,
+                                    )
+                                }
+                                when {
+                                    hit == null -> { selectedId = null; targetId = null; measureEnd = null }
+                                    liveTool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
+                                    liveTool == LegionTool.SELECT -> { selectedId = hit.id; liveOnOpenPlay(hit.id) }
+                                    else -> targetId = hit.id
+                                }
+                            }
+                            if (dragPan != null) pan = dragPan
+                            dragPan = null
+                            break
                         }
-                        if (liveTool == LegionTool.RANGE) measureEnd = change.position
-                    },
-                    onDragEnd = { if (dragPan != null) pan = dragPan; dragPan = null },
-                    onDragCancel = { dragPan = null },
-                )
+                    }
+                }
             }
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer)
