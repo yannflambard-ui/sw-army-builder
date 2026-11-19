@@ -51,6 +51,10 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
 
+      # Garde-fou i18n : détecte les formats % non échappés (crash FR/DE/ES).
+      - name: Validate localized string formats
+        run: python3 scripts/check_string_formats.py
+
       # ── Garde-fou visuel : comparer les écrans aux goldens Roborazzi (sans appareil) ──
       - name: Verify UI snapshots (Roborazzi)
         run: ./gradlew :app:verifyRoborazziDebug --no-daemon
