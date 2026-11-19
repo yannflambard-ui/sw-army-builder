@@ -118,12 +118,12 @@ fun LegionTabletopScreen(
     // Fit SYNCHRONE dès la 1re composition : déterministe en local comme en CI.
     var scale by remember {
         val padMm = 45f
-        val s = if (pawns.isEmpty()) 2.2f else {
-            val spanX = (pawns.maxOf { it.xMm } - pawns.minOf { it.xMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
-            val spanY = (pawns.maxOf { it.yMm } - pawns.minOf { it.yMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
-            minOf(vpW.toFloat() / spanX, vpH.toFloat() / spanY).coerceIn(0.6f, 4f)
-        }
-        mutableFloatStateOf(s)
+        // Cadrage initial sur le PLAYMAT ENTIER (36") pour voir les zones de déploiement,
+    // les objectifs et les graduations dès l'ouverture. L'utilisateur zoome ensuite
+    // sur ses pions au besoin (boutons −/+ ou pinch).
+    val matSpanPx = 2f * 18f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
+    val s = minOf(vpW.toFloat(), vpH.toFloat()) / matSpanPx
+    mutableFloatStateOf(s.coerceIn(0.25f, 4f))
     }
 
     var pan by remember { mutableStateOf<Offset?>(null) } // null = pas encore cadré
@@ -144,12 +144,7 @@ fun LegionTabletopScreen(
     // Conversion plateau (mm, centré 0,0) -> écran (px).
     // Centre du viewport en px (millieu de l'ecran), resolu apres mesure.
     var viewCenter by remember { mutableStateOf(Offset(vpW / 2f, vpH / 2f)) }
-    fun effPan(): Offset = dragPan ?: pan ?: run {
-        if (pawns.isEmpty()) viewCenter else Offset(
-            viewCenter.x - (pawns.maxOf { it.xMm } + pawns.minOf { it.xMm }) / 2f * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
-            viewCenter.y - (pawns.maxOf { it.yMm } + pawns.minOf { it.yMm }) / 2f * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
-        )
-    }
+    fun effPan(): Offset = dragPan ?: pan ?: viewCenter // centré sur le tapis (0,0)
     fun toScreen(p: LegionPawn): Offset = Offset(
         effPan().x + p.xMm * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
         effPan().y + p.yMm * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
@@ -160,11 +155,10 @@ fun LegionTabletopScreen(
     )
 
     fun fitScale(widthPx: Int, heightPx: Int): Float {
-        if (pawns.isEmpty()) return 2.2f
-        val padMm = 45f
-        val spanX = (pawns.maxOf { it.xMm } - pawns.minOf { it.xMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
-        val spanY = (pawns.maxOf { it.yMm } - pawns.minOf { it.yMm } + 2 * padMm) * LegionTabletopGeometry.LEGION_PX_PER_MM
-        return minOf(widthPx.toFloat() / spanX, heightPx.toFloat() / spanY).coerceIn(0.6f, 4f)
+        // Fit sur le tapis entier (36") : les zones de déploiement, les objectifs
+        // et les graduations sont visibles dès l'ouverture, comme un vrai playmat.
+        val matSpanPx = 2f * 18f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
+        return (minOf(widthPx.toFloat(), heightPx.toFloat()) / matSpanPx).coerceIn(0.25f, 4f)
     }
     // Fit SYNCHRONE : deterministe en local comme en CI (pas de race onSizeChanged).
     // Clé = IDENTITÉ des pions, PAS leurs positions : sans cela, chaque onMove
@@ -199,7 +193,7 @@ fun LegionTabletopScreen(
                 detectTransformGestures { centroid, panChange, zoom, _ ->
                     if (dragPan == null && (zoom != 1f || panChange != androidx.compose.ui.geometry.Offset.Zero)) {
                         val old = scale
-                        val next = (scale * zoom).coerceIn(0.3f, 6f)
+                        val next = (scale * zoom).coerceIn(0.25f, 6f)
                         val base = pan ?: viewCenter
                         // Le plateau sous le centroid reste sous le centroid après zoom :
                         // pan' = centroid - (centroid - pan) * (next/old) + panChange
@@ -277,11 +271,11 @@ fun LegionTabletopScreen(
                     )
                     Text(stringResource(R.string.tabletop_units_left, unitsLeft), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                 }
-                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale / 1.25f).coerceIn(0.3f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale / 1.25f).coerceIn(0.25f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
                     Text("−", color = LegionColors.TextPrimary, fontSize = 22.sp)
                 }
                 Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 10.sp)
-                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale * 1.25f).coerceIn(0.3f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale * 1.25f).coerceIn(0.25f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
                     Text("+", color = LegionColors.TextPrimary, fontSize = 22.sp)
                 }
                 IconButton(
@@ -399,17 +393,92 @@ private fun DrawScope.drawLegionBoard(
     textMeasurer: TextMeasurer,
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
-    // Grille en pouces (1" = 25,4mm).
-    val inchPx = LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM * scale
-    var g = center.x % inchPx
-    while (g < size.width) {
-        drawLine(LegionColors.Border, Offset(g, 0f), Offset(g, size.height), strokeWidth = 1.5f, alpha = 0.6f)
-        g += inchPx
-    }
-    g = center.y % inchPx
-    while (g < size.height) {
-        drawLine(LegionColors.Border, Offset(0f, g), Offset(size.width, g), strokeWidth = 1.5f, alpha = 0.6f)
-        g += inchPx
+    val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
+    fun mm(x: Float, y: Float) = Offset(center.x + x * pxPerMm, center.y + y * pxPerMm)
+    val inchPx = LegionTabletopGeometry.MM_PER_INCH * pxPerMm
+
+    // ── PLAYMAT 36"x36" (91,4 cm) : surface finie, pas une grille infinie ──
+    val halfMat = 18f * LegionTabletopGeometry.MM_PER_INCH // 457,2 mm
+    val tl = mm(-halfMat, -halfMat)
+    val br = mm(halfMat, halfMat)
+    val matSize = androidx.compose.ui.geometry.Size(br.x - tl.x, br.y - tl.y)
+
+    // Halo extérieur (table sombre autour du tapis).
+    drawRect(
+        brush = androidx.compose.ui.graphics.Brush.radialGradient(
+            colors = listOf(LegionColors.Surface, LegionColors.Background),
+            center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
+            radius = maxOf(size.width, size.height) * 0.75f,
+        ),
+        size = size,
+    )
+    // Surface du tapis (toile mate, dégradé central très discret).
+    if (matSize.width > 0f && matSize.height > 0f) {
+        drawRect(
+            brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                colors = listOf(LegionColors.SurfaceRaised, LegionColors.Surface),
+                center = androidx.compose.ui.geometry.Offset(tl.x + matSize.width / 2f, tl.y + matSize.height / 2f),
+                radius = maxOf(matSize.width, matSize.height) * 0.7f,
+            ),
+            topLeft = tl,
+            size = matSize,
+        )
+        // Quadrillage en pouces, LIMITÉ au tapis.
+        var gx = -halfMat
+        while (gx <= halfMat) {
+            val x = mm(gx, 0f).x
+            if (x in tl.x..br.x) drawLine(LegionColors.Border.copy(alpha = 0.45f), Offset(x, tl.y), Offset(x, br.y), strokeWidth = 1f)
+            gx += LegionTabletopGeometry.MM_PER_INCH
+        }
+        var gy = -halfMat
+        while (gy <= halfMat) {
+            val y = mm(0f, gy).y
+            if (y in tl.y..br.y) drawLine(LegionColors.Border.copy(alpha = 0.45f), Offset(tl.x, y), Offset(br.x, y), strokeWidth = 1f)
+            gy += LegionTabletopGeometry.MM_PER_INCH
+        }
+        // Double bordure du tapis.
+        drawRect(LegionColors.Accent.copy(alpha = 0.8f), topLeft = tl, size = matSize, style = Stroke(width = 6f))
+        drawRect(LegionColors.Border, topLeft = mm(-halfMat + 4f, -halfMat + 4f), size = androidx.compose.ui.geometry.Size(matSize.width - 8f, matSize.height - 8f), style = Stroke(width = 1.5f))
+
+        // Zones de déploiement (12" depuis chaque bord) + lignes de déploiement.
+        val dep = 12f * LegionTabletopGeometry.MM_PER_INCH
+        val dHaut = androidx.compose.ui.geometry.Size(matSize.width, dep * pxPerMm)
+        val dBas = androidx.compose.ui.geometry.Size(matSize.width, dep * pxPerMm)
+        drawRect(LegionColors.Danger.copy(alpha = 0.10f), topLeft = tl, size = dHaut)
+        drawRect(LegionColors.Info.copy(alpha = 0.10f), topLeft = mm(-halfMat, halfMat - dep), size = dBas)
+        val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(12f, 10f), 0f)
+        val lineHaut = mm(0f, -halfMat + dep).y
+        val lineBas = mm(0f, halfMat - dep).y
+        drawLine(LegionColors.Danger.copy(alpha = 0.55f), Offset(tl.x, lineHaut), Offset(br.x, lineHaut), strokeWidth = 2f, pathEffect = dash)
+        drawLine(LegionColors.Info.copy(alpha = 0.55f), Offset(tl.x, lineBas), Offset(br.x, lineBas), strokeWidth = 2f, pathEffect = dash)
+
+        // Zones d'objectif (3 disques sur la ligne médiane, rayon 6").
+        val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
+        for (ox in listOf(-12f, 0f, 12f)) {
+            val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
+            drawCircle(LegionColors.Accent.copy(alpha = 0.16f), radius = objR, center = c, style = Stroke(width = 2f, pathEffect = dash))
+            drawCircle(LegionColors.Warning.copy(alpha = 0.7f), radius = 3f, center = c)
+        }
+
+        // Graduations en pouces le long des bords (toutes les 6").
+        for (inch in -18..18 step 6) {
+            val x = mm(inch * LegionTabletopGeometry.MM_PER_INCH, 0f).x
+            val y = mm(0f, inch * LegionTabletopGeometry.MM_PER_INCH).y
+            drawLine(LegionColors.TextSecondary, Offset(x, tl.y), Offset(x, tl.y + 10f), strokeWidth = 1.5f)
+            drawLine(LegionColors.TextSecondary, Offset(x, br.y - 10f), Offset(x, br.y), strokeWidth = 1.5f)
+            drawLine(LegionColors.TextSecondary, Offset(tl.x, y), Offset(tl.x + 10f, y), strokeWidth = 1.5f)
+            drawLine(LegionColors.TextSecondary, Offset(br.x - 10f, y), Offset(br.x, y), strokeWidth = 1.5f)
+        }
+
+        // Légendes CENTRÉES dans la zone :meme sur petit ecran, si les bords du tapis
+        // sortent du cadre, le texte reste lisible au centre du viewport.
+        val legendStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Danger.copy(alpha = 0.8f))
+        fun drawCenteredLegend(text: String, y: Float, st: androidx.compose.ui.text.TextStyle) {
+            val w = textMeasurer.measure(text, st).size.width.toFloat() + 16f
+            drawText(textMeasurer, text, topLeft = Offset(center.x - w / 2f, y), size = androidx.compose.ui.geometry.Size(maxOf(1f, w), 32f), style = st)
+        }
+        drawCenteredLegend("DEPLOIEMENT ADVERSE", lineHaut - 26f, legendStyle)
+        drawCenteredLegend("DEPLOIEMENT", lineBas + 4f, legendStyle.copy(color = LegionColors.Info.copy(alpha = 0.9f)))
     }
     // Bornes de bandes de portée (6" par segment, rulebook:648-664) autour de
     // l'unité sélectionnée : R1=6", R2=12", R3=18", R4=24", R5=30".
@@ -449,6 +518,8 @@ private fun DrawScope.drawLegionBoard(
                 size = androidx.compose.ui.geometry.Size(r * 3.2f, r * 3.2f),
             )
         }
+        // Ombre portée : donne du relief au socle (effet figurine sur tapis).
+        drawCircle(LegionColors.Background.copy(alpha = 0.55f), radius = r, center = Offset(c.x + 4f, c.y + 5f))
         val bmp = p.imagePath?.let { cardBitmaps[it] }
         if (bmp != null) {
             // Miniature de carte légale (déjà dans l'app) dessinée en disque sur le socle.
@@ -468,22 +539,27 @@ private fun DrawScope.drawLegionBoard(
             drawCircle(LegionColors.Warning, radius = r + 4.dp.toPx(), center = c, style = Stroke(width = (2 * p.cover).dp.toPx()))
         }
         // Info en 2s : nom + blessures sous chaque socle, lisible sans tap.
+        // Largeur calculée sur le TEXTE MESURÉ : plus de troncature, et size
+        // explicite = maxWidth toujours >= 0 (évite le crash Constraints(-12 < 0)).
+        val label = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " Couv${p.cover}" else ""
+        val labelStyle = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
+            color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary)
+        val labelW = textMeasurer.measure(label, labelStyle).size.width.toFloat() + 8.dp.toPx()
+        val labelH = 18.dp.toPx()
+        val labelX = c.x - labelW / 2f
+        val labelY = c.y + r + 4.dp.toPx()
         drawRoundRect(
             color = LegionColors.Background.copy(alpha = 0.85f),
-            topLeft = Offset(c.x - r, c.y + r + 4.dp.toPx()),
-            size = Size(2 * r, 18.dp.toPx()),
+            topLeft = Offset(labelX, labelY),
+            size = Size(labelW, labelH),
             cornerRadius = CornerRadius(6.dp.toPx()),
         )
-        // size explicite OBLIGATOIRE : sans lui, Compose dérive maxWidth des
-        // contraintes du DrawScope moins topLeft.x. Quand le pan pousse un pion
-        // hors de l'écran, maxWidth devient négatif -> crash Constraints(-12 < 0).
         drawText(
             textMeasurer = textMeasurer,
-            text = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " Couv${p.cover}" else "",
-            topLeft = Offset(c.x - r + 3.dp.toPx(), c.y + r + 5.dp.toPx()),
-            size = Size(maxOf(1f, 2 * r - 6.dp.toPx()), 18.dp.toPx()),
-            style = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
-                color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary),
+            text = label,
+            topLeft = Offset(labelX + 4.dp.toPx(), labelY),
+            size = Size(maxOf(1f, labelW - 8.dp.toPx()), labelH),
+            style = labelStyle,
         )
     }
     // Ligne de visée tireur -> cible.
