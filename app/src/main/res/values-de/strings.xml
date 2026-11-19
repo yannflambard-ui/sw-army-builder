@@ -253,8 +253,6 @@
     <string name="deploy">Aufstellung</string>
     <string name="deploy_order">Wer stellt zuerst auf</string>
     <string name="deploy_zones">Aufstellungszonen</string>
-    <string name="zone1">Zone 1</string>
-    <string name="zone2">Zone 2</string>
     <string name="deploy_total">Aufgestellte Einheiten: %1$d</string>
     <string name="pass_v2_rule">V2-Regel: Passe-Tokens = nicht besiegte Einheiten - 1</string>
     <string name="pass_auto">Auto (3)</string>

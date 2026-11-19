@@ -3,7 +3,7 @@ name: Unit tests
 on:
   workflow_dispatch:
   push:
-    branches: [ redesign/step0-tokens ]
+    branches: [ master ]
 
 jobs:
   unit-tests:

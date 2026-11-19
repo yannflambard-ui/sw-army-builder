@@ -77,11 +77,19 @@ jobs:
 
       - name: Verify AAB signature
         if: inputs.build_aab
+        shell: bash
         run: |
+          set -euo pipefail
           AAB=$(find app/build/outputs/bundle/release -name '*.aab' | head -1)
           test -s "$AAB"
           echo "AAB: $AAB"
-          keytool -list -printcert -jarfile "$AAB" | grep -i 'Owner:' | head -1
+          # L'AAB est signé en JAR (META-INF/<alias>.RSA), pas en APK v2 : keytool -jarfile
+          # ne fonctionne pas. On extrait le certificat du zip puis on l'imprime.
+          RSA_PATH=$(unzip -Z1 "$AAB" | grep -E '^META-INF/.*\.RSA$' | head -1)
+          test -n "$RSA_PATH" || { echo "AUCUN CERTIFICAT DE SIGNATURE DANS L'AAB" >&2; exit 1; }
+          unzip -p "$AAB" "$RSA_PATH" > /tmp/release-cert.RSA
+          keytool -printcert -file /tmp/release-cert.RSA | grep -E 'Owner:|SHA256:'
+          echo "Signature AAB vérifiée ($RSA_PATH)"
 
       - name: Upload signed AAB
         if: inputs.build_aab

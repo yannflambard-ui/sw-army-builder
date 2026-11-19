@@ -251,8 +251,6 @@
     <string name="deploy">Déploiement</string>
     <string name="deploy_order">Qui déploie en premier</string>
     <string name="deploy_zones">Zones de déploiement</string>
-    <string name="zone1">Zone 1</string>
-    <string name="zone2">Zone 2</string>
     <string name="deploy_total">Unités déployées : %1$d</string>
     <string name="pass_v2_rule">Règle v2 : jetons de passe = unités non vaincues - 1</string>
     <string name="pass_auto">Auto (3)</string>

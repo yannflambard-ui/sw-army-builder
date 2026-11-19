@@ -1,6 +1,6 @@
 # Fiche Play Store — SW Army Builder
 
-Version validée : 2.64.1 (code 345), commit 6ebd635.
+Version validée : 2.67.0 (code 348), commit 1ca8910.
 Lien Drive de test : https://drive.google.com/file/d/1ep1Sr7eDoONqJx6jGfim6dfamurggY0-/view?usp=drivesdk
 
 ## Titre
@@ -9,12 +9,12 @@ SW Army Builder — Legion & Armada
 
 ## Description courte (80 caractères max)
 
-Constructeur de listes Star Wars Legion v2 et Armada 1.5, avec mode tabletop.
+Constructeur de listes Star Wars Legion v2 et Armada 1.6.0, avec mode tabletop.
 
 ## Description complète
 
 SW Army Builder est l'outil de constitution et de suivi de listes d'armées pour
-Star Wars Legion v2 et Star Wars Armada 1.5.
+Star Wars Legion v2 et Star Wars Armada 1.6.0.
 
 LEGION v2
 - Catalogue complet des unités et upgrades, avec validation des points, des rangs
@@ -26,10 +26,10 @@ LEGION v2
   par pool de dés blancs, blessures et activations. État local, à côté de la table.
 - Dés conformes aux faces FFG : attaque d8, défense d6.
 
-ARMADA 1.5
+ARMADA 1.6.0
 - Flottes, escadrons et points d'escouade.
 - Phase de commandement avec cadrans, pile d'ordres et suivi des manches.
-- Calculateur de dégâts et score de victoire à 12 points.
+- Calculateur de dégâts, objectifs et jetons de victoire, score de flotte sur 6 manches.
 
 GENERAL
 - Recherche et fiches détaillées avec règles complètes.
@@ -62,8 +62,22 @@ aucun traceur n'est intégré.
 
 Contact : [à renseigner par le propriétaire avant publication]
 
-## Notes de release 2.64.1
+## Notes de release 2.67.0
 
-Fin de la boucle de validation tabletop Legion (7 itérations, 4 experts) :
-règles des dés, portées, socles, couvert, blessures, drag et interface validés
-9/10 par les experts règles, ergonomie et gameplay.
+Boucle de validation finale (3 passes, 4 experts) sur les écrans Play et Tabletop.
+
+Legion — tap sur un pion = fiche dépliante du mode Play (camps allié/adverse) ;
+plateau tabletop (dés FFG, portées 6", socles, couvert pool blanc, blessures) ;
+Round 0 : Map cards appariées, Blue Player par jet de 4 dés noirs avec départage,
+alternance des 2 modifications par joueur, main exacte 2x1/2x2/2x3 + Standing Orders.
+
+Armada RRG 1.6.0 — élimination (vaisseaux seuls, départage au score), objectifs et
+jetons de victoire intégrés au score, cadran à révélation unique par manche,
+avancement de phase et fin de partie en 2 joueurs, 2 tirs depuis 2 zones de coque
+distinctes. Ancien écran de déploiement « Zone 1/2 » supprimé au profit du plateau.
+
+Interface — cibles tactiles 48 dp, texte 11 sp minimum, icônes Material avec
+contentDescription, 4 langues (EN/FR/DE/ES), captures Roborazzi en CI.
+
+Contact éditeur de la fiche Play : à renseigner par le propriétaire avant publication
+(blocant externe — non inventé).

@@ -253,8 +253,6 @@
     <string name="deploy">Despliegue</string>
     <string name="deploy_order">Quién despliega primero</string>
     <string name="deploy_zones">Zonas de despliegue</string>
-    <string name="zone1">Zona 1</string>
-    <string name="zone2">Zona 2</string>
     <string name="deploy_total">Unidades desplegadas: %1$d</string>
     <string name="pass_v2_rule">Regla v2: fichas de pase = unidades no derrotadas - 1</string>
     <string name="pass_auto">Auto (3)</string>
