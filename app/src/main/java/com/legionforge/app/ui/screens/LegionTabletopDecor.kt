@@ -212,7 +212,7 @@ object TerrainCards {
             TerrainPiece("snow_wall", TerrainKind.WALL, 60f, 260f, 150f, 25f, 1, false, TerrainSize.SMALL, 'B', 0, TerrainSurface.OPEN),
         ))
     val MUSTAFAR = TerrainCard(id = "mustafar", nameKey = "terrain_mustafar",
-        palette = TerrainPalette(Color(0xFF4A2E20), Color(0xFF8C2B12), Color(0xFFF07A2A)),
+        palette = TerrainPalette(Color(0xFF6E4A34), Color(0xFF7A3420), Color(0xFFB5653A)),
         pieces = listOf(
             TerrainPiece("lava_rig", TerrainKind.LAVA_RIG, -60f, -60f, 200f, 160f, 2, true, TerrainSize.LARGE, 'A', 0, TerrainSurface.IMPASSABLE),
             TerrainPiece("pylon1", TerrainKind.PYLON, 250f, -160f, 80f, 130f, 2, true, TerrainSize.MEDIUM, 'B'),
@@ -223,7 +223,7 @@ object TerrainCards {
             TerrainPiece("lava_pool", TerrainKind.FOUNTAIN, -230f, -240f, 90f, 70f, 0, false, TerrainSize.FILL_IN, 'A', 0, TerrainSurface.OPEN), // decor, aucune regle de deplacement
         ))
     val CORUSCANT = TerrainCard(id = "coruscant", nameKey = "terrain_coruscant",
-        palette = TerrainPalette(Color(0xFF6E88A0), Color(0xFF5B7A99), Color(0xFFF0C95A)),
+        palette = TerrainPalette(Color(0xFF6E88A0), Color(0xFF5B7A99), Color(0xFF9DB4C8)),
         pieces = listOf(
             TerrainPiece("tower_main", TerrainKind.SKYSCRAPER, -70f, -70f, 150f, 170f, 2, true, TerrainSize.LARGE, 'A', 0, TerrainSurface.IMPASSABLE),
             TerrainPiece("tower_low", TerrainKind.SKYSCRAPER, 230f, 150f, 170f, 110f, 2, true, TerrainSize.MEDIUM, 'B', 180),
@@ -251,7 +251,7 @@ object TerrainCards {
             TerrainPiece("crate", TerrainKind.CRATE, 40f, 90f, 45f, 45f, 1, false, TerrainSize.FILL_IN, 'A', 0, TerrainSurface.OPEN),
         ))
     val JAKKU = TerrainCard(id = "jakku", nameKey = "terrain_jakku",
-        palette = TerrainPalette(Color(0xFFC9A227), Color(0xFF8A6B3F), Color(0xFF55606B)),
+        palette = TerrainPalette(Color(0xFFB9A878), Color(0xFF8A6B3F), Color(0xFF6B6252)),
         pieces = listOf(
             TerrainPiece("hangar", TerrainKind.HANGAR, -60f, -50f, 220f, 160f, 2, true, TerrainSize.LARGE, 'A', 0, TerrainSurface.IMPASSABLE),
             TerrainPiece("vaporizer", TerrainKind.MOISTURE_VAPORIZER, 250f, 140f, 100f, 150f, 1, false, TerrainSize.MEDIUM, 'B'),
@@ -269,7 +269,7 @@ object TerrainCards {
             TerrainPiece("bridge", TerrainKind.WALL, 50f, 60f, 190f, 25f, 1, false, TerrainSize.SMALL, 'A', 0, TerrainSurface.OPEN),
         ))
     val DAGOBAH = TerrainCard(id = "dagobah", nameKey = "terrain_dagobah",
-        palette = TerrainPalette(Color(0xFF7C9A66), Color(0xFF527A44), Color(0xFFA8894F)),
+        palette = TerrainPalette(Color(0xFF7C9A66), Color(0xFF527A44), Color(0xFF8A8F5A)),
         pieces = listOf(
             TerrainPiece("hut", TerrainKind.TEMPLE, -70f, -60f, 150f, 120f, 2, true, TerrainSize.LARGE, 'A', 0, TerrainSurface.IMPASSABLE),
             TerrainPiece("tree1", TerrainKind.TREE, 250f, -170f, 120f, 120f, 2, true, TerrainSize.MEDIUM, 'B'),
@@ -303,16 +303,147 @@ private fun terrainColor(kind: TerrainKind): Color = when (kind) {
     TerrainKind.MOISTURE_VAPORIZER -> Color(0xFF9AA3AB)
 }
 
-/** Toit en trapèze décalé (faux 3/4). */
-private fun DrawScope.roof(tl: Offset, w: Float, h: Float, c: Color) {
-    val path = Path().apply {
-        moveTo(tl.x, tl.y + h * 0.5f)
-        lineTo(tl.x + w * 0.16f, tl.y + h * 0.16f)
-        lineTo(tl.x + w * 0.84f, tl.y + h * 0.16f)
-        lineTo(tl.x + w, tl.y + h * 0.5f)
-        close()
+/** Socle losange isométrique + ombre portée, pour ancrer les silhouettes spéciales. */
+private fun DrawScope.isoBase(tl: Offset, w: Float, h: Float, base: Color) {
+    val hw = w / 2f; val hh = h / 2f; val k = 0.5f
+    val cx = tl.x + hw; val cy = tl.y + hh
+    val gT = Offset(cx, cy - hh * k); val gR = Offset(cx + hw, cy)
+    val gB = Offset(cx, cy + hh * k); val gL = Offset(cx - hw, cy)
+    val sh = Offset(maxOf(4f, 5.dp.toPx()), maxOf(3f, 3.dp.toPx()))
+    drawPath(Path().apply {
+        moveTo(gT.x + sh.x, gT.y + sh.y); lineTo(gR.x + sh.x, gR.y + sh.y)
+        lineTo(gB.x + sh.x, gB.y + sh.y); lineTo(gL.x + sh.x, gL.y + sh.y); close()
+    }, Color(0x55000000))
+    drawPath(Path().apply {
+        moveTo(gT.x, gT.y); lineTo(gR.x, gR.y); lineTo(gB.x, gB.y); lineTo(gL.x, gL.y); close()
+    }, darken(base, 0.45f))
+    drawPath(Path().apply {
+        moveTo(gT.x, gT.y); lineTo(gR.x, gR.y); lineTo(gB.x, gB.y); lineTo(gL.x, gL.y); close()
+    }, Color(0x88000000), style = Stroke(width = maxOf(1.5f, 1.5.dp.toPx())))
+}
+
+/** Arbre isométrique 2D : tronc 2 faces + canopée losange (pas de disque, pas de dôme). */
+private fun DrawScope.isoTree(tl: Offset, w: Float, h: Float, base: Color, accent: Color) {
+    val hw = w / 2f; val hh = h / 2f; val k = 0.5f
+    val cx = tl.x + hw; val cy = tl.y + hh
+    // Tronc : 2 faces (clair gauche / sombre droite).
+    val tw = w * 0.16f
+    val trunkTop = cy - h * 0.30f
+    val trunkH = h * 0.34f   // se termine à cy + 0.04h, bien dans le losange (bas = cy + 0.25h)
+    drawRect(darken(base, 0.35f), topLeft = Offset(cx - tw, trunkTop), size = Size(maxOf(1f, tw), maxOf(1f, trunkH)))
+    drawRect(darken(base, 0.55f), topLeft = Offset(cx, trunkTop), size = Size(maxOf(1f, tw), maxOf(1f, trunkH)))
+    // Canopée : losange iso (volume vu du dessus, cohérent avec roof()).
+    val cw = w * 0.42f; val ch = h * 0.42f; val ccy = trunkTop
+    val canopy = Path().apply {
+        moveTo(cx, ccy - ch * k); lineTo(cx + cw, ccy); lineTo(cx, ccy + ch * k); lineTo(cx - cw, ccy); close()
     }
-    drawPath(path, c)
+    drawPath(canopy, lighten(base, 0.22f))
+    // Face inférieure de la canopée (donne l'épaisseur du feuillage).
+    drawPath(Path().apply {
+        moveTo(cx - cw, ccy); lineTo(cx, ccy + ch * k); lineTo(cx, ccy + ch * k + h * 0.08f); lineTo(cx - cw, ccy + h * 0.08f); close()
+    }, darken(base, 0.28f))
+    drawPath(canopy, accent.copy(alpha = 0.35f), style = Stroke(width = maxOf(1f, 1.dp.toPx())))
+    drawPath(canopy, Color(0x88000000), style = Stroke(width = maxOf(1.5f, 1.5.dp.toPx())))
+}
+
+/** Éclaircit une couleur vers le blanc (aplats SNES : valeur, pas dégradé). */
+private fun lighten(c: Color, f: Float): Color = Color(
+    alpha = c.alpha,
+    red = c.red + (1f - c.red) * f,
+    green = c.green + (1f - c.green) * f,
+    blue = c.blue + (1f - c.blue) * f,
+)
+
+/** Assombrit une couleur vers le noir. */
+private fun darken(c: Color, f: Float): Color = Color(
+    alpha = c.alpha,
+    red = c.red * (1f - f),
+    green = c.green * (1f - f),
+    blue = c.blue * (1f - f),
+)
+
+/**
+ * Bâtiment ISOMÉTRIQUE 2D façon Zelda SNES, géométrie COHÉRENTE :
+ * socle losange au sol → murs verticaux (gauche moyenne / droite sombre) →
+ * toit à 2 versants posé EXACTEMENT sur le haut des murs (mêmes sommets).
+ * Une seule direction de lumière. Aplats + contours nets, zéro dégradé, zéro vraie 3D.
+ */
+private fun DrawScope.roof(tl: Offset, w: Float, h: Float, base: Color, dark: Color, accent: Color) {
+    val hw = w / 2f
+    val hh = h / 2f
+    val k = 0.5f                                // aplatissement de la projection iso
+    val cx = tl.x + hw
+    val cy = tl.y + hh
+    val wallH = minOf(w, h) * 0.38f             // hauteur des murs
+    val roofRise = minOf(w, h) * 0.22f          // hauteur du faîtage au-dessus des gouttières
+
+    // Coins du SOCLE au sol (losange).
+    val gTop = Offset(cx, cy - hh * k)
+    val gRight = Offset(cx + hw, cy)
+    val gBottom = Offset(cx, cy + hh * k)
+    val gLeft = Offset(cx - hw, cy)
+
+    // 1) Ombre portée au sol (losange décalé bas-droite, net).
+    val sh = Offset(maxOf(4f, 5.dp.toPx()), maxOf(3f, 3.dp.toPx()))
+    drawPath(Path().apply {
+        moveTo(gTop.x + sh.x, gTop.y + sh.y); lineTo(gRight.x + sh.x, gRight.y + sh.y)
+        lineTo(gBottom.x + sh.x, gBottom.y + sh.y); lineTo(gLeft.x + sh.x, gLeft.y + sh.y); close()
+    }, Color(0x5A000000))
+
+    // Coins du HAUT DES MURS = coins du socle remontés de wallH (mêmes x).
+    val eTop = Offset(cx, cy - hh * k - wallH)
+    val eRight = Offset(cx + hw, cy - wallH)
+    val eBottom = Offset(cx, cy + hh * k - wallH)
+    val eLeft = Offset(cx - hw, cy - wallH)
+
+    // 2) Murs : face GAUCHE (moyenne, gLeft→gBottom), face DROITE (sombre, gBottom→gRight).
+    drawPath(Path().apply {
+        moveTo(gLeft.x, gLeft.y); lineTo(gBottom.x, gBottom.y)
+        lineTo(eBottom.x, eBottom.y); lineTo(eLeft.x, eLeft.y); close()
+    }, base)
+    drawPath(Path().apply {
+        moveTo(gBottom.x, gBottom.y); lineTo(gRight.x, gRight.y)
+        lineTo(eRight.x, eRight.y); lineTo(eBottom.x, eBottom.y); close()
+    }, darken(base, 0.3f))
+
+    // 3) Toit à 2 versants posé sur eLeft/eTop/eRight/eBottom.
+    // Faîtage = ligne entre les milieux des bords (eTop-eLeft) et (eRight-eBottom), +roofRise.
+    val rA = Offset((eTop.x + eLeft.x) / 2f, (eTop.y + eLeft.y) / 2f - roofRise)
+    val rB = Offset((eRight.x + eBottom.x) / 2f, (eRight.y + eBottom.y) / 2f - roofRise)
+    // Toit COMPLET : d'abord remplir TOUT le losange supérieur (fond de toit),
+    // puis poser les 2 pans par-dessus. Aucun trou possible.
+    val roofBase = Path().apply {
+        moveTo(eTop.x, eTop.y); lineTo(eRight.x, eRight.y)
+        lineTo(eBottom.x, eBottom.y); lineTo(eLeft.x, eLeft.y); close()
+    }
+    drawPath(roofBase, lighten(base, 0.18f))
+    // Pan GAUCHE (clair) : eLeft → eBottom → faîtage rB → rA.
+    val leftSlope = Path().apply {
+        moveTo(eLeft.x, eLeft.y); lineTo(eBottom.x, eBottom.y); lineTo(rB.x, rB.y); lineTo(rA.x, rA.y); close()
+    }
+    // Pan DROIT (moyen) : rA → rB → eRight → eTop.
+    val rightSlope = Path().apply {
+        moveTo(rA.x, rA.y); lineTo(rB.x, rB.y); lineTo(eRight.x, eRight.y); lineTo(eTop.x, eTop.y); close()
+    }
+    drawPath(leftSlope, lighten(base, 0.30f))
+    drawPath(rightSlope, lighten(base, 0.06f))
+    drawLine(lighten(base, 0.55f), rA, rB, strokeWidth = maxOf(1.5f, 1.5.dp.toPx()))
+
+    // 4) Porte sombre sur la face gauche + soubassement.
+    val doorCx = (gLeft.x + gBottom.x) / 2f
+    val doorCy = (gLeft.y + gBottom.y) / 2f - wallH * 0.3f
+    drawRect(Color(0xFF2A2018), topLeft = Offset(doorCx - w * 0.06f, doorCy),
+        size = Size(maxOf(1.5f, w * 0.12f), maxOf(2f, wallH * 0.55f)))
+    drawLine(darken(base, 0.5f), gLeft, gBottom, strokeWidth = maxOf(2f, 2.dp.toPx()))
+    drawLine(darken(base, 0.5f), gBottom, gRight, strokeWidth = maxOf(2f, 2.dp.toPx()))
+
+    // 5) Contours nets 16 bits.
+    val outline = maxOf(1.5f, 1.5.dp.toPx())
+    drawPath(leftSlope, Color(0x99000000), style = Stroke(width = outline))
+    drawPath(rightSlope, Color(0x99000000), style = Stroke(width = outline))
+    drawLine(Color(0x99000000), gLeft, eLeft, outline)
+    drawLine(Color(0x99000000), gBottom, eBottom, outline)
+    drawLine(Color(0x99000000), gRight, eRight, outline)
 }
 
 /** Flèche / toit conique (triangle). */
@@ -389,11 +520,29 @@ fun DrawScope.drawTerrainCard(
         // Ombre portée : l'opacité dépend de la surface (OPEN = praticable = ombre legere,
         // IMPASSABLE = masse pleine). Consomme `surface` — plus un champ mort.
         val shadowAlpha = when (piece.surface) {
-            TerrainSurface.OPEN -> 0x14
-            TerrainSurface.DIFFICULT -> 0x2E
-            TerrainSurface.IMPASSABLE -> 0x44
+            TerrainSurface.OPEN -> 0x2E
+            TerrainSurface.DIFFICULT -> 0x44
+            TerrainSurface.IMPASSABLE -> 0x55
         }
-        drawRect(Color(shadowAlpha shl 24), topLeft = Offset(topLeft.x + 3f, topLeft.y + 4f), size = Size(maxOf(1f, w), maxOf(1f, h)))
+        // NOTE : les bâtiments iso dessinent leur PROPRE ombre + socle losange dans roof().
+        // L'ombre rectaxiale globale n'est gardée que pour les kinds NON-bâtiment (décor plat).
+        val isBuilding = piece.kind in setOf(
+            TerrainKind.ICE_BASE, TerrainKind.GENERATOR, TerrainKind.LAVA_RIG,
+            TerrainKind.SKYSCRAPER, TerrainKind.BUNKER, TerrainKind.TOWER_SPIRE,
+            TerrainKind.HANGAR, TerrainKind.MOISTURE_VAPORIZER,
+            TerrainKind.MARKET, TerrainKind.TEMPLE, TerrainKind.TOWER,
+            TerrainKind.PYLON, TerrainKind.TREE_PLATFORM,
+        )
+        if (!isBuilding) {
+            val shOff = maxOf(4f, 5.dp.toPx())
+            drawRect(Color(shadowAlpha shl 24), topLeft = Offset(topLeft.x + shOff, topLeft.y + shOff),
+                size = Size(maxOf(1f, w), maxOf(1f, h)))
+            if (piece.surface != TerrainSurface.OPEN && piece.cover > 0) {
+                val rr = maxOf(1.5f, 2.dp.toPx())
+                drawRect(shade.copy(alpha = 0.5f), topLeft = Offset(topLeft.x - rr, topLeft.y + h * 0.82f), size = Size(rr * 2f, rr))
+                drawRect(shade.copy(alpha = 0.5f), topLeft = Offset(topLeft.x + w * 0.72f, topLeft.y + h * 0.9f), size = Size(rr * 1.6f, rr))
+            }
+        }
         // Liseré silhouette-aware. Epaisseur = `size` DOC62 ; teinte = `half` A/B
         // (permet de distinguer les 2 moitiés d'un layout). Pas de liseré si cover=0.
         val edgeWidth = when (piece.size) {
@@ -405,7 +554,7 @@ fun DrawScope.drawTerrainCard(
         val edgeCol = (if (piece.half == 'B') shade else accent).copy(alpha = 0.85f)
         val roundKind = piece.kind == TerrainKind.ROTUNDA || piece.kind == TerrainKind.TREE ||
             piece.kind == TerrainKind.FOUNTAIN || piece.kind == TerrainKind.TREE_PLATFORM
-        if (piece.cover > 0) {
+        if (piece.cover > 0 && !isBuilding) {
             if (roundKind) {
                 drawCircle(edgeCol, radius = maxOf(1f, minOf(w, h) / 2f + 1.dp.toPx()), center = center,
                     style = Stroke(width = edgeWidth))
@@ -422,8 +571,7 @@ fun DrawScope.drawTerrainCard(
                 drawCircle(shade, radius = maxOf(1f, minOf(w, h) / 4f), center = center)
             }
             TerrainKind.TREE -> {
-                drawCircle(col, radius = maxOf(1f, minOf(w, h) / 2f), center = center)
-                drawCircle(shade, radius = maxOf(1f, minOf(w, h) / 3.2f), center = center)
+                isoTree(topLeft, w, h, col, accent)
             }
             TerrainKind.FOUNTAIN -> {
                 drawCircle(shade, radius = maxOf(1f, minOf(w, h) / 2f), center = center)
@@ -433,41 +581,44 @@ fun DrawScope.drawTerrainCard(
                 drawCircle(col, radius = maxOf(1f, minOf(w, h) / 2f), center = center)
             }
             TerrainKind.MARKET -> {
-                drawRect(col, topLeft = topLeft, size = Size(w, h))
-                roof(topLeft, w, h, shade)
+                roof(topLeft, w, h, col, shade, accent)
             }
-            TerrainKind.TEMPLE, TerrainKind.TOWER, TerrainKind.WALL, TerrainKind.CRATE -> {
+            TerrainKind.TEMPLE, TerrainKind.TOWER -> {
+                roof(topLeft, w, h, col, shade, accent)
+            }
+            TerrainKind.WALL, TerrainKind.CRATE -> {
                 drawRect(col, topLeft = topLeft, size = Size(w, h))
-                if (piece.kind == TerrainKind.TEMPLE || piece.kind == TerrainKind.TOWER) {
-                    roof(topLeft, w, h, shade)
-                }
             }
             // ── Nouveaux bâtiments vectoriels ──
             TerrainKind.ICE_BASE -> {
-                drawRect(shade, topLeft = Offset(topLeft.x, cy), size = Size(w, maxOf(1f, h / 2f)))
-                domeFlat(cx, cy, w, h, col)
-                drawLine(accent, Offset(cx - w * 0.28f, cy - h * 0.2f), Offset(cx - w * 0.34f, cy - h * 0.75f), sw)
-                drawLine(accent, Offset(cx + w * 0.28f, cy - h * 0.2f), Offset(cx + w * 0.34f, cy - h * 0.75f), sw)
+                roof(topLeft, w, h, col, shade, accent)
+                val elev = minOf(w, h) * 0.38f
+                drawLine(accent.copy(alpha = 0.8f), Offset(cx - w * 0.22f, cy - h * 0.5f - elev),
+                    Offset(cx - w * 0.28f, cy - h * 0.5f - elev - h * 0.3f), sw)
+                drawLine(accent.copy(alpha = 0.8f), Offset(cx + w * 0.22f, cy - h * 0.5f - elev),
+                    Offset(cx + w * 0.28f, cy - h * 0.5f - elev - h * 0.24f), sw)
             }
             TerrainKind.GENERATOR -> {
-                drawRect(col, topLeft = topLeft, size = Size(w, h))
-                repeat(3) { i ->
-                    val bx = topLeft.x + w * (0.25f + i * 0.25f)
-                    drawRect(shade, topLeft = Offset(bx, topLeft.y + h * 0.3f), size = Size(maxOf(1f, w * 0.08f), h * 0.5f))
+                roof(topLeft, w, h, col, shade, accent)
+                val elev = minOf(w, h) * 0.38f
+                repeat(2) { i ->
+                    val bx = cx + (i - 0.5f) * w * 0.3f
+                    drawRect(darken(col, 0.3f), topLeft = Offset(bx, cy - h * 0.5f - elev - h * 0.2f),
+                        size = Size(maxOf(1f, w * 0.1f), h * 0.2f))
                 }
-                domeFlat(cx, topLeft.y + h * 0.25f, w * 0.7f, h * 0.4f, accent)
-                drawLine(shade, Offset(topLeft.x, cy + h * 0.2f), Offset(topLeft.x + w * 0.5f, cy + h * 0.45f), sw)
             }
             TerrainKind.LAVA_RIG -> {
-                drawRect(shade, topLeft = topLeft, size = Size(w, h))
-                repeat(3) { i ->
-                    val bx = topLeft.x + w * (0.2f + i * 0.3f)
-                    drawRect(col, topLeft = Offset(bx, topLeft.y - h * 0.2f), size = Size(maxOf(1f, w * 0.1f), h * 0.5f))
+                roof(topLeft, w, h, col, shade, accent)
+                val elev = minOf(w, h) * 0.38f
+                // Cheminées sur le toit (matière sourde, pas de disque orange vif).
+                repeat(2) { i ->
+                    val bx = cx + (i - 0.5f) * w * 0.28f
+                    drawRect(darken(col, 0.35f), topLeft = Offset(bx, cy - h * 0.5f - elev - h * 0.18f),
+                        size = Size(maxOf(1f, w * 0.09f), h * 0.18f))
                 }
-                drawLine(accent, Offset(cx, cy), Offset(cx + w * 0.6f, cy - h * 0.3f), sw * 2f)
-                drawCircle(accent, radius = maxOf(1f, h * 0.22f), center = Offset(cx + w * 0.6f, cy - h * 0.3f))
             }
             TerrainKind.PYLON -> {
+                isoBase(topLeft, w, h, col)
                 val path = Path().apply {
                     moveTo(cx - w * 0.5f, topLeft.y + h)
                     lineTo(cx - w * 0.18f, topLeft.y)
@@ -479,50 +630,42 @@ fun DrawScope.drawTerrainCard(
                 drawCircle(accent, radius = maxOf(1f, minOf(w, h) * 0.3f), center = Offset(cx, topLeft.y + h * 0.3f), style = Stroke(sw))
             }
             TerrainKind.SKYSCRAPER -> {
-                drawRect(col, topLeft = topLeft, size = Size(w, h))
-                roof(topLeft, w, h, shade)
-                for (i in 0 until 3) for (j in 0 until 2) {
-                    val wx = topLeft.x + w * (0.25f + i * 0.25f)
-                    val wy = topLeft.y + h * (0.55f + j * 0.18f)
-                    drawRect(accent, topLeft = Offset(wx, wy), size = Size(maxOf(1f, w * 0.08f), maxOf(1f, h * 0.08f)))
-                }
-                drawLine(accent, Offset(cx - w * 0.2f, topLeft.y), Offset(cx - w * 0.2f, topLeft.y - h * 0.25f), sw)
-                drawLine(accent, Offset(cx + w * 0.2f, topLeft.y), Offset(cx + w * 0.2f, topLeft.y - h * 0.18f), sw)
+                // Volume iso (pas de façade ni de grille de fenêtres). Antenne = repère.
+                roof(topLeft, w, h, col, shade, accent)
+                val elev = minOf(w, h) * 0.42f
+                drawLine(accent.copy(alpha = 0.75f), Offset(cx, cy - h * 0.28f - elev),
+                    Offset(cx, cy - h * 0.28f - elev - h * 0.2f), sw)
             }
             TerrainKind.TREE_PLATFORM -> {
-                drawRect(shade, topLeft = Offset(cx - w * 0.14f, cy), size = Size(maxOf(1f, w * 0.28f), maxOf(1f, h * 0.5f)))
-                drawCircle(col, radius = maxOf(1f, minOf(w, h) * 0.45f), center = Offset(cx, cy - h * 0.15f))
-                drawCircle(accent, radius = maxOf(1f, minOf(w, h) * 0.25f), center = Offset(cx, cy - h * 0.15f))
-                repeat(3) { i ->
-                    val ang = (i - 1) * 0.8f
-                    drawLine(shade, Offset(cx, cy + h * 0.3f),
-                        Offset(cx + kotlin.math.sin(ang) * w * 0.5f, cy + h * 0.5f + kotlin.math.cos(ang) * h * 0.2f), sw)
-                }
+                // Socle losange (plateforme) + arbre iso, un seul vocabulaire de projection.
+                isoBase(topLeft, w, h, col)
+                isoTree(topLeft, w, h, col, accent)
             }
             TerrainKind.BUNKER -> {
-                drawRect(col, topLeft = topLeft, size = Size(w, h))
-                roof(topLeft, w, h, shade)
-                drawRect(shade, topLeft = Offset(cx - w * 0.12f, cy - h * 0.05f), size = Size(maxOf(1f, w * 0.24f), maxOf(1f, h * 0.3f)))
-                drawRect(Color(0xFF1A1410), topLeft = Offset(topLeft.x + w * 0.2f, cy), size = Size(maxOf(1f, w * 0.12f), maxOf(1f, h * 0.12f)))
-                drawRect(Color(0xFF1A1410), topLeft = Offset(topLeft.x + w * 0.68f, cy), size = Size(maxOf(1f, w * 0.12f), maxOf(1f, h * 0.12f)))
+                roof(topLeft, w, h, col, shade, accent)
+                // Bunker : toit plus plat (faîtage écrasé) déjà géré par roof; 2 meurtrières sombres.
+                val elev = minOf(w, h) * 0.38f
+                drawRect(Color(0xFF1A1410), topLeft = Offset(cx - w * 0.16f, cy - elev * 0.5f),
+                    size = Size(maxOf(1f, w * 0.1f), maxOf(1.5f, elev * 0.18f)))
+                drawRect(Color(0xFF1A1410), topLeft = Offset(cx + w * 0.06f, cy - elev * 0.5f),
+                    size = Size(maxOf(1f, w * 0.1f), maxOf(1.5f, elev * 0.18f)))
             }
             TerrainKind.TOWER_SPIRE -> {
+                isoBase(topLeft, w, h, col)
                 drawRect(col, topLeft = Offset(topLeft.x, cy - h * 0.1f), size = Size(w, h * 0.6f))
                 spire(topLeft, w, h, shade)
                 drawLine(accent, Offset(cx, topLeft.y - h * 0.18f), Offset(cx, topLeft.y - h * 0.5f), sw)
                 drawCircle(accent, radius = maxOf(1f, w * 0.18f), center = Offset(cx + w * 0.3f, cy - h * 0.1f))
             }
             TerrainKind.HANGAR -> {
-                drawRect(col, topLeft = topLeft, size = Size(w, h))
-                domeFlat(cx, topLeft.y + h * 0.35f, w, h * 0.7f, shade)
-                drawRect(Color(0xFF2B2118), topLeft = Offset(cx - w * 0.14f, cy - h * 0.05f), size = Size(maxOf(1f, w * 0.28f), maxOf(1f, h * 0.35f)))
-                val aile = Path().apply {
-                    moveTo(topLeft.x, cy); lineTo(topLeft.x - w * 0.16f, topLeft.y + h * 0.6f)
-                    lineTo(topLeft.x - w * 0.16f, cy); close()
-                }
-                drawPath(aile, shade)
+                roof(topLeft, w, h, col, shade, accent)
+                // Porte de hangar sombre sur la face avant.
+                val elev = minOf(w, h) * 0.38f
+                drawRect(Color(0xFF2B2118), topLeft = Offset(cx - w * 0.13f, cy - elev * 0.65f),
+                    size = Size(maxOf(1f, w * 0.26f), maxOf(2f, elev * 0.55f)))
             }
             TerrainKind.MOISTURE_VAPORIZER -> {
+                isoBase(topLeft, w, h, col)
                 drawRect(col, topLeft = Offset(cx - w * 0.12f, topLeft.y + h * 0.25f), size = Size(maxOf(1f, w * 0.24f), h * 0.6f))
                 drawCircle(shade, radius = maxOf(1f, w * 0.3f), center = Offset(cx - w * 0.3f, topLeft.y + h * 0.45f))
                 drawCircle(shade, radius = maxOf(1f, w * 0.3f), center = Offset(cx + w * 0.3f, topLeft.y + h * 0.45f))
