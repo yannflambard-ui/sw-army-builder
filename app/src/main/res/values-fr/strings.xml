@@ -269,7 +269,7 @@
     <string name="search_prompt">Saisissez un nom, un mot-clé ou une règle pour rechercher toutes les cartes.</string>
     <string name="tabletop_back">Retour</string>
     <string name="tabletop_title">Tabletop Legion · Manche %1$d</string>
-    <string name="tabletop_units_left">%1$d unité(s) restante(s)</string>
+    <string name="tabletop_units_left">%1$d restantes</string>
     <string name="tabletop_measure">Mesurer la portée</string>
     <string name="tabletop_end_round">Fin tour</string>
     <string name="tabletop_recenter">Recadrer</string>

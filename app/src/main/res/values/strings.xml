@@ -267,7 +267,7 @@
     <string name="search_prompt">Type a name, keyword or rule to search all cards.</string>
     <string name="tabletop_back">Back</string>
     <string name="tabletop_title">Legion Tabletop · Round %1$d</string>
-    <string name="tabletop_units_left">%1$d unit(s) remaining</string>
+    <string name="tabletop_units_left">%1$d left</string>
     <string name="tabletop_measure">Measure range</string>
     <string name="tabletop_end_round">End round</string>
     <string name="tabletop_recenter">Recenter</string>

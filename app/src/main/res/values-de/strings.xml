@@ -269,7 +269,7 @@
     <string name="search_prompt">Name, Schlüsselwort oder Regel eingeben, um alle Karten zu durchsuchen.</string>
     <string name="tabletop_back">Zurück</string>
     <string name="tabletop_title">Legion Tabletop · Runde %1$d</string>
-    <string name="tabletop_units_left">%1$d Einheit(en) übrig</string>
+    <string name="tabletop_units_left">%1$d übrig</string>
     <string name="tabletop_measure">Reichweite messen</string>
     <string name="tabletop_end_round">Rundenende</string>
     <string name="tabletop_recenter">Zentrieren</string>

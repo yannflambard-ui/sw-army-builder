@@ -275,7 +275,7 @@ fun LegionTabletopScreen(
                         else stringResource(R.string.tabletop_title, round),
                         color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium, maxLines = 1,
                     )
-                    Text(stringResource(R.string.tabletop_units_left, unitsLeft), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.tabletop_units_left, unitsLeft), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                 }
                 IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale / 1.25f).coerceIn(0.3f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
                     Text("−", color = LegionColors.TextPrimary, fontSize = 22.sp)
@@ -452,8 +452,8 @@ private fun DrawScope.drawLegionBoard(
         val bmp = p.imagePath?.let { cardBitmaps[it] }
         if (bmp != null) {
             // Miniature de carte légale (déjà dans l'app) dessinée en disque sur le socle.
-            val side = r * 2f
-            drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset((c.x - r).toInt(), (c.y - r).toInt()), dstSize = androidx.compose.ui.unit.IntSize(side.toInt(), side.toInt()))
+            val side = maxOf(1f, r * 2f)
+            drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset((c.x - r).toInt(), (c.y - r).toInt()), dstSize = androidx.compose.ui.unit.IntSize(side.toInt().coerceAtLeast(1), side.toInt().coerceAtLeast(1)))
         } else {
             drawCircle(base, radius = r, center = c)
         }
@@ -474,10 +474,14 @@ private fun DrawScope.drawLegionBoard(
             size = Size(2 * r, 18.dp.toPx()),
             cornerRadius = CornerRadius(6.dp.toPx()),
         )
+        // size explicite OBLIGATOIRE : sans lui, Compose dérive maxWidth des
+        // contraintes du DrawScope moins topLeft.x. Quand le pan pousse un pion
+        // hors de l'écran, maxWidth devient négatif -> crash Constraints(-12 < 0).
         drawText(
             textMeasurer = textMeasurer,
             text = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " Couv${p.cover}" else "",
             topLeft = Offset(c.x - r + 3.dp.toPx(), c.y + r + 5.dp.toPx()),
+            size = Size(maxOf(1f, 2 * r - 6.dp.toPx()), 18.dp.toPx()),
             style = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
                 color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary),
         )
