@@ -295,6 +295,7 @@
     <string name="tabletop_zoom_out">Zoom out</string>
     <string name="tabletop_tap_hint">Tap a unit to open its full card</string>
     <string name="tabletop_territory_note">Indicative zones · see Map Card</string>
+    <string name="tabletop_terrain_note">Cover 1 blue / 2 orange · proposed, agree in pre-game</string>
     <string name="tabletop_territory_enemy">ENEMY TERRITORY (RED PLAYER)</string>
     <string name="tabletop_territory_allied">ALLIED TERRITORY (BLUE PLAYER)</string>
     <string name="tabletop_obj">OBJ %1$d</string>
@@ -314,4 +315,12 @@
     <string name="terrain_tatooine">Tatooine</string>
     <string name="terrain_naboo">Naboo</string>
     <string name="terrain_geonosis">Geonosis</string>
+    <string name="terrain_hoth">Hoth</string>
+    <string name="terrain_mustafar">Mustafar</string>
+    <string name="terrain_coruscant">Coruscant</string>
+    <string name="terrain_kashyyyk">Kashyyyk</string>
+    <string name="terrain_scarif">Scarif</string>
+    <string name="terrain_jakku">Jakku</string>
+    <string name="terrain_bespin">Bespin</string>
+    <string name="terrain_dagobah">Dagobah</string>
 </resources>

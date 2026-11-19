@@ -6,7 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -16,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.legionforge.app.ui.theme.LegionColors
@@ -42,17 +48,18 @@ fun TerrainPickerSheet(
             Text(title, color = LegionColors.Accent, fontWeight = FontWeight.Bold, fontSize = LegionType.Title)
             Text(coverHint, color = LegionColors.TextSecondary, fontSize = LegionType.Caption)
             cards.forEach { (card, label) ->
-                TerrainRow(label, current?.id == card.id) { onPick(card) }
+                TerrainRow(label, current?.id == card.id, card.palette) { onPick(card) }
             }
-            TerrainRow(nameNone, current == null) { onPick(null) }
+            TerrainRow(nameNone, current == null, null) { onPick(null) }
         }
     }
 }
 
 @Composable
-private fun TerrainRow(name: String, selected: Boolean, onClick: () -> Unit) {
+private fun TerrainRow(name: String, selected: Boolean, palette: TerrainPalette?, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth()
+            .heightIn(min = 48.dp) // cible tactile >= 48dp
             .clickable(onClick = onClick)
             .background(
                 Brush.horizontalGradient(
@@ -64,6 +71,16 @@ private fun TerrainRow(name: String, selected: Boolean, onClick: () -> Unit) {
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Pastille 3 teintes : distingue les 8 planètes d'un coup d'œil.
+        if (palette != null) {
+            listOf(palette.base, palette.shade, palette.accent).forEach { c ->
+                androidx.compose.foundation.layout.Box(
+                    Modifier.size(14.dp).background(c, CircleShape)
+                )
+                Spacer(Modifier.width(3.dp))
+            }
+            Spacer(Modifier.width(6.dp))
+        }
         Text(name, color = if (selected) LegionColors.Background else LegionColors.TextPrimary,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal, fontSize = LegionType.Body)
     }

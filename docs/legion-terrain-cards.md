@@ -6,7 +6,7 @@
 
 - **100 % vectoriel original** (Canvas Compose `drawRect`/`drawPath`/`drawCircle`/`drawLine`). Zéro asset externe embarqué.
 - Couvert = **valeur PROPOSÉE à valider en pré-game** entre joueurs (rulebook:2256-2261), jamais une constante de règle. Anneau bleu = léger(1), orange = lourd(2). Crits jamais annulés (2262-2272).
-- `size` (LARGE/MEDIUM/SMALL/FILL_IN), `half` (A/B), `rotation` (0/180) : champs à ajouter au modèle AVANT dessin (DOC62 : 2/6/8/16–24 pièces, 2 moitiés assemblées, espacement ≥7" **indicatif · voir Terrain Layout Card**).
+- `size` (LARGE/MEDIUM/SMALL/FILL_IN), `half` (A/B), `rotation` (0/180) : champs ajoutés au modèle et **consommés par le rendu** (épaisseur du liseré = size, teinte A/B = half, opacité de l'ombre = surface). DOC62 (2/6/8/16–24 pièces, 2 moitiés assemblées, espacement ≥7") décrit les LAYOUTS OFFICIELS, pas ces cartes : ce sont des **interprétations thématiques libres**, pas des reproductions fidèles. Comptage réel des 8 cartes : 8 LARGE / 22 MEDIUM / 13 SMALL / 3 FILL_IN (1 LARGE par carte). Les quantités DOC62 sont une référence **indicative · voir Terrain Layout Card**, jamais une règle.
 - Map Card = seule source des territoires/POI/placement (rulebook:391-395, 421). Aucune bande de déploiement ni objectif codé en dur.
 - `blocksLos` indépendant du couvert : area terrain (volume) → true ; simple muret → false.
 
@@ -34,6 +34,22 @@ data class TerrainPiece(..., val size: TerrainSize, val half: Char, val rotation
 | dagobah | Dagobah · Marais | `#2C3A2A` marais · `#4F6B3A` mousse · `#6B5433` tourbe | TEMPLE (existante) : hutte + toit conique penché + 2 poteaux + mousse | TREE tordu, tronc couché (WALL), ROTUNDA butte, FOUNTAIN flaque (cover 0 décor) | 2 lourd (hutte, TREE matures) · 1 léger (troncs, buttes) · 0 flaques | Décor dense, peu de couverts francs ; arbres/hutte structurent ; flaques purement visuelles |
 
 10 nouveaux `TerrainKind` : `ICE_BASE, GENERATOR, LAVA_RIG, PYLON, SKYSCRAPER, TREE_PLATFORM, BUNKER, TOWER_SPIRE, HANGAR, MOISTURE_VAPORIZER`.
+
+## Corrections post-revue intégrées (ergo 7 → , Legion 7 → , dessin 8 → )
+
+- Anneaux couvert : couleurs DEDIEES `#2E9BFF` (léger) / `#FF7A00` (lourd), halo sombre,
+  chiffre 1/2, stroke zoom-indépendant `maxOf(2f, …)` — distincts du doré des objectifs.
+- Liseré silhouette-aware : cercle pour ROTUNDA/TREE/FOUNTAIN/TREE_PLATFORM, rect pour les
+  bâtiments, alpha 0,85, AUCUN liseré sur cover=0 (ne pas simuler un couvert).
+- Palettes sombres éclaircies (Dagobah `#7C9A66`, Coruscant `#6E88A0`, Mustafar, Kashyyyk).
+- Rotation appliquée au rendu (`rotate(piece.rotation, center)`) — donnée plus morte.
+- Surfaces corrigées : tranchées/barricades = OPEN (749-753), bassins/flaques cover 0 = OPEN
+  (aucune règle de déplacement inventée) ; igloo/mousse (area terrain) = blocksLos true.
+- NABOO fontaine décalée à (120,100) hors de l'emprise plaza [-80,80]² (787-794).
+- Étiquetage UI : note « Cover 1 blue / 2 orange · proposed, agree in pre-game » (+ i18n 4 langues).
+- Sélecteur : cible tactile 48dp min + pastille 3 teintes par carte.
+- LOS : ✕ central remplacé par 2 traits en coin (n'est plus lu comme unité morte).
+- Fixture Roborazzi : pion BBD déplacé hors de la silhouette centrale.
 
 ## Corrections Legion intégrées
 

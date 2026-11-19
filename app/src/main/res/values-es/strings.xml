@@ -297,6 +297,7 @@
     <string name="tabletop_zoom_out">Alejar</string>
     <string name="tabletop_tap_hint">Toca una unidad para abrir su ficha</string>
     <string name="tabletop_territory_note">Zonas orientativas · ver Map Card</string>
+    <string name="tabletop_terrain_note">Cubierta 1 azul / 2 naranja · propuesta, acordar antes de la partida</string>
     <string name="tabletop_territory_enemy">TERRITORIO ENEMIGO (JUGADOR ROJO)</string>
     <string name="tabletop_territory_allied">TERRITORIO ALIADO (JUGADOR AZUL)</string>
     <string name="tabletop_obj">OBJ %1$d</string>
@@ -316,4 +317,12 @@
     <string name="terrain_tatooine">Tatooine</string>
     <string name="terrain_naboo">Naboo</string>
     <string name="terrain_geonosis">Geonosis</string>
+    <string name="terrain_hoth">Hoth</string>
+    <string name="terrain_mustafar">Mustafar</string>
+    <string name="terrain_coruscant">Coruscant</string>
+    <string name="terrain_kashyyyk">Kashyyyk</string>
+    <string name="terrain_scarif">Scarif</string>
+    <string name="terrain_jakku">Jakku</string>
+    <string name="terrain_bespin">Bespin</string>
+    <string name="terrain_dagobah">Dagobah</string>
 </resources>

@@ -206,6 +206,7 @@ fun LegionTabletopScreen(
         val ttEnemy = stringResource(R.string.tabletop_territory_enemy)
         val ttAllied = stringResource(R.string.tabletop_territory_allied)
         val ttNote = stringResource(R.string.tabletop_territory_note)
+        val ttTerrainNote = stringResource(R.string.tabletop_terrain_note)
         val ttObj = stringResource(R.string.tabletop_obj)
         val missionLabels = mapOf(
             "command" to stringResource(R.string.rail_command),
@@ -320,7 +321,7 @@ fun LegionTabletopScreen(
             }
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer,
-                ttEnemy, ttAllied, ttNote, ttObj, terrainCard)
+                ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote)
         }
 
         // ── Barre haute 48dp ─────────────────────────────────────────────────
@@ -514,6 +515,7 @@ private fun DrawScope.drawLegionBoard(
     territoryNote: String,
     objPrefix: String,
     terrainCard: TerrainCard? = null,
+    terrainNote: String = "",
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
     val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
@@ -612,7 +614,7 @@ private fun DrawScope.drawLegionBoard(
         }
         // Légendes placées au bord du tapis, hors de la zone des pions (ligne médiane).
         val legendH = textMeasurer.measure(territoryEnemy, legendStyle).size.height.toFloat()
-        drawCenteredLegend(territoryEnemy, tl.y + 36.dp.toPx(), legendStyle)
+        drawCenteredLegend(territoryEnemy, tl.y + 58.dp.toPx(), legendStyle) // décalée sous les 2 notes (zone + couvert)
         drawCenteredLegend(territoryAllied, br.y - 36.dp.toPx() - legendH, legendStyle.copy(color = LegionColors.Info))
         // Indication honnête : bornes indicatives, le territoire réel vient de la Map Card.
         val noteStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, color = LegionColors.TextSecondary)
@@ -624,6 +626,15 @@ private fun DrawScope.drawLegionBoard(
             size = androidx.compose.ui.geometry.Size(noteW, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
         drawText(textMeasurer, note, topLeft = Offset(center.x - noteW/2f + 8.dp.toPx(), noteY + 2.dp.toPx()),
             size = Size(maxOf(1f, noteW - 16.dp.toPx()), 18.dp.toPx()), style = noteStyle)
+        // Note terrain : couvert = valeur PROPOSEE a valider en pre-game (rulebook:2256-2261).
+        if (terrainCard != null && terrainNote.isNotBlank()) {
+            val tnW = textMeasurer.measure(terrainNote, noteStyle).size.width.toFloat() + 16.dp.toPx()
+            val tnY = noteY + 22.dp.toPx()
+            drawRoundRect(LegionColors.Background.copy(alpha = 0.9f), topLeft = Offset(center.x - tnW/2f, tnY),
+                size = androidx.compose.ui.geometry.Size(tnW, 20.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
+            drawText(textMeasurer, terrainNote, topLeft = Offset(center.x - tnW/2f + 8.dp.toPx(), tnY + 1.dp.toPx()),
+                size = Size(maxOf(1f, tnW - 16.dp.toPx()), 18.dp.toPx()), style = noteStyle)
+        }
     }
     // Bornes de bandes de portée (6" par segment, rulebook:648-664) autour de
     // l'unité sélectionnée : R1=6", R2=12", R3=18", R4=24", R5=30".

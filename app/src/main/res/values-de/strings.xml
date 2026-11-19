@@ -297,6 +297,7 @@
     <string name="tabletop_zoom_out">Verkleinern</string>
     <string name="tabletop_tap_hint">Einheit tippen, um die Karte zu öffnen</string>
     <string name="tabletop_territory_note">Hinweiszonen · siehe Map Card</string>
+    <string name="tabletop_terrain_note">Deckung 1 blau / 2 orange · vorgeschlagen, vor dem Spiel abstimmen</string>
     <string name="tabletop_territory_enemy">FEINDGEBIET (ROTER SPIELER)</string>
     <string name="tabletop_territory_allied">VERBÜNDETES GEBIET (BLAUER SPIELER)</string>
     <string name="tabletop_obj">OBJ %1$d</string>
@@ -316,4 +317,12 @@
     <string name="terrain_tatooine">Tatooine</string>
     <string name="terrain_naboo">Naboo</string>
     <string name="terrain_geonosis">Geonosis</string>
+    <string name="terrain_hoth">Hoth</string>
+    <string name="terrain_mustafar">Mustafar</string>
+    <string name="terrain_coruscant">Coruscant</string>
+    <string name="terrain_kashyyyk">Kashyyyk</string>
+    <string name="terrain_scarif">Scarif</string>
+    <string name="terrain_jakku">Jakku</string>
+    <string name="terrain_bespin">Bespin</string>
+    <string name="terrain_dagobah">Dagobah</string>
 </resources>
