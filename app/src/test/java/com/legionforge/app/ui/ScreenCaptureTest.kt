@@ -2,6 +2,7 @@ package com.legionforge.app.ui
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
+import androidx.compose.ui.geometry.Offset
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.legionforge.app.ui.screens.HomeScreen
 import com.legionforge.app.ui.screens.SearchScreen
@@ -127,6 +128,34 @@ class LegionTabletopCaptureSmallTest {
                 LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
                     onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
                     onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> })
+            }
+        }
+    }
+}
+
+/**
+ * Garde-fou ANTI-CRASH : un pan extrême pousse les badges OBJ et les légendes
+ * hors du canvas. Sans `size` explicite, drawText calcule maxWidth < 0 et
+ * lève `maxWidth(-35) must be >= than minWidth(0)` (deuxième occurrence de ce
+ * bug après le `-12` en 2.70.0). Ce test échoue si la régression revient.
+ */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-mdpi")
+class LegionTabletopOffscreenTest {
+    @Test
+    fun pan_extreme_ne_crashe_pas() {
+        val pawns = listOf(
+            LegionPawn("a1", "B1 Battle Droids", -60f, -80f, baseSize = "small", maxWounds = 4, wounds = 4),
+            LegionPawn("b1", "Captain Rex", 60f, 60f, baseSize = "medium", maxWounds = 4, wounds = 4, isOpp = true),
+        )
+        // Capture avec un pan qui envoie tout le tapis HORS de l'écran.
+        captureRoboImage("src/test/snapshots/legion-tabletop-offscreen.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 3, unitsLeft = 2,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    initialPan = Offset(9000f, 9000f))
             }
         }
     }

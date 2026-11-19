@@ -112,6 +112,7 @@ fun LegionTabletopScreen(
     onMove: (String, Float, Float, Float) -> Unit,
     onRoundChange: (Int) -> Unit,
     onWoundsChange: (String, Int) -> Unit,
+    initialPan: androidx.compose.ui.geometry.Offset? = null, // test hors-cadre uniquement
 ) {
     var selectedId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
@@ -132,7 +133,7 @@ fun LegionTabletopScreen(
     mutableFloatStateOf(s.coerceIn(0.25f, 4f))
     }
 
-    var pan by remember { mutableStateOf<Offset?>(null) } // null = pas encore cadré
+    var pan by remember { mutableStateOf<Offset?>(initialPan) } // null = pas encore cadré
     // Translation figée pendant le drag d'un pion : effPan() recalculerait sinon
     // la bounding-box à chaque frame et la coordonnée mm dériverait sous le doigt.
     var dragPan by remember { mutableStateOf<Offset?>(null) }
@@ -556,7 +557,8 @@ private fun DrawScope.drawLegionBoard(
             val left = center.x - w / 2f
             drawRoundRect(LegionColors.Background.copy(alpha = 0.94f), topLeft = Offset(left, y),
                 size = androidx.compose.ui.geometry.Size(maxOf(1f, w), h), cornerRadius = CornerRadius(6.dp.toPx()))
-            drawText(textMeasurer, text, topLeft = Offset(left + 8.dp.toPx(), y + 4.dp.toPx()), style = st)
+            drawText(textMeasurer, text, topLeft = Offset(left + 8.dp.toPx(), y + 4.dp.toPx()),
+                size = Size(maxOf(1f, w - 16.dp.toPx()), maxOf(1f, h)), style = st)
         }
         // Légendes placées au bord du tapis, hors de la zone des pions (ligne médiane).
         val legendH = textMeasurer.measure(territoryEnemy, legendStyle).size.height.toFloat()
@@ -570,7 +572,8 @@ private fun DrawScope.drawLegionBoard(
         val noteY = tl.y + 8.dp.toPx()
         drawRoundRect(LegionColors.Background.copy(alpha = 0.9f), topLeft = Offset(center.x - noteW/2f, noteY),
             size = androidx.compose.ui.geometry.Size(noteW, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
-        drawText(textMeasurer, note, topLeft = Offset(center.x - noteW/2f + 8.dp.toPx(), noteY + 2.dp.toPx()), style = noteStyle)
+        drawText(textMeasurer, note, topLeft = Offset(center.x - noteW/2f + 8.dp.toPx(), noteY + 2.dp.toPx()),
+            size = Size(maxOf(1f, noteW - 16.dp.toPx()), 18.dp.toPx()), style = noteStyle)
     }
     // Bornes de bandes de portée (6" par segment, rulebook:648-664) autour de
     // l'unité sélectionnée : R1=6", R2=12", R3=18", R4=24", R5=30".
@@ -705,7 +708,8 @@ private fun DrawScope.drawLegionBoard(
         val tw = textMeasurer.measure(tag, objLabelStyle).size.width.toFloat() + 12.dp.toPx()
         drawRoundRect(LegionColors.Background.copy(alpha = 0.95f), topLeft = Offset(c.x - tw/2f, c.y - 11.dp.toPx()),
             size = androidx.compose.ui.geometry.Size(tw, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
-        drawText(textMeasurer, tag, topLeft = Offset(c.x - tw/2f + 6.dp.toPx(), c.y - 8.dp.toPx()), style = objLabelStyle)
+        drawText(textMeasurer, tag, topLeft = Offset(c.x - tw/2f + 6.dp.toPx(), c.y - 8.dp.toPx()),
+            size = Size(maxOf(1f, tw - 12.dp.toPx()), 20.dp.toPx()), style = objLabelStyle)
     }
     // Ligne de visée tireur -> cible.
     if (selected != null && target != null) {
