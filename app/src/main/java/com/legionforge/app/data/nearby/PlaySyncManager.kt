@@ -30,7 +30,7 @@ data class SyncedUnitState(
     val defeated: Boolean? = null,    // Legion unité vaincue
     val vehicleDamage: List<String> = emptyList(),  // Legion véhicule : états (immobilized, weapon)
     val promoted: Boolean? = null,    // Legion unité promue commandant
-    val deployZone: Int? = null,       // Legion déploiement : null=non déployé, 1=zone1, 2=zone2
+    val deployZone: Int? = null,       // legacy (champ conservé pour compatibilité payload Nearby ; plus utilisé en UI)
     val orderReceived: Boolean? = null,  // Legion : a reçu un ordre ce round
     val bends: List<Int>? = null,        // Armada : coudes signés par articulation (1..4), null = droit
 )

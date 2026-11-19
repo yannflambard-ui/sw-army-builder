@@ -642,7 +642,7 @@ fun TabletopScreen(
                                 listOf("front" to "Avant", "left" to "Bâbord", "right" to "Tribord", "rear" to "Arrière").forEach { (sector, label) ->
                                     val on = chosenAttackSector == sector
                                     val used = usedSectors[sp.id].orEmpty().contains(sector)
-                                    Surface(onClick = { if (!used) chosenAttackSector = if (on) null else sector }, shape = RoundedCornerShape(6.dp),
+                                    Surface(onClick = { chosenAttackSector = if (on) null else sector }, enabled = !used, shape = RoundedCornerShape(6.dp),
                                         color = if (used) LegionColors.SurfaceRaised else if (on) LegionColors.Accent else LegionColors.Border) {
                                         Text(if (used) "$label ✓" else label, Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = if (used) LegionColors.TextTertiary else if (on) LegionColors.Background else Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
