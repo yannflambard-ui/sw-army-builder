@@ -250,10 +250,21 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 if (showTerrainPicker) {
                     com.legionforge.app.ui.screens.TerrainPickerSheet(
                         current = terrainCard,
+                        cards = com.legionforge.app.ui.screens.TerrainCards.ALL.map { card ->
+                            card to androidx.compose.ui.res.stringResource(
+                                when (card.id) {
+                                    "monument" -> com.legionforge.app.R.string.terrain_monument
+                                    "ruins" -> com.legionforge.app.R.string.terrain_ruins
+                                    "endor" -> com.legionforge.app.R.string.terrain_endor
+                                    "tatooine" -> com.legionforge.app.R.string.terrain_tatooine
+                                    "naboo" -> com.legionforge.app.R.string.terrain_naboo
+                                    "geonosis" -> com.legionforge.app.R.string.terrain_geonosis
+                                    else -> com.legionforge.app.R.string.terrain_none
+                                }
+                            )
+                        },
                         onPick = { terrainCard = it; showTerrainPicker = false },
                         onDismiss = { showTerrainPicker = false },
-                        nameMonument = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_monument),
-                        nameRuins = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_ruins),
                         nameNone = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_none),
                         title = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_title),
                         coverHint = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_cover),

@@ -312,4 +312,8 @@
     <string name="terrain_none">Sin terreno</string>
     <string name="terrain_cover">Cubierta: L=ligera H=pesada</string>
     <string name="terrain_pick">Elegir terreno</string>
+    <string name="terrain_endor">Endor</string>
+    <string name="terrain_tatooine">Tatooine</string>
+    <string name="terrain_naboo">Naboo</string>
+    <string name="terrain_geonosis">Geonosis</string>
 </resources>

@@ -16,21 +16,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.legionforge.app.ui.theme.LegionColors
 import com.legionforge.app.ui.theme.LegionType
 
-/** Sélecteur de carte de terrain : 2 dioramas pré-construits + « aucun ». */
+/** Sélecteur de carte de terrain : toutes les cartes pré-construites + « aucun ». */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TerrainPickerSheet(
     current: TerrainCard?,
+    cards: List<Pair<TerrainCard, String>>,
     onPick: (TerrainCard?) -> Unit,
     onDismiss: () -> Unit,
-    nameMonument: String,
-    nameRuins: String,
     nameNone: String,
     title: String,
     coverHint: String,
@@ -43,8 +41,9 @@ fun TerrainPickerSheet(
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, color = LegionColors.Accent, fontWeight = FontWeight.Bold, fontSize = LegionType.Title)
             Text(coverHint, color = LegionColors.TextSecondary, fontSize = LegionType.Caption)
-            TerrainRow(nameMonument, current?.id == TerrainCards.MONUMENT.id) { onPick(TerrainCards.MONUMENT) }
-            TerrainRow(nameRuins, current?.id == TerrainCards.RUINS.id) { onPick(TerrainCards.RUINS) }
+            cards.forEach { (card, label) ->
+                TerrainRow(label, current?.id == card.id) { onPick(card) }
+            }
             TerrainRow(nameNone, current == null) { onPick(null) }
         }
     }

@@ -100,7 +100,86 @@ object TerrainCards {
             TerrainPiece("caisse3", TerrainKind.CRATE, -100f, -110f, 40f, 40f, 1),
         ),
     )
-    val ALL = listOf(MONUMENT, RUINS)
+    // Endor : bunker imperial central, village Ewok en hauteur, rochers, troncs.
+    val ENDOR = TerrainCard(
+        id = "endor", nameKey = "terrain_endor",
+        pieces = listOf(
+            TerrainPiece("bunker", TerrainKind.TEMPLE, 0f, 0f, 150f, 120f, 2, true),
+            TerrainPiece("antenne", TerrainKind.TOWER, 60f, -100f, 45f, 45f, 2, true),
+            TerrainPiece("mur1", TerrainKind.WALL, -80f, -70f, 120f, 25f, 1, true),
+            TerrainPiece("mur2", TerrainKind.WALL, -80f, 70f, 120f, 25f, 1, true),
+            TerrainPiece("ewok1", TerrainKind.TEMPLE, -320f, -180f, 110f, 90f, 2, true),
+            TerrainPiece("ewok2", TerrainKind.TEMPLE, -320f, 60f, 110f, 90f, 2, true),
+            TerrainPiece("pont", TerrainKind.WALL, -230f, -60f, 90f, 22f, 1, false),
+            TerrainPiece("rocher1", TerrainKind.ROTUNDA, 280f, -200f, 90f, 90f, 2, true),
+            TerrainPiece("rocher2", TerrainKind.ROTUNDA, 300f, 180f, 80f, 80f, 2, true),
+            TerrainPiece("tronc1", TerrainKind.WALL, 140f, 220f, 130f, 22f, 1, false),
+            TerrainPiece("arbre1", TerrainKind.TREE, -140f, 250f, 60f, 60f, 1),
+            TerrainPiece("arbre2", TerrainKind.TREE, -60f, 300f, 60f, 60f, 1),
+            TerrainPiece("arbre3", TerrainKind.TREE, 200f, 300f, 60f, 60f, 1),
+            TerrainPiece("caisse1", TerrainKind.CRATE, 70f, 130f, 40f, 40f, 1),
+        ),
+    )
+    // Tatooine : maisons adobe a dome, marche, epaves, rochers, murets.
+    val TATOOINE = TerrainCard(
+        id = "tatooine", nameKey = "terrain_tatooine",
+        pieces = listOf(
+            TerrainPiece("dome1", TerrainKind.ROTUNDA, -260f, -220f, 130f, 130f, 2, true),
+            TerrainPiece("dome2", TerrainKind.ROTUNDA, 260f, -220f, 120f, 120f, 2, true),
+            TerrainPiece("maison1", TerrainKind.TEMPLE, -260f, 120f, 150f, 110f, 2, true),
+            TerrainPiece("maison2", TerrainKind.TEMPLE, 260f, 140f, 140f, 110f, 2, true),
+            TerrainPiece("marche1", TerrainKind.MARKET, -80f, -180f, 110f, 70f, 1),
+            TerrainPiece("marche2", TerrainKind.MARKET, 80f, -180f, 110f, 70f, 1),
+            TerrainPiece("marche3", TerrainKind.MARKET, 0f, -80f, 100f, 70f, 1),
+            TerrainPiece("epave", TerrainKind.CRATE, 100f, 60f, 100f, 70f, 1, true),
+            TerrainPiece("tour", TerrainKind.TOWER, -100f, 60f, 50f, 50f, 2, true),
+            TerrainPiece("mur1", TerrainKind.WALL, -50f, 240f, 140f, 25f, 1, true),
+            TerrainPiece("mur2", TerrainKind.WALL, 100f, 240f, 25f, 120f, 1, true),
+            TerrainPiece("rocher1", TerrainKind.ROTUNDA, -330f, -40f, 70f, 70f, 2, true),
+            TerrainPiece("rocher2", TerrainKind.ROTUNDA, 330f, 0f, 70f, 70f, 2, true),
+            TerrainPiece("caisse1", TerrainKind.CRATE, 40f, 180f, 40f, 40f, 1),
+        ),
+    )
+    // Naboo : plaza centrale, arcades, fontaines, jardins, pont, raffinerie.
+    val NABOO = TerrainCard(
+        id = "naboo", nameKey = "terrain_naboo",
+        pieces = listOf(
+            TerrainPiece("plaza", TerrainKind.FOUNTAIN, 0f, 0f, 160f, 160f, 0),
+            TerrainPiece("fontaine", TerrainKind.FOUNTAIN, 0f, 0f, 55f, 55f, 1),
+            TerrainPiece("arcade1", TerrainKind.TEMPLE, -280f, -180f, 150f, 100f, 2, true),
+            TerrainPiece("arcade2", TerrainKind.TEMPLE, 280f, -180f, 150f, 100f, 2, true),
+            TerrainPiece("ruines", TerrainKind.TEMPLE, -300f, 180f, 130f, 110f, 2, true),
+            TerrainPiece("pont", TerrainKind.WALL, 0f, 300f, 180f, 25f, 1, false),
+            TerrainPiece("jardin1", TerrainKind.TREE, -160f, 120f, 70f, 70f, 1),
+            TerrainPiece("jardin2", TerrainKind.TREE, 160f, 120f, 70f, 70f, 1),
+            TerrainPiece("jardin3", TerrainKind.TREE, -150f, -140f, 60f, 60f, 1),
+            TerrainPiece("statue1", TerrainKind.STATUE, -90f, 90f, 35f, 35f, 0),
+            TerrainPiece("statue2", TerrainKind.STATUE, 90f, 90f, 35f, 35f, 0),
+            TerrainPiece("raffinerie", TerrainKind.ROTUNDA, 300f, 220f, 100f, 100f, 2, true),
+            TerrainPiece("caisse1", TerrainKind.CRATE, 220f, 100f, 40f, 40f, 1),
+            TerrainPiece("caisse2", TerrainKind.CRATE, -220f, -100f, 40f, 40f, 1),
+        ),
+    )
+    // Geonosis : ruches en spirale, canyons, fabrique separatiste, debris, barricades.
+    val GEONOSIS = TerrainCard(
+        id = "geonosis", nameKey = "terrain_geonosis",
+        pieces = listOf(
+            TerrainPiece("ruche1", TerrainKind.ROTUNDA, -180f, -180f, 130f, 130f, 2, true),
+            TerrainPiece("ruche2", TerrainKind.ROTUNDA, 200f, 180f, 110f, 110f, 2, true),
+            TerrainPiece("monticule", TerrainKind.ROTUNDA, 0f, 0f, 120f, 120f, 2, true),
+            TerrainPiece("canyon1", TerrainKind.WALL, -300f, 60f, 60f, 180f, 2, true),
+            TerrainPiece("canyon2", TerrainKind.WALL, 300f, -100f, 60f, 170f, 2, true),
+            TerrainPiece("fabrique1", TerrainKind.TEMPLE, -100f, 260f, 150f, 100f, 2, true),
+            TerrainPiece("fabrique2", TerrainKind.TEMPLE, 120f, -280f, 140f, 100f, 2, true),
+            TerrainPiece("barricade", TerrainKind.WALL, 40f, 160f, 130f, 25f, 2, true),
+            TerrainPiece("debris1", TerrainKind.CRATE, -60f, 120f, 45f, 45f, 1),
+            TerrainPiece("debris2", TerrainKind.CRATE, 90f, 80f, 45f, 45f, 1),
+            TerrainPiece("caisse1", TerrainKind.CRATE, -120f, -80f, 40f, 40f, 1),
+            TerrainPiece("caisse2", TerrainKind.CRATE, 160f, -60f, 40f, 40f, 1),
+            TerrainPiece("tunnel", TerrainKind.TEMPLE, 0f, -320f, 90f, 60f, 2, true),
+        ),
+    )
+    val ALL = listOf(MONUMENT, RUINS, ENDOR, TATOOINE, NABOO, GEONOSIS)
 }
 
 /** Couleur d'un élément de terrain selon son type. */

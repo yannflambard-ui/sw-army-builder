@@ -10,7 +10,7 @@ import org.junit.Test
 class TerrainCardsTest {
     @Test
     fun `deux cartes avec paysage non vide`() {
-        assertEquals(2, TerrainCards.ALL.size)
+        assertEquals(6, TerrainCards.ALL.size)
         TerrainCards.ALL.forEach { card ->
             assertTrue("${card.id} a du terrain", card.pieces.isNotEmpty())
             assertTrue("ids uniques", card.pieces.map { it.id }.toSet().size == card.pieces.size)
@@ -34,6 +34,15 @@ class TerrainCardsTest {
         val ruins = TerrainCards.RUINS.pieces.map { it.kind }
         assertTrue("tour centrale", ruins.contains(TerrainKind.TOWER))
         assertTrue("ruines", ruins.contains(TerrainKind.TEMPLE))
+    }
+
+    @Test
+    fun `quatre planetes presentes`() {
+        val ids = TerrainCards.ALL.map { it.id }.toSet()
+        assertTrue("endor", ids.contains("endor"))
+        assertTrue("tatooine", ids.contains("tatooine"))
+        assertTrue("naboo", ids.contains("naboo"))
+        assertTrue("geonosis", ids.contains("geonosis"))
     }
 
     @Test

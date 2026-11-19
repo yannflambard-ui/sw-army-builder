@@ -310,4 +310,8 @@
     <string name="terrain_none">No terrain</string>
     <string name="terrain_cover">Cover: L=light H=heavy</string>
     <string name="terrain_pick">Choose terrain</string>
+    <string name="terrain_endor">Endor</string>
+    <string name="terrain_tatooine">Tatooine</string>
+    <string name="terrain_naboo">Naboo</string>
+    <string name="terrain_geonosis">Geonosis</string>
 </resources>
