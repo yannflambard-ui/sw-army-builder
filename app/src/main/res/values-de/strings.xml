@@ -292,4 +292,9 @@
     <string name="tabletop_cover_light">leicht</string>
     <string name="tabletop_cover_heavy">schwer</string>
     <string name="tabletop_cover_pool">%1$s Deckung des Ziels · Würfel: %2$s</string>
+    <string name="tabletop_zoom">Zoom %1$d %</string>
+    <string name="tabletop_zoom_in">Vergrößern</string>
+    <string name="tabletop_zoom_out">Verkleinern</string>
+    <string name="tabletop_tap_hint">Einheit tippen, um die Karte zu öffnen</string>
+    <string name="tabletop_territory_note">Hinweiszonen · siehe Map Card</string>
 </resources>

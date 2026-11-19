@@ -292,4 +292,9 @@
     <string name="tabletop_cover_light">ligero</string>
     <string name="tabletop_cover_heavy">pesado</string>
     <string name="tabletop_cover_pool">Cubierta %1$s del objetivo · dados: %2$s</string>
+    <string name="tabletop_zoom">Zoom %1$d %</string>
+    <string name="tabletop_zoom_in">Acercar</string>
+    <string name="tabletop_zoom_out">Alejar</string>
+    <string name="tabletop_tap_hint">Toca una unidad para abrir su ficha</string>
+    <string name="tabletop_territory_note">Zonas orientativas · ver Map Card</string>
 </resources>

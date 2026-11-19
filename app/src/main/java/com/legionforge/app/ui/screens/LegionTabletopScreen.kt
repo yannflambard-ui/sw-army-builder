@@ -15,6 +15,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +31,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.platform.LocalDensity
@@ -302,25 +307,18 @@ fun LegionTabletopScreen(
                 }
                 Spacer(Modifier.width(4.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(
-                        if (cfg.screenWidthDp < 380) stringResource(R.string.tabletop_title_short, round)
-                        else stringResource(R.string.tabletop_title, round),
-                        color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium, maxLines = 1,
-                    )
-                    Text(stringResource(R.string.tabletop_units_left, unitsLeft), color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
-                }
-                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale / 1.25f).coerceIn(0.25f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
-                    Text("−", color = LegionColors.TextPrimary, fontSize = 22.sp)
-                }
-                Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 10.sp)
-                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale * 1.25f).coerceIn(0.25f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
-                    Text("+", color = LegionColors.TextPrimary, fontSize = 22.sp)
+                    Text(stringResource(R.string.tabletop_title_short, round),
+                        color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.tabletop_units_left, unitsLeft),
+                        color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
                 IconButton(
                     onClick = { tool = if (tool == LegionTool.RANGE) LegionTool.SELECT else LegionTool.RANGE },
                     modifier = Modifier.size(LegionDims.TouchMin),
                 ) {
-                    Icon(Icons.Default.Build, contentDescription = stringResource(R.string.tabletop_measure), tint = if (tool == LegionTool.RANGE) LegionColors.Accent else LegionColors.TextSecondary)
+                    Icon(Icons.Filled.Build, contentDescription = stringResource(R.string.tabletop_measure), tint = if (tool == LegionTool.RANGE) LegionColors.Accent else LegionColors.TextSecondary)
                 }
                 Surface(onClick = { onRoundChange(round + 1) }, shape = RoundedCornerShape(LegionDims.Radius), color = LegionColors.Accent, modifier = Modifier.heightIn(min = LegionDims.TouchMin)) {
                     Row(Modifier.padding(horizontal = LegionDims.SpaceS), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -336,7 +334,7 @@ fun LegionTabletopScreen(
                     },
                     modifier = Modifier.size(LegionDims.TouchMin),
                 ) {
-                    Icon(Icons.Default.Info, contentDescription = stringResource(R.string.tabletop_recenter), tint = LegionColors.TextSecondary)
+                    Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.tabletop_recenter), tint = LegionColors.TextSecondary)
                 }
             }
         }
@@ -366,6 +364,28 @@ fun LegionTabletopScreen(
                     }
                 }
             }
+        }
+
+        // ── Pastille de zoom en bas (libère la barre haute) ─────────────────
+        Row(
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)
+                .background(LegionColors.SurfaceRaised, RoundedCornerShape(LegionDims.Radius)),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale / 1.25f).coerceIn(0.25f, 6f) },
+                modifier = Modifier.semantics { contentDescription = "Zoom arrière" }) {
+                Icon(Icons.Filled.Clear, contentDescription = null, tint = LegionColors.TextPrimary)
+            }
+            Text(stringResource(R.string.tabletop_zoom, (scale * 100).toInt()), color = LegionColors.TextPrimary,
+                style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 4.dp))
+            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale * 1.25f).coerceIn(0.25f, 6f) },
+                modifier = Modifier.semantics { contentDescription = "Zoom avant" }) {
+                Icon(Icons.Filled.Add, contentDescription = null, tint = LegionColors.TextPrimary)
+            }
+        }
+        if (selected == null) {
+            Text(stringResource(R.string.tabletop_tap_hint), Modifier.align(Alignment.BottomCenter).padding(bottom = 76.dp),
+                color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelLarge)
         }
 
         // ── Feuille de dés compacte ──────────────────────────────────────────
@@ -465,13 +485,13 @@ private fun DrawScope.drawLegionBoard(
         var gx = -halfMat
         while (gx <= halfMat) {
             val x = mm(gx, 0f).x
-            if (x in tl.x..br.x) drawLine(LegionColors.Border.copy(alpha = 0.45f), Offset(x, tl.y), Offset(x, br.y), strokeWidth = 1f)
+            if (x in tl.x..br.x) drawLine(LegionColors.Border.copy(alpha = 0.18f), Offset(x, tl.y), Offset(x, br.y), strokeWidth = 1f)
             gx += LegionTabletopGeometry.MM_PER_INCH
         }
         var gy = -halfMat
         while (gy <= halfMat) {
             val y = mm(0f, gy).y
-            if (y in tl.y..br.y) drawLine(LegionColors.Border.copy(alpha = 0.45f), Offset(tl.x, y), Offset(br.x, y), strokeWidth = 1f)
+            if (y in tl.y..br.y) drawLine(LegionColors.Border.copy(alpha = 0.18f), Offset(tl.x, y), Offset(br.x, y), strokeWidth = 1f)
             gy += LegionTabletopGeometry.MM_PER_INCH
         }
         // Double bordure du tapis.
@@ -492,9 +512,11 @@ private fun DrawScope.drawLegionBoard(
 
         // Zones d'objectif (3 disques sur la ligne médiane, rayon 6").
         val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
-        for (ox in listOf(-12f, 0f, 12f)) {
+        val objLabelStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Accent)
+        for ((i, ox) in listOf(-12f, 0f, 12f).withIndex()) {
             val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
-            drawCircle(LegionColors.Accent.copy(alpha = 0.16f), radius = objR, center = c, style = Stroke(width = 2f, pathEffect = dash))
+            drawCircle(LegionColors.Accent.copy(alpha = 0.07f), radius = objR, center = c)
+            drawCircle(LegionColors.Accent.copy(alpha = 0.65f), radius = objR, center = c, style = Stroke(width = 2f, pathEffect = dash))
             drawCircle(LegionColors.Warning.copy(alpha = 0.7f), radius = 3f, center = c)
         }
 
@@ -508,15 +530,30 @@ private fun DrawScope.drawLegionBoard(
             drawLine(LegionColors.TextSecondary, Offset(br.x - 10f, y), Offset(br.x, y), strokeWidth = 1.5f)
         }
 
-        // Légendes CENTRÉES dans la zone :meme sur petit ecran, si les bords du tapis
-        // sortent du cadre, le texte reste lisible au centre du viewport.
-        val legendStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Danger.copy(alpha = 0.8f))
+        // Légendes CENTRÉES avec fond opaque : lisibles même si les bords du tapis
+        // sortent du cadre, et jamais barrées par la ligne de démarcation.
+        val legendStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Danger)
         fun drawCenteredLegend(text: String, y: Float, st: androidx.compose.ui.text.TextStyle) {
-            val w = textMeasurer.measure(text, st).size.width.toFloat() + 16f
-            drawText(textMeasurer, text, topLeft = Offset(center.x - w / 2f, y), size = androidx.compose.ui.geometry.Size(maxOf(1f, w), 32f), style = st)
+            val m = textMeasurer.measure(text, st)
+            val w = m.size.width.toFloat() + 16.dp.toPx()
+            val h = m.size.height.toFloat() + 8.dp.toPx()
+            val left = center.x - w / 2f
+            drawRoundRect(LegionColors.Background.copy(alpha = 0.94f), topLeft = Offset(left, y),
+                size = androidx.compose.ui.geometry.Size(maxOf(1f, w), h), cornerRadius = CornerRadius(6.dp.toPx()))
+            drawText(textMeasurer, text, topLeft = Offset(left + 8.dp.toPx(), y + 4.dp.toPx()), style = st)
         }
-        drawCenteredLegend("DEPLOIEMENT ADVERSE", lineHaut - 26f, legendStyle)
-        drawCenteredLegend("DEPLOIEMENT", lineBas + 4f, legendStyle.copy(color = LegionColors.Info.copy(alpha = 0.9f)))
+        val legendH = textMeasurer.measure("TERRITOIRE ENNEMI (JOUER ROUGE)", legendStyle).size.height.toFloat()
+        drawCenteredLegend("TERRITOIRE ENNEMI (JOUER ROUGE)", lineHaut - legendH - 14.dp.toPx(), legendStyle)
+        drawCenteredLegend("TERRITOIRE ALLIE (JOUER BLEU)", lineBas + 14.dp.toPx(), legendStyle.copy(color = LegionColors.Info))
+        // Indication honnête : bornes indicatives, le territoire réel vient de la Map Card.
+        val noteStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, color = LegionColors.TextSecondary)
+        val note = "Zones indicatives · voir Map Card"
+        val noteW = textMeasurer.measure(note, noteStyle).size.width.toFloat() + 16.dp.toPx()
+        // Note placée juste sous la bordure HAUTE du tapis, loin des pions (ligne médiane).
+        val noteY = tl.y + 8.dp.toPx()
+        drawRoundRect(LegionColors.Background.copy(alpha = 0.9f), topLeft = Offset(center.x - noteW/2f, noteY),
+            size = androidx.compose.ui.geometry.Size(noteW, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
+        drawText(textMeasurer, note, topLeft = Offset(center.x - noteW/2f + 8.dp.toPx(), noteY + 2.dp.toPx()), style = noteStyle)
     }
     // Bornes de bandes de portée (6" par segment, rulebook:648-664) autour de
     // l'unité sélectionnée : R1=6", R2=12", R3=18", R4=24", R5=30".
@@ -536,9 +573,36 @@ private fun DrawScope.drawLegionBoard(
         drawLine(LegionColors.Accent, toScreen(selected), measureEnd, strokeWidth = 2f)
     }
     // Pions.
-    pawns.forEach { p ->
+    // Toutes les positions de pions sont calculées AVANT le dessin, pour que
+    // les étiquettes (dessinées en 2e passe) évitent TOUS les socles, y compris
+    // ceux dessinés après elles.
+    val pawnGeom = pawns.map { p ->
         val c = toScreen(p)
-        val r = LegionTabletopGeometry.baseRadiusPx(p.baseSize, scale)
+        val r = maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, scale), 16.dp.toPx())
+        Triple(p, c, r)
+    }
+    val drawnLabels = mutableListOf<androidx.compose.ui.geometry.Rect>()
+    // Réserver les zones des 3 objectifs pour ne pas poser d'étiquette de pion dessus.
+    val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
+    for (ox in listOf(-12f, 0f, 12f)) {
+        val oc = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
+        drawnLabels.add(androidx.compose.ui.geometry.Rect(oc.x - 28.dp.toPx(), oc.y - 22.dp.toPx(), oc.x + 28.dp.toPx(), oc.y + 22.dp.toPx()))
+    }
+    // Réserver TOUS les disques de pions.
+    pawnGeom.forEach { (_, c, r) ->
+        drawnLabels.add(androidx.compose.ui.geometry.Rect(c.x - r, c.y - r, c.x + r, c.y + r))
+    }
+    // Réserver les bandes des légendes de territoire (dessinées avant les pions) :
+    // aucune étiquette de pion ne doit venir les recouvrir.
+    if (matSize.width > 0f && matSize.height > 0f) {
+        val depLocal = 12f * LegionTabletopGeometry.MM_PER_INCH
+        val lh = mm(0f, -halfMat + depLocal).y
+        val lb = mm(0f, halfMat - depLocal).y
+        drawnLabels.add(androidx.compose.ui.geometry.Rect(tl.x, lh - 70.dp.toPx(), br.x, lh + 50.dp.toPx()))
+        drawnLabels.add(androidx.compose.ui.geometry.Rect(tl.x, lb - 30.dp.toPx(), br.x, lb + 70.dp.toPx()))
+    }
+    // ── 1re passe : dessiner tous les socles ──
+    pawnGeom.forEach { (p, c, r) ->
         val base = when {
             p.defeated -> LegionColors.TextTertiary.copy(alpha = 0.5f)
             p.isOpp -> LegionColors.Danger
@@ -576,29 +640,46 @@ private fun DrawScope.drawLegionBoard(
         if (p.cover > 0 && !p.defeated) {
             drawCircle(LegionColors.Warning, radius = r + 4.dp.toPx(), center = c, style = Stroke(width = (2 * p.cover).dp.toPx()))
         }
-        // Info en 2s : nom + blessures sous chaque socle, lisible sans tap.
-        // Largeur calculée sur le TEXTE MESURÉ : plus de troncature, et size
-        // explicite = maxWidth toujours >= 0 (évite le crash Constraints(-12 < 0)).
-        val label = "${p.name} ${p.wounds}/${p.maxWounds}" + if (p.cover > 0) " Couv${p.cover}" else ""
+    }
+    // ── 2e passe : étiquettes AU-DESSUS de tous les socles, sans chevauchement ──
+    pawnGeom.forEach { (p, c, r) ->
+        // Nom COURT (sans l'upgrade entre parenthèses) + PV explicite, largeur bornée.
+        val shortName = p.name.substringBefore('(').trim().let { if (it.length > 18) it.take(17) + "…" else it }
+        val label = "$shortName · ${p.wounds}/${p.maxWounds} PV" + if (p.cover > 0) " · ☂${p.cover}" else ""
         val labelStyle = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
             color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary)
-        val labelW = textMeasurer.measure(label, labelStyle).size.width.toFloat() + 8.dp.toPx()
+        val labelW = minOf(textMeasurer.measure(label, labelStyle).size.width.toFloat() + 8.dp.toPx(), 0.42f * size.width)
         val labelH = 18.dp.toPx()
         val labelX = c.x - labelW / 2f
-        val labelY = c.y + r + 4.dp.toPx()
-        drawRoundRect(
-            color = LegionColors.Background.copy(alpha = 0.85f),
-            topLeft = Offset(labelX, labelY),
-            size = Size(labelW, labelH),
-            cornerRadius = CornerRadius(6.dp.toPx()),
-        )
-        drawText(
-            textMeasurer = textMeasurer,
-            text = label,
-            topLeft = Offset(labelX + 4.dp.toPx(), labelY),
-            size = Size(maxOf(1f, labelW - 8.dp.toPx()), labelH),
-            style = labelStyle,
-        )
+        val labelY = c.y - r - labelH - 4.dp.toPx() // AU-DESSUS du socle (zone joueur dégagée)
+        val labelRect = androidx.compose.ui.geometry.Rect(labelX, labelY, labelX + labelW, labelY + labelH)
+        // Dédup contre TOUS les socles, objectifs et étiquettes déjà posées.
+        if (labelRect.left >= 0f && labelRect.right <= size.width && drawnLabels.none { it.overlaps(labelRect) }) {
+            drawRoundRect(
+                color = LegionColors.Background.copy(alpha = 0.92f),
+                topLeft = Offset(labelX, labelY),
+                size = Size(labelW, labelH),
+                cornerRadius = CornerRadius(6.dp.toPx()),
+            )
+            drawText(
+                textMeasurer = textMeasurer,
+                text = label,
+                topLeft = Offset(labelX + 4.dp.toPx(), labelY),
+                size = Size(maxOf(1f, labelW - 8.dp.toPx()), labelH),
+                style = labelStyle,
+            )
+            drawnLabels.add(labelRect)
+        }
+    }
+    // Badges OBJ dessinés EN DERNIER : au-dessus des socles, jamais masqués.
+    val objLabelStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Accent)
+    for ((i, ox) in listOf(-12f, 0f, 12f).withIndex()) {
+        val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
+        val tag = "OBJ ${i + 1}"
+        val tw = textMeasurer.measure(tag, objLabelStyle).size.width.toFloat() + 12.dp.toPx()
+        drawRoundRect(LegionColors.Background.copy(alpha = 0.95f), topLeft = Offset(c.x - tw/2f, c.y - 11.dp.toPx()),
+            size = androidx.compose.ui.geometry.Size(tw, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
+        drawText(textMeasurer, tag, topLeft = Offset(c.x - tw/2f + 6.dp.toPx(), c.y - 8.dp.toPx()), style = objLabelStyle)
     }
     // Ligne de visée tireur -> cible.
     if (selected != null && target != null) {

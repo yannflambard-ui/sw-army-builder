@@ -290,4 +290,9 @@
     <string name="tabletop_cover_light">light</string>
     <string name="tabletop_cover_heavy">heavy</string>
     <string name="tabletop_cover_pool">%1$s cover of the target · dice: %2$s</string>
+    <string name="tabletop_zoom">Zoom %1$d %%</string>
+    <string name="tabletop_zoom_in">Zoom in</string>
+    <string name="tabletop_zoom_out">Zoom out</string>
+    <string name="tabletop_tap_hint">Tap a unit to open its full card</string>
+    <string name="tabletop_territory_note">Indicative zones · see Map Card</string>
 </resources>

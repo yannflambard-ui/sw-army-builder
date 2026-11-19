@@ -292,4 +292,9 @@
     <string name="tabletop_cover_light">léger</string>
     <string name="tabletop_cover_heavy">lourd</string>
     <string name="tabletop_cover_pool">Couvert %1$s de la cible · dés : %2$s</string>
+    <string name="tabletop_zoom">Zoom %1$d %</string>
+    <string name="tabletop_zoom_in">Zoom avant</string>
+    <string name="tabletop_zoom_out">Zoom arrière</string>
+    <string name="tabletop_tap_hint">Touchez une unité pour ouvrir sa fiche</string>
+    <string name="tabletop_territory_note">Zones indicatives · voir Map Card</string>
 </resources>
