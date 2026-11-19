@@ -8,6 +8,7 @@ import com.legionforge.app.ui.screens.HomeScreen
 import com.legionforge.app.ui.screens.SearchScreen
 import com.legionforge.app.ui.screens.LegionPawn
 import com.legionforge.app.ui.screens.LegionTabletopScreen
+import com.legionforge.app.ui.screens.TerrainCards
 import com.legionforge.app.ui.theme.LegionForgeTheme
 import com.legionforge.app.ui.viewmodel.ArmyBuilderViewModel
 import org.junit.Test
@@ -156,6 +157,29 @@ class LegionTabletopOffscreenTest {
                     onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
                     onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
                     initialPan = Offset(9000f, 9000f))
+            }
+        }
+    }
+}
+
+/** Plateau Legion avec carte de terrain "Place monumentale" + bandeau missions. */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-mdpi")
+class LegionTabletopTerrainCaptureTest {
+    @Test
+    fun legion_tabletop_avec_terrain() {
+        val pawns = listOf(
+            LegionPawn("a1", "B1 Battle Droids", -60f, -80f, baseSize = "small", maxWounds = 4, wounds = 4),
+            LegionPawn("a2", "AT-TE", 90f, -120f, baseSize = "large", maxWounds = 8, wounds = 8),
+            LegionPawn("b1", "Captain Rex", 60f, 60f, baseSize = "medium", maxWounds = 4, wounds = 4, isOpp = true),
+        )
+        captureRoboImage("src/test/snapshots/legion-tabletop-terrain.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 2, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    terrainCard = TerrainCards.MONUMENT, victoryPoints = 6)
             }
         }
     }

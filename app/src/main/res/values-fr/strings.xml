@@ -300,4 +300,16 @@
     <string name="tabletop_territory_enemy">TERRITOIRE ENNEMI (JOUER ROUGE)</string>
     <string name="tabletop_territory_allied">TERRITOIRE ALLIÉ (JOUER BLEU)</string>
     <string name="tabletop_obj">OBJ %1$d</string>
+    <string name="rail_command">COMMANDEMENT</string>
+    <string name="rail_primary">OBJECTIF PRINCIPAL</string>
+    <string name="rail_map">CARTE DES OBJECTIFS</string>
+    <string name="rail_secondary">OBJECTIF SECONDAIRE</string>
+    <string name="rail_round">MANCHE</string>
+    <string name="rail_vp">PV</string>
+    <string name="terrain_title">Carte de terrain</string>
+    <string name="terrain_monument">Place monumentale</string>
+    <string name="terrain_ruins">Ruines desertiques</string>
+    <string name="terrain_none">Aucun terrain</string>
+    <string name="terrain_cover">Couvert : L=leger H=lourd</string>
+    <string name="terrain_pick">Choisir le terrain</string>
 </resources>

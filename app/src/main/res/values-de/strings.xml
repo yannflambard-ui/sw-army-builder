@@ -300,4 +300,16 @@
     <string name="tabletop_territory_enemy">FEINDGEBIET (ROTER SPIELER)</string>
     <string name="tabletop_territory_allied">VERBÜNDETES GEBIET (BLAUER SPIELER)</string>
     <string name="tabletop_obj">OBJ %1$d</string>
+    <string name="rail_command">BEFEHL</string>
+    <string name="rail_primary">HAUPTZIEL</string>
+    <string name="rail_map">ZIELKARTEN</string>
+    <string name="rail_secondary">NEBENZIEL</string>
+    <string name="rail_round">RUNDE</string>
+    <string name="rail_vp">SP</string>
+    <string name="terrain_title">Geländekarte</string>
+    <string name="terrain_monument">Monumentplatz</string>
+    <string name="terrain_ruins">Wüstenruinen</string>
+    <string name="terrain_none">Kein Gelände</string>
+    <string name="terrain_cover">Deckung: L=leicht H=schwer</string>
+    <string name="terrain_pick">Gelände wählen</string>
 </resources>

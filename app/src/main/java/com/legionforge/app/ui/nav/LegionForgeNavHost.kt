@@ -11,6 +11,8 @@ import androidx.compose.runtime.LaunchedEffect
 import com.legionforge.app.data.model.ListEntry
 import com.legionforge.app.data.model.ArmadaSlot
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -205,6 +207,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         isOpp = isOpp,
                         canRotate = baseSize != "small",
                         imagePath = legionTokenMap[e.card.id]?.let { "legion_tokens/$it" } ?: e.card.imagePath(),
+                        faction = e.card.factionId,
                     )
                 }
                 // État de plateau local : les interactions ne sont plus des no-op.
@@ -212,7 +215,10 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 // solo. La persistance des positions x/y/heading reste à faire.
                 var legionState by remember(lid) { mutableStateOf(legionPawns) }
                 var legionRound by remember(lid) { mutableIntStateOf(1) }
+                var terrainCard by remember(lid) { mutableStateOf<com.legionforge.app.ui.screens.TerrainCard?>(null) }
+                var showTerrainPicker by remember(lid) { mutableStateOf(false) }
                 LaunchedEffect(legionPawns) { legionState = legionPawns }
+                androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
                 com.legionforge.app.ui.screens.LegionTabletopScreen(
                     pawns = legionState,
                     round = legionRound,
@@ -238,7 +244,22 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                             } else p
                         }
                     },
+                    terrainCard = terrainCard,
+                    onPickTerrain = { showTerrainPicker = true },
                 )
+                if (showTerrainPicker) {
+                    com.legionforge.app.ui.screens.TerrainPickerSheet(
+                        current = terrainCard,
+                        onPick = { terrainCard = it; showTerrainPicker = false },
+                        onDismiss = { showTerrainPicker = false },
+                        nameMonument = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_monument),
+                        nameRuins = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_ruins),
+                        nameNone = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_none),
+                        title = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_title),
+                        coverHint = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_cover),
+                    )
+                }
+                }
                 return@composable
             }
 

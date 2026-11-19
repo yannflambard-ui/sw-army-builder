@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
@@ -95,6 +96,8 @@ data class LegionPawn(
     val isOpp: Boolean = false,
     val canRotate: Boolean = false,   // socle cranté (pivot avant Move)
     val imagePath: String? = null,    // miniature de carte locale (assets), token légal
+    val faction: String = "",         // factionId pour la couleur catalogue (factionColor)
+    val upgrade: String = "",         // upgrade/commandant entre parenthèses -> "(c)" sur l'étiquette
 )
 
 private enum class LegionTool { SELECT, RANGE, ARC }
@@ -113,6 +116,10 @@ fun LegionTabletopScreen(
     onRoundChange: (Int) -> Unit,
     onWoundsChange: (String, Int) -> Unit,
     initialPan: androidx.compose.ui.geometry.Offset? = null, // test hors-cadre uniquement
+    terrainCard: TerrainCard? = null,
+    showMissionRail: Boolean = true,
+    victoryPoints: Int = 0,
+    onPickTerrain: (() -> Unit)? = null,
 ) {
     var selectedId by remember { mutableStateOf<String?>(null) }
     var targetId by remember { mutableStateOf<String?>(null) }
@@ -197,6 +204,14 @@ fun LegionTabletopScreen(
         val ttAllied = stringResource(R.string.tabletop_territory_allied)
         val ttNote = stringResource(R.string.tabletop_territory_note)
         val ttObj = stringResource(R.string.tabletop_obj)
+        val missionLabels = mapOf(
+            "command" to stringResource(R.string.rail_command),
+            "primary" to stringResource(R.string.rail_primary),
+            "map" to stringResource(R.string.rail_map),
+            "secondary" to stringResource(R.string.rail_secondary),
+            "round" to stringResource(R.string.rail_round),
+            "vp" to stringResource(R.string.rail_vp),
+        )
         Canvas(
             Modifier.fillMaxSize().testTag("legion_board").pointerInput(Unit) {
                 // Geste UNIQUE : 1 doigt = tap/drag, 2 doigts = pinch-zoom.
@@ -299,7 +314,7 @@ fun LegionTabletopScreen(
             }
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer,
-                ttEnemy, ttAllied, ttNote, ttObj)
+                ttEnemy, ttAllied, ttNote, ttObj, terrainCard)
         }
 
         // ── Barre haute 48dp ─────────────────────────────────────────────────
@@ -326,6 +341,11 @@ fun LegionTabletopScreen(
                 ) {
                     Icon(Icons.Filled.Build, contentDescription = stringResource(R.string.tabletop_measure), tint = if (tool == LegionTool.RANGE) LegionColors.Accent else LegionColors.TextSecondary)
                 }
+                if (onPickTerrain != null) {
+                    IconButton(onClick = onPickTerrain, modifier = Modifier.size(LegionDims.TouchMin)) {
+                        Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.terrain_pick), tint = LegionColors.TextSecondary)
+                    }
+                }
                 Surface(onClick = { onRoundChange(round + 1) }, shape = RoundedCornerShape(LegionDims.Radius), color = LegionColors.Accent, modifier = Modifier.heightIn(min = LegionDims.TouchMin)) {
                     Row(Modifier.padding(horizontal = LegionDims.SpaceS), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Default.ArrowForward, contentDescription = null, tint = LegionColors.Background, modifier = Modifier.size(18.dp))
@@ -342,6 +362,10 @@ fun LegionTabletopScreen(
                 ) {
                     Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.tabletop_recenter), tint = LegionColors.TextSecondary)
                 }
+            }
+            // Bandeau des cartes de mission, AU-DESSUS du plateau (hors Canvas).
+            if (showMissionRail) {
+                MissionCardRail(round = round, victoryPoints = victoryPoints, labels = missionLabels)
             }
         }
 
@@ -448,8 +472,22 @@ private fun SmallAction(label: String, active: Boolean, enabled: Boolean = true,
 
 /** Libellé court d'un pion pour l'info en 2s. Extrait pour test de non-régression. */
 internal fun formatPawnLabel(p: LegionPawn): String {
-    val shortName = p.name.substringBefore('(').trim().let { if (it.length > 18) it.take(17) + "…" else it }
-    return "$shortName · ${p.wounds}/${p.maxWounds} PV" + if (p.cover > 0) " · ☂${p.cover}" else ""
+    // Nom COURT : initiales des mots du nom principal ("Darth Vader" -> "DV"),
+    // ou le nom tronqué si une seule mot. L'upgrade devient "(c)"/"(x)".
+    val baseName = p.name.substringBefore('(').trim()
+    val words = baseName.split(" ").filter { it.isNotBlank() }
+    val initials = if (words.size >= 2) words.map { it.first().uppercaseChar() }.joinToString("")
+                   else baseName.split("-").first().take(3).uppercase()
+    val up = p.upgrade.ifBlank {
+        // fallback : contenu entre parenthèses du nom
+        p.name.substringAfter('(', "").substringBefore(')', "").trim()
+    }
+    val tag = when {
+        up.isBlank() -> ""
+        up.contains("command", true) || up.contains("commander", true) || up.contains("commandant", true) -> "(c)"
+        else -> "(" + up.first().uppercaseChar() + ")"
+    }
+    return "$initials$tag · ${p.wounds}/${p.maxWounds} PV" + if (p.cover > 0) " · ☂${p.cover}" else ""
 }
 
 private fun DrawScope.drawLegionBoard(
@@ -467,6 +505,7 @@ private fun DrawScope.drawLegionBoard(
     territoryAllied: String,
     territoryNote: String,
     objPrefix: String,
+    terrainCard: TerrainCard? = null,
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
     val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
@@ -515,6 +554,9 @@ private fun DrawScope.drawLegionBoard(
         // Double bordure du tapis.
         drawRect(LegionColors.Accent.copy(alpha = 0.8f), topLeft = tl, size = matSize, style = Stroke(width = 6f))
         drawRect(LegionColors.Border, topLeft = mm(-halfMat + 4f, -halfMat + 4f), size = androidx.compose.ui.geometry.Size(matSize.width - 8f, matSize.height - 8f), style = Stroke(width = 1.5f))
+
+        // Paysage de la carte de terrain choisie (avant les zones/pions).
+        drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
 
         // Zones de déploiement (12" depuis chaque bord) + lignes de déploiement.
         val dep = 12f * LegionTabletopGeometry.MM_PER_INCH
@@ -661,7 +703,8 @@ private fun DrawScope.drawLegionBoard(
         // Nom COURT (sans l'upgrade entre parenthèses) + PV explicite, largeur bornée.
         val label = formatPawnLabel(p)
         val labelStyle = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
-            color = if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary)
+            color = if (p.faction.isNotBlank()) factionColor(p.faction)
+                    else if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary)
         val labelW = minOf(textMeasurer.measure(label, labelStyle).size.width.toFloat() + 8.dp.toPx(), 0.42f * size.width)
         val labelH = 18.dp.toPx()
         val gap = 4.dp.toPx()
