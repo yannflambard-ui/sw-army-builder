@@ -2929,19 +2929,21 @@ internal fun UnitDetailSheet(
     unit: ListEntry, children: List<ListEntry>, allEntries: List<ListEntry>,
     wikiSections: List<WikiSectionEntity>, onRuleClick: (WikiSectionEntity) -> Unit,
     state: SyncedUnitState, onChange: (SyncedUnitState) -> Unit, readOnly: Boolean,
-    onDice: () -> Unit, onCompare: () -> Unit, onClose: () -> Unit
+    onDice: () -> Unit, onCompare: () -> Unit, onClose: () -> Unit,
+    showDice: Boolean = true, showCompare: Boolean = true, // tabletop : dés déjà dans la barre rapide, pas de comparaison
 ) {
     ModalBottomSheet(onDismissRequest = onClose, containerColor = LegionColors.Background) {
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(unit.card.name, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Surface(onClick = onDice, shape = RoundedCornerShape(8.dp), color = LegionColors.Border) {
+                if (showDice) Surface(onClick = onDice, shape = RoundedCornerShape(8.dp), color = LegionColors.Border) {
                     Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.dice), tint = LegionColors.Accent, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
                         Text(stringResource(R.string.dice), color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+                if (showCompare) {
                 Spacer(Modifier.width(6.dp))
                 Surface(onClick = onCompare, shape = RoundedCornerShape(8.dp), color = LegionColors.Border) {
                     Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -2949,6 +2951,7 @@ internal fun UnitDetailSheet(
                         Spacer(Modifier.width(4.dp))
                         Text("Comparer", color = LegionColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
+                }
                 }
             }
             Box(Modifier.fillMaxWidth().heightIn(max = 900.dp)) {

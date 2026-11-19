@@ -54,9 +54,9 @@ class LegionTabletopInteractionTest {
     }
 
     @Test
-    fun tap_sur_un_pion_selectionne_sans_quitter_le_tabletop() {
-        // Le tap doit sélectionner localement (menu bas) et NE PAS appeler
-        // onOpenPlay, qui naviguerait vers CARD_DETAIL et quitterait le plateau.
+    fun tap_sur_un_pion_ouvre_la_fiche_en_overlay() {
+        // Le tap doit appeler onOpenPlay pour ouvrir la VRAIE fiche dépliante
+        // (UnitDetailSheet en overlay dans le NavHost, plateau visible derrière).
         var openedId: String? = null
         compose.setContent {
             LegionForgeTheme {
@@ -74,7 +74,7 @@ class LegionTabletopInteractionTest {
             up()
         }
         compose.waitForIdle()
-        assertTrue("tap ne doit PAS ouvrir la fiche Play", openedId == null)
+        assertTrue("tap doit ouvrir la fiche dépliante du pion", openedId == "a1")
     }
 
     @Test

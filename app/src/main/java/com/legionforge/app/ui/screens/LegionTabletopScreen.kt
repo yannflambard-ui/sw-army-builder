@@ -304,10 +304,10 @@ fun LegionTabletopScreen(
                                 when {
                                     hit == null -> { selectedId = null; targetId = null; measureEnd = null }
                                     liveTool == LegionTool.RANGE && selected != null && hit.id != selectedId -> targetId = hit.id
-                                    // Tap = sélection locale UNIQUEMENT : le menu dépliant
-                                    // s'ouvre en bas SANS quitter le plateau (onOpenPlay
-                                    // navigue vers CARD_DETAIL et faisait quitter le mode tabletop).
-                                    liveTool == LegionTool.SELECT -> { selectedId = hit.id }
+                                    // Tap = sélection locale (barre rapide) ET ouverture de la
+                                    // VRAIE fiche dépliante (UnitDetailSheet en overlay dans le
+                                    // NavHost, plateau visible derriere — jamais de navigation).
+                                    liveTool == LegionTool.SELECT -> { selectedId = hit.id; liveOnOpenPlay(hit.id) }
                                     else -> targetId = hit.id
                                 }
                             }
@@ -382,7 +382,7 @@ fun LegionTabletopScreen(
             selected?.let { p ->
                 Column(
                     Modifier
-                        .padding(horizontal = 16.dp, vertical = 60.dp)
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
                         .background(LegionColors.SurfaceRaised, RoundedCornerShape(LegionDims.Radius))
                         .padding(LegionDims.SpaceS),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -399,7 +399,6 @@ fun LegionTabletopScreen(
                             onCoverChange(p.id, (p.cover + 1) % 3)
                         }
                         SmallAction(stringResource(R.string.tabletop_dice), false, enabled = targetId != null) { showDice = true }
-                        SmallAction(stringResource(R.string.tabletop_open_play), false) { onOpenPlay(p.id) }
                     }
                 }
             }

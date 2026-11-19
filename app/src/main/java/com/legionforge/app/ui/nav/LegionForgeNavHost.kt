@@ -166,7 +166,10 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 val legionSyncVm: PlaySyncViewModel = viewModel()
                 val legionOppJson by legionSyncVm.opponentListJson.collectAsState()
                 val legionSoloOpp by vm.soloOppEntries.collectAsState()
-                val legionOppEntries = remember(legionOppJson, vm.cards.value) {
+                // TOUTES les entrées adverses (unités + upgrades). Le filtre LEGION_UNIT
+                // ne s'applique qu'à la construction des pions ; la fiche a besoin des
+                // upgrades (children) pour afficher les effets et leurs points.
+                val legionOppAll = remember(legionOppJson, vm.cards.value) {
                     if (legionOppJson.isNullOrBlank()) emptyList() else {
                         val opp = try {
                             com.google.gson.Gson().fromJson(legionOppJson, com.legionforge.app.ui.viewmodel.ShareListPayload::class.java)
@@ -174,15 +177,17 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         (opp?.entries ?: emptyList()).mapNotNull { se ->
                             vm.cards.value.firstOrNull { it.id == se.cardId }?.let { card ->
                                 ListEntry(
-                                    instanceId = se.instanceId?.let { "B:$it" } ?: "opp_${se.cardId}",
+                                    // Ids alignés sur CardDetailScreen:486-488 (B:<uuid> ou opp_<card>_<parent|root>).
+                                    instanceId = se.instanceId?.let { "B:$it" } ?: "opp_${se.cardId}_${se.parentInstanceId ?: "root"}",
                                     card = card,
-                                    parentInstanceId = null,
+                                    parentInstanceId = se.parentInstanceId?.let { "B:$it" },
                                     quantity = se.quantity,
                                 )
                             }
-                        }.filter { it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT }
+                        }
                     }
                 }
+                val legionOppEntries = legionOppAll.filter { it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT }
                 val legionSoloEntries = legionSoloOpp.filter { it.card.kind == com.legionforge.app.data.model.CardKind.LEGION_UNIT && it.parentInstanceId == null }
                 val allLegionEntries = legionEntries + legionOppEntries.ifEmpty { legionSoloEntries }
                 val legionPawns = allLegionEntries.mapIndexed { i, e ->
@@ -225,13 +230,23 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 }
                 var missionSlot by remember(lid) { mutableStateOf<String?>(null) }
                 var missionSel by remember(lid) { mutableStateOf<Map<String, String>>(emptyMap()) }
-                LaunchedEffect(lid, legionPawns) {
+                // Keyer sur les IDS des pions, pas sur legionPawns (objets recalculés à chaque
+                // recomposition) : sinon le chargement écrase les éditions wounds/cover faites
+                // depuis la fiche. On ne restaure que x/y/heading ; l'état courant est préservé.
+                val legionPawnIds = legionPawns.joinToString(",") { it.id }
+                LaunchedEffect(lid, legionPawnIds) {
                     val saved = runCatching { boardDao.getByList(lid)?.snapshot?.let { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(it) } }.getOrNull()
                     val pos = saved?.tabletopUnits ?: emptyMap()
-                    // Applique les positions sauvegardées ; nouveau pawn sans position garde sa place par défaut.
+                    val currentById = legionState.associateBy { it.id }
                     legionState = legionPawns.map { pawn ->
-                        pos[pawn.id]?.let { pawn.copy(xMm = it.x, yMm = it.y, headingDeg = it.heading,
-                            wounds = pawn.wounds, cover = pawn.cover) } ?: pawn
+                        val cur = currentById[pawn.id]
+                        val savedPos = pos[pawn.id]
+                        when {
+                            cur != null && savedPos != null -> cur.copy(xMm = savedPos.x, yMm = savedPos.y, headingDeg = savedPos.heading)
+                            cur != null -> cur
+                            savedPos != null -> pawn.copy(xMm = savedPos.x, yMm = savedPos.y, headingDeg = savedPos.heading)
+                            else -> pawn
+                        }
                     }
                     legionRound = saved?.round ?: 1
                     missionSel = saved?.tabletopMissions ?: emptyMap()
@@ -266,19 +281,17 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     battleCards.firstOrNull { it.name == name && it.category == cat }
                         ?: battleCards.firstOrNull { it.category == cat }
                 }
+                var detailPawnId by remember(lid) { mutableStateOf<String?>(null) }
                 androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
                 com.legionforge.app.ui.screens.LegionTabletopScreen(
                     pawns = legionState,
                     round = legionRound,
                     onBack = { navController.popBackStack() },
                     onOpenPlay = { id ->
-                        // Ouvre la fiche dépliante du mode Play SANS quitter le tabletop :
-                        // on empile une NOUVELLE entrée CARD_DETAIL au-dessus du plateau.
-                        // Le retour (popBackStack) ramène donc au plateau. Ne jamais faire
-                        // popBackStack ici : l'entrée précédente est souvent l'ancien
-                        // CARD_DETAIL d'origine, ce qui écraserait le tabletop.
-                        navController.navigate(Routes.cardDetail(lid, id))
-                        navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", id)
+                        // Ouvre la VRAIE fiche dépliante (UnitDetailSheet) en overlay DIRECT
+                        // au-dessus du plateau : pas de navigation, le plateau reste visible,
+                        // le retour = dismiss de la sheet. Jamais popBackStack ici.
+                        detailPawnId = id
                     },
                     onMove = { id, x, y, h -> legionState = legionState.map { if (it.id == id) it.copy(xMm = x, yMm = y, headingDeg = h) else it } },
                     onActivate = { id -> legionState = legionState.map { if (it.id == id) it.copy(activated = !it.activated) else it } },
@@ -334,6 +347,56 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         onPick = { card -> missionSel = missionSel + (slot to card.name); missionSlot = null },
                         onDismiss = { missionSlot = null },
                     )
+                }
+                // ── VRAIE fiche dépliante du mode Play, en overlay sur le plateau ──
+                // Même UnitDetailSheet que CardDetailScreen:1529 : stats, règles, jetons,
+                // capacités. Plateau visible derrière, retour = dismiss (jamais de navigation).
+                if (detailPawnId != null) {
+                    val did = detailPawnId!!
+                    // Toutes les cartes (unités ET upgrades) pour que la fiche affiche
+                    // les enfants et leurs effets, exactement comme le mode Play.
+                    val allForDetail = vm.entries.value + legionOppAll + legionSoloOpp
+                    val unit = allForDetail.firstOrNull { it.instanceId == did }
+                    val pawn = legionState.firstOrNull { it.id == did }
+                    if (unit != null && pawn != null) {
+                        val isOppDetail = did.startsWith("B:") || did.startsWith("opp_")
+                        val wikiSections by vm.wikiSections.collectAsState()
+                        val detailWiki = remember(unit, wikiSections) { wikiSections.filter { it.gameSystem == unit.card.gameSystem.name } }
+                        val children = allForDetail.filter { it.parentInstanceId == unit.instanceId }
+                        val syncStateMap = if (isOppDetail) legionSyncVm.oppStates.collectAsState().value else legionSyncVm.ownStates.collectAsState().value
+                        val base = syncStateMap[did] ?: com.legionforge.app.data.nearby.SyncedUnitState(did)
+                        // defeated doit être dérivé des PV (applyWounds) : 0 PV => vaincu,
+                        // PV>0 => non vaincu. Sinon la fiche et le plateau divergent.
+                        val (shownWounds, shownDead) = com.legionforge.app.domain.LegionTabletopGeometry.applyWounds(
+                            pawn.wounds, pawn.maxWounds, pawn.wounds)
+                        val detailState = base.copy(
+                            wounds = shownWounds, cover = pawn.cover,
+                            defeated = shownDead, activated = pawn.activated,
+                        )
+                        val connected = legionSyncVm.mode.collectAsState().value == com.legionforge.app.data.nearby.ShareMode.CONNECTED
+                        val readOnlyDetail = connected && isOppDetail
+                        val onChangeDetail: (com.legionforge.app.data.nearby.SyncedUnitState) -> Unit =
+                            if (readOnlyDetail) { _ -> } else { next ->
+                                if (!isOppDetail) legionSyncVm.setOwnState(did, next)
+                                // Mirroring vers le plateau : blessures/couvert/états uniquement,
+                                // jamais x/y/heading (gérés par le drag du plateau).
+                                legionState = legionState.map { p ->
+                                    if (p.id != did) p else {
+                                        val (nw, dead) = com.legionforge.app.domain.LegionTabletopGeometry.applyWounds(
+                                            p.wounds, p.maxWounds, next.wounds ?: p.wounds)
+                                        p.copy(wounds = nw, cover = (next.cover ?: p.cover).coerceIn(0, 2),
+                                            defeated = if (next.wounds != null) dead else (next.defeated ?: dead),
+                                            activated = next.activated ?: p.activated)
+                                    }
+                                }
+                            }
+                        com.legionforge.app.ui.screens.UnitDetailSheet(
+                            unit, children, allForDetail, detailWiki, {},
+                            detailState, onChangeDetail, readOnlyDetail,
+                            onDice = {}, onCompare = {}, onClose = { detailPawnId = null },
+                            showDice = false, showCompare = false,
+                        )
+                    }
                 }
                 }
                 return@composable
