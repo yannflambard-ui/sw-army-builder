@@ -278,7 +278,11 @@ fun TabletopScreen(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = LegionColors.Accent, fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
-                Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 11.sp, maxLines = 1)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    TextButton(onClick = { scale = (scale / 1.25f).coerceIn(0.3f, 5f) }, modifier = Modifier.size(40.dp)) { Text("−", color = LegionColors.Accent, fontSize = 18.sp) }
+                    Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 11.sp, maxLines = 1)
+                    TextButton(onClick = { scale = (scale * 1.25f).coerceIn(0.3f, 5f) }, modifier = Modifier.size(40.dp)) { Text("+", color = LegionColors.Accent, fontSize = 18.sp) }
+                }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { showDeployment = !showDeployment }) { Text(if (showDeployment) "Masquer zones" else "Zones", fontSize = 11.sp) }
@@ -302,13 +306,6 @@ fun TabletopScreen(
                     fitScale = need
                     if (!fitInitialized) { scale = need; pan = Offset.Zero; fitInitialized = true }
                 }
-                // Zoom et déplacement du plateau (deux doigts) : on ne touche pas aux pions
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, panChange, zoom, _ ->
-                        scale = (scale * zoom).coerceIn(0.3f, 4f)
-                        pan += panChange
-                    }
-                }
         ) {
             // Init des dés quand attaquant ou cible (position, cap, armement) change.
             androidx.compose.runtime.LaunchedEffect(selectedId, targetId) { manualAntiDice = ArmadaDiceBag() }
@@ -322,7 +319,17 @@ fun TabletopScreen(
             Canvas(
                 Modifier
                     .fillMaxSize()
-                    .pointerInput(positions, scale, pan) {
+                    .pointerInput(Unit) {
+                        // Pinch-zoom + pan du plateau (2 doigts). Dans le MEME pointerInput
+                        // que le drag/tap pour éviter que le parent ne capture le geste.
+                        detectTransformGestures { _, panChange, zoom, _ ->
+                            if (zoom != 1f || panChange != androidx.compose.ui.geometry.Offset.Zero) {
+                                if (dragId == null) {
+                                    scale = (scale * zoom).coerceIn(0.3f, 5f)
+                                    pan += panChange
+                                }
+                            }
+                        }
                         // Déplacement manuel : placement des navires et déplacement indicatif des escadrons.
                         detectDragGestures(
                             onDragStart = { at: androidx.compose.ui.geometry.Offset ->

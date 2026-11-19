@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.layout.onSizeChanged
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.legionforge.app.domain.LegionTabletopGeometry
@@ -192,6 +194,23 @@ fun LegionTabletopScreen(
         val textMeasurer = rememberTextMeasurer()
         Canvas(
             Modifier.fillMaxSize().testTag("legion_board").pointerInput(Unit) {
+                // Pinch-zoom (2 doigts) : absent auparavant sur Legion. Gardé figé pendant
+                // le drag d'un pion (dragPan != null) pour ne pas faire dériver la coordonnée mm.
+                detectTransformGestures { centroid, panChange, zoom, _ ->
+                    if (dragPan == null && (zoom != 1f || panChange != androidx.compose.ui.geometry.Offset.Zero)) {
+                        val old = scale
+                        val next = (scale * zoom).coerceIn(0.3f, 6f)
+                        val base = pan ?: viewCenter
+                        // Le plateau sous le centroid reste sous le centroid après zoom :
+                        // pan' = centroid - (centroid - pan) * (next/old) + panChange
+                        val ratio = next / old
+                        pan = androidx.compose.ui.geometry.Offset(
+                            centroid.x - (centroid.x - base.x) * ratio + panChange.x,
+                            centroid.y - (centroid.y - base.y) * ratio + panChange.y,
+                        )
+                        scale = next
+                    }
+                }
                 detectTapGestures { at ->
                     val hit = livePawns.lastOrNull { p ->
                         val c = toScreenLive(p)
@@ -257,6 +276,13 @@ fun LegionTabletopScreen(
                         color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium, maxLines = 1,
                     )
                     Text(stringResource(R.string.tabletop_units_left, unitsLeft), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                }
+                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale / 1.25f).coerceIn(0.3f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                    Text("−", color = LegionColors.TextPrimary, fontSize = 22.sp)
+                }
+                Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 10.sp)
+                IconButton(onClick = { val base = pan ?: viewCenter; val next = (scale * 1.25f).coerceIn(0.3f, 6f); pan = base; scale = next }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                    Text("+", color = LegionColors.TextPrimary, fontSize = 22.sp)
                 }
                 IconButton(
                     onClick = { tool = if (tool == LegionTool.RANGE) LegionTool.SELECT else LegionTool.RANGE },

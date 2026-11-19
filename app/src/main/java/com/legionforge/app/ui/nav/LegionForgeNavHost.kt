@@ -218,18 +218,13 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     round = legionRound,
                     onBack = { navController.popBackStack() },
                     onOpenPlay = { id ->
-                        // Ouvre la vraie fiche dépliante du mode Play. On dépose l'id dans
-                        // savedStateHandle pour résoudre aussi les pions adverses (B:/opp_).
-                        val playEntry = navController.previousBackStackEntry?.takeIf {
-                            it.destination.route == Routes.CARD_DETAIL
-                        }
-                        if (playEntry != null) {
-                            playEntry.savedStateHandle["tabletop_selected_unit"] = id
-                            navController.popBackStack()
-                        } else {
-                            navController.navigate(Routes.cardDetail(lid, id))
-                            navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", id)
-                        }
+                        // Ouvre la fiche dépliante du mode Play SANS quitter le tabletop :
+                        // on empile une NOUVELLE entrée CARD_DETAIL au-dessus du plateau.
+                        // Le retour (popBackStack) ramène donc au plateau. Ne jamais faire
+                        // popBackStack ici : l'entrée précédente est souvent l'ancien
+                        // CARD_DETAIL d'origine, ce qui écraserait le tabletop.
+                        navController.navigate(Routes.cardDetail(lid, id))
+                        navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", id)
                     },
                     onMove = { id, x, y, h -> legionState = legionState.map { if (it.id == id) it.copy(xMm = x, yMm = y, headingDeg = h) else it } },
                     onActivate = { id -> legionState = legionState.map { if (it.id == id) it.copy(activated = !it.activated) else it } },
@@ -356,15 +351,9 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 pawns = pawns,
                 sessionId = lid,
                 onSelectPlayUnit = { unitId ->
-                    val playEntry = navController.previousBackStackEntry?.takeIf { it.destination.route == Routes.CARD_DETAIL }
-                    if (playEntry != null) {
-                        playEntry.savedStateHandle["tabletop_selected_unit"] = unitId
-                        navController.popBackStack()
-                    } else {
-                        // Déposer la sélection sur la destination créée, même si c'est un pion adverse.
-                        navController.navigate(Routes.cardDetail(lid, unitId))
-                        navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", unitId)
-                    }
+                    // Empile la fiche au-dessus du plateau : le retour ramène au tabletop.
+                    navController.navigate(Routes.cardDetail(lid, unitId))
+                    navController.currentBackStackEntry?.savedStateHandle?.set("tabletop_selected_unit", unitId)
                 },
                 round = tabletopRound,
                 phase = tabletopPhase,
