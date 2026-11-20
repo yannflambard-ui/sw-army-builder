@@ -304,7 +304,7 @@
     <string name="rail_map">OBJECTIVE CARDS</string>
     <string name="rail_secondary">SECONDARY OBJECTIVE</string>
     <string name="rail_round">ROUND</string>
-    <string name="rail_vp">VP</string>
+    <string name="rail_vp">SCORE</string>
     <string name="terrain_title">Terrain card</string>
     <string name="terrain_monument">Monument Square</string>
     <string name="terrain_ruins">Desert Ruins</string>

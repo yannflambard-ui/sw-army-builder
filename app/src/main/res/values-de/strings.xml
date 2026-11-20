@@ -306,7 +306,7 @@
     <string name="rail_map">ZIELKARTEN</string>
     <string name="rail_secondary">NEBENZIEL</string>
     <string name="rail_round">RUNDE</string>
-    <string name="rail_vp">SP</string>
+    <string name="rail_vp">PUNKTE</string>
     <string name="terrain_title">Geländekarte</string>
     <string name="terrain_monument">Monumentplatz</string>
     <string name="terrain_ruins">Wüstenruinen</string>

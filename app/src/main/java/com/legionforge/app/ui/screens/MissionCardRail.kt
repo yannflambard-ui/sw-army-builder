@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.legionforge.app.ui.theme.LegionColors
 import com.legionforge.app.ui.theme.LegionType
 
@@ -83,10 +84,13 @@ fun MissionCardRail(
                         Text(
                             card?.name ?: labels[slot.label] ?: slot.label,
                             color = Color.White,
-                            fontSize = LegionType.Caption,
+                            fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
-                            lineHeight = LegionType.Caption * 1.1f,
+                            lineHeight = 10.sp,
+                            maxLines = 3,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }

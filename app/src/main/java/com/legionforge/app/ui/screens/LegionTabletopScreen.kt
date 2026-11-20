@@ -499,6 +499,55 @@ internal fun formatPawnLabel(p: LegionPawn): String {
     return "$initials$tag · ${p.wounds}/${p.maxWounds} PV" + if (p.cover > 0) " · ☂${p.cover}" else ""
 }
 
+/**
+ * Palette "champ de bataille" — aplats chauds désaturés façon carte SNES.
+ * LOCALE au plateau : ne modifie pas LegionColors (utilisé par tout le reste de l'app).
+ * Couleurs vives réservées aux SIGNALS DE RÈGLE (couvert, portée, sélection).
+ */
+private object BattlePalette {
+    val Ground = Color(0xFF6E6658)          // sol pierre/sable
+    val TileA = Color(0xFF746C5C)
+    val TileB = Color(0xFF665F50)
+    val TileSeam = Color(0x11000000)
+    val Grout = Color(0xFF8C8068)           // graduations bords
+    val Wood = Color(0xFF5A4632)            // cadre bois
+    val WoodLight = Color(0xFF7A5F42)
+    val Parchment = Color(0xFFC2B280)       // liseré interne / plaquettes
+    val ParchmentBright = Color(0xFFE8D8B0)
+    val Ink = Color(0xFF3A2E1E)             // texte sur parchemin
+    val InkRed = Color(0xFF8C3B32)          // PV sur parchemin
+    val TapeOwn = Color(0xFF8C3B32)         // ruban déploiement ADV (rouge sourd)
+    val TapeOpp = Color(0xFF4A6484)         // ruban déploiement MOI (bleu sourd)
+    val CoinWood = Color(0xFF6B4F3A)        // jeton pion
+    val CoinRing = Color(0xFFC2B280)
+    val Select = Color(0xFFFFE08A)
+    val Activated = Color(0xFF9FB59B)
+    val Defeated = Color(0xFF889088)
+    val CoverLight = Color(0xFF2E9BFF)
+    val CoverHeavy = Color(0xFFFF7A00)
+    val Objective = Color(0xFFC2B280)
+    val RangeLine = Color(0xFFFFC857)
+}
+
+/** Silhouette de troupe stylisée (casque + épaules) pour les jetons sans illustration. */
+private fun DrawScope.drawTroopSilhouette(cx: Float, cy: Float, r: Float, color: Color) {
+    // Épaules / torse (trapèze).
+    drawPath(androidx.compose.ui.graphics.Path().apply {
+        moveTo(cx - r * 0.62f, cy + r * 0.7f)
+        lineTo(cx - r * 0.42f, cy + r * 0.05f)
+        lineTo(cx + r * 0.42f, cy + r * 0.05f)
+        lineTo(cx + r * 0.62f, cy + r * 0.7f)
+        close()
+    }, color)
+    // Casque (demi-cercle).
+    drawArc(color, 180f, 180f, false,
+        topLeft = Offset(cx - r * 0.34f, cy - r * 0.55f),
+        size = androidx.compose.ui.geometry.Size(maxOf(1f, r * 0.68f), maxOf(1f, r * 0.68f)))
+    // Visière sombre.
+    drawRect(BattlePalette.Wood, topLeft = Offset(cx - r * 0.3f, cy - r * 0.08f),
+        size = androidx.compose.ui.geometry.Size(maxOf(1f, r * 0.6f), maxOf(1f, r * 0.16f)))
+}
+
 private fun DrawScope.drawLegionBoard(
     scale: Float,
     pan: Offset,
@@ -528,110 +577,135 @@ private fun DrawScope.drawLegionBoard(
     val br = mm(halfMat, halfMat)
     val matSize = androidx.compose.ui.geometry.Size(br.x - tl.x, br.y - tl.y)
 
-    // Halo extérieur (table sombre autour du tapis).
-    drawRect(
-        brush = androidx.compose.ui.graphics.Brush.radialGradient(
-            colors = listOf(LegionColors.Surface, LegionColors.Background),
-            center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
-            radius = maxOf(size.width, size.height) * 0.75f,
-        ),
-        size = size,
-    )
-    // Surface du tapis (toile mate, dégradé central très discret).
+    // Extérieur : table sombre neutre (simple aplat, PAS de dégradé radar).
+    drawRect(Color(0xFF141210), size = size)
     if (matSize.width > 0f && matSize.height > 0f) {
-        drawRect(
-            brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                colors = listOf(LegionColors.SurfaceRaised, LegionColors.Surface),
-                center = androidx.compose.ui.geometry.Offset(tl.x + matSize.width / 2f, tl.y + matSize.height / 2f),
-                radius = maxOf(matSize.width, matSize.height) * 0.7f,
-            ),
-            topLeft = tl,
-            size = matSize,
-        )
-        // Quadrillage en pouces, LIMITÉ au tapis.
-        var gx = -halfMat
-        while (gx <= halfMat) {
-            val x = mm(gx, 0f).x
-            if (x in tl.x..br.x) drawLine(LegionColors.Border.copy(alpha = 0.18f), Offset(x, tl.y), Offset(x, br.y), strokeWidth = 1f)
-            gx += LegionTabletopGeometry.MM_PER_INCH
+        // SOL PIERRE façon carte SNES : dalles rectangulaires à joints DÉCALÉS
+        // (pas un damier = grille de calcul), teintes pierre sourdes + joints fins.
+        drawRect(BattlePalette.Ground, topLeft = tl, size = matSize)
+        val tileW = maxOf(14f, 44f * scale)
+        val tileH = maxOf(10f, 30f * scale)
+        var ty = tl.y
+        var row = 0
+        while (ty < br.y) {
+            val th = minOf(tileH, br.y - ty)
+            val offset = if (row % 2 == 0) 0f else tileW / 2f   // joints décalés (brique)
+            var tx = tl.x - offset
+            var col = 0
+            while (tx < br.x) {
+                val tw = minOf(tileW, br.x - tx)
+                if (tw > 1f && th > 1f) {
+                    // variation de teinte déterministe (3 pierres).
+                    val v = (row * 7 + col * 3) % 5
+                    val stone = when (v) { 0 -> BattlePalette.TileB; 1 -> BattlePalette.TileA; else -> BattlePalette.Ground }
+                    drawRect(stone, topLeft = Offset(tx + 1f, ty + 1f),
+                        size = androidx.compose.ui.geometry.Size(maxOf(1f, tw - 2f), maxOf(1f, th - 2f)))
+                    // éclat clair en haut à gauche de la dalle (matière).
+                    drawLine(BattlePalette.Parchment.copy(alpha = 0.10f), Offset(tx + 2f, ty + 2f),
+                        Offset(tx + maxOf(2f, tw * 0.5f), ty + 2f), strokeWidth = 1f)
+                }
+                tx += tileW; col++
+            }
+            ty += tileH; row++
         }
-        var gy = -halfMat
-        while (gy <= halfMat) {
-            val y = mm(0f, gy).y
-            if (y in tl.y..br.y) drawLine(LegionColors.Border.copy(alpha = 0.18f), Offset(tl.x, y), Offset(br.x, y), strokeWidth = 1f)
-            gy += LegionTabletopGeometry.MM_PER_INCH
-        }
-        // Double bordure du tapis.
-        drawRect(LegionColors.Accent.copy(alpha = 0.8f), topLeft = tl, size = matSize, style = Stroke(width = 6f))
-        drawRect(LegionColors.Border, topLeft = mm(-halfMat + 4f, -halfMat + 4f), size = androidx.compose.ui.geometry.Size(matSize.width - 8f, matSize.height - 8f), style = Stroke(width = 1.5f))
+        // Cadre bois avec liseré parchemin (plus de doré néon).
+        drawRect(BattlePalette.Wood, topLeft = tl, size = matSize, style = Stroke(width = 8f))
+        drawRect(BattlePalette.WoodLight, topLeft = mm(-halfMat + 5f, -halfMat + 5f),
+            size = androidx.compose.ui.geometry.Size(matSize.width - 10f, matSize.height - 10f), style = Stroke(width = 2f))
+        drawRect(BattlePalette.Parchment, topLeft = mm(-halfMat + 9f, -halfMat + 9f),
+            size = androidx.compose.ui.geometry.Size(matSize.width - 18f, matSize.height - 18f), style = Stroke(width = 1.5f))
 
         // Paysage de la carte de terrain choisie (avant les zones/pions).
         drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
 
-        // Zones de déploiement (12" depuis chaque bord) + lignes de déploiement.
+        // Frontières de déploiement : ruban sombre discret (zones INDICATIVES, voir Map Card).
         val dep = 12f * LegionTabletopGeometry.MM_PER_INCH
-        val dHaut = androidx.compose.ui.geometry.Size(matSize.width, dep * pxPerMm)
-        val dBas = androidx.compose.ui.geometry.Size(matSize.width, dep * pxPerMm)
-        drawRect(LegionColors.Danger.copy(alpha = 0.10f), topLeft = tl, size = dHaut)
-        drawRect(LegionColors.Info.copy(alpha = 0.10f), topLeft = mm(-halfMat, halfMat - dep), size = dBas)
-        val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(12f, 10f), 0f)
         val lineHaut = mm(0f, -halfMat + dep).y
         val lineBas = mm(0f, halfMat - dep).y
-        drawLine(LegionColors.Danger.copy(alpha = 0.55f), Offset(tl.x, lineHaut), Offset(br.x, lineHaut), strokeWidth = 2f, pathEffect = dash)
-        drawLine(LegionColors.Info.copy(alpha = 0.55f), Offset(tl.x, lineBas), Offset(br.x, lineBas), strokeWidth = 2f, pathEffect = dash)
+        val bandH = maxOf(7f, 8.dp.toPx())
+        // Remplissage léger des zones (indicatives) + ruban franc sur la frontière.
+        // HAUTE = ENNEMI (rouge), BASSE = ALLIÉ (bleu).
+        drawRect(Color(0x556A241C), topLeft = tl,
+            size = androidx.compose.ui.geometry.Size(matSize.width, lineHaut - tl.y))
+        drawRect(Color(0x4D2E6FA8), topLeft = Offset(tl.x, lineBas),
+            size = androidx.compose.ui.geometry.Size(matSize.width, br.y - lineBas))
+        drawRect(BattlePalette.TapeOwn, topLeft = Offset(tl.x, lineHaut - bandH/2f),
+            size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
+        drawRect(BattlePalette.TapeOpp, topLeft = Offset(tl.x, lineBas - bandH/2f),
+            size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
 
-        // Zones d'objectif (3 disques sur la ligne médiane, rayon 6").
+        // Objectifs : bornes pierre (losange socle + prisme 2 faces + disque glyphe).
+        // Nombre/position indicatifs — la disposition réelle vient de la Map/Objective Card.
         val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
         for (ox in listOf(-12f, 0f, 12f)) {
             val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
-            drawCircle(LegionColors.Accent.copy(alpha = 0.07f), radius = objR, center = c)
-            drawCircle(LegionColors.Accent.copy(alpha = 0.65f), radius = objR, center = c, style = Stroke(width = 2f, pathEffect = dash))
-            drawCircle(LegionColors.Warning.copy(alpha = 0.7f), radius = 3f, center = c)
+            drawCircle(Color(0x08000000), radius = objR, center = c)  // empreinte discrète
+            val br2 = objR * 0.34f
+            // ombre losange
+            drawPath(androidx.compose.ui.graphics.Path().apply {
+                moveTo(c.x, c.y - br2 + 5f); lineTo(c.x + br2, c.y + 5f)
+                lineTo(c.x, c.y + br2 + 5f); lineTo(c.x - br2, c.y + 5f); close()
+            }, Color(0x5A000000))
+            // prisme 2 faces
+            drawPath(androidx.compose.ui.graphics.Path().apply {
+                moveTo(c.x - br2, c.y); lineTo(c.x, c.y + br2); lineTo(c.x, c.y + br2 - br2*0.7f); lineTo(c.x - br2, c.y - br2*0.7f); close()
+            }, Color(0xFF9A9180))
+            drawPath(androidx.compose.ui.graphics.Path().apply {
+                moveTo(c.x, c.y + br2); lineTo(c.x + br2, c.y); lineTo(c.x + br2, c.y - br2*0.7f); lineTo(c.x, c.y + br2 - br2*0.7f); close()
+            }, Color(0xFF6E6658))
+            // disque sommet + glyphe
+            drawCircle(BattlePalette.Objective, radius = br2 * 0.72f, center = Offset(c.x, c.y - br2*0.7f))
+            drawCircle(BattlePalette.Ink, radius = br2 * 0.72f, center = Offset(c.x, c.y - br2*0.7f), style = Stroke(width = 1f))
+            val g = br2 * 0.3f
+            drawLine(BattlePalette.Ink, Offset(c.x - g, c.y - br2*0.7f - g), Offset(c.x + g, c.y - br2*0.7f + g), strokeWidth = 1.5f)
+            drawLine(BattlePalette.Ink, Offset(c.x + g, c.y - br2*0.7f - g), Offset(c.x - g, c.y - br2*0.7f + g), strokeWidth = 1.5f)
         }
 
-        // Graduations en pouces le long des bords (toutes les 6").
+        // Graduations discrètes sur le bord seul (toutes les 6").
         for (inch in -18..18 step 6) {
             val x = mm(inch * LegionTabletopGeometry.MM_PER_INCH, 0f).x
             val y = mm(0f, inch * LegionTabletopGeometry.MM_PER_INCH).y
-            drawLine(LegionColors.TextSecondary, Offset(x, tl.y), Offset(x, tl.y + 10f), strokeWidth = 1.5f)
-            drawLine(LegionColors.TextSecondary, Offset(x, br.y - 10f), Offset(x, br.y), strokeWidth = 1.5f)
-            drawLine(LegionColors.TextSecondary, Offset(tl.x, y), Offset(tl.x + 10f, y), strokeWidth = 1.5f)
-            drawLine(LegionColors.TextSecondary, Offset(br.x - 10f, y), Offset(br.x, y), strokeWidth = 1.5f)
+            drawLine(BattlePalette.Grout, Offset(x, tl.y + 10f), Offset(x, tl.y + 18f), strokeWidth = 1.5f)
+            drawLine(BattlePalette.Grout, Offset(x, br.y - 18f), Offset(x, br.y - 10f), strokeWidth = 1.5f)
+            drawLine(BattlePalette.Grout, Offset(tl.x + 10f, y), Offset(tl.x + 18f, y), strokeWidth = 1.5f)
+            drawLine(BattlePalette.Grout, Offset(br.x - 18f, y), Offset(br.x - 10f, y), strokeWidth = 1.5f)
         }
 
         // Légendes CENTRÉES avec fond opaque : lisibles même si les bords du tapis
         // sortent du cadre, et jamais barrées par la ligne de démarcation.
-        val legendStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Danger)
+        val legendStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = Color(0xFF6A241C))
         fun drawCenteredLegend(text: String, y: Float, st: androidx.compose.ui.text.TextStyle) {
             val m = textMeasurer.measure(text, st)
             val w = m.size.width.toFloat() + 16.dp.toPx()
             val h = m.size.height.toFloat() + 8.dp.toPx()
             val left = center.x - w / 2f
-            drawRoundRect(LegionColors.Background.copy(alpha = 0.94f), topLeft = Offset(left, y),
-                size = androidx.compose.ui.geometry.Size(maxOf(1f, w), h), cornerRadius = CornerRadius(6.dp.toPx()))
+            drawRoundRect(BattlePalette.Parchment, topLeft = Offset(left, y),
+                size = androidx.compose.ui.geometry.Size(maxOf(1f, w), h), cornerRadius = CornerRadius(4.dp.toPx()))
+            drawRoundRect(BattlePalette.Wood, topLeft = Offset(left, y),
+                size = androidx.compose.ui.geometry.Size(maxOf(1f, w), h), cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(width = 1f))
             drawText(textMeasurer, text, topLeft = Offset(left + 8.dp.toPx(), y + 4.dp.toPx()),
                 size = Size(maxOf(1f, w - 16.dp.toPx()), maxOf(1f, h)), style = st)
         }
         // Légendes placées au bord du tapis, hors de la zone des pions (ligne médiane).
         val legendH = textMeasurer.measure(territoryEnemy, legendStyle).size.height.toFloat()
         drawCenteredLegend(territoryEnemy, tl.y + 58.dp.toPx(), legendStyle) // décalée sous les 2 notes (zone + couvert)
-        drawCenteredLegend(territoryAllied, br.y - 36.dp.toPx() - legendH, legendStyle.copy(color = LegionColors.Info))
+        drawCenteredLegend(territoryAllied, br.y - 36.dp.toPx() - legendH, legendStyle.copy(color = BattlePalette.TapeOpp))
         // Indication honnête : bornes indicatives, le territoire réel vient de la Map Card.
-        val noteStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, color = LegionColors.TextSecondary)
+        val noteStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, color = BattlePalette.Ink)
         val note = territoryNote
         val noteW = textMeasurer.measure(note, noteStyle).size.width.toFloat() + 16.dp.toPx()
         // Note placée juste sous la bordure HAUTE du tapis, loin des pions (ligne médiane).
         val noteY = tl.y + 8.dp.toPx()
-        drawRoundRect(LegionColors.Background.copy(alpha = 0.9f), topLeft = Offset(center.x - noteW/2f, noteY),
-            size = androidx.compose.ui.geometry.Size(noteW, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
+        drawRoundRect(BattlePalette.Parchment, topLeft = Offset(center.x - noteW/2f, noteY),
+            size = androidx.compose.ui.geometry.Size(noteW, 22.dp.toPx()), cornerRadius = CornerRadius(4.dp.toPx()))
         drawText(textMeasurer, note, topLeft = Offset(center.x - noteW/2f + 8.dp.toPx(), noteY + 2.dp.toPx()),
             size = Size(maxOf(1f, noteW - 16.dp.toPx()), 18.dp.toPx()), style = noteStyle)
         // Note terrain : couvert = valeur PROPOSEE a valider en pre-game (rulebook:2256-2261).
         if (terrainCard != null && terrainNote.isNotBlank()) {
             val tnW = textMeasurer.measure(terrainNote, noteStyle).size.width.toFloat() + 16.dp.toPx()
             val tnY = noteY + 22.dp.toPx()
-            drawRoundRect(LegionColors.Background.copy(alpha = 0.9f), topLeft = Offset(center.x - tnW/2f, tnY),
-                size = androidx.compose.ui.geometry.Size(tnW, 20.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
+            drawRoundRect(BattlePalette.Parchment, topLeft = Offset(center.x - tnW/2f, tnY),
+                size = androidx.compose.ui.geometry.Size(tnW, 20.dp.toPx()), cornerRadius = CornerRadius(4.dp.toPx()))
             drawText(textMeasurer, terrainNote, topLeft = Offset(center.x - tnW/2f + 8.dp.toPx(), tnY + 1.dp.toPx()),
                 size = Size(maxOf(1f, tnW - 16.dp.toPx()), 18.dp.toPx()), style = noteStyle)
         }
@@ -696,25 +770,39 @@ private fun DrawScope.drawLegionBoard(
                 size = androidx.compose.ui.geometry.Size(r * 3.2f, r * 3.2f),
             )
         }
-        // Ombre portée : donne du relief au socle (effet figurine sur tapis).
-        drawCircle(LegionColors.Background.copy(alpha = 0.55f), radius = r, center = Offset(c.x + 4f, c.y + 5f))
+        // Jeton bois ÉPAIS : ombre portée + chant sombre décalé + tranche claire.
+        drawCircle(Color(0x99000000), radius = r, center = Offset(c.x + 5f, c.y + 6f))
+        drawCircle(Color(0xFF3A2A1B), radius = r, center = Offset(c.x + 1.5f, c.y + 2.5f))  // chant (épaisseur)
         val bmp = p.imagePath?.let { cardBitmaps[it] }
         if (bmp != null) {
-            // Miniature de carte légale (déjà dans l'app) dessinée en disque sur le socle.
             val side = maxOf(1f, r * 2f)
             drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset((c.x - r).toInt(), (c.y - r).toInt()), dstSize = androidx.compose.ui.unit.IntSize(side.toInt().coerceAtLeast(1), side.toInt().coerceAtLeast(1)))
         } else {
-            drawCircle(base, radius = r, center = c)
+            drawCircle(BattlePalette.CoinWood, radius = r, center = c)
+            val troopCol = if (p.faction.isNotBlank()) factionColor(p.faction)
+                           else if (p.isOpp) BattlePalette.TapeOwn else BattlePalette.TapeOpp
+            drawTroopSilhouette(c.x, c.y - r * 0.08f, r * 0.85f, troopCol)
         }
-        drawCircle(
-            if (p.id == selected?.id) LegionColors.Accent
-            else if (p.activated) LegionColors.Success
-            else LegionColors.Border,
-            radius = r, center = c, style = Stroke(width = if (p.id == selected?.id) 3f else 2f),
-        )
-        // Couvert NON directionnel (rulebook:2229-2260) : anneau neutre, pas un secteur.
+        // Liseré d'état : 1 seul trait, jamais d'anneau multiple.
+        val ring = when {
+            p.id == selected?.id -> Color(0xFFFFD21A)   // or franc, distinct du parchemin
+            p.activated -> Color(0xFF6FBF7A)            // vert activé franc
+            p.defeated -> BattlePalette.Defeated
+            p.isOpp -> Color(0xFFC0392B)                // rouge ennemi franc (≠ bleu couvert)
+            else -> Color(0xFF2E6FA8)                   // bleu allié franc (≠ bleu couvert clair)
+        }
+        drawCircle(ring, radius = r, center = c, style = Stroke(width = if (p.id == selected?.id) 3f else 2f))
+        // Liseré de chant clair (bois taillé) juste à l'intérieur du pourtour.
+        drawCircle(BattlePalette.Parchment.copy(alpha = 0.55f), radius = r - 2.dp.toPx(), center = c,
+            style = Stroke(width = maxOf(1f, 1.dp.toPx())))
+        // Couvert NON directionnel (rulebook:2229-2260) : anneau épaisseur=level ;
+        // le chiffre 1/2 est dans le label (☂n) pour le daltonisme.
         if (p.cover > 0 && !p.defeated) {
-            drawCircle(LegionColors.Warning, radius = r + 4.dp.toPx(), center = c, style = Stroke(width = (2 * p.cover).dp.toPx()))
+            val cc = if (p.cover >= 2) BattlePalette.CoverHeavy else BattlePalette.CoverLight
+            val covW = (2 * p.cover).dp.toPx()   // épaisseur = niveau de couvert (rulebook:2262)
+            val covR = r + 5.dp.toPx()
+            drawCircle(Color(0x99000000), radius = covR, center = c, style = Stroke(width = covW + 1.5f))
+            drawCircle(cc, radius = covR, center = c, style = Stroke(width = covW))
         }
     }
     // ── 2e passe : étiquettes AU-DESSUS de tous les socles, sans chevauchement ──
@@ -722,10 +810,10 @@ private fun DrawScope.drawLegionBoard(
         // Nom COURT (sans l'upgrade entre parenthèses) + PV explicite, largeur bornée.
         val label = formatPawnLabel(p)
         val labelStyle = TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold,
-            color = if (p.faction.isNotBlank()) factionColor(p.faction)
-                    else if (p.isOpp) LegionColors.Danger else LegionColors.TextPrimary)
-        val labelW = minOf(textMeasurer.measure(label, labelStyle).size.width.toFloat() + 8.dp.toPx(), 0.42f * size.width)
-        val labelH = 18.dp.toPx()
+            color = BattlePalette.Ink)
+        // +20dp : 11 pastille camp + 4 marge gauche texte + 5 marge droite (évite "PV" tronqué).
+        val labelW = minOf(textMeasurer.measure(label, labelStyle).size.width.toFloat() + 28.dp.toPx(), 0.60f * size.width)
+        val labelH = 19.dp.toPx()
         val gap = 4.dp.toPx()
         // 4 positions essayées dans l'ordre : haut, bas, gauche, droite.
         val candidates = listOf(
@@ -747,29 +835,48 @@ private fun DrawScope.drawLegionBoard(
         // Repli : première position valide, sinon le Haut par défaut (toujours affiché).
         val pos = candidates.firstOrNull { fits(it) } ?: candidates[0]
         val finalRect = androidx.compose.ui.geometry.Rect(pos.x, pos.y, pos.x + labelW, pos.y + labelH)
+        // Plaquette parchemin ancrée au socle (anti-HUD) : fond clair, contour bois.
         drawRoundRect(
-            color = LegionColors.Background.copy(alpha = 0.92f),
+            color = BattlePalette.ParchmentBright,
             topLeft = pos,
             size = Size(labelW, labelH),
-            cornerRadius = CornerRadius(6.dp.toPx()),
+            cornerRadius = CornerRadius(4.dp.toPx()),
         )
+        drawRoundRect(
+            color = BattlePalette.Wood,
+            topLeft = pos,
+            size = Size(labelW, labelH),
+            cornerRadius = CornerRadius(4.dp.toPx()),
+            style = Stroke(width = 1f),
+        )
+        // Pastille de camp : couleur + LETTRE A/E (pas la couleur seule — daltonisme).
+        val campCol = if (p.isOpp) Color(0xFFC0392B) else Color(0xFF2E6FA8)
+        val campLetter = if (p.isOpp) "E" else "A"
+        val pr = maxOf(6f, 7.dp.toPx())
+        drawCircle(campCol, radius = pr, center = Offset(pos.x + pr + 2.dp.toPx(), pos.y + labelH/2f))
+        val campStyle = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        drawText(textMeasurer, campLetter,
+            topLeft = Offset(pos.x + pr + 2.dp.toPx() - pr*0.5f, pos.y + labelH/2f - pr*0.7f),
+            size = Size(maxOf(1f, pr*2f), maxOf(1f, pr*1.6f)), style = campStyle)
         drawText(
             textMeasurer = textMeasurer,
             text = label,
-            topLeft = Offset(pos.x + 4.dp.toPx(), pos.y),
-            size = Size(maxOf(1f, labelW - 8.dp.toPx()), labelH),
+            topLeft = Offset(pos.x + 2*pr + 5.dp.toPx(), pos.y),
+            size = Size(maxOf(1f, labelW - (2*pr + 7.dp.toPx())), labelH),
             style = labelStyle,
         )
         drawnLabels.add(finalRect)
     }
     // Badges OBJ dessinés EN DERNIER : au-dessus des socles, jamais masqués.
-    val objLabelStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = LegionColors.Accent)
+    val objLabelStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = BattlePalette.Wood)
     for ((i, ox) in listOf(-12f, 0f, 12f).withIndex()) {
         val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
         val tag = objPrefix.format(i + 1)
         val tw = textMeasurer.measure(tag, objLabelStyle).size.width.toFloat() + 12.dp.toPx()
-        drawRoundRect(LegionColors.Background.copy(alpha = 0.95f), topLeft = Offset(c.x - tw/2f, c.y - 11.dp.toPx()),
-            size = androidx.compose.ui.geometry.Size(tw, 22.dp.toPx()), cornerRadius = CornerRadius(6.dp.toPx()))
+        drawRoundRect(BattlePalette.ParchmentBright, topLeft = Offset(c.x - tw/2f, c.y - 11.dp.toPx()),
+            size = androidx.compose.ui.geometry.Size(tw, 22.dp.toPx()), cornerRadius = CornerRadius(4.dp.toPx()))
+        drawRoundRect(BattlePalette.Wood, topLeft = Offset(c.x - tw/2f, c.y - 11.dp.toPx()),
+            size = androidx.compose.ui.geometry.Size(tw, 22.dp.toPx()), cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(width = 1f))
         drawText(textMeasurer, tag, topLeft = Offset(c.x - tw/2f + 6.dp.toPx(), c.y - 8.dp.toPx()),
             size = Size(maxOf(1f, tw - 12.dp.toPx()), 20.dp.toPx()), style = objLabelStyle)
     }

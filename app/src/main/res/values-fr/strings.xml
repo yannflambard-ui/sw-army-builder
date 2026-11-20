@@ -306,7 +306,7 @@
     <string name="rail_map">CARTE DES OBJECTIFS</string>
     <string name="rail_secondary">OBJECTIF SECONDAIRE</string>
     <string name="rail_round">MANCHE</string>
-    <string name="rail_vp">PV</string>
+    <string name="rail_vp">SCORE</string>
     <string name="terrain_title">Carte de terrain</string>
     <string name="terrain_monument">Place monumentale</string>
     <string name="terrain_ruins">Ruines desertiques</string>

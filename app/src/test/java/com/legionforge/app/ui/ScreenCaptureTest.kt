@@ -101,7 +101,7 @@ class LegionTabletopCaptureTest {
             LegionPawn("a2", "General Grievous", 40f, -40f, baseSize = "medium", maxWounds = 5, wounds = 3, speed = 2, canRotate = true, imagePath = "legion_tokens/legion_v2_lhq2_general-grievous-wheel-bike-warlord.webp"),
             LegionPawn("a3", "AT-TE", 90f, -120f, baseSize = "large", maxWounds = 8, wounds = 8, speed = 1, canRotate = true),
             LegionPawn("b1", "Clone Troopers", -40f, 90f, baseSize = "small", maxWounds = 4, wounds = 2, speed = 2, isOpp = true, cover = 1),
-            LegionPawn("b2", "Captain Rex", 60f, 60f, baseSize = "medium", maxWounds = 4, wounds = 4, speed = 2, isOpp = true),
+            LegionPawn("b2", "Captain Rex", 90f, 70f, baseSize = "medium", maxWounds = 4, wounds = 4, speed = 2, isOpp = true, cover = 2),
         )
         captureRoboImage("src/test/snapshots/legion-tabletop-411x891.png") {
             LegionForgeTheme {
