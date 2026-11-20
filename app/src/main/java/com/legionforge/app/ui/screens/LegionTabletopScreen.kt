@@ -123,8 +123,9 @@ fun LegionTabletopScreen(
     missionCards: Map<String, LegionBattleCard?> = emptyMap(),
     missionBitmaps: Map<String, androidx.compose.ui.graphics.ImageBitmap> = emptyMap(),
     onPickMissionCard: ((String) -> Unit)? = null,
+    forceBlockedDrop: Boolean = false, // test uniquement : force le feedback collision
 ) {
-    var selectedId by remember { mutableStateOf<String?>(null) }
+    var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var tool by remember { mutableStateOf(LegionTool.SELECT) }
     // Viewport synchrone (PAS via onSizeChanged, non déterministe en CI Roborazzi).
@@ -149,6 +150,10 @@ fun LegionTabletopScreen(
     var dragPan by remember { mutableStateOf<Offset?>(null) }
     var measureEnd by remember { mutableStateOf<Offset?>(null) }
     var showDice by remember { mutableStateOf(false) }
+    // Feedback collision : true pendant le drag si le drop serait illégal (mur IMPASSABLE).
+    var blockedDrop by remember { mutableStateOf(forceBlockedDrop) }
+    // Dernière position MM légale du pion en cours de drag (retour si drop bloqué).
+    var lastValidMm by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     val density = LocalDensity.current
     val appCtx = androidx.compose.ui.platform.LocalContext.current.applicationContext
     val cardBitmaps = remember(pawns) {
@@ -191,6 +196,7 @@ fun LegionTabletopScreen(
     val liveTool by rememberUpdatedState(tool)
     val liveOnMove by rememberUpdatedState(onMove)
     val liveOnOpenPlay by rememberUpdatedState(onOpenPlay)
+    val liveTerrain by rememberUpdatedState(terrainCard)
     fun toScreenLive(p: LegionPawn): Offset = Offset(
         livePan.x + p.xMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
         livePan.y + p.yMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
@@ -284,7 +290,19 @@ fun LegionTabletopScreen(
                                 val dp = dragPawnId?.let { id -> livePawns.firstOrNull { it.id == id } }
                                 if (dp != null && liveTool == LegionTool.SELECT) {
                                     val (mx, my) = screenToMmLive(c.position)
-                                    liveOnMove(dp.id, mx, my, dp.headingDeg)
+                                    val rMm = LegionTabletopGeometry.baseRadiusMm(dp.baseSize)
+                                    val pieces = liveTerrain?.pieces ?: emptyList()
+                                    val blocked = com.legionforge.app.domain.LegionTerrainCollision.isDropBlocked(
+                                        mx, my, rMm, pieces)
+                                    blockedDrop = blocked
+                                    // IMPASSABLE : REFUSER le drop, garder la dernière position
+                                    // légale (rulebook:846-848). Pas de snap au bord.
+                                    if (!blocked) {
+                                        liveOnMove(dp.id, mx, my, dp.headingDeg)
+                                        lastValidMm = mx to my
+                                    } else {
+                                        lastValidMm?.let { (lx, ly) -> liveOnMove(dp.id, lx, ly, dp.headingDeg) }
+                                    }
                                 } else {
                                     pan = livePan + delta
                                 }
@@ -314,6 +332,8 @@ fun LegionTabletopScreen(
                             }
                             if (dragPan != null) pan = dragPan
                             dragPan = null
+                            blockedDrop = forceBlockedDrop
+                            lastValidMm = null
                             break
                         }
                     }
@@ -321,7 +341,7 @@ fun LegionTabletopScreen(
             }
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer,
-                ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote)
+                ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote, blockedDrop)
         }
 
         // ── Barre haute 48dp ─────────────────────────────────────────────────
@@ -457,6 +477,24 @@ fun LegionTabletopScreen(
                 )
             }
         }
+
+        // Toast de feedback (TOUT EN DESSUS) : drop refusé par un bâtiment IMPASSABLE.
+        if (blockedDrop) {
+            Surface(
+                Modifier.align(Alignment.TopCenter).padding(top = 96.dp),
+                shape = RoundedCornerShape(LegionDims.Radius),
+                color = Color(0xFF8E1B14),
+                shadowElevation = 8.dp,
+            ) {
+                Text(
+                    stringResource(R.string.tabletop_placement_blocked),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                )
+            }
+        }
     }
 }
 
@@ -565,6 +603,7 @@ private fun DrawScope.drawLegionBoard(
     objPrefix: String,
     terrainCard: TerrainCard? = null,
     terrainNote: String = "",
+    blockedDrop: Boolean = false,
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
     val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
@@ -608,15 +647,36 @@ private fun DrawScope.drawLegionBoard(
             }
             ty += tileH; row++
         }
+        // GRAIN DE SOL 100% procédural (zéro asset) : points de sable/pierre
+        // déterministes sur une grille, alpha faible. Appliqué AU SOL, avant tout volume.
+        val grainStep = maxOf(10f, 14f / scale.coerceAtLeast(0.25f))
+        var gy = tl.y + grainStep / 2f
+        var gi = 0
+        while (gy < br.y) {
+            var gx = tl.x + grainStep / 2f
+            var gj = 0
+            while (gx < br.x) {
+                // bruit déterministe par hash de position (pas de Random non déterministe en CI).
+                val h = ((gi * 73856093) xor (gj * 19349663)) and 0x7fffffff
+                if (h % 5 == 0) {
+                    val jx = gx + ((h shr 4) % grainStep.toInt().coerceAtLeast(1)) * 0.3f
+                    val jy = gy + ((h shr 8) % grainStep.toInt().coerceAtLeast(1)) * 0.3f
+                    val gr = maxOf(0.8f, 1.3f * scale)
+                    drawCircle(Color(0x14000000), radius = gr, center = Offset(jx, jy))
+                } else if (h % 7 == 0) {
+                    val gr = maxOf(0.8f, 1f * scale)
+                    drawCircle(Color(0x14FFF0D0), radius = gr, center = Offset(gx, gy))
+                }
+                gx += grainStep; gj++
+            }
+            gy += grainStep; gi++
+        }
         // Cadre bois avec liseré parchemin (plus de doré néon).
         drawRect(BattlePalette.Wood, topLeft = tl, size = matSize, style = Stroke(width = 8f))
         drawRect(BattlePalette.WoodLight, topLeft = mm(-halfMat + 5f, -halfMat + 5f),
             size = androidx.compose.ui.geometry.Size(matSize.width - 10f, matSize.height - 10f), style = Stroke(width = 2f))
         drawRect(BattlePalette.Parchment, topLeft = mm(-halfMat + 9f, -halfMat + 9f),
             size = androidx.compose.ui.geometry.Size(matSize.width - 18f, matSize.height - 18f), style = Stroke(width = 1.5f))
-
-        // Paysage de la carte de terrain choisie (avant les zones/pions).
-        drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
 
         // Frontières de déploiement : ruban sombre discret (zones INDICATIVES, voir Map Card).
         val dep = 12f * LegionTabletopGeometry.MM_PER_INCH
@@ -634,32 +694,32 @@ private fun DrawScope.drawLegionBoard(
         drawRect(BattlePalette.TapeOpp, topLeft = Offset(tl.x, lineBas - bandH/2f),
             size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
 
-        // Objectifs : bornes pierre (losange socle + prisme 2 faces + disque glyphe).
-        // Nombre/position indicatifs — la disposition réelle vient de la Map/Objective Card.
+        // Objectifs : JETON AU SOL (anneau or sourd + croix), jamais un volume opaque.
+        // Les bâtiments dessinés après recouvrent le jeton s'ils le chevauchent —
+        // purement cosmétique (les vrais POI viennent de la Map Card, rulebook:391-401).
+        // Nombre/position INDICATIFS (étiquette "voir Map Card" plus bas).
         val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
+        val objStroke = maxOf(2f, 2.dp.toPx())
         for (ox in listOf(-12f, 0f, 12f)) {
             val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
-            drawCircle(Color(0x08000000), radius = objR, center = c)  // empreinte discrète
-            val br2 = objR * 0.34f
-            // ombre losange
-            drawPath(androidx.compose.ui.graphics.Path().apply {
-                moveTo(c.x, c.y - br2 + 5f); lineTo(c.x + br2, c.y + 5f)
-                lineTo(c.x, c.y + br2 + 5f); lineTo(c.x - br2, c.y + 5f); close()
-            }, Color(0x5A000000))
-            // prisme 2 faces
-            drawPath(androidx.compose.ui.graphics.Path().apply {
-                moveTo(c.x - br2, c.y); lineTo(c.x, c.y + br2); lineTo(c.x, c.y + br2 - br2*0.7f); lineTo(c.x - br2, c.y - br2*0.7f); close()
-            }, Color(0xFF9A9180))
-            drawPath(androidx.compose.ui.graphics.Path().apply {
-                moveTo(c.x, c.y + br2); lineTo(c.x + br2, c.y); lineTo(c.x + br2, c.y - br2*0.7f); lineTo(c.x, c.y + br2 - br2*0.7f); close()
-            }, Color(0xFF6E6658))
-            // disque sommet + glyphe
-            drawCircle(BattlePalette.Objective, radius = br2 * 0.72f, center = Offset(c.x, c.y - br2*0.7f))
-            drawCircle(BattlePalette.Ink, radius = br2 * 0.72f, center = Offset(c.x, c.y - br2*0.7f), style = Stroke(width = 1f))
-            val g = br2 * 0.3f
-            drawLine(BattlePalette.Ink, Offset(c.x - g, c.y - br2*0.7f - g), Offset(c.x + g, c.y - br2*0.7f + g), strokeWidth = 1.5f)
-            drawLine(BattlePalette.Ink, Offset(c.x + g, c.y - br2*0.7f - g), Offset(c.x - g, c.y - br2*0.7f + g), strokeWidth = 1.5f)
+            // Halo sombre pour détacher le trait du sol.
+            drawCircle(Color(0x33000000), radius = objR, center = c,
+                style = Stroke(width = objStroke + 2f))
+            // Anneau or translucide (pas de disque plein).
+            drawCircle(BattlePalette.Objective.copy(alpha = 0.55f), radius = objR, center = c,
+                style = Stroke(width = objStroke))
+            // Croix fine au centre (repère d'objectif, pas une unité détruite).
+            val g = objR * 0.16f
+            drawLine(BattlePalette.Objective.copy(alpha = 0.7f),
+                Offset(c.x - g, c.y - g), Offset(c.x + g, c.y + g), strokeWidth = objStroke)
+            drawLine(BattlePalette.Objective.copy(alpha = 0.7f),
+                Offset(c.x + g, c.y - g), Offset(c.x - g, c.y + g), strokeWidth = objStroke)
         }
+
+        // Paysage de la carte de terrain (BÂTIMENTS) dessiné APRÈS les objectifs au sol :
+        // les volumes recouvrent les jetons d'objectif qui les chevauchent (cosmétique,
+        // rulebook:391-401 — les vrais POI viennent de la Map Card), jamais l'inverse.
+        drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
 
         // Graduations discrètes sur le bord seul (toutes les 6").
         for (inch in -18..18 step 6) {
@@ -792,6 +852,12 @@ private fun DrawScope.drawLegionBoard(
             else -> Color(0xFF2E6FA8)                   // bleu allié franc (≠ bleu couvert clair)
         }
         drawCircle(ring, radius = r, center = c, style = Stroke(width = if (p.id == selected?.id) 3f else 2f))
+        // Feedback collision : halo rouge sur le pion dont le drop est refusé (mur IMPASSABLE).
+        if (blockedDrop && p.id == selected?.id) {
+            drawCircle(Color(0xFFFF3B30).copy(alpha = 0.30f), radius = r + 8.dp.toPx(), center = c)
+            drawCircle(Color(0xFFFF3B30), radius = r + 3.dp.toPx(), center = c,
+                style = Stroke(width = maxOf(2f, 2.dp.toPx())))
+        }
         // Liseré de chant clair (bois taillé) juste à l'intérieur du pourtour.
         drawCircle(BattlePalette.Parchment.copy(alpha = 0.55f), radius = r - 2.dp.toPx(), center = c,
             style = Stroke(width = maxOf(1f, 1.dp.toPx())))

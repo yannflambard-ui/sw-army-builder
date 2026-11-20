@@ -383,12 +383,40 @@ private fun DrawScope.roof(tl: Offset, w: Float, h: Float, base: Color, dark: Co
     val gBottom = Offset(cx, cy + hh * k)
     val gLeft = Offset(cx - hw, cy)
 
-    // 1) Ombre portée au sol (losange décalé bas-droite, net).
+    // 1) Ombre portée au sol (losange décalé bas-droite, net) — TOUJOURS en fond.
     val sh = Offset(maxOf(4f, 5.dp.toPx()), maxOf(3f, 3.dp.toPx()))
     drawPath(Path().apply {
         moveTo(gTop.x + sh.x, gTop.y + sh.y); lineTo(gRight.x + sh.x, gRight.y + sh.y)
         lineTo(gBottom.x + sh.x, gBottom.y + sh.y); lineTo(gLeft.x + sh.x, gLeft.y + sh.y); close()
     }, Color(0x5A000000))
+
+    // 1b) SOCLE au sol (losange sombre) — dessiné APRÈS l'ombre, donc visible.
+    // Légèrement élargi pour dépasser sous les murs = ancrage net, plus de pied flottant.
+    val sGrow = 1.12f
+    fun soclePt(p: Offset) = Offset(cx + (p.x - cx) * sGrow, cy + (p.y - cy) * sGrow)
+    val sTop = soclePt(gTop); val sRight = soclePt(gRight)
+    val sBottom = soclePt(gBottom); val sLeft = soclePt(gLeft)
+    val soclePath = Path().apply {
+        moveTo(sTop.x, sTop.y); lineTo(sRight.x, sRight.y)
+        lineTo(sBottom.x, sBottom.y); lineTo(sLeft.x, sLeft.y); close()
+    }
+    drawPath(soclePath, darken(base, 0.5f))
+    drawPath(soclePath, Color(0x88000000), style = Stroke(width = maxOf(1.5f, 1.5.dp.toPx())))
+
+    // 1c) RUBBLE : 3 petits débris sourds au pied (ancrage « based terrain »).
+    val rBase = minOf(w, h) * 0.05f
+    drawPath(Path().apply {
+        moveTo(gLeft.x - rBase * 0.5f, gLeft.y + rBase * 0.2f)
+        lineTo(gLeft.x - rBase * 1.4f, gLeft.y + rBase * 0.9f)
+        lineTo(gLeft.x - rBase * 0.3f, gLeft.y + rBase * 1.1f); close()
+    }, darken(base, 0.4f))
+    drawPath(Path().apply {
+        moveTo(gRight.x + rBase * 0.4f, gRight.y + rBase * 0.3f)
+        lineTo(gRight.x + rBase * 1.5f, gRight.y + rBase)
+        lineTo(gRight.x + rBase * 0.6f, gRight.y + rBase * 1.2f); close()
+    }, darken(base, 0.48f))
+    drawCircle(darken(base, 0.35f), radius = maxOf(1f, rBase * 0.5f),
+        center = Offset(gBottom.x + rBase * 0.8f, gBottom.y + rBase * 0.6f))
 
     // Coins du HAUT DES MURS = coins du socle remontés de wallH (mêmes x).
     val eTop = Offset(cx, cy - hh * k - wallH)
@@ -429,11 +457,35 @@ private fun DrawScope.roof(tl: Offset, w: Float, h: Float, base: Color, dark: Co
     drawPath(rightSlope, lighten(base, 0.06f))
     drawLine(lighten(base, 0.55f), rA, rB, strokeWidth = maxOf(1.5f, 1.5.dp.toPx()))
 
-    // 4) Porte sombre sur la face gauche + soubassement.
+    // 4) Porte sombre sur la face gauche.
     val doorCx = (gLeft.x + gBottom.x) / 2f
-    val doorCy = (gLeft.y + gBottom.y) / 2f - wallH * 0.3f
-    drawRect(Color(0xFF2A2018), topLeft = Offset(doorCx - w * 0.06f, doorCy),
+    // Mur = de gLeft/gBottom (bas) à eLeft/eBottom (haut), hauteur wallH.
+    // PorteEntièrement DANS le mur : haut à -0.80·wallH, hauteur 0.55·wallH → bas -0.25·wallH.
+    val doorTop = (gLeft.y + gBottom.y) / 2f - wallH * 0.80f
+    drawRect(Color(0xFF2A2018), topLeft = Offset(doorCx - w * 0.06f, doorTop),
         size = Size(maxOf(1.5f, w * 0.12f), maxOf(2f, wallH * 0.55f)))
+
+    // 4b) SOUBASSEMENT : bande sombre sur le bas des 2 faces (la « matière » qui
+    // manquait au placeholder). Interpolation le long des murs, hauteur ~22% de wallH.
+    val plinthT = 0.22f
+    fun lerp(a: Offset, b: Offset, t: Float) = Offset(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+    val gLeftP = lerp(eLeft, gLeft, plinthT); val gBottomP = lerp(eBottom, gBottom, plinthT)
+    val gRightP = lerp(eRight, gRight, plinthT)
+    drawPath(Path().apply {
+        moveTo(gLeft.x, gLeft.y); lineTo(gBottom.x, gBottom.y)
+        lineTo(gBottomP.x, gBottomP.y); lineTo(gLeftP.x, gLeftP.y); close()
+    }, darken(base, 0.42f))
+    drawPath(Path().apply {
+        moveTo(gBottom.x, gBottom.y); lineTo(gRight.x, gRight.y)
+        lineTo(gRightP.x, gRightP.y); lineTo(gBottomP.x, gBottomP.y); close()
+    }, darken(darken(base, 0.3f), 0.42f))
+
+    // 4c) MATIÈRE : 2 traits de panneau sur le versant clair (dry-brush sourd),
+    // jamais de grille de fenêtres (anti-coloriage). Couleur = toit éclairci.
+    val seam = lighten(base, 0.10f)
+    val seamW = maxOf(1f, 1.dp.toPx())
+    drawLine(seam, lerp(eLeft, rA, 0.42f), lerp(eBottom, rB, 0.42f), seamW)
+    drawLine(seam, lerp(eLeft, rA, 0.68f), lerp(eBottom, rB, 0.68f), seamW)
     drawLine(darken(base, 0.5f), gLeft, gBottom, strokeWidth = maxOf(2f, 2.dp.toPx()))
     drawLine(darken(base, 0.5f), gBottom, gRight, strokeWidth = maxOf(2f, 2.dp.toPx()))
 
