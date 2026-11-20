@@ -2,12 +2,16 @@ package com.legionforge.app.ui
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
+import coil.ImageLoader
+import coil.compose.LocalImageLoader
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.legionforge.app.domain.LegionMissionBuilder
 import com.legionforge.app.ui.screens.LegionBattleCard
 import com.legionforge.app.ui.screens.MissionBuilderSheetV2
 import com.legionforge.app.ui.screens.loadBattleCards
 import com.legionforge.app.ui.theme.LegionForgeTheme
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.CompositionLocalProvider
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -30,7 +34,11 @@ class MissionBuilderCaptureTest {
     }
 
     private fun render(name: String, revealed: Map<String, String>, blue: String?, modsLeft: Map<String, Int>, modsTurn: String) {
+        val ctx = ApplicationProvider.getApplicationContext<Application>()
+        // Coil synchrone sous Robolectric : évite le rendu partiel des images (flaky snapshots).
+        val syncLoader = ImageLoader.Builder(ctx).dispatcher(Dispatchers.Main.immediate).build()
         captureRoboImage("src/test/snapshots/mission-builder-$name.png") {
+            CompositionLocalProvider(LocalImageLoader provides syncLoader) {
             LegionForgeTheme {
                 MissionBuilderSheetV2(
                     battleCards = cards, battleDeck = deck,
@@ -40,6 +48,7 @@ class MissionBuilderCaptureTest {
                     onRollBlue = {}, onInitialReveal = { _ -> }, onMod = { _, _ -> },
                     onZoom = { _, _ -> }, onStart = {}, onClose = {},
                 )
+            }
             }
         }
     }
