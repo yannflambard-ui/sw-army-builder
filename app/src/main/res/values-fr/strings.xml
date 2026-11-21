@@ -326,4 +326,14 @@
     <string name="terrain_jakku">Jakku</string>
     <string name="terrain_bespin">Bespin</string>
     <string name="terrain_dagobah">Dagobah</string>
+    <string name="battlemat_none">Plateau vectoriel</string>
+    <string name="battlemat_tatooine">Tatooine</string>
+    <string name="battlemat_hoth">Hoth</string>
+    <string name="battlemat_endor">Endor</string>
+    <string name="battlemat_scarif">Scarif</string>
+    <string name="battlemat_naboo">Naboo</string>
+    <string name="battlemat_geonosis">Géonosis</string>
+    <string name="battlemat_tactical">Couche tactique</string>
+    <string name="battlemat_title">Choisir un tapis</string>
+    <string name="battlemat_change_hint">Manche %1$d · toucher pour changer</string>
 </resources>

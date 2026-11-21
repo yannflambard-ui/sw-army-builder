@@ -326,4 +326,14 @@
     <string name="terrain_jakku">Jakku</string>
     <string name="terrain_bespin">Bespin</string>
     <string name="terrain_dagobah">Dagobah</string>
+    <string name="battlemat_none">Vektorplatte</string>
+    <string name="battlemat_tatooine">Tatooine</string>
+    <string name="battlemat_hoth">Hoth</string>
+    <string name="battlemat_endor">Endor</string>
+    <string name="battlemat_scarif">Scarif</string>
+    <string name="battlemat_naboo">Naboo</string>
+    <string name="battlemat_geonosis">Geonosis</string>
+    <string name="battlemat_tactical">Taktische Ebene</string>
+    <string name="battlemat_title">Kampfplatte wählen</string>
+    <string name="battlemat_change_hint">Runde %1$d · tippen zum Wechseln</string>
 </resources>

@@ -222,6 +222,9 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 var legionRound by remember(lid) { mutableIntStateOf(1) }
                 var terrainCard by remember(lid) { mutableStateOf<com.legionforge.app.ui.screens.TerrainCard?>(null) }
                 var showTerrainPicker by remember(lid) { mutableStateOf(false) }
+                // Tapis PAR DÉFAUT : Tatooine (nom visible en haut, changeable).
+                var battleMat by remember(lid) { mutableStateOf(com.legionforge.app.ui.screens.BattleMats.TATOOINE) }
+                var showBattleMatPicker by remember(lid) { mutableStateOf(false) }
                 // Cartes de mission du bandeau (vraies images) + sélection par emplacement.
                 val battleCards = remember { com.legionforge.app.ui.screens.loadBattleCards(legionCtx) }
                 val battleBitmaps = remember(battleCards) {
@@ -307,6 +310,19 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     },
                     terrainCard = terrainCard,
                     onPickTerrain = { showTerrainPicker = true },
+                    battleMat = battleMat,
+                    battleMatName = androidx.compose.ui.res.stringResource(
+                        when (battleMat.id) {
+                            "battlemat_tatooine" -> com.legionforge.app.R.string.battlemat_tatooine
+                            "battlemat_hoth" -> com.legionforge.app.R.string.battlemat_hoth
+                            "battlemat_endor" -> com.legionforge.app.R.string.battlemat_endor
+                            "battlemat_scarif" -> com.legionforge.app.R.string.battlemat_scarif
+                            "battlemat_naboo" -> com.legionforge.app.R.string.battlemat_naboo
+                            "battlemat_geonosis" -> com.legionforge.app.R.string.battlemat_geonosis
+                            else -> com.legionforge.app.R.string.battlemat_none
+                        }
+                    ),
+                    onPickBattleMat = { showBattleMatPicker = true },
                     missionCards = selectedMissionCards,
                     missionBitmaps = battleBitmaps,
                     onPickMissionCard = { slot -> missionSlot = slot },
@@ -332,6 +348,13 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         nameNone = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_none),
                         title = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_title),
                         coverHint = androidx.compose.ui.res.stringResource(com.legionforge.app.R.string.terrain_cover),
+                    )
+                }
+                if (showBattleMatPicker) {
+                    com.legionforge.app.ui.screens.BattleMatPickerSheet(
+                        current = battleMat,
+                        onPick = { battleMat = it; showBattleMatPicker = false },
+                        onDismiss = { showBattleMatPicker = false },
                     )
                 }
                 if (missionSlot != null) {

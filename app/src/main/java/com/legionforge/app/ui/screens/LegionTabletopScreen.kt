@@ -5,6 +5,7 @@ import com.legionforge.app.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
@@ -124,6 +125,9 @@ fun LegionTabletopScreen(
     missionBitmaps: Map<String, androidx.compose.ui.graphics.ImageBitmap> = emptyMap(),
     onPickMissionCard: ((String) -> Unit)? = null,
     forceBlockedDrop: Boolean = false, // test uniquement : force le feedback collision
+    battleMat: BattleMat = BattleMats.NONE,
+    battleMatName: String = "",
+    onPickBattleMat: (() -> Unit)? = null,
 ) {
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
     var targetId by remember { mutableStateOf<String?>(null) }
@@ -159,6 +163,13 @@ fun LegionTabletopScreen(
     val cardBitmaps = remember(pawns) {
         pawns.mapNotNull { it.imagePath }.distinct().associateWith { loadLegionAssetBitmap(appCtx, it) }
     }
+    // Image de FOND du battle mat (vraie image Gemini), null = plateau vectoriel.
+    val matBitmap = remember(battleMat.assetPath) {
+        if (battleMat.assetPath.isBlank()) null else loadLegionAssetBitmap(appCtx, battleMat.assetPath)
+    }
+    // Couche logique : visible par défaut si un mat image est choisi (sinon le
+    // décor vectoriel classique reste géré par terrainCard).
+    var showMatLogic by remember(battleMat.id) { mutableStateOf(battleMat != BattleMats.NONE) }
 
     val selected = pawns.firstOrNull { it.id == selectedId }
     val target = pawns.firstOrNull { it.id == targetId }
@@ -197,6 +208,7 @@ fun LegionTabletopScreen(
     val liveOnMove by rememberUpdatedState(onMove)
     val liveOnOpenPlay by rememberUpdatedState(onOpenPlay)
     val liveTerrain by rememberUpdatedState(terrainCard)
+    val liveBattleMat by rememberUpdatedState(battleMat)
     fun toScreenLive(p: LegionPawn): Offset = Offset(
         livePan.x + p.xMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
         livePan.y + p.yMm * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale,
@@ -291,7 +303,10 @@ fun LegionTabletopScreen(
                                 if (dp != null && liveTool == LegionTool.SELECT) {
                                     val (mx, my) = screenToMmLive(c.position)
                                     val rMm = LegionTabletopGeometry.baseRadiusMm(dp.baseSize)
-                                    val pieces = liveTerrain?.pieces ?: emptyList()
+                                    // Collision : pièces du mat image si actif, sinon du décor vectoriel.
+                                    val pieces = if (liveBattleMat != BattleMats.NONE && liveBattleMat.pieces.isNotEmpty())
+                                        liveBattleMat.pieces
+                                    else liveTerrain?.pieces ?: emptyList()
                                     val blocked = com.legionforge.app.domain.LegionTerrainCollision.isDropBlocked(
                                         mx, my, rMm, pieces)
                                     blockedDrop = blocked
@@ -341,7 +356,8 @@ fun LegionTabletopScreen(
             }
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer,
-                ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote, blockedDrop)
+                ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote, blockedDrop,
+                matBitmap, battleMat, showMatLogic)
         }
 
         // ── Barre haute 48dp ─────────────────────────────────────────────────
@@ -354,11 +370,20 @@ fun LegionTabletopScreen(
                     Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.tabletop_back), tint = LegionColors.TextPrimary)
                 }
                 Spacer(Modifier.width(4.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.tabletop_title_short, round),
-                        color = LegionColors.TextPrimary, style = MaterialTheme.typography.titleMedium,
+                Column(Modifier.weight(1f).then(
+                    if (onPickBattleMat != null) Modifier.clickable(onClick = onPickBattleMat) else Modifier
+                )) {
+                    // Nom du tapis BIEN VISIBLE en haut, avec round + unités restantes.
+                    val matLabel = if (battleMat != BattleMats.NONE && battleMatName.isNotBlank())
+                        battleMatName else stringResource(R.string.tabletop_title_short, round)
+                    Text(matLabel,
+                        color = LegionColors.Accent, style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                    Text(stringResource(R.string.tabletop_units_left, unitsLeft),
+                    Text(
+                        if (battleMat != BattleMats.NONE)
+                            stringResource(R.string.battlemat_change_hint, unitsLeft)
+                        else stringResource(R.string.tabletop_units_left, unitsLeft),
                         color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelLarge,
                         maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
@@ -368,9 +393,22 @@ fun LegionTabletopScreen(
                 ) {
                     Icon(Icons.Filled.Build, contentDescription = stringResource(R.string.tabletop_measure), tint = if (tool == LegionTool.RANGE) LegionColors.Accent else LegionColors.TextSecondary)
                 }
-                if (onPickTerrain != null) {
+                // Sélecteur de battle mat (images planètes) — remplace/augmente le terrain vectoriel.
+                if (onPickBattleMat != null) {
+                    IconButton(onClick = onPickBattleMat, modifier = Modifier.size(LegionDims.TouchMin)) {
+                        Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.battlemat_title),
+                            tint = if (battleMat != BattleMats.NONE) LegionColors.Accent else LegionColors.TextSecondary)
+                    }
+                } else if (onPickTerrain != null) {
                     IconButton(onClick = onPickTerrain, modifier = Modifier.size(LegionDims.TouchMin)) {
                         Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.terrain_pick), tint = LegionColors.TextSecondary)
+                    }
+                }
+                // Bascule couche logique (overlay) — visible seulement si un mat image est actif.
+                if (matBitmap != null) {
+                    IconButton(onClick = { showMatLogic = !showMatLogic }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                        Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.battlemat_tactical),
+                            tint = if (showMatLogic) Color(0xFF00E5A8) else LegionColors.TextSecondary)
                     }
                 }
                 Surface(onClick = { onRoundChange(round + 1) }, shape = RoundedCornerShape(LegionDims.Radius), color = LegionColors.Accent, modifier = Modifier.heightIn(min = LegionDims.TouchMin)) {
@@ -604,6 +642,9 @@ private fun DrawScope.drawLegionBoard(
     terrainCard: TerrainCard? = null,
     terrainNote: String = "",
     blockedDrop: Boolean = false,
+    matBitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
+    battleMat: BattleMat = BattleMats.NONE,
+    showMatLogic: Boolean = false,
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
     val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
@@ -619,6 +660,22 @@ private fun DrawScope.drawLegionBoard(
     // Extérieur : table sombre neutre (simple aplat, PAS de dégradé radar).
     drawRect(Color(0xFF141210), size = size)
     if (matSize.width > 0f && matSize.height > 0f) {
+        if (matBitmap != null) {
+            // VRAIE IMAGE de battle mat (Gemini 2:1) en « contain » dans le carré 36" :
+            // occupe toute la largeur, bandes haut/bas. Le carré reste l'espace logique.
+            val iw = matBitmap.width.toFloat()
+            val ih = matBitmap.height.toFloat()
+            val scaleImg = minOf(matSize.width / iw, matSize.height / ih)
+            val dw = iw * scaleImg
+            val dh = ih * scaleImg
+            val dx = center.x - dw / 2f
+            val dy = center.y - dh / 2f
+            drawImage(matBitmap, dstOffset = androidx.compose.ui.unit.IntOffset(dx.toInt(), dy.toInt()),
+                dstSize = androidx.compose.ui.unit.IntSize(dw.toInt().coerceAtLeast(1), dh.toInt().coerceAtLeast(1)))
+            // Voile léger pour accrocher la couche logique (mode tactique uniquement).
+            if (showMatLogic) drawRect(Color(0x30000000), topLeft = Offset(dx, dy),
+                size = androidx.compose.ui.geometry.Size(dw, dh))
+        } else {
         // SOL PIERRE façon carte SNES : dalles rectangulaires à joints DÉCALÉS
         // (pas un damier = grille de calcul), teintes pierre sourdes + joints fins.
         drawRect(BattlePalette.Ground, topLeft = tl, size = matSize)
@@ -671,6 +728,7 @@ private fun DrawScope.drawLegionBoard(
             }
             gy += grainStep; gi++
         }
+        } // fin else (sol vectoriel)
         // Cadre bois avec liseré parchemin (plus de doré néon).
         drawRect(BattlePalette.Wood, topLeft = tl, size = matSize, style = Stroke(width = 8f))
         drawRect(BattlePalette.WoodLight, topLeft = mm(-halfMat + 5f, -halfMat + 5f),
@@ -716,10 +774,14 @@ private fun DrawScope.drawLegionBoard(
                 Offset(c.x + g, c.y - g), Offset(c.x - g, c.y + g), strokeWidth = objStroke)
         }
 
-        // Paysage de la carte de terrain (BÂTIMENTS) dessiné APRÈS les objectifs au sol :
-        // les volumes recouvrent les jetons d'objectif qui les chevauchent (cosmétique,
-        // rulebook:391-401 — les vrais POI viennent de la Map Card), jamais l'inverse.
-        drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
+        // COUCHE LOGIQUE du battle mat image (zones/couvert/LOS) — remplace le
+        // décor vectoriel classique quand une vraie image est sélectionnée.
+        if (matBitmap != null && battleMat != BattleMats.NONE) {
+            if (showMatLogic) drawBattleMatLogic(battleMat, ::mm, pxPerMm, textMeasurer)
+        } else {
+            // Paysage de la carte de terrain vectorielle d'origine.
+            drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
+        }
 
         // Graduations discrètes sur le bord seul (toutes les 6").
         for (inch in -18..18 step 6) {
