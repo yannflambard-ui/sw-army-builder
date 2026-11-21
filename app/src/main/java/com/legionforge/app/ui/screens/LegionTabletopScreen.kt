@@ -138,6 +138,7 @@ fun LegionTabletopScreen(
     forceDeployCurrent: Pair<Float, Float>? = null, // test uniquement
     forceDeploySpeed: Int = 1, // test uniquement
     forceScale: Float? = null, // test uniquement : zoom imposé
+    forceRailCollapsed: Boolean = false, // test uniquement : rail de cartes replié
 ) {
     ForceLandscapeWhileMounted()
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
@@ -459,6 +460,7 @@ fun LegionTabletopScreen(
             if (showMissionRail) {
                 MissionCardRail(round = round, victoryPoints = victoryPoints, labels = missionLabels,
                     selectedCards = missionCards, cardBitmaps = missionBitmaps,
+                    initiallyCollapsed = forceRailCollapsed,
                     onPickCard = { slot -> onPickMissionCard?.invoke(slot) })
             }
         }

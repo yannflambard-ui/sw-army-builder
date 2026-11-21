@@ -24,6 +24,19 @@ class LegionBattleMatLandscapeTest {
     )
 
     @Test
+    fun tatooine_paysage_rail_replie() {
+        captureRoboImage("src/test/snapshots/legion-paysage-rail-replie.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.TATOOINE, battleMatName = "Tatooine",
+                    onPickBattleMat = {}, forceRailCollapsed = true)
+            }
+        }
+    }
+
+    @Test
     fun tatooine_paysage() {
         captureRoboImage("src/test/snapshots/legion-battlemat-paysage.png") {
             LegionForgeTheme {
