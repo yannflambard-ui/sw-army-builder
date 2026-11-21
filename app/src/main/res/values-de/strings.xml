@@ -297,6 +297,7 @@
     <string name="tabletop_zoom_out">Verkleinern</string>
     <string name="tabletop_tap_hint">Einheit tippen, um die Karte zu öffnen</string>
     <string name="tabletop_territory_note">Hinweiszonen · siehe Map Card</string>
+    <string name="mapcard_note">Map-Karte: %1$s · Objekte dekorativ · siehe Objective Card</string>
     <string name="tabletop_terrain_note">Deckung 1 blau / 2 orange · vorgeschlagen, vor dem Spiel abstimmen</string>
     <string name="tabletop_placement_blocked">Platzierung blockiert - Gebaude</string>
     <string name="tabletop_territory_enemy">FEINDGEBIET (ROTER SPIELER)</string>

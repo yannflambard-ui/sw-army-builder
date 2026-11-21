@@ -297,6 +297,7 @@
     <string name="tabletop_zoom_out">Zoom arrière</string>
     <string name="tabletop_tap_hint">Touchez une unité pour ouvrir sa fiche</string>
     <string name="tabletop_territory_note">Zones indicatives · voir Map Card</string>
+    <string name="mapcard_note">Carte Map : %1$s · objets décoratifs · voir Carte Objectif</string>
     <string name="tabletop_terrain_note">Couvert 1 bleu / 2 orange · proposé, à valider en pré-game</string>
     <string name="tabletop_placement_blocked">Placement bloque - batiment</string>
     <string name="tabletop_territory_enemy">TERRITOIRE ENNEMI (JOUER ROUGE)</string>

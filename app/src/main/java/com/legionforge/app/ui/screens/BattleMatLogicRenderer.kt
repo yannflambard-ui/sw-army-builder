@@ -40,6 +40,11 @@ fun DrawScope.drawBattleMatLogic(
     textMeasurer: TextMeasurer,
 ) {
     if (mat == BattleMats.NONE || mat.pieces.isEmpty()) return
+    // LOD : sous ~25 % de zoom (pxPerMm < 0,5), les 159 contours fins écrasent la
+    // hiérarchie visuelle. On ne garde que les emprises IMPASSABLE (contrainte de
+    // collision réelle) en trait simple — couvert/chiffres/hachures réapparaissent
+    // dès qu'on zoome assez pour les lire (rulebook lisibilité).
+    val coarse = pxPerMm < 0.5f
     val pin = BattleMatPalette()
     val halo = Color(0x99000000)
     val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f)
@@ -53,6 +58,15 @@ fun DrawScope.drawBattleMatLogic(
         val left = c.x - w / 2f
         val top = c.y - h / 2f
         val rect = androidx.compose.ui.geometry.Rect(left, top, left + w, top + h)
+
+        if (coarse) {
+            if (piece.surface == TerrainSurface.IMPASSABLE) {
+                drawRect(Color(0x18FF3D6E), topLeft = rect.topLeft, size = rect.size)
+                drawRect(pin.impassable.copy(alpha = 0.7f), topLeft = rect.topLeft, size = rect.size,
+                    style = Stroke(width = maxOf(1.5f, stroke)))
+            }
+            continue
+        }
 
         when (piece.surface) {
             TerrainSurface.OPEN -> {
@@ -69,7 +83,7 @@ fun DrawScope.drawBattleMatLogic(
                 drawRect(pin.impassable, topLeft = rect.topLeft, size = rect.size,
                     style = Stroke(width = stroke))
                 // Hachures 45° discrètes dans l'emprise.
-                val step = maxOf(12f, 16.dp.toPx())
+                val step = maxOf(18f, 24.dp.toPx())
                 var hx = left - h
                 while (hx < left + w) {
                     val x1 = maxOf(left, hx)
@@ -77,7 +91,7 @@ fun DrawScope.drawBattleMatLogic(
                     val x2 = kotlin.math.min(left + w, hx + h)
                     val y2 = top + (x2 - hx)
                     if (x2 > x1 && y1 <= top + h && y2 <= top + h) {
-                        drawLine(pin.impassable.copy(alpha = 0.38f), Offset(x1, y1), Offset(x2, y2), strokeWidth = 1f)
+                        drawLine(pin.impassable.copy(alpha = 0.26f), Offset(x1, y1), Offset(x2, y2), strokeWidth = 1f)
                     }
                     hx += step
                 }
@@ -96,10 +110,17 @@ fun DrawScope.drawBattleMatLogic(
             val cw = maxOf(1.2f, (piece.cover).dp.toPx()).coerceAtMost(2f)
             drawCircle(halo.copy(alpha = 0.55f), radius = r, center = c, style = Stroke(width = cw + 1f))
             drawCircle(col, radius = r, center = c, style = Stroke(width = cw))
-            val style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xCCFFFFFF))
-            drawText(textMeasurer, piece.cover.toString(),
-                topLeft = Offset(c.x - 4.dp.toPx(), c.y - 6.dp.toPx()),
-                size = Size(8.dp.toPx(), 12.dp.toPx()), style = style)
+            // Chiffre >= 11sp avec halo sombre (plancher lisibilité, daltonisme).
+            val glyph = piece.cover.toString()
+            val style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFFFFF))
+            val haloStyle = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xEE000000))
+            val tw = 14.dp.toPx(); val th = 18.dp.toPx()
+            val tl = Offset(c.x - tw / 2f, c.y - th / 2f)
+            // Halo 4 directions pour décoller le chiffre du sable et des hachures.
+            for (d in listOf(Offset(-1f, 0f), Offset(1f, 0f), Offset(0f, -1f), Offset(0f, 1f))) {
+                drawText(textMeasurer, glyph, topLeft = tl + Offset(d.x, d.y), size = Size(tw, th), style = haloStyle)
+            }
+            drawText(textMeasurer, glyph, topLeft = tl, size = Size(tw, th), style = style)
         }
 
         // blocksLos : ✕ en COIN supérieur gauche, jamais au centre.

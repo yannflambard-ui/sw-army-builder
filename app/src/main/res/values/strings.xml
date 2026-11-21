@@ -295,6 +295,7 @@
     <string name="tabletop_zoom_out">Zoom out</string>
     <string name="tabletop_tap_hint">Tap a unit to open its full card</string>
     <string name="tabletop_territory_note">Indicative zones · see Map Card</string>
+    <string name="mapcard_note">Map Card: %1$s · objects are decorative · see Objective Card</string>
     <string name="tabletop_terrain_note">Cover 1 blue / 2 orange · proposed, agree in pre-game</string>
     <string name="tabletop_placement_blocked">Placement blocked - building</string>
     <string name="tabletop_territory_enemy">ENEMY TERRITORY (RED PLAYER)</string>

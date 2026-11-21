@@ -110,6 +110,19 @@ private fun LegionPawn.footprintRadiusMm(): Float =
 private enum class LegionTool { SELECT, RANGE, ARC }
 
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Fit initial du plateau 6'x3' sur LES DEUX axes, avec marge 4 %.
+ * Plateau = 72" × 36" = 1828,8 × 914,4 mm ; PX_PER_MM = 2 → 3657,6 × 1828,8 px.
+ * Le facteur limitant est le min(largeur, hauteur) : en paysage c'est la hauteur.
+ * Pur (sans Compose) pour être verrouillé par un test JVM.
+ */
+internal fun legionFitScale(widthPx: Int, heightPx: Int): Float {
+    val longPx = 72f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
+    val shortPx = 36f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
+    val fit = minOf(widthPx.toFloat() / longPx, heightPx.toFloat() / shortPx)
+    return (fit * 0.96f).coerceIn(0.10f, 6f)
+}
+
 @Composable
 fun LegionTabletopScreen(
     pawns: List<LegionPawn>,
@@ -139,6 +152,8 @@ fun LegionTabletopScreen(
     forceDeploySpeed: Int = 1, // test uniquement
     forceScale: Float? = null, // test uniquement : zoom imposé
     forceRailCollapsed: Boolean = false, // test uniquement : rail de cartes replié
+    forceMapLayoutName: String? = null, // test uniquement : Map Card à transcrire
+    blueAtBottom: Boolean = true, // choix du bord de Blue (rulebook 1244-1248)
 ) {
     ForceLandscapeWhileMounted()
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
@@ -155,9 +170,10 @@ fun LegionTabletopScreen(
         // Cadrage initial sur le PLAYMAT ENTIER (6'x3') pour voir les zones de déploiement,
     // les objectifs et les graduations dès l'ouverture. L'utilisateur zoome ensuite
     // sur ses pions au besoin (boutons −/+ ou pinch).
-    // Plateau 6'x3' : cadrage initial sur la LARGEUR (6 pieds) pour portrait.
-    val matSpanPx = 72f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
-    val s = vpW.toFloat() / matSpanPx
+    // Fit sur LES DEUX axes : plateau 6'x3' = 3657,6 px (long) × 1828,8 px (court).
+    // En paysage (ex. 891×411), la HAUTEUR est le facteur limitant — cadrer sur la
+    // seule largeur déborde de ~8 px en haut/bas (bordures/graduations coupées).
+    val s = legionFitScale(vpW, vpH)
     mutableFloatStateOf((forceScale ?: s).coerceIn(0.10f, 6f))
     }
 
@@ -185,6 +201,10 @@ fun LegionTabletopScreen(
     val matBitmap = remember(battleMat.assetPath) {
         if (battleMat.assetPath.isBlank()) null else loadLegionAssetBitmap(appCtx, battleMat.assetPath)
     }
+    // Objets POI des Map Cards (assets legion_poi/*.png), chargés une fois.
+    val poiBitmaps = remember {
+        com.legionforge.app.domain.PoiObject.entries.associateWith { loadLegionAssetBitmap(appCtx, it.asset) }
+    }
     // Couche logique : visible par défaut si un mat image est choisi (sinon le
     // décor vectoriel classique reste géré par terrainCard).
     var showMatLogic by remember(battleMat.id) { mutableStateOf(battleMat != BattleMats.NONE) }
@@ -194,8 +214,10 @@ fun LegionTabletopScreen(
 
     // Conversion plateau (mm, centré 0,0) -> écran (px).
     // Centre du viewport en px (millieu de l'ecran), resolu apres mesure.
-    var viewCenter by remember { mutableStateOf(Offset(vpW / 2f, vpH / 2f)) }
-    fun effPan(): Offset = dragPan ?: pan ?: viewCenter // centré sur le tapis (0,0)
+    // Centre DYNAMIQUE : dérivé de vpW/vpH à chaque mesure (un remember figé garderait
+    // la taille initiale si le Canvas est remesuré après layout → plateau décalé/bord coupé).
+    fun viewCenter(): Offset = Offset(vpW / 2f, vpH / 2f)
+    fun effPan(): Offset = dragPan ?: pan ?: viewCenter() // centré sur le tapis (0,0)
     fun toScreen(p: LegionPawn): Offset = Offset(
         effPan().x + p.xMm * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
         effPan().y + p.yMm * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
@@ -205,12 +227,7 @@ fun LegionTabletopScreen(
         (at.y - effPan().y) / (LegionTabletopGeometry.LEGION_PX_PER_MM * scale),
     )
 
-    fun fitScale(widthPx: Int, heightPx: Int): Float {
-        // Fit sur le tapis entier (6'x3') : les zones de déploiement, les objectifs
-        // et les graduations sont visibles dès l'ouverture, comme un vrai playmat.
-        val matSpanPx = 72f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
-        return (widthPx.toFloat() / matSpanPx).coerceIn(0.10f, 6f)
-    }
+    fun fitScale(widthPx: Int, heightPx: Int): Float = legionFitScale(widthPx, heightPx)
     // Fit SYNCHRONE : deterministe en local comme en CI (pas de race onSizeChanged).
     // Clé = IDENTITÉ des pions, PAS leurs positions : sans cela, chaque onMove
     // redéclenche le fit et la transformation bouge pendant le drag.
@@ -244,8 +261,11 @@ fun LegionTabletopScreen(
         val ttEnemy = stringResource(R.string.tabletop_territory_enemy)
         val ttAllied = stringResource(R.string.tabletop_territory_allied)
         val ttNote = stringResource(R.string.tabletop_territory_note)
+        val ttMapCardNote = stringResource(R.string.mapcard_note)
         val ttTerrainNote = stringResource(R.string.tabletop_terrain_note)
         val ttObj = stringResource(R.string.tabletop_obj)
+        val mapName = forceMapLayoutName ?: missionCards["map"]?.name
+        val mapLayout = com.legionforge.app.domain.LegionMapLayouts.forName(mapName)
         val missionLabels = mapOf(
             "command" to stringResource(R.string.rail_command),
             "primary" to stringResource(R.string.rail_primary),
@@ -383,9 +403,9 @@ fun LegionTabletopScreen(
             }
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer,
-                ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote, blockedDrop,
+                ttEnemy, ttAllied, ttNote, ttMapCardNote, ttObj, terrainCard, ttTerrainNote, blockedDrop,
                 matBitmap, battleMat, showMatLogic,
-                deployOrigin, deployCurrent, deploySpeed)
+                deployOrigin, deployCurrent, deploySpeed, mapLayout, blueAtBottom, poiBitmaps)
         }
 
         // ── Barre haute 48dp ─────────────────────────────────────────────────
@@ -410,7 +430,7 @@ fun LegionTabletopScreen(
                         maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     Text(
                         if (battleMat != BattleMats.NONE)
-                            stringResource(R.string.battlemat_change_hint, unitsLeft)
+                            stringResource(R.string.battlemat_change_hint, round)
                         else stringResource(R.string.tabletop_units_left, unitsLeft),
                         color = LegionColors.TextSecondary, style = MaterialTheme.typography.labelLarge,
                         maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -500,13 +520,13 @@ fun LegionTabletopScreen(
                 .background(LegionColors.SurfaceRaised, RoundedCornerShape(LegionDims.Radius)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale / 1.25f).coerceIn(0.10f, 6f) },
+            IconButton(onClick = { val base = pan ?: viewCenter(); pan = base; scale = (scale / 1.25f).coerceIn(0.10f, 6f) },
                 modifier = Modifier.semantics { contentDescription = cdZoomOut }) {
                 Text("−", color = LegionColors.TextPrimary, fontSize = 24.sp)
             }
             Text(stringResource(R.string.tabletop_zoom, (scale * 100).toInt()), color = LegionColors.TextPrimary,
                 style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 4.dp))
-            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale * 1.25f).coerceIn(0.10f, 6f) },
+            IconButton(onClick = { val base = pan ?: viewCenter(); pan = base; scale = (scale * 1.25f).coerceIn(0.10f, 6f) },
                 modifier = Modifier.semantics { contentDescription = cdZoomIn }) {
                 Icon(Icons.Filled.Add, contentDescription = null, tint = LegionColors.TextPrimary)
             }
@@ -667,6 +687,7 @@ private fun DrawScope.drawLegionBoard(
     territoryEnemy: String,
     territoryAllied: String,
     territoryNote: String,
+    mapCardNote: String,
     objPrefix: String,
     terrainCard: TerrainCard? = null,
     terrainNote: String = "",
@@ -677,6 +698,9 @@ private fun DrawScope.drawLegionBoard(
     deployOrigin: Pair<Float, Float>? = null,
     deployCurrent: Pair<Float, Float>? = null,
     deploySpeed: Int = 1,
+    mapLayout: com.legionforge.app.domain.LegionMapLayout? = null,
+    blueAtBottom: Boolean = true,
+    poiBitmaps: Map<com.legionforge.app.domain.PoiObject, androidx.compose.ui.graphics.ImageBitmap?> = emptyMap(),
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
     val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
@@ -772,42 +796,69 @@ private fun DrawScope.drawLegionBoard(
         drawRect(BattlePalette.Parchment, topLeft = mm(-halfW + 9f, -halfH + 9f),
             size = androidx.compose.ui.geometry.Size(matSize.width - 18f, matSize.height - 18f), style = Stroke(width = 1.5f))
 
-        // Frontières de déploiement : ruban sombre discret (zones INDICATIVES, voir Map Card).
-        val dep = 12f * LegionTabletopGeometry.MM_PER_INCH
-        val lineHaut = mm(0f, -halfMat + dep).y
-        val lineBas = mm(0f, halfMat - dep).y
-        val bandH = maxOf(7f, 8.dp.toPx())
-        // Remplissage léger des zones (indicatives) + ruban franc sur la frontière.
-        // HAUTE = ENNEMI (rouge), BASSE = ALLIÉ (bleu).
-        drawRect(Color(0x556A241C), topLeft = tl,
-            size = androidx.compose.ui.geometry.Size(matSize.width, lineHaut - tl.y))
-        drawRect(Color(0x4D2E6FA8), topLeft = Offset(tl.x, lineBas),
-            size = androidx.compose.ui.geometry.Size(matSize.width, br.y - lineBas))
-        drawRect(BattlePalette.TapeOwn, topLeft = Offset(tl.x, lineHaut - bandH/2f),
-            size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
-        drawRect(BattlePalette.TapeOpp, topLeft = Offset(tl.x, lineBas - bandH/2f),
-            size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
-
-        // Objectifs : JETON AU SOL (anneau or sourd + croix), jamais un volume opaque.
-        // Les bâtiments dessinés après recouvrent le jeton s'ils le chevauchent —
-        // purement cosmétique (les vrais POI viennent de la Map Card, rulebook:391-401).
-        // Nombre/position INDICATIFS (étiquette "voir Map Card" plus bas).
-        val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
+        // ── MAP CARD : territoires + POI TRANSCRITS (rulebook 391-401, 417-423) ──
+        // Quand la Map Card choisie est transcrite, on dessine SA géométrie réelle.
+        // Sinon, repères INDICATIFS uniquement (jamais présentés comme de vraies zones).
+        val activeLayout = mapLayout?.oriented(blueAtBottom)?.takeIf { it.transcribed }
         val objStroke = maxOf(2f, 2.dp.toPx())
-        for (ox in listOf(-12f, 0f, 12f)) {
-            val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
-            // Halo sombre pour détacher le trait du sol.
-            drawCircle(Color(0x33000000), radius = objR, center = c,
-                style = Stroke(width = objStroke + 2f))
-            // Anneau or translucide (pas de disque plein).
-            drawCircle(BattlePalette.Objective.copy(alpha = 0.55f), radius = objR, center = c,
-                style = Stroke(width = objStroke))
-            // Croix fine au centre (repère d'objectif, pas une unité détruite).
-            val g = objR * 0.16f
-            drawLine(BattlePalette.Objective.copy(alpha = 0.7f),
-                Offset(c.x - g, c.y - g), Offset(c.x + g, c.y + g), strokeWidth = objStroke)
-            drawLine(BattlePalette.Objective.copy(alpha = 0.7f),
-                Offset(c.x + g, c.y - g), Offset(c.x - g, c.y + g), strokeWidth = objStroke)
+        if (activeLayout != null) {
+            fun drawTerritory(rects: List<IntArray>, fill: Color, edge: Color) {
+                for (rc in rects) {
+                    val a = activeLayout.caseEdge(rc[0].toFloat(), rc[1].toFloat())
+                    val b = activeLayout.caseEdge(rc[2].toFloat() + 1f, rc[3].toFloat() + 1f)
+                    val topLeft = mm(a.first, a.second)
+                    val size = androidx.compose.ui.geometry.Size(b.first - a.first, b.second - a.second)
+                    drawRect(fill, topLeft = topLeft, size = size)
+                    drawRect(edge, topLeft = topLeft, size = size, style = Stroke(width = maxOf(2f, 2.dp.toPx())))
+                }
+            }
+            drawTerritory(activeLayout.allied, Color(0xB0245FBF), BattlePalette.TapeOwn)
+            drawTerritory(activeLayout.enemy, Color(0xB08A1E12), BattlePalette.TapeOpp)
+            // POI : cylindre 2" (rulebook 653, 1316). Objet thématique si fourni, sinon anneau.
+            val poiBmp = activeLayout.poiObject?.let { poiBitmaps[it] }
+            for (pt in activeLayout.poi) {
+                // POI = intersections de grille → caseEdge (PAS caseCenter, +76 mm d'erreur).
+                val c0 = activeLayout.caseEdge(pt[0].toFloat(), pt[1].toFloat())
+                val c = mm(c0.first, c0.second)
+                val r = 1f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm // rayon 1" pour 2" de diamètre
+                if (poiBmp != null) {
+                    // Halo sombre + anneau doré distinctif (POI de Map Card, pas un jeton d'unité).
+                    val rp = r * 1.25f
+                    drawCircle(Color(0x66000000), radius = rp, center = c)
+                    drawCircle(Color(0xFFF5C542), radius = rp,
+                        center = c, style = Stroke(width = maxOf(3.5f, 3.5.dp.toPx())))
+                    val d = (r * 2.2f).toInt().coerceAtLeast(1)
+                    drawImage(poiBmp,
+                        dstOffset = androidx.compose.ui.unit.IntOffset((c.x - r * 1.1f).toInt(), (c.y - r * 1.1f).toInt()),
+                        dstSize = androidx.compose.ui.unit.IntSize(d, d))
+                } else {
+                    drawCircle(Color(0x33000000), radius = r, center = c, style = Stroke(width = objStroke + 2f))
+                    drawCircle(BattlePalette.Objective.copy(alpha = 0.62f), radius = r, center = c, style = Stroke(width = objStroke))
+                    val g = r * 0.16f
+                    drawLine(BattlePalette.Objective.copy(alpha = 0.75f), Offset(c.x-g,c.y-g), Offset(c.x+g,c.y+g), strokeWidth = objStroke)
+                    drawLine(BattlePalette.Objective.copy(alpha = 0.75f), Offset(c.x+g,c.y-g), Offset(c.x-g,c.y+g), strokeWidth = objStroke)
+                }
+            }
+        } else {
+            // Repères INDICATIFS (zones 12" + 3 disques) — étiquetés "voir Map Card".
+            val dep = 12f * LegionTabletopGeometry.MM_PER_INCH
+            val lineHaut = mm(0f, -halfMat + dep).y
+            val lineBas = mm(0f, halfMat - dep).y
+            val bandH = maxOf(7f, 8.dp.toPx())
+            drawRect(Color(0x2A6A241C), topLeft = tl,
+                size = androidx.compose.ui.geometry.Size(matSize.width, lineHaut - tl.y))
+            drawRect(Color(0x242E6FA8), topLeft = Offset(tl.x, lineBas),
+                size = androidx.compose.ui.geometry.Size(matSize.width, br.y - lineBas))
+            drawRect(BattlePalette.TapeOwn.copy(alpha = 0.5f), topLeft = Offset(tl.x, lineHaut - bandH/2f),
+                size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
+            drawRect(BattlePalette.TapeOpp.copy(alpha = 0.5f), topLeft = Offset(tl.x, lineBas - bandH/2f),
+                size = androidx.compose.ui.geometry.Size(matSize.width, bandH))
+            val objR = 6f * LegionTabletopGeometry.MM_PER_INCH * pxPerMm
+            for (ox in listOf(-12f, 0f, 12f)) {
+                val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
+                drawCircle(Color(0x33000000), radius = objR, center = c, style = Stroke(width = objStroke + 2f))
+                drawCircle(BattlePalette.Objective.copy(alpha = 0.45f), radius = objR, center = c, style = Stroke(width = objStroke))
+            }
         }
 
         // COUCHE LOGIQUE du battle mat image (zones/couvert/LOS) — remplace le
@@ -851,9 +902,9 @@ private fun DrawScope.drawLegionBoard(
         val legendH = textMeasurer.measure(territoryEnemy, legendStyle).size.height.toFloat()
         drawCenteredLegend(territoryEnemy, tl.y + 58.dp.toPx(), legendStyle) // décalée sous les 2 notes (zone + couvert)
         drawCenteredLegend(territoryAllied, br.y - 36.dp.toPx() - legendH, legendStyle.copy(color = BattlePalette.TapeOpp))
-        // Indication honnête : bornes indicatives, le territoire réel vient de la Map Card.
+        // Indication honnête : si la Map Card est transcrite, afficher son nom ; sinon rappel "voir Map Card".
         val noteStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, color = BattlePalette.Ink)
-        val note = territoryNote
+        val note = if (activeLayout != null) String.format(mapCardNote, activeLayout.name) else territoryNote
         val noteW = textMeasurer.measure(note, noteStyle).size.width.toFloat() + 16.dp.toPx()
         // Note placée juste sous la bordure HAUTE du tapis, loin des pions (ligne médiane).
         val noteY = tl.y + 8.dp.toPx()

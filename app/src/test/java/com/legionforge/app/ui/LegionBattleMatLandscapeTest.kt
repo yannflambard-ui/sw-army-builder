@@ -36,6 +36,21 @@ class LegionBattleMatLandscapeTest {
         }
     }
 
+    /** Map Card en PAYSAGE (le vrai rendu store) : zones + POI au fit réel, cadrage complet. */
+    @Test
+    fun mapcard_recover_paysage() {
+        captureRoboImage("src/test/snapshots/legion-mapcard-recover-paysage.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.TATOOINE, battleMatName = "Tatooine",
+                    onPickBattleMat = {}, forceMapLayoutName = "Recover the Research",
+                    forceRailCollapsed = true)
+            }
+        }
+    }
+
     @Test
     fun tatooine_paysage() {
         captureRoboImage("src/test/snapshots/legion-battlemat-paysage.png") {

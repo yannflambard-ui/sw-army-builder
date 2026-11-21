@@ -17,6 +17,12 @@ import kotlin.math.min
  * DIFFICULT (840-844) est traversable (vitesse -1, min 1) : JAMAIS bloqué ici.
  * OPEN est praticable : jamais bloqué.
  *
+ * PRIORITÉ D'IMBRICATION : les emprises peuvent se superposer (ex. mur OPEN posé
+ * sur une crête IMPASSABLE). La règle est `any` : dès qu'UNE pièce IMPASSABLE
+ * recouvre le socle, le drop est refusé. C'est le choix sûr — un couvert OPEN ne
+ * peut jamais « réhabiliter » un terrain interdit (rulebook 846-848). Les pièces
+ * analysées sont dédupées par l'emprise au sol, donc pas de faux positifs.
+ *
  * Le test est pur (aucun Canvas / Compose) pour être vérifié en JVM.
  */
 object LegionTerrainCollision {
