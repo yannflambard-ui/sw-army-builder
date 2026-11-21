@@ -344,4 +344,5 @@
     <string name="armada_battlemat_coruscant">Órbita de Coruscant</string>
     <string name="armada_battlemat_title">Elegir tapete espacial</string>
     <string name="armada_battlemat_change_hint">Ronda %1$d · toca para cambiar</string>
+    <string name="tabletop_toggle_orientation">Cambiar horizontal / vertical</string>
 </resources>

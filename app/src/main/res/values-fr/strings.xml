@@ -344,4 +344,5 @@
     <string name="armada_battlemat_coruscant">Orbite de Coruscant</string>
     <string name="armada_battlemat_title">Choisir un tapis spatial</string>
     <string name="armada_battlemat_change_hint">Manche %1$d · toucher pour changer</string>
+    <string name="tabletop_toggle_orientation">Basculer paysage / portrait</string>
 </resources>

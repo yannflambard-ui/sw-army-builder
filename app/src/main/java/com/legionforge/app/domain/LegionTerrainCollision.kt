@@ -41,11 +41,17 @@ object LegionTerrainCollision {
         if (pieces.isEmpty() || baseRadiusMm <= 0f) return false
         return pieces.any { p ->
             if (p.surface != TerrainSurface.IMPASSABLE) return@any false
-            circleIntersectsRect(
-                cx = xMm, cy = yMm, r = baseRadiusMm,
-                left = p.xMm - p.wMm / 2f, right = p.xMm + p.wMm / 2f,
-                top = p.yMm - p.hMm / 2f, bottom = p.yMm + p.hMm / 2f,
-            )
+            // Contour réel (polygone) si fourni — sinon AABB rétro-compatible.
+            val poly = TerrainPolygon.outlineMm(p)
+            if (poly.isNotEmpty()) {
+                TerrainPolygon.circleIntersectsPolygon(xMm, yMm, baseRadiusMm, poly)
+            } else {
+                circleIntersectsRect(
+                    cx = xMm, cy = yMm, r = baseRadiusMm,
+                    left = p.xMm - p.wMm / 2f, right = p.xMm + p.wMm / 2f,
+                    top = p.yMm - p.hMm / 2f, bottom = p.yMm + p.hMm / 2f,
+                )
+            }
         }
     }
 

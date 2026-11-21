@@ -342,4 +342,5 @@
     <string name="armada_battlemat_coruscant">Coruscant Orbit</string>
     <string name="armada_battlemat_title">Choose a space mat</string>
     <string name="armada_battlemat_change_hint">Round %1$d · tap to change</string>
+    <string name="tabletop_toggle_orientation">Switch landscape / portrait</string>
 </resources>

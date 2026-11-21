@@ -33,6 +33,21 @@ import kotlin.math.max
  *
  * Zéro asset externe, tout en primitives Canvas Compose.
  */
+/** Construit le Path écran d'un contour mm, ou null si AABB (pas de polygone). */
+private fun outlinePath(piece: TerrainPiece, mm: (Float, Float) -> Offset): Path? {
+    val poly = com.legionforge.app.domain.TerrainPolygon.outlineMm(piece)
+    if (poly.size < 3) return null
+    val path = Path()
+    val first = mm(poly[0].first, poly[0].second)
+    path.moveTo(first.x, first.y)
+    for (i in 1 until poly.size) {
+        val p = mm(poly[i].first, poly[i].second)
+        path.lineTo(p.x, p.y)
+    }
+    path.close()
+    return path
+}
+
 fun DrawScope.drawBattleMatLogic(
     mat: BattleMat,
     mm: (Float, Float) -> Offset,
@@ -58,30 +73,47 @@ fun DrawScope.drawBattleMatLogic(
         val left = c.x - w / 2f
         val top = c.y - h / 2f
         val rect = androidx.compose.ui.geometry.Rect(left, top, left + w, top + h)
+        val opath = outlinePath(piece, mm) // non-null = vrai polygone, sinon AABB
 
         if (coarse) {
             if (piece.surface == TerrainSurface.IMPASSABLE) {
-                drawRect(Color(0x18FF3D6E), topLeft = rect.topLeft, size = rect.size)
-                drawRect(pin.impassable.copy(alpha = 0.7f), topLeft = rect.topLeft, size = rect.size,
-                    style = Stroke(width = maxOf(1.5f, stroke)))
+                if (opath != null) {
+                    drawPath(opath, Color(0x18FF3D6E))
+                    drawPath(opath, pin.impassable.copy(alpha = 0.7f), style = Stroke(width = maxOf(1.5f, stroke)))
+                } else {
+                    drawRect(Color(0x18FF3D6E), topLeft = rect.topLeft, size = rect.size)
+                    drawRect(pin.impassable.copy(alpha = 0.7f), topLeft = rect.topLeft, size = rect.size,
+                        style = Stroke(width = maxOf(1.5f, stroke)))
+                }
             }
             continue
         }
 
         when (piece.surface) {
             TerrainSurface.OPEN -> {
-                drawRect(pin.open.copy(alpha = 0.6f), topLeft = rect.topLeft, size = rect.size,
+                if (opath != null) drawPath(opath, pin.open.copy(alpha = 0.6f), style = Stroke(width = stroke, pathEffect = dot))
+                else drawRect(pin.open.copy(alpha = 0.6f), topLeft = rect.topLeft, size = rect.size,
                     style = Stroke(width = stroke, pathEffect = dot))
             }
             TerrainSurface.DIFFICULT -> {
-                drawRect(Color(0x14FFD24A), topLeft = rect.topLeft, size = rect.size)
-                drawRect(pin.difficult, topLeft = rect.topLeft, size = rect.size,
-                    style = Stroke(width = stroke, pathEffect = dash))
+                if (opath != null) {
+                    drawPath(opath, Color(0x14FFD24A))
+                    drawPath(opath, pin.difficult, style = Stroke(width = stroke, pathEffect = dash))
+                } else {
+                    drawRect(Color(0x14FFD24A), topLeft = rect.topLeft, size = rect.size)
+                    drawRect(pin.difficult, topLeft = rect.topLeft, size = rect.size,
+                        style = Stroke(width = stroke, pathEffect = dash))
+                }
             }
             TerrainSurface.IMPASSABLE -> {
-                drawRect(Color(0x20FF3D6E), topLeft = rect.topLeft, size = rect.size)
-                drawRect(pin.impassable, topLeft = rect.topLeft, size = rect.size,
-                    style = Stroke(width = stroke))
+                if (opath != null) {
+                    drawPath(opath, Color(0x20FF3D6E))
+                    drawPath(opath, pin.impassable, style = Stroke(width = stroke))
+                } else {
+                    drawRect(Color(0x20FF3D6E), topLeft = rect.topLeft, size = rect.size)
+                    drawRect(pin.impassable, topLeft = rect.topLeft, size = rect.size,
+                        style = Stroke(width = stroke))
+                }
                 // Hachures 45° discrètes dans l'emprise.
                 val step = maxOf(18f, 24.dp.toPx())
                 var hx = left - h
@@ -99,23 +131,31 @@ fun DrawScope.drawBattleMatLogic(
         }
 
         // Halo sombre sous le trait principal (surface claire comme eau turquoise).
-        drawRect(halo.copy(alpha = 0.25f), topLeft = Offset(left + 2f, top + 2f), size = rect.size,
-            style = Stroke(width = 1f))
+        if (opath != null) {
+            drawPath(opath, halo.copy(alpha = 0.25f), style = Stroke(width = 1f))
+        } else {
+            drawRect(halo.copy(alpha = 0.25f), topLeft = Offset(left + 2f, top + 2f), size = rect.size,
+                style = Stroke(width = 1f))
+        }
+        // Anneau de couvert : centré sur le vrai contour si polygone (sinon AABB).
+        val coverCenter = com.legionforge.app.domain.TerrainPolygon.outlineBoundsMm(piece)?.let { b -> mm(b.cx, b.cy) } ?: c
+        val coverW = com.legionforge.app.domain.TerrainPolygon.outlineBoundsMm(piece)?.w ?: w
+        val coverH = com.legionforge.app.domain.TerrainPolygon.outlineBoundsMm(piece)?.h ?: h
 
         // Couvert : anneau + CHIFFRE (daltonisme + fond chargé), épaisseur = niveau.
         if (piece.cover > 0) {
-            val r = maxOf(w, h) / 2f + 3.dp.toPx()
+            val r = maxOf(coverW, coverH) / 2f + 3.dp.toPx()
             val col = if (piece.cover >= 2) Color(0xAAFF7A00) else Color(0xAA2E9BFF)
             // Epaisseur plafonnée à 2px : l'anneau SIGNALE, ne domine pas la photo.
             val cw = maxOf(1.2f, (piece.cover).dp.toPx()).coerceAtMost(2f)
-            drawCircle(halo.copy(alpha = 0.55f), radius = r, center = c, style = Stroke(width = cw + 1f))
-            drawCircle(col, radius = r, center = c, style = Stroke(width = cw))
+            drawCircle(halo.copy(alpha = 0.55f), radius = r, center = coverCenter, style = Stroke(width = cw + 1f))
+            drawCircle(col, radius = r, center = coverCenter, style = Stroke(width = cw))
             // Chiffre >= 11sp avec halo sombre (plancher lisibilité, daltonisme).
             val glyph = piece.cover.toString()
             val style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFFFFF))
             val haloStyle = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xEE000000))
             val tw = 14.dp.toPx(); val th = 18.dp.toPx()
-            val tl = Offset(c.x - tw / 2f, c.y - th / 2f)
+            val tl = Offset(coverCenter.x - tw / 2f, coverCenter.y - th / 2f)
             // Halo 4 directions pour décoller le chiffre du sable et des hachures.
             for (d in listOf(Offset(-1f, 0f), Offset(1f, 0f), Offset(0f, -1f), Offset(0f, 1f))) {
                 drawText(textMeasurer, glyph, topLeft = tl + Offset(d.x, d.y), size = Size(tw, th), style = haloStyle)

@@ -126,6 +126,34 @@ class LegionBattleMatCaptureTest {
         }
     }
 
+    /** Bouton i OFF : fond + unités seulement, annotations masquées. */
+    @Test
+    fun battlemat_annotations_masquees() {
+        captureRoboImage("src/test/snapshots/legion-annotations-masquees.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.TATOOINE, battleMatName = "Tatooine",
+                    onPickBattleMat = {}, forceShowMatLogic = false)
+            }
+        }
+    }
+
+    /** Portrait (bascule) : le plateau 2:1 dépasse, c'est assumé. */
+    @Test
+    fun battlemat_portrait() {
+        captureRoboImage("src/test/snapshots/legion-battlemat-portrait.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.TATOOINE, battleMatName = "Tatooine",
+                    onPickBattleMat = {}, forceLandscape = false)
+            }
+        }
+    }
+
     @Test
     fun mapcard_recover_research_zones() {
         captureRoboImage("src/test/snapshots/legion-mapcard-recover.png") {

@@ -84,6 +84,21 @@ class LegionMapLayoutTest {
     }
 
     @Test
+    fun poi_objets_varies_par_carte() {
+        // Chaque carte propose plusieurs objets distincts (variation demandée par Yann).
+        for (name in LegionMapLayouts.NAMES) {
+            val layout = LegionMapLayouts.forName(name)!!
+            assertTrue("Pas d'objets décoratifs pour $name", layout.poiObjects.isNotEmpty())
+            assertTrue("Moins de 2 objets distincts pour $name", layout.poiObjects.size >= 2)
+            assertEquals("Doublons d'objets pour $name", layout.poiObjects.size, layout.poiObjects.toSet().size)
+        }
+        // Rotation si plus de POI que d'objets : index wrap sans crash.
+        val m = LegionMapLayouts.RECOVER_THE_RESEARCH
+        for (i in m.poi.indices) assertTrue(m.poiObjectAt(i) != null)
+        assertEquals(m.poiObjectAt(0), m.poiObjectAt(m.poiObjects.size))
+    }
+
+    @Test
     fun resolution_par_nom_et_repli() {
         assertEquals(LegionMapLayouts.RECOVER_THE_RESEARCH,
             LegionMapLayouts.forName("Recover the Research"))

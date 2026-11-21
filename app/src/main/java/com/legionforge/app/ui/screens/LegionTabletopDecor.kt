@@ -72,6 +72,13 @@ data class TerrainPiece(
     val half: Char = 'A',          // un layout DOC62 = 2 moities A/B assemblees
     val rotation: Int = 0,         // 0 ou 180
     val surface: TerrainSurface = TerrainSurface.IMPASSABLE,
+    /**
+     * Contour réel de l'emprise au sol en PIXELS IMAGE (1408x704), ordre horaire.
+     * null = emprise rectangulaire AABB (xMm/yMm/wMm/hMm) — rétro-compatible.
+     * Non-null = vrai polygone (bâtiment irrégulier, canal sinueux) : le rendu et
+     * la collision suivent CE contour au lieu du rectangle englobant.
+     */
+    val outline: List<Pair<Float, Float>>? = null,
 )
 
 /** Une carte de terrain pré-construite, indépendante des cartes Map du jeu. */

@@ -344,4 +344,5 @@
     <string name="armada_battlemat_coruscant">Coruscant-Orbit</string>
     <string name="armada_battlemat_title">Weltraumplatte wählen</string>
     <string name="armada_battlemat_change_hint">Runde %1$d · tippen zum Wechseln</string>
+    <string name="tabletop_toggle_orientation">Querformat / Hochformat wechseln</string>
 </resources>

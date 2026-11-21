@@ -18,13 +18,15 @@ import androidx.compose.ui.platform.LocalContext
  * n'est pas une Activity réelle -> le cast échoue et on ignore proprement.
  */
 @Composable
-fun ForceLandscapeWhileMounted() {
+fun ForceLandscapeWhileMounted(enabled: Boolean = true) {
     val ctx = LocalContext.current
-    DisposableEffect(ctx) {
+    DisposableEffect(ctx, enabled) {
         val activity = ctx as? Activity
         val previous = activity?.requestedOrientation
-        if (activity != null && previous != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+        if (enabled && activity != null && previous != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else if (!enabled && activity != null && previous != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         onDispose {
             if (activity != null && previous != null) {

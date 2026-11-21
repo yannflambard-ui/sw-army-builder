@@ -154,8 +154,14 @@ fun LegionTabletopScreen(
     forceRailCollapsed: Boolean = false, // test uniquement : rail de cartes replié
     forceMapLayoutName: String? = null, // test uniquement : Map Card à transcrire
     blueAtBottom: Boolean = true, // choix du bord de Blue (rulebook 1244-1248)
+    forceLandscape: Boolean? = null, // test uniquement : orientation imposée
+    forceShowMatLogic: Boolean? = null, // test uniquement : bouton i (annotations)
 ) {
-    ForceLandscapeWhileMounted()
+    var landscape by remember { mutableStateOf(forceLandscape ?: true) }
+    var showMatLogic by remember(battleMat.id) {
+        mutableStateOf(forceShowMatLogic ?: (battleMat != BattleMats.NONE))
+    }
+    ForceLandscapeWhileMounted(enabled = landscape)
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var tool by remember { mutableStateOf(LegionTool.SELECT) }
@@ -207,7 +213,6 @@ fun LegionTabletopScreen(
     }
     // Couche logique : visible par défaut si un mat image est choisi (sinon le
     // décor vectoriel classique reste géré par terrainCard).
-    var showMatLogic by remember(battleMat.id) { mutableStateOf(battleMat != BattleMats.NONE) }
 
     val selected = pawns.firstOrNull { it.id == selectedId }
     val target = pawns.firstOrNull { it.id == targetId }
@@ -452,12 +457,17 @@ fun LegionTabletopScreen(
                         Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.terrain_pick), tint = LegionColors.TextSecondary)
                     }
                 }
-                // Bascule couche logique (overlay) — visible seulement si un mat image est actif.
-                if (matBitmap != null) {
-                    IconButton(onClick = { showMatLogic = !showMatLogic }, modifier = Modifier.size(LegionDims.TouchMin)) {
-                        Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.battlemat_tactical),
-                            tint = if (showMatLogic) Color(0xFF00E5A8) else LegionColors.TextSecondary)
-                    }
+                // Bascule couche logique / annotations (bouton i) — garde fond + unités.
+                IconButton(onClick = { showMatLogic = !showMatLogic }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                    Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.battlemat_tactical),
+                        tint = if (showMatLogic) Color(0xFF00E5A8) else LegionColors.TextSecondary)
+                }
+                // Bascule orientation paysage / portrait (le tapis 2:1 peut dépasser).
+                val orientationLabel = stringResource(R.string.tabletop_toggle_orientation)
+                IconButton(onClick = { landscape = !landscape }, modifier = Modifier.size(LegionDims.TouchMin)) {
+                    Text(if (landscape) "▭" else "▯", color = LegionColors.Accent,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.semantics { contentDescription = orientationLabel })
                 }
                 Surface(onClick = { onRoundChange(round + 1) }, shape = RoundedCornerShape(LegionDims.Radius), color = LegionColors.Accent, modifier = Modifier.heightIn(min = LegionDims.TouchMin)) {
                     Row(Modifier.padding(horizontal = LegionDims.SpaceS), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -796,6 +806,10 @@ private fun DrawScope.drawLegionBoard(
         drawRect(BattlePalette.Parchment, topLeft = mm(-halfW + 9f, -halfH + 9f),
             size = androidx.compose.ui.geometry.Size(matSize.width - 18f, matSize.height - 18f), style = Stroke(width = 1.5f))
 
+        // ── ANNOTATIONS (bouton i) ──────────────────────────────────────────
+        // showMatLogic = false (bouton i OFF) → on ne garde que le fond + les unités :
+        // territoires, POI, couche logique, graduations, légendes et notes sont masqués.
+        if (showMatLogic) {
         // ── MAP CARD : territoires + POI TRANSCRITS (rulebook 391-401, 417-423) ──
         // Quand la Map Card choisie est transcrite, on dessine SA géométrie réelle.
         // Sinon, repères INDICATIFS uniquement (jamais présentés comme de vraies zones).
@@ -814,9 +828,9 @@ private fun DrawScope.drawLegionBoard(
             }
             drawTerritory(activeLayout.allied, Color(0xB0245FBF), BattlePalette.TapeOwn)
             drawTerritory(activeLayout.enemy, Color(0xB08A1E12), BattlePalette.TapeOpp)
-            // POI : cylindre 2" (rulebook 653, 1316). Objet thématique si fourni, sinon anneau.
-            val poiBmp = activeLayout.poiObject?.let { poiBitmaps[it] }
-            for (pt in activeLayout.poi) {
+            // POI : cylindre 2" (rulebook 653, 1316). Objet DÉCORATIF varié par point.
+            for ((poiIndex, pt) in activeLayout.poi.withIndex()) {
+                val poiBmp = activeLayout.poiObjectAt(poiIndex)?.let { poiBitmaps[it] }
                 // POI = intersections de grille → caseEdge (PAS caseCenter, +76 mm d'erreur).
                 val c0 = activeLayout.caseEdge(pt[0].toFloat(), pt[1].toFloat())
                 val c = mm(c0.first, c0.second)
@@ -921,6 +935,7 @@ private fun DrawScope.drawLegionBoard(
             drawText(textMeasurer, terrainNote, topLeft = Offset(center.x - tnW/2f + 8.dp.toPx(), tnY + 1.dp.toPx()),
                 size = Size(maxOf(1f, tnW - 16.dp.toPx()), 18.dp.toPx()), style = noteStyle)
         }
+        } // fin if (showMatLogic) — annotations masquées quand bouton i OFF
     }
     // Bornes de bandes de portée (6" par segment, rulebook:648-664) autour de
     // l'unité sélectionnée : R1=6", R2=12", R3=18", R4=24", R5=30".
@@ -1087,7 +1102,8 @@ private fun DrawScope.drawLegionBoard(
         )
         drawnLabels.add(finalRect)
     }
-    // Badges OBJ dessinés EN DERNIER : au-dessus des socles, jamais masqués.
+    // Badges OBJ (repères indicatifs) — masqués avec les autres annotations (bouton i OFF).
+    if (showMatLogic) {
     val objLabelStyle = androidx.compose.ui.text.TextStyle(fontSize = LegionType.Caption, fontWeight = FontWeight.Bold, color = BattlePalette.Wood)
     for ((i, ox) in listOf(-12f, 0f, 12f).withIndex()) {
         val c = mm(ox * LegionTabletopGeometry.MM_PER_INCH, 0f)
@@ -1099,6 +1115,7 @@ private fun DrawScope.drawLegionBoard(
             size = androidx.compose.ui.geometry.Size(tw, 22.dp.toPx()), cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(width = 1f))
         drawText(textMeasurer, tag, topLeft = Offset(c.x - tw/2f + 6.dp.toPx(), c.y - 8.dp.toPx()),
             size = Size(maxOf(1f, tw - 12.dp.toPx()), 20.dp.toPx()), style = objLabelStyle)
+    }
     }
     // Ligne de visée tireur -> cible.
     if (selected != null && target != null) {

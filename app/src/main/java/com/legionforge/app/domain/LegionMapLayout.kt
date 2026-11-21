@@ -38,8 +38,12 @@ data class LegionMapLayout(
     val name: String,
     val gridCols: Int = 12,
     val gridRows: Int = 6,
-    /** Objet affiché sur les POI de cette carte (même objet répété, ou null = anneau générique). */
-    val poiObject: PoiObject? = null,
+    /**
+     * Objets DÉCORATIFS à disposer sur les POI (un par point, rotation si plus de
+     * POI que d'objets). Vide = anneaux génériques. Le type/nombre réel vient de
+     * l'Objective Card — ces objets sont un repère visuel, pas une donnée de règle.
+     */
+    val poiObjects: List<PoiObject> = emptyList(),
     /** Rectangles de territoire allié, en cases [c0,r0,c1,r1] (c1/r1 inclus). */
     val allied: List<IntArray> = emptyList(),
     /** Rectangles de territoire ennemi, en cases [c0,r0,c1,r1]. */
@@ -68,6 +72,10 @@ data class LegionMapLayout(
         return (e.first + caseMm / 2f) to (e.second + caseMm / 2f)
     }
 
+    /** Objet décoratif pour le POI d'index [i] : rotation sur la liste fournie. */
+    fun poiObjectAt(i: Int): PoiObject? =
+        if (poiObjects.isEmpty()) null else poiObjects[i % poiObjects.size]
+
     /**
      * Applique le choix du bord de Blue (rulebook 1244-1248).
      * [blueAtBottom] = true : transcription d'origine (allié en bas) ;
@@ -95,7 +103,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(0,0,8,0)),
         poi = listOf(intArrayOf(2,2), intArrayOf(5,2), intArrayOf(9,2), intArrayOf(3,4), intArrayOf(7,4), intArrayOf(10,4)),
         transcribed = true,
-        poiObject = PoiObject.CONTROL_TERMINAL,
+        poiObjects = listOf(PoiObject.CONTROL_TERMINAL, PoiObject.COMMS_TOWER, PoiObject.SHIELD_GENERATOR, PoiObject.POWER_GENERATOR, PoiObject.TRANSCEIVER, PoiObject.SUPPLY_CRATE),
     )
 
     val INTERCEPT_SIGNALS = LegionMapLayout(
@@ -105,7 +113,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(1,0,4,1)),
         poi = listOf(intArrayOf(3,1), intArrayOf(1,3), intArrayOf(5,3), intArrayOf(3,5)),
         transcribed = true,
-        poiObject = PoiObject.COMMS_TOWER,
+        poiObjects = listOf(PoiObject.COMMS_TOWER, PoiObject.TRANSCEIVER, PoiObject.CONTROL_TERMINAL, PoiObject.POWER_GENERATOR),
     )
 
     val BREAKTHROUGH = LegionMapLayout(
@@ -115,7 +123,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(0,0,8,1), intArrayOf(0,2,1,3)),
         poi = listOf(intArrayOf(8,1), intArrayOf(1,3), intArrayOf(11,3), intArrayOf(4,5)),
         transcribed = true,
-        poiObject = PoiObject.BUNKER_STATION,
+        poiObjects = listOf(PoiObject.BUNKER_STATION, PoiObject.SHIELD_GENERATOR, PoiObject.SUPPLY_CRATE, PoiObject.CARGO_CUBES, PoiObject.CONTROL_TERMINAL, PoiObject.POWER_GENERATOR),
     )
 
     val BUNKER_ASSAULT = LegionMapLayout(
@@ -125,7 +133,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(1,0,4,1)),
         poi = listOf(intArrayOf(1,2), intArrayOf(5,2), intArrayOf(1,4), intArrayOf(5,4)),
         transcribed = true,
-        poiObject = PoiObject.BUNKER_STATION,
+        poiObjects = listOf(PoiObject.BUNKER_STATION, PoiObject.SHIELD_GENERATOR, PoiObject.SUPPLY_CRATE, PoiObject.CARGO_CUBES, PoiObject.CONTROL_TERMINAL, PoiObject.POWER_GENERATOR),
     )
 
     val CLOSE_THE_POCKET = LegionMapLayout(
@@ -135,7 +143,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(0,0,1,1), intArrayOf(4,0,5,1)),
         poi = listOf(intArrayOf(1,3), intArrayOf(3,3), intArrayOf(5,3)),
         transcribed = true,
-        poiObject = PoiObject.SUPPLY_CRATE,
+        poiObjects = listOf(PoiObject.SUPPLY_CRATE, PoiObject.CARGO_CUBES, PoiObject.FUEL_CANISTER, PoiObject.RHYDONIUM_CANISTER),
     )
 
     val CONTACT_CONTACT = LegionMapLayout(
@@ -145,7 +153,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(6,0,11,1), intArrayOf(9,2,10,3)),
         poi = listOf(intArrayOf(3,1), intArrayOf(6,1), intArrayOf(6,3), intArrayOf(6,5), intArrayOf(9,5)),
         transcribed = true,
-        poiObject = PoiObject.TRANSCEIVER,
+        poiObjects = listOf(PoiObject.TRANSCEIVER, PoiObject.COMMS_TOWER, PoiObject.CONTROL_TERMINAL, PoiObject.SHIELD_GENERATOR, PoiObject.POWER_GENERATOR),
     )
 
     val PAYLOAD = LegionMapLayout(
@@ -155,7 +163,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(0,0,11,1)),
         poi = listOf(intArrayOf(9,2), intArrayOf(6,3), intArrayOf(2,4)),
         transcribed = true,
-        poiObject = PoiObject.CARGO_CUBES,
+        poiObjects = listOf(PoiObject.CARGO_CUBES, PoiObject.SUPPLY_CRATE, PoiObject.FUEL_CANISTER, PoiObject.BUNKER_STATION),
     )
 
     val CAULDRON = LegionMapLayout(
@@ -165,7 +173,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(0,0,11,1)),
         poi = listOf(intArrayOf(3,1), intArrayOf(9,1), intArrayOf(4,3), intArrayOf(7,3), intArrayOf(3,4), intArrayOf(9,4)),
         transcribed = true,
-        poiObject = PoiObject.RHYDONIUM_CANISTER,
+        poiObjects = listOf(PoiObject.RHYDONIUM_CANISTER, PoiObject.FUEL_CANISTER, PoiObject.CARGO_CUBES, PoiObject.CONTROL_TERMINAL, PoiObject.POWER_GENERATOR, PoiObject.SUPPLY_CRATE),
     )
 
     val OUTFLANK = LegionMapLayout(
@@ -175,7 +183,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(3,0,8,1), intArrayOf(11,0,11,3)),
         poi = listOf(intArrayOf(2,2), intArrayOf(6,2), intArrayOf(6,4), intArrayOf(10,4)),
         transcribed = true,
-        poiObject = PoiObject.FUEL_CANISTER,
+        poiObjects = listOf(PoiObject.FUEL_CANISTER, PoiObject.RHYDONIUM_CANISTER, PoiObject.SUPPLY_CRATE, PoiObject.CARGO_CUBES),
     )
 
     val SHIFTING_PRIORITIES = LegionMapLayout(
@@ -185,7 +193,7 @@ object LegionMapLayouts {
         enemy = listOf(intArrayOf(0,0,8,1)),
         poi = listOf(intArrayOf(1,4), intArrayOf(3,3), intArrayOf(6,3), intArrayOf(9,3), intArrayOf(11,2)),
         transcribed = true,
-        poiObject = PoiObject.POWER_GENERATOR,
+        poiObjects = listOf(PoiObject.POWER_GENERATOR, PoiObject.SHIELD_GENERATOR, PoiObject.CONTROL_TERMINAL, PoiObject.COMMS_TOWER, PoiObject.TRANSCEIVER),
     )
 
     /** Résolution par nom de Map Card. Repli : null (jamais de bandes 12" inventées). */
