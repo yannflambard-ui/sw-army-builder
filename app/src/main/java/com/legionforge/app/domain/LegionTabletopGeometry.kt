@@ -13,8 +13,9 @@ import kotlin.math.sqrt
  * CONVENTIONS D'ÉCHELLE (choix d'implémentation, PAS des règles du rulebook) :
  * - 1 pouce = 25,4 mm (conversion physique).
  * - 1 mm de table = [LEGION_PX_PER_MM] px à zoom 1.
- * - Taille des socles : petit = 25 mm, moyen = 40 mm, grand = 50 mm de DIAMÈTRE
- *   (valeurs communément admises ; le rulebook ne les chiffre pas, rulebook:298-303).
+ * - Taille des socles (DIAMÈTRE officiel, FFG CSR 2018 / AMG 06-2026) :
+ *   small=27 mm, medium=50 mm, large=70 mm, huge=100 mm. Le rulebook:298-303 ne
+ *   chiffre rien (small vs notched seulement) : ces valeurs viennent du CSR.
  * - Arc avant = 90° (±45° autour du facing) : APPROXIMATION. Le rulebook ne chiffre
  *   aucun angle (rulebook:2686-2689, socles crantés aux lignes sculptées).
  */
@@ -22,16 +23,45 @@ object LegionTabletopGeometry {
     const val MM_PER_INCH = 25.4f
     const val LEGION_PX_PER_MM = 2.0f
 
-    /** Rayon du socle en mm selon la taille. small=12,5 / medium=20 / large=25. */
-    fun baseRadiusMm(size: String): Float = when (size.lowercase()) {
-        "small" -> 12.5f
-        "medium" -> 20f
-        "large" -> 25f
-        else -> 12.5f
+    /**
+     * Diamètre officiel du socle en mm (FFG CSR 2018 / AMG 06-2026).
+     * small=27 (infanterie), medium=50 (bikes), large=70 (AT-RT/emplacements),
+     * huge=100 (AT-ST, T-47). Valeurs propriétaires : LAAT/le 120, AAT/TX-130 150,
+     * A-A5 100x175. Le rulebook:298-303 ne chiffre pas (small vs notched).
+     */
+    fun baseDiameterMm(size: String): Float = when (size.lowercase()) {
+        "small" -> 27f
+        "medium" -> 50f
+        "large" -> 70f
+        "huge" -> 100f
+        else -> 27f
     }
 
-    /** Diamètre du socle en mm. */
-    fun baseDiameterMm(size: String): Float = baseRadiusMm(size) * 2f
+    /** Rayon du socle en mm. */
+    fun baseRadiusMm(size: String): Float = baseDiameterMm(size) / 2f
+
+    /**
+     * Emprise d'une ESCQADE en mm (diamètre de l'ensemble des socles serrés).
+     *
+     * Une unité Legion n'est PAS un socle unique : [miniCount] figurines sont
+     * positionnées côte à côte, touchantes (au contact, rulebook:766). Pour
+     * 1 figurine l'emprise = 1 diamètre ; pour N, on aligne les socles en 2
+     * rangées compactes. Le RAYON d'emprise sert à la collision et au rendu.
+     *
+     * Géométrie : N socles de diamètre D serrés en grille quasi-carrée
+     * (colonnes = ceil(sqrt(N))) -> largeur = cols*D, hauteur = rows*D.
+     * Le rayon circulaire englobant = hypot(largeur, hauteur)/2.
+     */
+    fun squadFootprintRadiusMm(size: String, miniCount: Int): Float {
+        val d = baseDiameterMm(size)
+        val n = miniCount.coerceAtLeast(1)
+        if (n == 1) return d / 2f // 1 figurine = rayon d'un socle unique, pas sa diagonale
+        val cols = kotlin.math.ceil(kotlin.math.sqrt(n.toDouble())).toInt().coerceAtLeast(1)
+        val rows = kotlin.math.ceil(n.toDouble() / cols).toInt().coerceAtLeast(1)
+        val w = cols * d
+        val h = rows * d
+        return hypot(w / 2f, h / 2f)
+    }
 
     /**
      * Socle PTIT vs CRANTÉ — règle officielle (rulebook:298-303) :
@@ -47,6 +77,31 @@ object LegionTabletopGeometry {
     fun isNotchedBase(cardSubtype: String?): Boolean {
         val s = cardSubtype?.trim()?.lowercase() ?: return true
         return s !in SMALL_BASE_SUBTYPES
+    }
+
+    /**
+     * Taille de socle ("small"/"medium"/"large"/"huge") depuis la CARTE.
+     * Le rulebook:298-303 ne chiffre pas, mais le CSR publie : small 27 (les 4
+     * sous-types infanterie), medium 50 (bikes/cavalerie/droïdes lourds),
+     * large 70 (AT-RT, emplacements, véhicules légers), huge 100+ (AT-ST,
+     * T-47, Occupier, AAT). Le catalogue n'a PAS de champ de taille : on
+     * déduit du sous-type puis du nom pour les véhicules lourds.
+     */
+    fun baseSizeFor(cardSubtype: String?, name: String?, miniCount: Int): String {
+        val sub = cardSubtype?.trim()?.lowercase() ?: ""
+        if (sub in SMALL_BASE_SUBTYPES) return "small"
+        val n = name?.lowercase() ?: ""
+        // Gros véhicules / créatures montures : socle huge (100 mm et +).
+        if (n.contains("at-st") || n.contains("t-47") || n.contains("aat") ||
+            n.contains("occupier") || n.contains("tx-225") || n.contains("laat/le") ||
+            n.contains("a-at") || n.contains("saber-class") || n.contains("dwarf spider") ||
+            n.contains("crab droid") || n.contains("grievous")) return "huge"
+        // Bikes, cavalerie, droïdes lourds, speeders légers : medium 50 mm.
+        if (sub == "repulsor vehicle" || sub == "heavy droid trooper" ||
+            n.contains("bike") || n.contains("speeder") && !n.contains("a-a5") ||
+            n.contains("tauntaun") || n.contains("dewback") || n.contains("droideka")) return "medium"
+        // AT-RT, emplacements, autres véhicules : large 70 mm.
+        return "large"
     }
 
     /** Applique une nouvelle valeur de blessures : bornage 0..max et defeated dérivé. */

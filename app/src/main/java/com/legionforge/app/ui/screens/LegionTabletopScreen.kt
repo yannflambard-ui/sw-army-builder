@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.asImageBitmap
@@ -99,7 +100,12 @@ data class LegionPawn(
     val imagePath: String? = null,    // miniature de carte locale (assets), token légal
     val faction: String = "",         // factionId pour la couleur catalogue (factionColor)
     val upgrade: String = "",         // upgrade/commandant entre parenthèses -> "(c)" sur l'étiquette
+    val miniCount: Int = 1,           // figurines de l'escouade (legionStats.miniCount) -> emprise
 )
+
+/** Rayon d'emprise du pion en mm : socle seul si 1 figurine, grille compacte si escouade. */
+private fun LegionPawn.footprintRadiusMm(): Float =
+    LegionTabletopGeometry.squadFootprintRadiusMm(baseSize, miniCount)
 
 private enum class LegionTool { SELECT, RANGE, ARC }
 
@@ -128,7 +134,12 @@ fun LegionTabletopScreen(
     battleMat: BattleMat = BattleMats.NONE,
     battleMatName: String = "",
     onPickBattleMat: (() -> Unit)? = null,
+    forceDeployOrigin: Pair<Float, Float>? = null, // test uniquement
+    forceDeployCurrent: Pair<Float, Float>? = null, // test uniquement
+    forceDeploySpeed: Int = 1, // test uniquement
+    forceScale: Float? = null, // test uniquement : zoom imposé
 ) {
+    ForceLandscapeWhileMounted()
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var tool by remember { mutableStateOf(LegionTool.SELECT) }
@@ -140,12 +151,13 @@ fun LegionTabletopScreen(
     // Fit SYNCHRONE dès la 1re composition : déterministe en local comme en CI.
     var scale by remember {
         val padMm = 45f
-        // Cadrage initial sur le PLAYMAT ENTIER (36") pour voir les zones de déploiement,
+        // Cadrage initial sur le PLAYMAT ENTIER (6'x3') pour voir les zones de déploiement,
     // les objectifs et les graduations dès l'ouverture. L'utilisateur zoome ensuite
     // sur ses pions au besoin (boutons −/+ ou pinch).
-    val matSpanPx = 2f * 18f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
-    val s = minOf(vpW.toFloat(), vpH.toFloat()) / matSpanPx
-    mutableFloatStateOf(s.coerceIn(0.25f, 4f))
+    // Plateau 6'x3' : cadrage initial sur la LARGEUR (6 pieds) pour portrait.
+    val matSpanPx = 72f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
+    val s = vpW.toFloat() / matSpanPx
+    mutableFloatStateOf((forceScale ?: s).coerceIn(0.10f, 6f))
     }
 
     var pan by remember { mutableStateOf<Offset?>(initialPan) } // null = pas encore cadré
@@ -158,6 +170,11 @@ fun LegionTabletopScreen(
     var blockedDrop by remember { mutableStateOf(forceBlockedDrop) }
     // Dernière position MM légale du pion en cours de drag (retour si drop bloqué).
     var lastValidMm by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    // Ficelle de déplacement : origine (MM) du pion saisi + position courante (MM).
+    // Indique la portée Speed (vitesse), ne contraint PAS le drop (choix Yann).
+    var deployOrigin by remember { mutableStateOf<Pair<Float, Float>?>(forceDeployOrigin) }
+    var deployCurrent by remember { mutableStateOf<Pair<Float, Float>?>(forceDeployCurrent) }
+    var deploySpeed by remember { mutableStateOf(forceDeploySpeed) }
     val density = LocalDensity.current
     val appCtx = androidx.compose.ui.platform.LocalContext.current.applicationContext
     val cardBitmaps = remember(pawns) {
@@ -188,16 +205,18 @@ fun LegionTabletopScreen(
     )
 
     fun fitScale(widthPx: Int, heightPx: Int): Float {
-        // Fit sur le tapis entier (36") : les zones de déploiement, les objectifs
+        // Fit sur le tapis entier (6'x3') : les zones de déploiement, les objectifs
         // et les graduations sont visibles dès l'ouverture, comme un vrai playmat.
-        val matSpanPx = 2f * 18f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
-        return (minOf(widthPx.toFloat(), heightPx.toFloat()) / matSpanPx).coerceIn(0.25f, 4f)
+        val matSpanPx = 72f * LegionTabletopGeometry.MM_PER_INCH * LegionTabletopGeometry.LEGION_PX_PER_MM
+        return (widthPx.toFloat() / matSpanPx).coerceIn(0.10f, 6f)
     }
     // Fit SYNCHRONE : deterministe en local comme en CI (pas de race onSizeChanged).
     // Clé = IDENTITÉ des pions, PAS leurs positions : sans cela, chaque onMove
     // redéclenche le fit et la transformation bouge pendant le drag.
     val pawnIds = pawns.joinToString("|") { it.id }
-    LaunchedEffect(vpW, vpH, pawnIds) { scale = fitScale(vpW, vpH) }
+    LaunchedEffect(vpW, vpH, pawnIds) {
+        if (forceScale == null) scale = fitScale(vpW, vpH)
+    }
 
     // Réfs STABLES pour le pointerInput : sans cela, pawns/scale/effPan changent
     // à chaque frame de drag, ce qui redémarre detectDragGestures et casse le geste.
@@ -263,7 +282,7 @@ fun LegionTabletopScreen(
                             val dist = (a - b).getDistance()
                             if (lastDist > 0f && dist > 0f) {
                                 val oldS = liveScale
-                                val next = (oldS * (dist / lastDist)).coerceIn(0.25f, 6f)
+                                val next = (oldS * (dist / lastDist)).coerceIn(0.10f, 6f)
                                 val base = livePan
                                 val ratio = next / oldS
                                 pan = Offset(
@@ -289,7 +308,7 @@ fun LegionTabletopScreen(
                                 if (dragPawnId == null && liveTool == LegionTool.SELECT) {
                                     val hit = livePawns.lastOrNull { pl ->
                                         (down.position - toScreenLive(pl)).getDistance() <= maxOf(
-                                            LegionTabletopGeometry.baseRadiusPx(pl.baseSize, liveScale) + 8f,
+                                            (pl.footprintRadiusMm() * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale) + 8f,
                                             LegionDims.TouchMin.toPx() / 2f,
                                         )
                                     }
@@ -297,12 +316,17 @@ fun LegionTabletopScreen(
                                         dragPawnId = hit.id
                                         selectedId = hit.id
                                         dragPan = livePan // figer la translation pendant le geste
+                                        // Ficelle : origine = position actuelle du pion, portée = sa Vitesse.
+                                        deployOrigin = hit.xMm to hit.yMm
+                                        deployCurrent = hit.xMm to hit.yMm
+                                        deploySpeed = hit.speed.coerceAtLeast(1)
                                     }
                                 }
                                 val dp = dragPawnId?.let { id -> livePawns.firstOrNull { it.id == id } }
                                 if (dp != null && liveTool == LegionTool.SELECT) {
                                     val (mx, my) = screenToMmLive(c.position)
-                                    val rMm = LegionTabletopGeometry.baseRadiusMm(dp.baseSize)
+                                    deployCurrent = mx to my
+                                    val rMm = dp.footprintRadiusMm()
                                     // Collision : pièces du mat image si actif, sinon du décor vectoriel.
                                     val pieces = if (liveBattleMat != BattleMats.NONE && liveBattleMat.pieces.isNotEmpty())
                                         liveBattleMat.pieces
@@ -327,11 +351,13 @@ fun LegionTabletopScreen(
                             c.consume()
                         } else {
                             // ── FIN DU GESTE ──
+                            deployOrigin = null
+                            deployCurrent = null
                             if (!pinching && !moved) {
                                 // TAP : ouvrir la fiche du pion touche.
                                 val hit = livePawns.lastOrNull { pl ->
                                     (down.position - toScreenLive(pl)).getDistance() <= maxOf(
-                                        LegionTabletopGeometry.baseRadiusPx(pl.baseSize, liveScale) + 8f,
+                                        (pl.footprintRadiusMm() * LegionTabletopGeometry.LEGION_PX_PER_MM * liveScale) + 8f,
                                         LegionDims.TouchMin.toPx() / 2f,
                                     )
                                 }
@@ -357,7 +383,8 @@ fun LegionTabletopScreen(
         ) {
             drawLegionBoard(scale, effPan(), selected, target, tool, measureEnd, pawns, ::toScreen, cardBitmaps, textMeasurer,
                 ttEnemy, ttAllied, ttNote, ttObj, terrainCard, ttTerrainNote, blockedDrop,
-                matBitmap, battleMat, showMatLogic)
+                matBitmap, battleMat, showMatLogic,
+                deployOrigin, deployCurrent, deploySpeed)
         }
 
         // ── Barre haute 48dp ─────────────────────────────────────────────────
@@ -471,13 +498,13 @@ fun LegionTabletopScreen(
                 .background(LegionColors.SurfaceRaised, RoundedCornerShape(LegionDims.Radius)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale / 1.25f).coerceIn(0.25f, 6f) },
+            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale / 1.25f).coerceIn(0.10f, 6f) },
                 modifier = Modifier.semantics { contentDescription = cdZoomOut }) {
                 Text("−", color = LegionColors.TextPrimary, fontSize = 24.sp)
             }
             Text(stringResource(R.string.tabletop_zoom, (scale * 100).toInt()), color = LegionColors.TextPrimary,
                 style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 4.dp))
-            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale * 1.25f).coerceIn(0.25f, 6f) },
+            IconButton(onClick = { val base = pan ?: viewCenter; pan = base; scale = (scale * 1.25f).coerceIn(0.10f, 6f) },
                 modifier = Modifier.semantics { contentDescription = cdZoomIn }) {
                 Icon(Icons.Filled.Add, contentDescription = null, tint = LegionColors.TextPrimary)
             }
@@ -497,8 +524,8 @@ fun LegionTabletopScreen(
         // ── Aide mesure ──────────────────────────────────────────────────────
         if (tool == LegionTool.RANGE && target != null && selected != null) {
             val dMm = LegionTabletopGeometry.edgeDistanceMm(
-                selected.xMm, selected.yMm, LegionTabletopGeometry.baseRadiusMm(selected.baseSize),
-                target.xMm, target.yMm, LegionTabletopGeometry.baseRadiusMm(target.baseSize),
+                selected.xMm, selected.yMm, selected.footprintRadiusMm(),
+                target.xMm, target.yMm, target.footprintRadiusMm(),
             )
             val inches = LegionTabletopGeometry.roundHalf(LegionTabletopGeometry.mmToInches(dMm))
             Surface(
@@ -645,24 +672,31 @@ private fun DrawScope.drawLegionBoard(
     matBitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
     battleMat: BattleMat = BattleMats.NONE,
     showMatLogic: Boolean = false,
+    deployOrigin: Pair<Float, Float>? = null,
+    deployCurrent: Pair<Float, Float>? = null,
+    deploySpeed: Int = 1,
 ) {
     val center = pan // plateau centré sur (0,0) → écran = centre du viewport
     val pxPerMm = LegionTabletopGeometry.LEGION_PX_PER_MM * scale
     fun mm(x: Float, y: Float) = Offset(center.x + x * pxPerMm, center.y + y * pxPerMm)
     val inchPx = LegionTabletopGeometry.MM_PER_INCH * pxPerMm
 
-    // ── PLAYMAT 36"x36" (91,4 cm) : surface finie, pas une grille infinie ──
-    val halfMat = 18f * LegionTabletopGeometry.MM_PER_INCH // 457,2 mm
-    val tl = mm(-halfMat, -halfMat)
-    val br = mm(halfMat, halfMat)
+    // ── PLAYMAT STANDARD 6'x3' (1828,8 x 914,4 mm) : surface finie ──
+    // Format tournoi Legion (pas le Recon 3'x3'). Les images Gemini sont 2:1 :
+    // elles remplissent EXACTEMENT le plateau, plus de bandes noires.
+    val halfW = 36f * LegionTabletopGeometry.MM_PER_INCH  // 914,4 mm (bord long)
+    val halfH = 18f * LegionTabletopGeometry.MM_PER_INCH  // 457,2 mm (bord court)
+    val halfMat = halfH // compatibilité : graduations/heritage (bord court)
+    val tl = mm(-halfW, -halfH)
+    val br = mm(halfW, halfH)
     val matSize = androidx.compose.ui.geometry.Size(br.x - tl.x, br.y - tl.y)
 
     // Extérieur : table sombre neutre (simple aplat, PAS de dégradé radar).
     drawRect(Color(0xFF141210), size = size)
     if (matSize.width > 0f && matSize.height > 0f) {
         if (matBitmap != null) {
-            // VRAIE IMAGE de battle mat (Gemini 2:1) en « contain » dans le carré 36" :
-            // occupe toute la largeur, bandes haut/bas. Le carré reste l'espace logique.
+            // VRAIE IMAGE de battle mat (Gemini 2:1) sur le plateau 6'x3' :
+            // le ratio tombe exactement, l'image couvre tout le plateau.
             val iw = matBitmap.width.toFloat()
             val ih = matBitmap.height.toFloat()
             val scaleImg = minOf(matSize.width / iw, matSize.height / ih)
@@ -731,9 +765,9 @@ private fun DrawScope.drawLegionBoard(
         } // fin else (sol vectoriel)
         // Cadre bois avec liseré parchemin (plus de doré néon).
         drawRect(BattlePalette.Wood, topLeft = tl, size = matSize, style = Stroke(width = 8f))
-        drawRect(BattlePalette.WoodLight, topLeft = mm(-halfMat + 5f, -halfMat + 5f),
+        drawRect(BattlePalette.WoodLight, topLeft = mm(-halfW + 5f, -halfH + 5f),
             size = androidx.compose.ui.geometry.Size(matSize.width - 10f, matSize.height - 10f), style = Stroke(width = 2f))
-        drawRect(BattlePalette.Parchment, topLeft = mm(-halfMat + 9f, -halfMat + 9f),
+        drawRect(BattlePalette.Parchment, topLeft = mm(-halfW + 9f, -halfH + 9f),
             size = androidx.compose.ui.geometry.Size(matSize.width - 18f, matSize.height - 18f), style = Stroke(width = 1.5f))
 
         // Frontières de déploiement : ruban sombre discret (zones INDICATIVES, voir Map Card).
@@ -783,12 +817,15 @@ private fun DrawScope.drawLegionBoard(
             drawTerrainCard(terrainCard, ::mm, pxPerMm, textMeasurer)
         }
 
-        // Graduations discrètes sur le bord seul (toutes les 6").
-        for (inch in -18..18 step 6) {
+        // Graduations discrètes (toutes les 6"). Bord LONG = 72" (-36..36),
+        // bord COURT = 36" (-18..18) sur le plateau standard 6'x3'.
+        for (inch in -36..36 step 6) {
             val x = mm(inch * LegionTabletopGeometry.MM_PER_INCH, 0f).x
-            val y = mm(0f, inch * LegionTabletopGeometry.MM_PER_INCH).y
             drawLine(BattlePalette.Grout, Offset(x, tl.y + 10f), Offset(x, tl.y + 18f), strokeWidth = 1.5f)
             drawLine(BattlePalette.Grout, Offset(x, br.y - 18f), Offset(x, br.y - 10f), strokeWidth = 1.5f)
+        }
+        for (inch in -18..18 step 6) {
+            val y = mm(0f, inch * LegionTabletopGeometry.MM_PER_INCH).y
             drawLine(BattlePalette.Grout, Offset(tl.x + 10f, y), Offset(tl.x + 18f, y), strokeWidth = 1.5f)
             drawLine(BattlePalette.Grout, Offset(br.x - 18f, y), Offset(br.x - 10f, y), strokeWidth = 1.5f)
         }
@@ -855,7 +892,7 @@ private fun DrawScope.drawLegionBoard(
     // ceux dessinés après elles.
     val pawnGeom = pawns.map { p ->
         val c = toScreen(p)
-        val r = maxOf(LegionTabletopGeometry.baseRadiusPx(p.baseSize, scale), 16.dp.toPx())
+        val r = maxOf(p.footprintRadiusMm() * LegionTabletopGeometry.LEGION_PX_PER_MM * scale, 16.dp.toPx())
         Triple(p, c, r)
     }
     // Seules les étiquettes DÉJÀ POSÉES sont des obstacles. Les socles sont
@@ -980,9 +1017,11 @@ private fun DrawScope.drawLegionBoard(
         // Pastille de camp : couleur + LETTRE A/E (pas la couleur seule — daltonisme).
         val campCol = if (p.isOpp) Color(0xFFC0392B) else Color(0xFF2E6FA8)
         val campLetter = if (p.isOpp) "E" else "A"
-        val pr = maxOf(6f, 7.dp.toPx())
+        // Daltonisme : disque élargi + lettre au plancher LegionType.Caption (11sp).
+        val pr = maxOf(9f, 10.dp.toPx())
         drawCircle(campCol, radius = pr, center = Offset(pos.x + pr + 2.dp.toPx(), pos.y + labelH/2f))
-        val campStyle = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        val campStyle = TextStyle(fontSize = LegionType.Caption,
+            fontWeight = FontWeight.Bold, color = Color.White)
         drawText(textMeasurer, campLetter,
             topLeft = Offset(pos.x + pr + 2.dp.toPx() - pr*0.5f, pos.y + labelH/2f - pr*0.7f),
             size = Size(maxOf(1f, pr*2f), maxOf(1f, pr*1.6f)), style = campStyle)
@@ -1011,6 +1050,48 @@ private fun DrawScope.drawLegionBoard(
     // Ligne de visée tireur -> cible.
     if (selected != null && target != null) {
         drawLine(LegionColors.Accent, toScreen(selected), toScreen(target), strokeWidth = 2f)
+    }
+
+    // FICELLE DE DÉPLACEMENT (dessinée EN DERNIER = au-dessus des pions) :
+    // cercle de portée Vitesse (Speed × 25,4 mm) + ligne pointillée origine→curseur.
+    // INDICATIVE (drop libre), la collision IMPASSABLE reste seule contraignante.
+    // Rulebook 687-689 / 1651-1659. Halo sombre pour lisibilité sur sable clair.
+    if (deployOrigin != null && deployCurrent != null) {
+        val (ox, oy) = deployOrigin!!
+        val (cx, cy) = deployCurrent!!
+        val o = mm(ox, oy)
+        val cpt = mm(cx, cy)
+        val reachMm = deploySpeed.coerceAtLeast(1) * LegionTabletopGeometry.MM_PER_INCH
+        val reachPx = reachMm * pxPerMm
+        val dashFic = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 6f), 0f)
+        val haloFic = Color(0xBB000000)
+        val distMm = kotlin.math.sqrt((cx - ox) * (cx - ox) + (cy - oy) * (cy - oy))
+        val horsPerimetre = distMm > reachMm
+        // Couleur VIVE (cyan/rouge) : le blanc se fondait dans les étiquettes parchemin.
+        val ficColor = if (horsPerimetre) Color(0xFFFF5A5A) else Color(0xFF00E5A8)
+        // Cercle de portée : halo sombre puis pointillé contrasté.
+        drawCircle(haloFic, radius = reachPx, center = o, style = Stroke(width = 4f, pathEffect = dashFic))
+        drawCircle(ficColor.copy(alpha = 0.85f), radius = reachPx, center = o, style = Stroke(width = 2f, pathEffect = dashFic))
+        // Ficelle : halo sombre épais puis pointillé coloré — reste lisible sur parchemin.
+        drawLine(haloFic, o, cpt, strokeWidth = 8f, pathEffect = dashFic)
+        drawLine(ficColor, o, cpt, strokeWidth = 3.5f, pathEffect = dashFic)
+        // Pastille de destination : disque plein + liseré.
+        if (horsPerimetre) {
+            drawCircle(haloFic, radius = 10f, center = cpt)
+            drawCircle(Color(0xFFFF5A5A), radius = 8f, center = cpt)
+            drawCircle(Color.White, radius = 3f, center = cpt)
+        } else {
+            drawCircle(haloFic, radius = 9f, center = cpt)
+            drawCircle(Color(0xFF00E5A8), radius = 7f, center = cpt)
+            drawCircle(Color.White, radius = 3f, center = cpt)
+        }
+        // Étiquette obligatoire : le disque est une approximation UI, la vraie
+        // règle est le Movement Tool plié (rulebook 687-689). Pas un rayon officiel.
+        val lbl = "indicatif · voir Movement Tool"
+        val lblStyle = TextStyle(fontSize = 11.sp, color = Color.White,
+            shadow = Shadow(Color(0xFF000000), Offset(1f, 1f), 3f))
+        val tp = textMeasurer.measure(lbl, lblStyle)
+        drawText(tp, topLeft = Offset(o.x - tp.size.width / 2f, o.y - reachPx - 26f))
     }
 }
 

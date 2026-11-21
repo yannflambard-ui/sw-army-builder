@@ -334,4 +334,11 @@
     <string name="battlemat_tactical">Tactical layer</string>
     <string name="battlemat_title">Choose a battle mat</string>
     <string name="battlemat_change_hint">Round %1$d · tap to change</string>
+    <string name="armada_battlemat_none">Standard grid</string>
+    <string name="armada_battlemat_scarif">Scarif Orbit</string>
+    <string name="armada_battlemat_hoth">Hoth Sector</string>
+    <string name="armada_battlemat_kaliida">Kaliida Nebula</string>
+    <string name="armada_battlemat_coruscant">Coruscant Orbit</string>
+    <string name="armada_battlemat_title">Choose a space mat</string>
+    <string name="armada_battlemat_change_hint">Round %1$d · tap to change</string>
 </resources>

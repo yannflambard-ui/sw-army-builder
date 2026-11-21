@@ -9,9 +9,11 @@ import org.junit.Test
 class LegionTabletopGeometryTest {
 
     @Test fun `socles diametres`() {
-        assertEquals(25f, LegionTabletopGeometry.baseDiameterMm("small"), 0.001f)
-        assertEquals(40f, LegionTabletopGeometry.baseDiameterMm("medium"), 0.001f)
-        assertEquals(50f, LegionTabletopGeometry.baseDiameterMm("large"), 0.001f)
+        // Diamètres officiels CSR 2018 / AMG 06-2026.
+        assertEquals(27f, LegionTabletopGeometry.baseDiameterMm("small"), 0.001f)
+        assertEquals(50f, LegionTabletopGeometry.baseDiameterMm("medium"), 0.001f)
+        assertEquals(70f, LegionTabletopGeometry.baseDiameterMm("large"), 0.001f)
+        assertEquals(100f, LegionTabletopGeometry.baseDiameterMm("huge"), 0.001f)
     }
 
     @Test fun `pouces en mm`() {

@@ -1,5 +1,6 @@
 package com.legionforge.app.ui
 
+import com.legionforge.app.ui.screens.BattleMat
 import com.legionforge.app.ui.screens.BattleMats
 import com.legionforge.app.ui.screens.LegionPawn
 import com.legionforge.app.ui.screens.LegionTabletopScreen
@@ -18,9 +19,9 @@ import org.robolectric.annotation.GraphicsMode
 class LegionBattleMatCaptureTest {
 
     private val pawns = listOf(
-        LegionPawn("a1", "B1 Battle Droids", -60f, -80f, baseSize = "small", maxWounds = 4, wounds = 4, speed = 2),
+        LegionPawn("a1", "B1 Battle Droids", -60f, -80f, baseSize = "small", maxWounds = 4, wounds = 4, speed = 2, miniCount = 4),
         LegionPawn("a2", "General Grievous", 40f, -40f, baseSize = "medium", maxWounds = 5, wounds = 3, speed = 2),
-        LegionPawn("b1", "Clone Troopers", -40f, 90f, baseSize = "small", maxWounds = 4, wounds = 2, speed = 2, isOpp = true, cover = 1),
+        LegionPawn("b1", "Clone Troopers", -40f, 90f, baseSize = "small", maxWounds = 4, wounds = 2, speed = 2, isOpp = true, cover = 1, miniCount = 3),
     )
 
     @Test
@@ -35,6 +36,63 @@ class LegionBattleMatCaptureTest {
             }
         }
     }
+
+    @Test
+    fun battlemat_tatooine_zoom_alignement() {
+        captureRoboImage("src/test/snapshots/legion-battlemat-tatooine-zoom.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.TATOOINE, battleMatName = "Tatooine",
+                    onPickBattleMat = {}, forceScale = 0.35f)
+            }
+        }
+    }
+
+    @Test
+    fun ficelle_deplacement_speed3() {
+        captureRoboImage("src/test/snapshots/legion-ficelle-deplacement.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.NONE,
+                    forceDeployOrigin = -60f to -80f,
+                    forceDeployCurrent = 120f to 40f,
+                    forceDeploySpeed = 3)
+            }
+        }
+    }
+
+    private fun captureMat(mat: BattleMat, name: String, file: String) {
+        captureRoboImage("src/test/snapshots/$file") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = mat, battleMatName = name, onPickBattleMat = {})
+            }
+        }
+    }
+
+    @Test fun battlemat_hoth() = captureMat(BattleMats.HOTH, "Hoth", "legion-battlemat-hoth.png")
+    @Test fun battlemat_endor() = captureMat(BattleMats.ENDOR, "Endor", "legion-battlemat-endor.png")
+    @Test fun battlemat_naboo() = captureMat(BattleMats.NABOO, "Naboo", "legion-battlemat-naboo.png")
+
+    @Test
+    fun battlemat_naboo_zoom() {
+        captureRoboImage("src/test/snapshots/legion-battlemat-naboo-zoom.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = pawns, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.NABOO, battleMatName = "Naboo",
+                    onPickBattleMat = {}, forceScale = 0.35f)
+            }
+        }
+    }
+    @Test fun battlemat_geonosis() = captureMat(BattleMats.GEONOSIS, "Geonosis", "legion-battlemat-geonosis.png")
 
     @Test
     fun battlemat_scarif_sans_logique() {

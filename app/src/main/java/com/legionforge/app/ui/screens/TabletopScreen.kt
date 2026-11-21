@@ -2,6 +2,7 @@ package com.legionforge.app.ui.screens
 import com.legionforge.app.ui.theme.LegionColors
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -133,12 +134,18 @@ fun attackRange(bag: ArmadaDiceBag): Pair<Float, List<String>> = when {
 /** Angles de tir d'un vaisseau, en degrés. front + 2*flank + rear = 360. */
 data class FiringArcs(val front: Float, val flank: Float, val rear: Float)
 
-/** Dimensions de socle (mm), RRG 1.6.0. Les flottilles n'ont pas de taille tranchée : pion neutre. */
+/**
+ * Dimensions de socle (mm), RRG 1.6.0 §SIZE CLASS p.18 + errata p.23.
+ * small 43x71, medium 63x102, large 77.5x129 (valeurs RRG exactes).
+ * Flottille = taille de son socle (small 43x71 pour les flottilles actuelles).
+ * Huge = "un pion sur DEUX socles large" (RRG) : 77.5 x 258 (2x129). Les
+ * 365 mm parfois cités sont l'empreinte du pion, NON une valeur RRG.
+ */
 fun baseSizeMm(sizeClass: String): Pair<Float, Float> = when (sizeClass) {
     "small" -> 43f to 71f
     "medium" -> 63f to 102f
     "large" -> 77.5f to 129f
-    "huge" -> 77.5f to 365f
+    "huge" -> 77.5f to 258f
     else -> 43f to 71f
 }
 
@@ -153,7 +160,11 @@ fun TabletopScreen(
     deployment: Boolean = false,
     onBack: () -> Unit,
     onOpenPlay: (String) -> Unit = {},
+    battleMat: ArmadaBattleMat = ArmadaBattleMats.SCARIF,
+    battleMatName: String = "",
+    onPickBattleMat: (() -> Unit)? = null,
 ) {
+    ForceLandscapeWhileMounted()
     // Cadrage initial : le tapis 1800x900 mm tient dans la largeur (PX_PER_MM = 2 px/mm, ~1080 px écran)
     var scale by remember { mutableStateOf(0.5f) }
     // Scale de cadrage : le plateau entier tient dans l'écran (ergonome).
@@ -265,6 +276,10 @@ fun TabletopScreen(
     val bitmaps = remember(pawns) {
         (pawns.mapNotNull { it.imagePath } + pawns.mapNotNull { it.basePath } + pawns.mapNotNull { it.figurePath } + pawns.mapNotNull { it.tokenPath }).distinct().associateWith { loadAssetBitmap(appCtx, it) }
     }
+    // Image de FOND cosmétique du tapis spatial (aucune règle de terrain inventée).
+    val matBitmap = remember(battleMat.assetPath) {
+        if (battleMat.assetPath.isBlank()) null else loadAssetBitmap(appCtx, battleMat.assetPath)
+    }
 
     Column(Modifier.fillMaxSize().background(LegionColors.Background)) {
         // Top bar : retour (icône) · manche + zoom · recentrer (icône). Tout en maxLines=1.
@@ -276,8 +291,14 @@ fun TabletopScreen(
             androidx.compose.material3.IconButton(onClick = onBack) {
                 Text("←", color = LegionColors.Accent, fontSize = 22.sp)
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = LegionColors.Accent, fontSize = 13.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.then(if (onPickBattleMat != null) Modifier.clickable(onClick = onPickBattleMat) else Modifier)) {
+                // Nom du tapis BIEN VISIBLE, cliquable pour changer.
+                val matLabel = if (battleMat != ArmadaBattleMats.NONE && battleMatName.isNotBlank())
+                    battleMatName else "Manche $round/6"
+                Text(matLabel, color = LegionColors.Accent, fontSize = 15.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, maxLines = 1)
+                Text("Manche $round/6 · ${phase.lowercase().replaceFirstChar { it.uppercase() }}", color = LegionColors.TextSecondary, fontSize = 11.sp, maxLines = 1)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     TextButton(onClick = { scale = (scale / 1.25f).coerceIn(0.3f, 5f) }, modifier = Modifier.size(40.dp)) { Text("−", color = LegionColors.Accent, fontSize = 18.sp) }
                     Text("${"%.0f".format(scale * 100)}%", color = LegionColors.TextSecondary, fontSize = 11.sp, maxLines = 1)
@@ -413,6 +434,15 @@ fun TabletopScreen(
                     }
             ) {
                 val c = Offset(size.width / 2 + pan.x, size.height / 2 + pan.y)
+                // FOND : vraie image du tapis spatial, 1800x900 mm (ratio 2:1 exact).
+                if (matBitmap != null) {
+                    val k = PX_PER_MM * scale
+                    val bw = BOARD_W_MM * k
+                    val bh = BOARD_H_MM * k
+                    drawImage(matBitmap,
+                        dstOffset = androidx.compose.ui.unit.IntOffset((c.x - bw / 2).toInt(), (c.y - bh / 2).toInt()),
+                        dstSize = androidx.compose.ui.unit.IntSize(bw.toInt().coerceAtLeast(1), bh.toInt().coerceAtLeast(1)))
+                }
                 // plateau : zones de déploiement + grille de 100 mm
                 if (showDeployment) drawDeploymentZones(c, scale)
                 drawGrid(c, scale)

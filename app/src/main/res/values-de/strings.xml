@@ -336,4 +336,11 @@
     <string name="battlemat_tactical">Taktische Ebene</string>
     <string name="battlemat_title">Kampfplatte wählen</string>
     <string name="battlemat_change_hint">Runde %1$d · tippen zum Wechseln</string>
+    <string name="armada_battlemat_none">Standardraster</string>
+    <string name="armada_battlemat_scarif">Scarif-Orbit</string>
+    <string name="armada_battlemat_hoth">Hoth-Sektor</string>
+    <string name="armada_battlemat_kaliida">Kaliida-Nebel</string>
+    <string name="armada_battlemat_coruscant">Coruscant-Orbit</string>
+    <string name="armada_battlemat_title">Weltraumplatte wählen</string>
+    <string name="armada_battlemat_change_hint">Runde %1$d · tippen zum Wechseln</string>
 </resources>

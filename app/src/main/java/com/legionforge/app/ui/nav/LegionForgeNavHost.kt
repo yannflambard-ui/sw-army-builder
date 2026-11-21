@@ -197,8 +197,8 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     // Seuls trooper/clone trooper/droid trooper/wookiee trooper sont
                     // sur petits socles ; TOUT le reste est cranté (mandalorien,
                     // emplacement, créature, véhicule...).
-                    val baseSize = if (com.legionforge.app.domain.LegionTabletopGeometry
-                        .isNotchedBase(e.card.cardSubtype)) "large" else "small"
+                    val baseSize = com.legionforge.app.domain.LegionTabletopGeometry.baseSizeFor(
+                        e.card.cardSubtype, e.card.name, st?.miniCount ?: 1)
                     com.legionforge.app.ui.screens.LegionPawn(
                         id = e.instanceId,
                         name = e.card.name,
@@ -213,6 +213,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         canRotate = baseSize != "small",
                         imagePath = legionTokenMap[e.card.id]?.let { "legion_tokens/$it" } ?: e.card.imagePath(),
                         faction = e.card.factionId,
+                        miniCount = st?.miniCount ?: 1,
                     )
                 }
                 // État de plateau local : positions/round/couvert persistés dans le
@@ -530,6 +531,13 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     yMm = if (e.instanceId.startsWith("B:") || e.instanceId.startsWith("opp_")) -304.8f else 304.8f,
                 )
             }
+            // Tapis spatial Armada PAR DÉFAUT : Scarif (nom visible, changeable).
+            var armadaBattleMat by androidx.compose.runtime.remember(lid) {
+                androidx.compose.runtime.mutableStateOf(com.legionforge.app.ui.screens.ArmadaBattleMats.SCARIF)
+            }
+            var showArmadaMatPicker by androidx.compose.runtime.remember(lid) {
+                androidx.compose.runtime.mutableStateOf(false)
+            }
             com.legionforge.app.ui.screens.TabletopScreen(
                 pawns = pawns,
                 sessionId = lid,
@@ -543,7 +551,25 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 deployment = tabletopSetup,
                 onBack = { navController.popBackStack() },
                 onOpenPlay = { instanceId -> navController.navigate(Routes.cardDetail(lid, instanceId)) },
+                battleMat = armadaBattleMat,
+                battleMatName = androidx.compose.ui.res.stringResource(
+                    when (armadaBattleMat.id) {
+                        "armada_scarif" -> com.legionforge.app.R.string.armada_battlemat_scarif
+                        "armada_hoth" -> com.legionforge.app.R.string.armada_battlemat_hoth
+                        "armada_kaliida" -> com.legionforge.app.R.string.armada_battlemat_kaliida
+                        "armada_coruscant" -> com.legionforge.app.R.string.armada_battlemat_coruscant
+                        else -> com.legionforge.app.R.string.armada_battlemat_none
+                    }
+                ),
+                onPickBattleMat = { showArmadaMatPicker = true },
             )
+            if (showArmadaMatPicker) {
+                com.legionforge.app.ui.screens.ArmadaBattleMatPickerSheet(
+                    current = armadaBattleMat,
+                    onPick = { armadaBattleMat = it; showArmadaMatPicker = false },
+                    onDismiss = { showArmadaMatPicker = false },
+                )
+            }
         }
         composable(Routes.SHARE, arguments = listOf(navArgument("listId") { type = NavType.StringType })) { entry ->
             val lid = entry.arguments?.getString("listId") ?: return@composable

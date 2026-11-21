@@ -336,4 +336,11 @@
     <string name="battlemat_tactical">Capa táctica</string>
     <string name="battlemat_title">Elegir tapete</string>
     <string name="battlemat_change_hint">Ronda %1$d · toca para cambiar</string>
+    <string name="armada_battlemat_none">Cuadrícula estándar</string>
+    <string name="armada_battlemat_scarif">Órbita de Scarif</string>
+    <string name="armada_battlemat_hoth">Sector de Hoth</string>
+    <string name="armada_battlemat_kaliida">Nebulosa de Kaliida</string>
+    <string name="armada_battlemat_coruscant">Órbita de Coruscant</string>
+    <string name="armada_battlemat_title">Elegir tapete espacial</string>
+    <string name="armada_battlemat_change_hint">Ronda %1$d · toca para cambiar</string>
 </resources>

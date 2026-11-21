@@ -336,4 +336,11 @@
     <string name="battlemat_tactical">Couche tactique</string>
     <string name="battlemat_title">Choisir un tapis</string>
     <string name="battlemat_change_hint">Manche %1$d · toucher pour changer</string>
+    <string name="armada_battlemat_none">Grille standard</string>
+    <string name="armada_battlemat_scarif">Orbite de Scarif</string>
+    <string name="armada_battlemat_hoth">Secteur de Hoth</string>
+    <string name="armada_battlemat_kaliida">Nébuleuse de Kaliida</string>
+    <string name="armada_battlemat_coruscant">Orbite de Coruscant</string>
+    <string name="armada_battlemat_title">Choisir un tapis spatial</string>
+    <string name="armada_battlemat_change_hint">Manche %1$d · toucher pour changer</string>
 </resources>
