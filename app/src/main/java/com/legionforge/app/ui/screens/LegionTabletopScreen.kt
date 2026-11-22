@@ -173,8 +173,8 @@ fun LegionTabletopScreen(
     var showMatLogic by remember(battleMat.id) {
         mutableStateOf(forceShowMatLogic ?: (battleMat != BattleMats.NONE))
     }
-    // Ne verrouiller que si l'utilisateur a forcé : en AUTO on laisse le système
-    // libre de signaler la rotation (sinon le portrait devient inatteignable).
+    // AUTO (null) : on pose explicitement UNSPECIFIED pour LIBERER tout verrou
+    // d'une activité précédente (sinon le portrait reste inatteignable).
     ForceLandscapeWhileMounted(enabled = orientationOverride)
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
     var targetId by remember { mutableStateOf<String?>(null) }
@@ -852,7 +852,11 @@ private fun DrawScope.drawLegionBoard(
                     val a = activeLayout.caseEdge(rc[0].toFloat(), rc[1].toFloat())
                     val b = activeLayout.caseEdge(rc[2].toFloat() + 1f, rc[3].toFloat() + 1f)
                     val topLeft = mm(a.first, a.second)
-                    val size = androidx.compose.ui.geometry.Size(b.first - a.first, b.second - a.second)
+                    // BUG CORRIGÉ : caseEdge() renvoie des mm plateau. La taille doit
+                    // être convertie en px comme le topLeft, sinon la zone de
+                    // déploiement se met à "grandir/rétrécir" quand on zoome.
+                    val sizePx = activeLayout.territorySizePx(a, b, pxPerMm)
+                    val size = androidx.compose.ui.geometry.Size(sizePx.first, sizePx.second)
                     drawRect(fill, topLeft = topLeft, size = size)
                     drawRect(edge, topLeft = topLeft, size = size, style = Stroke(width = maxOf(2f, 2.dp.toPx())))
                 }

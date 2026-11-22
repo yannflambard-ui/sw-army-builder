@@ -49,6 +49,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.hypot
+import com.legionforge.app.domain.ArmadaDeployment
 import com.legionforge.app.domain.SEGMENT_MM
 import com.legionforge.app.domain.YAW_STEP_DEG
 import com.legionforge.app.domain.maxClicks
@@ -163,16 +164,20 @@ fun TabletopScreen(
     battleMat: ArmadaBattleMat = ArmadaBattleMats.SCARIF,
     battleMatName: String = "",
     onPickBattleMat: (() -> Unit)? = null,
+    forceScale: Float? = null, // test uniquement : zoom imposé (chasseurs 9,5 mm invisibles au fit)
 ) {
     // Suit l'orientation physique du téléphone (portrait ET paysage) ; aucun
     // verrouillage posé, sinon la rotation ne serait plus signalée au composable.
     ForceLandscapeWhileMounted(enabled = null)
     // Cadrage initial : le tapis 1800x900 mm tient dans la largeur (PX_PER_MM = 2 px/mm, ~1080 px écran)
-    var scale by remember { mutableStateOf(0.5f) }
+    var scale by remember { mutableStateOf(forceScale ?: 0.5f) }
     // Scale de cadrage : le plateau entier tient dans l'écran (ergonome).
     var fitScale by remember { mutableStateOf(0.5f) }
     var fitInitialized by remember { mutableStateOf(false) }
     var showDeployment by remember(deployment) { mutableStateOf(deployment) }
+    // Round 0 = phase de mise en place : drag & drop LIBRE mais contraint à la
+    // zone de déploiement du côté du joueur (RRG : bande distance 1-3 du bord long).
+    var deployMode by remember(round) { mutableStateOf(round == 0) }
     var pan by remember { mutableStateOf(Offset.Zero) }
     // Positions distinctes du snapshot Play : éviter d'écraser les données de partie.
     val tablePrefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences("armada_tabletop_positions", android.content.Context.MODE_PRIVATE)
@@ -315,6 +320,22 @@ fun TabletopScreen(
             }
         }
 
+        // Round 0 : bandeau de mise en place. Le drag est contraint à la zone.
+        if (deployMode) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(androidx.compose.ui.graphics.Color(0x5522D3EE))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("DÉPLOIEMENT · placez votre flotte dans la zone",
+                    color = androidx.compose.ui.graphics.Color.White, fontSize = 11.sp, maxLines = 1)
+                TextButton(onClick = { deployMode = false }, modifier = Modifier.defaultMinSize(minHeight = 48.dp)) {
+                    Text("Flotte prête", color = androidx.compose.ui.graphics.Color.White, fontSize = 11.sp)
+                }
+            }
+        }
 
         Box(
             Modifier
@@ -327,7 +348,7 @@ fun TabletopScreen(
                         sz.height / (BOARD_H_MM * PX_PER_MM),
                     ) * 0.95f
                     fitScale = need
-                    if (!fitInitialized) { scale = need; pan = Offset.Zero; fitInitialized = true }
+                    if (!fitInitialized) { scale = forceScale ?: need; pan = Offset.Zero; fitInitialized = true }
                 }
         ) {
             // Init des dés quand attaquant ou cible (position, cap, armement) change.
@@ -374,13 +395,53 @@ fun TabletopScreen(
                                 if (id != null && pos != null) {
                                     positions = positions.map { p ->
                                         if (p.id != id) p else {
-                                            val reach = if (p.isSquadron) p.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
-                                            val d = kotlin.math.hypot(pos.x - p.xMm, pos.y - p.yMm)
-                                            if (p.isSquadron && d > reach) {
-                                                // hors zone atteignable : on garde la position
-                                                p
+                                            if (deployMode) {
+                                                // ROUND 0 : placement RRG. Vaisseaux = bande
+                                                // distance 1-3 du bord long ; escadrons = distance
+                                                // 1-2 d'un vaisseau AMI (donc hors bande possible).
+                                                val side = ArmadaDeployment.sideFor(p.isOpp)
+                                                // RRG : la distance se mesure au BORD du socle.
+                                                val (pHalfW, pHalfL) = ArmadaDeployment.baseHalfMm(p.sizeClass)
+                                                val friendly = positions
+                                                    .filter { it.isOpp == p.isOpp && !it.isSquadron && it.id != id }
+                                                    .map { v ->
+                                                        val (hw, hl) = ArmadaDeployment.baseHalfMm(v.sizeClass)
+                                                        Triple(v.xMm, v.yMm, (hw + hl) / 2f)
+                                                    }
+                                                if (p.isSquadron) {
+                                                    // Jetons ronds : demi-taille négligeable.
+                                                    if (ArmadaDeployment.squadronValid(pos.x, pos.y, side, friendly, 0f)) {
+                                                        p.copy(xMm = pos.x, yMm = pos.y)
+                                                    } else if (friendly.isNotEmpty()) {
+                                                        // Snap au plus proche vaisseau ami, au BORD de son socle.
+                                                        val nearest = friendly.minByOrNull { (sx, sy, sh) ->
+                                                            kotlin.math.hypot(pos.x - sx, pos.y - sy) - sh
+                                                        }!!
+                                                        val dx = pos.x - nearest.first
+                                                        val dy = pos.y - nearest.second
+                                                        val len = kotlin.math.hypot(dx, dy).coerceAtLeast(0.01f)
+                                                        val d = nearest.third + ArmadaDeployment.SQUAD_MIN_MM
+                                                        p.copy(
+                                                            xMm = nearest.first + dx / len * d,
+                                                            yMm = nearest.second + dy / len * d,
+                                                        )
+                                                    } else {
+                                                        val (nx, ny) = ArmadaDeployment.clampToBand(pos.x, pos.y, side, pHalfW, pHalfL)
+                                                        p.copy(xMm = nx, yMm = ny)
+                                                    }
+                                                } else {
+                                                    val (nx, ny) = ArmadaDeployment.clampToBand(pos.x, pos.y, side, pHalfW, pHalfL)
+                                                    p.copy(xMm = nx, yMm = ny)
+                                                }
                                             } else {
-                                                p.copy(xMm = pos.x, yMm = pos.y)
+                                                val reach = if (p.isSquadron) p.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
+                                                val d = kotlin.math.hypot(pos.x - p.xMm, pos.y - p.yMm)
+                                                if (p.isSquadron && d > reach) {
+                                                    // hors zone atteignable : on garde la position
+                                                    p
+                                                } else {
+                                                    p.copy(xMm = pos.x, yMm = pos.y)
+                                                }
                                             }
                                         }
                                     }
@@ -446,7 +507,7 @@ fun TabletopScreen(
                         dstSize = androidx.compose.ui.unit.IntSize(bw.toInt().coerceAtLeast(1), bh.toInt().coerceAtLeast(1)))
                 }
                 // plateau : zones de déploiement + grille de 100 mm
-                if (showDeployment) drawDeploymentZones(c, scale)
+                if (showDeployment || deployMode) drawDeploymentZones(c, scale)
                 drawGrid(c, scale)
                 // Aperçu du gabarit : polyligne d'autant de segments que la vitesse, poignées aux
                 // articulations et vaisseau fantôme d'arrivée. INDICATIF : 22,5°/cran et 40 mm/segment non sourcés.
@@ -572,6 +633,8 @@ fun TabletopScreen(
                         }
                         // Figurine réelle à l'ÉCHELLE DE LA FIGURINE : longueur nez-queue = lengthMm.
                         val figBmp = p.figurePath?.let { bitmaps[it] }
+                        // Asset Venator : proue dessinée en bas -> 180° (cap 0° = proue haut).
+                        val flipVenator = p.figurePath?.contains("venator", ignoreCase = true) == true
                         if (figBmp != null && p.figureLengthMm > 0f) {
                             val longPx = p.figureLengthMm * PX_PER_MM * scale
                             val k = longPx / maxOf(figBmp.width, figBmp.height).toFloat()
@@ -579,7 +642,7 @@ fun TabletopScreen(
                             val fh = figBmp.height * k
                             val n = p.figureCount.coerceAtLeast(1)
                             if (n == 1) {
-                                drawCardImage(figBmp, center, fw, fh)
+                                drawCardImage(figBmp, center, fw, fh, flip180 = flipVenator)
                             } else {
                                 // Escadre (3 chasseurs) ou flottille (2 vaisseaux) : jetons en quinconce
                                 val step = longPx * 0.17f
@@ -588,7 +651,7 @@ fun TabletopScreen(
                                     drawCardImage(
                                         figBmp,
                                         Offset(center.x + (i - half) * step, center.y + (i - half) * step * 0.5f),
-                                        fw, fh,
+                                        fw, fh, flip180 = flipVenator,
                                     )
                                 }
                             }
@@ -1060,10 +1123,23 @@ private fun DrawScope.drawBase(center: Offset, w: Float, h: Float, headingDeg: F
 }
 
 /** Image de la carte au-dessus du socle (miniature). Le bitmap est chargé hors thread UI. */
-private fun DrawScope.drawCardImage(bmp: androidx.compose.ui.graphics.ImageBitmap?, center: Offset, w: Float, h: Float) {
+private fun DrawScope.drawCardImage(
+    bmp: androidx.compose.ui.graphics.ImageBitmap?,
+    center: Offset,
+    w: Float,
+    h: Float,
+    flip180: Boolean = false,
+) {
     if (bmp == null) return
     val dst = androidx.compose.ui.unit.IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
-    drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset((center.x - w / 2).toInt(), (center.y - h / 2).toInt()), dstSize = dst)
+    val off = androidx.compose.ui.unit.IntOffset((center.x - w / 2).toInt(), (center.y - h / 2).toInt())
+    if (flip180) {
+        // Asset Venator dessiné nez EN BAS alors que le cap 0° Legion/Armada
+        // attend la proue EN HAUT -> rotation 180° locale autour du centre.
+        rotate(degrees = 180f, pivot = center) { drawImage(bmp, dstOffset = off, dstSize = dst) }
+    } else {
+        drawImage(bmp, dstOffset = off, dstSize = dst)
+    }
 }
 
 /** Vrai si le point touché tombe dans le socle du pion (heading 0 uniquement, étape 1). */
@@ -1152,7 +1228,7 @@ fun loadArmadaTokens(context: Context): Map<String, String> = try {
 fun loadArmadaFigures(context: Context): Map<String, ArmadaFigure> = try {
     val txt = context.assets.open("armada_figures_map.json").bufferedReader().use { it.readText() }
     val items = JSONObject(txt).getJSONObject("items")
-    buildMap {
+    val base = buildMap {
         items.keys().forEach { k ->
             val o = items.getJSONObject(k)
             put(k, ArmadaFigure(
@@ -1163,6 +1239,34 @@ fun loadArmadaFigures(context: Context): Map<String, ArmadaFigure> = try {
                 figureCount = o.optInt("figure_count", 1),
             ))
         }
+    }
+    // 92 escadrons n'avaient PAS d'entrée -> drawBase(round) dessinait des ronds
+    // noirs. Nouveau mapping card_id -> coque -> asset DEJA EMBARQUE, avec
+    // fallback par faction (TIE/ln, X-wing, V-19, Vulture). Ne pas écraser les
+    // entrées précises existantes.
+    try {
+        val fhTxt = context.assets.open("armada_fighter_hulls.json").bufferedReader().use { it.readText() }
+        val fh = JSONObject(fhTxt)
+        val hulls = fh.getJSONObject("hulls")
+        val byCard = fh.getJSONObject("by_card_id")
+        buildMap {
+            putAll(base)
+            byCard.keys().forEach { cid ->
+                if (!containsKey(cid)) {
+                    val hull = byCard.getString(cid)
+                    val o = hulls.optJSONObject(hull) ?: return@forEach
+                    put(cid, ArmadaFigure(
+                        asset = o.getString("asset"),
+                        sizeClass = "small",
+                        figureKind = "fighter",
+                        lengthMm = o.optDouble("length_mm", 9.5).toFloat(),
+                        figureCount = o.optInt("figure_count", 3),
+                    ))
+                }
+            }
+        }
+    } catch (_: Exception) {
+        base // repli : ancien comportement si le mapping est absent
     }
 } catch (_: Exception) { emptyMap() }
 

@@ -2769,7 +2769,7 @@ internal fun CampRow(
                         val _lstats = remember(unit.instanceId) { LegionStatsParser.parse(unit.card.legionStats) }
                         val _courage = _lstats?.courage?.takeIf { it > 0 } ?: 1
                         val _suppres = st.suppressions ?: 0
-                        val panicking = _suppres >= _courage * 2 && _suppres > 0
+                        val panicking = com.legionforge.app.domain.LegionSuppression.isPanicked(_suppres, _courage)
                         val campColor = if (label == "MOI") LegionColors.Warning else LegionColors.Info
                         val stateColor = when {
                             panicking -> Color(0xFFFF5252)

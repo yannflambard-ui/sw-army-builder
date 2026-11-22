@@ -66,6 +66,15 @@ data class LegionMapLayout(
         return x to y
     }
 
+    /**
+     * Taille en PIXELS d'un territoire délimité par deux intersections caseEdge.
+     * [a] et [b] sont en mm plateau ; la conversion doit être appliquée ici,
+     * PAS oubliée comme dans l'ancien bug où la taille mm était passée brute à
+     * drawRect (la zone grandissait/rétrécissait au zoom).
+     */
+    fun territorySizePx(a: Pair<Float, Float>, b: Pair<Float, Float>, pxPerMm: Float): Pair<Float, Float> =
+        ((b.first - a.first) * pxPerMm) to ((b.second - a.second) * pxPerMm)
+
     /** Centre d'une case en mm plateau. */
     fun caseCenter(c: Float, r: Float): Pair<Float, Float> {
         val e = caseEdge(c, r)

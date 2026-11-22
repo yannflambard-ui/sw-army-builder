@@ -26,6 +26,37 @@ class ArmadaBattleMatCaptureTest {
             maxSpeed = 1, hull = 10, shieldFront = 3, arcs = FiringArcs(270f, 45f, 45f)),
     )
 
+    /** Vérifie que les escadrons affichent de vraies silhouettes de chasseurs
+     *  (ex-x_wing_img06.png) au lieu des anciens ronds noirs drawBase(round). */
+    @Test
+    fun armada_chasseurs_silhouettes() {
+        val fighters = listOf(
+            TabletopPawn("f1", "X-wing Squadron", "squadron", -45f, 40f, 0f,
+                isSquadron = true, maxSpeed = 4, hull = 5,
+                figurePath = "armada_figures/x_wing_img06.png",
+                figureLengthMm = 9.48f, figureKind = "fighter", figureCount = 3),
+            TabletopPawn("f2", "TIE/ln Squadron", "squadron", 0f, 40f, 0f,
+                isSquadron = true, maxSpeed = 4, hull = 3, isOpp = true,
+                figurePath = "armada_figures/tie_fighter_external.png",
+                figureLengthMm = 9.48f, figureKind = "fighter", figureCount = 3),
+            TabletopPawn("f3", "A-wing Squadron", "squadron", 45f, 40f, 0f,
+                isSquadron = true, maxSpeed = 5, hull = 3,
+                figurePath = "armada_figures/a_wing_img06.png",
+                figureLengthMm = 9.48f, figureKind = "fighter", figureCount = 3),
+            TabletopPawn("f4", "Vulture Squadron", "squadron", 0f, -40f, 0f,
+                isSquadron = true, maxSpeed = 4, hull = 3, isOpp = true,
+                figurePath = "armada_figures/vulture_img06.png",
+                figureLengthMm = 9.48f, figureKind = "fighter", figureCount = 3),
+        )
+        captureRoboImage("src/test/snapshots/armada-chasseurs-silhouettes.png") {
+            LegionForgeTheme {
+                TabletopScreen(pawns = fighters, sessionId = "test-fighters", round = 1, phase = "SQUADRON",
+                    onBack = {}, battleMat = ArmadaBattleMats.SCARIF, battleMatName = "Orbite de Scarif",
+                    onPickBattleMat = {}, forceScale = 1.2f)
+            }
+        }
+    }
+
     @Test
     fun armada_tapis_scarif() {
         captureRoboImage("src/test/snapshots/armada-battlemat-scarif.png") {
