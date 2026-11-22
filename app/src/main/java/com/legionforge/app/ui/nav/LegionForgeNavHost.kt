@@ -255,6 +255,22 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     legionRound = saved?.round ?: 1
                     missionSel = saved?.tabletopMissions ?: emptyMap()
                 }
+                // Déploiement par défaut : poser chaque unité dans la zone de la
+                // Map Card (allied = joueur, enemy = adversaire). Uniquement si
+                // aucune position sauvegardée n'existe (on ne écrase pas une partie).
+                LaunchedEffect(missionSel, legionPawnIds) {
+                    val saved = runCatching { boardDao.getByList(lid)?.snapshot?.let { com.legionforge.app.data.model.PlaySessionSnapshot.fromJson(it) } }.getOrNull()
+                    if (!saved?.tabletopUnits.isNullOrEmpty()) return@LaunchedEffect
+                    val layout = missionSel["map"]?.let { com.legionforge.app.domain.LegionMapLayouts.forName(it) }
+                    val defs = com.legionforge.app.domain.LegionDeploymentDefaults.placements(
+                        legionPawns.map { p ->
+                            val isOpp = p.isOpp
+                            com.legionforge.app.domain.LegionDeploymentDefaults.Spec(p.id, isOpp, p.miniCount)
+                        }, layout)
+                    legionState = legionState.map { p ->
+                        defs[p.id]?.let { d -> p.copy(xMm = d.xMm, yMm = d.yMm) } ?: p
+                    }
+                }
                 // Sauvegarde à chaque changement d'état du plateau.
                 LaunchedEffect(legionState, legionRound) {
                     if (legionState.isEmpty()) return@LaunchedEffect

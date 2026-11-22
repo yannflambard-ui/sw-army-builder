@@ -16,15 +16,15 @@ class ManeuverGeometryTest {
     }
 
     @Test fun unCoudeDroiteV1() {
-        val s = 40f * 0.3826834f
-        val c = 40f * 0.9238795f
-        eq(s, -c, 22.5f, resolveManeuver2(0f, 0f, 0f, 1, listOf(1)))
+        // RRG p.11 : le 1er segment reste DROIT ; le cran ne change que le cap final.
+        eq(0f, -40f, 22.5f, resolveManeuver2(0f, 0f, 0f, 1, listOf(1)))
     }
 
     @Test fun deuxCoudesOpposesV2() {
+        // segment 1 droit (0,-40), cran +22,5 ; segment 2 oblique puis cran -22,5 -> cap 0.
         val s = 40f * 0.3826834f
         val c = 40f * 0.9238795f
-        eq(s, -c - 40f, 0f, resolveManeuver2(0f, 0f, 0f, 2, listOf(1, -1)))
+        eq(s, -40f - c, 0f, resolveManeuver2(0f, 0f, 0f, 2, listOf(1, -1)))
     }
 
     @Test fun vitesseZeroResteSurPlace() {
@@ -33,8 +33,8 @@ class ManeuverGeometryTest {
     }
 
     @Test fun cranMaxV1() {
-        val v = 40f / sqrt(2f)
-        eq(v, -v, 45f, resolveManeuver2(0f, 0f, 0f, 1, listOf(2)))
+        // 2 crans = cap final +45, mais le segment reste droit.
+        eq(0f, -40f, 45f, resolveManeuver2(0f, 0f, 0f, 1, listOf(2)))
     }
 
     @Test fun articulationsAuDelaDeLaVitesseIgnorees() {

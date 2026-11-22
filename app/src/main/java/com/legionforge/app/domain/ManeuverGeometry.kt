@@ -14,8 +14,9 @@ data class ManeuverResult(val xMm: Float, val yMm: Float, val headingDeg: Float)
  * Gabarit à plusieurs coudes. RRG 1519-1524 : un pliage PAR ARTICULATION (pas un cran global).
  * Convention : cap 0 = proue vers le haut, sens horaire positif, axe y écran vers le bas,
  * donc u(cap) = (sin cap, -cos cap).
- * b_i > 0 = tribord, b_i < 0 = bâbord. cap_i = cap0 + somme(b_1..b_i) * angleParCran.
- * Chaque segment i avance de L selon cap_i. RRG 786-787 : articulations au-delà de la vitesse ignorées.
+ * b_i > 0 = tribord, b_i < 0 = bâbord. cap final = cap0 + somme(b_i) * angleParCran.
+ * RRG p.11 : le segment i avance selon le cap COURANT, puis le cran i courbe les
+ * segments suivants (articulation en FIN de segment, pas au début).
  * Vitesse 0 : sur place, cap0 inchangé (RRG 1398).
  */
 fun resolveManeuver2(
@@ -28,10 +29,12 @@ fun resolveManeuver2(
     var x = x0
     var y = y0
     for (i in 0 until minOf(speed, bends.size)) {
-        cap += bends[i] * anglePerClick
+        // RRG p.11 : le segment i reste aligné sur le cap courant ; le cran i
+        // ne courbe que les segments SUIVANTS (articulation en fin de segment).
         val r = Math.toRadians(cap.toDouble())
         x += (segmentLengthMm * sin(r)).toFloat()
         y -= (segmentLengthMm * cos(r)).toFloat()
+        cap += bends[i] * anglePerClick
     }
     return ManeuverResult(x, y, cap)
 }
@@ -48,11 +51,12 @@ fun maneuverPolyline(
     var x = x0
     var y = y0
     for (i in 0 until minOf(speed, bends.size)) {
-        cap += bends[i] * anglePerClick
+        // Même convention que resolveManeuver2 : segment puis cran.
         val r = Math.toRadians(cap.toDouble())
         x += (segmentLengthMm * sin(r)).toFloat()
         y -= (segmentLengthMm * cos(r)).toFloat()
         pts += x to y
+        cap += bends[i] * anglePerClick
     }
     return pts
 }
@@ -60,6 +64,35 @@ fun maneuverPolyline(
 /** Crans max d'une articulation, lus dans la Speed Chart (position 1..n -> vitesse -> crans). */
 fun maxClicks(speedChart: List<Map<Int, Int>>, position: Int, speed: Int): Int =
     speedChart.getOrNull(position - 1)?.get(speed) ?: 0
+
+/**
+ * Toutes les positions d'atterrissage légales pour la vitesse choisie.
+ *
+ * Une articulation par segment (RRG 1519-1524) ; à chaque articulation i, le
+ * nombre de crans est borné par la Speed Chart via [maxClicks]. Le producteur
+ * énumère les combinaisons [-max..+max] et résout chaque gabarit.
+ *
+ * La vitesse 0 rend une seule position (sur place, RRG 1398). Un speedChart
+ * vide = aucun virage autorisé (une seule trajectoire droite).
+ */
+fun maneuverLandings(
+    x0: Float, y0: Float, cap0: Float, speed: Int,
+    speedChart: List<Map<Int, Int>> = emptyList(),
+    anglePerClick: Float = YAW_STEP_DEG,
+    segmentLengthMm: Float = SEGMENT_MM,
+): List<ManeuverResult> {
+    if (speed <= 0) return listOf(ManeuverResult(x0, y0, cap0))
+    var combos = listOf(emptyList<Int>())
+    for (i in 1..speed) {
+        val m = maxClicks(speedChart, i, speed).coerceAtLeast(0)
+        combos = combos.flatMap { prefix -> (-m..m).map { b -> prefix + b } }
+    }
+    return combos.map { resolveManeuver2(x0, y0, cap0, speed, it, anglePerClick, segmentLengthMm) }
+}
+
+/** Position d'atterrissage la plus proche d'un point (cc à 1 cm près). */
+fun nearestLanding(landings: List<ManeuverResult>, xMm: Float, yMm: Float): ManeuverResult? =
+    landings.minByOrNull { (it.xMm - xMm) * (it.xMm - xMm) + (it.yMm - yMm) * (it.yMm - yMm) }
 
 /** Toucher un socle RECTANGULAIRE tourné de headingDeg : on ramène le point dans le repère local du socle. */
 fun hitRotatedBase(

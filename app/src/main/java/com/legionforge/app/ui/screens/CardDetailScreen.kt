@@ -2860,6 +2860,35 @@ internal fun CommandCenterRow(myCmd: LegionCommandCard?, oppCmd: LegionCommandCa
                 }
             }
         }
+        // La carte choisie doit rester VISIBLE en haut du champ de bataille.
+        // Avant, seule la priorité s'affichait ici (la carte n'était que dans la main).
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CommandChip("MOI", myCmd, LegionColors.Warning, Modifier.weight(1f))
+            CommandChip("ADV", oppCmd, LegionColors.Info, Modifier.weight(1f))
+        }
+    }
+}
+
+/** Pastille carte de commandement : pip + nom, visible en haut du battlefield. */
+@Composable
+private fun CommandChip(who: String, card: LegionCommandCard?, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    Surface(modifier, shape = RoundedCornerShape(8.dp),
+        color = LegionColors.SurfaceRaised, border = BorderStroke(1.dp, color.copy(alpha = 0.6f))) {
+        Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(shape = CircleShape, color = color) {
+                Text(card?.pip ?: "?", Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                    color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.width(6.dp))
+            Column(Modifier.weight(1f)) {
+                Text(who, color = color, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(card?.name ?: "en attente…", color = Color.White, fontSize = 11.sp, maxLines = 1)
+            }
+        }
     }
 }
 

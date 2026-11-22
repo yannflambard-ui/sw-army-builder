@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,10 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.hypot
 import com.legionforge.app.domain.ArmadaDeployment
+import com.legionforge.app.domain.ArmadaDeploymentDefaults
 import com.legionforge.app.domain.SEGMENT_MM
 import com.legionforge.app.domain.YAW_STEP_DEG
 import com.legionforge.app.domain.maxClicks
 import com.legionforge.app.domain.maneuverPolyline
+import com.legionforge.app.domain.maneuverLandings
+import com.legionforge.app.domain.nearestLanding
 import com.legionforge.app.domain.resolveManeuver2
 import com.legionforge.app.domain.hitRotatedBase
 import android.content.Context
@@ -165,6 +169,11 @@ fun TabletopScreen(
     battleMatName: String = "",
     onPickBattleMat: (() -> Unit)? = null,
     forceScale: Float? = null, // test uniquement : zoom imposé (chasseurs 9,5 mm invisibles au fit)
+    // test uniquement : simuler un drag en cours pour capturer les destinations
+    forceDragPawnId: String? = null,
+    forceDragPosMm: Offset? = null,
+    forceSpeedIdx: Int = 0, // test uniquement : vitesse du gabarit à prévisualiser
+    forcePan: Offset? = null, // test uniquement : pan imposé (contrôle non-régression header)
 ) {
     // Suit l'orientation physique du téléphone (portrait ET paysage) ; aucun
     // verrouillage posé, sinon la rotation ne serait plus signalée au composable.
@@ -178,11 +187,20 @@ fun TabletopScreen(
     // Round 0 = phase de mise en place : drag & drop LIBRE mais contraint à la
     // zone de déploiement du côté du joueur (RRG : bande distance 1-3 du bord long).
     var deployMode by remember(round) { mutableStateOf(round == 0) }
-    var pan by remember { mutableStateOf(Offset.Zero) }
+    var pan by remember { mutableStateOf(forcePan ?: Offset.Zero) }
     // Positions distinctes du snapshot Play : éviter d'écraser les données de partie.
     val tablePrefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences("armada_tabletop_positions", android.content.Context.MODE_PRIVATE)
     val savedPositions = remember(sessionId) {
         runCatching { JSONObject(tablePrefs.getString(sessionId, "{}") ?: "{}") }.getOrElse { JSONObject() }
+    }
+    // Déploiement par défaut : vaisseaux dans la bande RRG, escadrons en formation
+    // décalée (V/pointe/ligne + bruit déterministe) — aucune superposition.
+    val deploymentDefaults = remember(pawns) {
+        ArmadaDeploymentDefaults.placements(pawns.map { p ->
+            ArmadaDeploymentDefaults.Spec(p.id, p.isSquadron, p.isOpp, p.sizeClass)
+        }, false) + ArmadaDeploymentDefaults.placements(pawns.map { p ->
+            ArmadaDeploymentDefaults.Spec(p.id, p.isSquadron, p.isOpp, p.sizeClass)
+        }, true)
     }
     var positions by remember(sessionId) {
         mutableStateOf(pawns.map { p ->
@@ -194,7 +212,10 @@ fun TabletopScreen(
                     kotlin.math.abs(item.optDouble("heading", Double.NaN)) < 0.01) item.put("heading", 180.0)
                 tablePrefs.edit().putString(sessionId, savedPositions.toString()).putBoolean(migrationKey, true).apply()
             }
-            if (item == null) p else p.copy(
+            if (item == null) {
+                val d = deploymentDefaults[p.id]
+                if (d != null) p.copy(xMm = d.xMm, yMm = d.yMm) else p
+            } else p.copy(
                 xMm = item.optDouble("x", p.xMm.toDouble()).toFloat(),
                 yMm = item.optDouble("y", p.yMm.toDouble()).toFloat(),
                 headingDeg = item.optDouble("heading", p.headingDeg.toDouble()).toFloat(),
@@ -221,7 +242,13 @@ fun TabletopScreen(
             when {
                 live != null -> p.copy(xMm = live.xMm, yMm = live.yMm, headingDeg = live.headingDeg)
                 saved != null -> p.copy(xMm = saved.optDouble("x", p.xMm.toDouble()).toFloat(), yMm = saved.optDouble("y", p.yMm.toDouble()).toFloat(), headingDeg = saved.optDouble("heading", p.headingDeg.toDouble()).toFloat())
-                else -> p
+                else -> {
+                    val d = deploymentDefaults[p.id]
+                    if (d != null) p.copy(xMm = d.xMm, yMm = d.yMm) else {
+                        // En Round 0 on force l'orientation du camp dans la bande.
+                        if (deployMode && p.isOpp) p.copy(headingDeg = 180f) else p
+                    }
+                }
             }
         }
     }
@@ -231,9 +258,9 @@ fun TabletopScreen(
         tablePrefs.edit().putString(sessionId, savedPositions.toString()).apply()
     }
     var selectedId by remember { mutableStateOf<String?>(null) }
-    var dragId by remember { mutableStateOf<String?>(null) }
+    var dragId by remember { mutableStateOf<String?>(forceDragPawnId) }
     // Position du doigt pendant un drag (en mm plateau) — pour le trait de visée et le dépôt
-    var dragPosMm by remember { mutableStateOf<Offset?>(null) }
+    var dragPosMm by remember { mutableStateOf<Offset?>(forceDragPosMm) }
     // Volet « Manœuvre » (vitesse + coudes) : replié par défaut, ouvert si un pion est sélectionné
     var showManeuver by remember { mutableStateOf(false) }
     // Menu du bas (comme en mode Play) : ouvert au long-press sur un vaisseau
@@ -246,7 +273,7 @@ fun TabletopScreen(
     androidx.compose.runtime.LaunchedEffect(round) { com.legionforge.app.ui.viewmodel.ArmadaShotCounter.reset(); usedSectors = emptyMap() }
     androidx.compose.runtime.LaunchedEffect(selectedId) { showManeuver = selectedId != null }
     var targetId by remember { mutableStateOf<String?>(null) }
-    var speedIdx by remember { mutableStateOf(0) }
+    var speedIdx by remember { mutableStateOf(forceSpeedIdx) }
     var attackResult by remember { mutableStateOf<String?>(null) }
     var manualAntiDice by remember { mutableStateOf(ArmadaDiceBag()) }
     var blackDice by remember { mutableStateOf(0) }
@@ -276,6 +303,17 @@ fun TabletopScreen(
     val jointMax = { pos: Int -> if (selPawn != null) maxClicks(selPawn.speedChart, pos, speedIdx) else 0 }
     // Crans effectifs bornés : aucune mutation d'état pendant la composition
     val effectiveBends = List(4) { i -> bends[i].coerceIn(-jointMax(i + 1), jointMax(i + 1)) }
+    // Destinations du gabarit, calculées UNE fois par drag (pas à chaque frame).
+    val dragSource = positions.find { it.id == dragId }
+    val dragLandings = remember(
+        dragId, dragSource?.xMm, dragSource?.yMm, dragSource?.headingDeg,
+        speedIdx, dragSource?.speedChart,
+    ) {
+        if (dragId != null && dragSource != null && !dragSource.isSquadron &&
+            !deployMode && round > 0 && speedIdx > 0
+        ) maneuverLandings(dragSource.xMm, dragSource.yMm, dragSource.headingDeg,
+            speedIdx, dragSource.speedChart) else emptyList()
+    }
     val bendsSummary = effectiveBends.mapIndexedNotNull { i, b ->
         if (b == 0) null else "${"①②③④"[i]}${if (b < 0) "←" else "→"}${kotlin.math.abs(b)}"
     }.joinToString(" ").ifEmpty { "droit" }
@@ -363,6 +401,9 @@ fun TabletopScreen(
             Canvas(
                 Modifier
                     .fillMaxSize()
+                    // Le pan peut pousser le dessin hors du Box : sans clip, la carte
+                    // recouvre la top bar (bouton « Zones » coupé). RRG hors sujet, bug UI.
+                    .clipToBounds()
                     .pointerInput(Unit) {
                         // Pinch-zoom + pan du plateau (2 doigts). Dans le MEME pointerInput
                         // que le drag/tap pour éviter que le parent ne capture le geste.
@@ -433,6 +474,15 @@ fun TabletopScreen(
                                                     val (nx, ny) = ArmadaDeployment.clampToBand(pos.x, pos.y, side, pHalfW, pHalfL)
                                                     p.copy(xMm = nx, yMm = ny)
                                                 }
+                                            } else if (round > 0 && !p.isSquadron && speedIdx > 0) {
+                                                // VAISSEAU : le doigt choisit parmi les atterrissages
+                                                // du gabarit de manoeuvre (vitesse + crans de la Speed Chart).
+                                                // Pas de popup : on snap direct au point le plus proche.
+                                                val landing = nearestLanding(dragLandings, pos.x, pos.y)
+                                                if (landing != null) {
+                                                    p.copy(xMm = landing.xMm, yMm = landing.yMm,
+                                                        headingDeg = landing.headingDeg)
+                                                } else p
                                             } else {
                                                 val reach = if (p.isSquadron) p.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
                                                 val d = kotlin.math.hypot(pos.x - p.xMm, pos.y - p.yMm)
@@ -448,8 +498,14 @@ fun TabletopScreen(
                                 }
                                 dragId = null
                                 dragPosMm = null
+                                // Le déplacement est consommé : on range le gabarit pour
+                                // ne pas laisser un aperçu persistant à la nouvelle position.
+                                if (round > 0 && !deployMode && speedIdx > 0) speedIdx = 0
                             },
-                            onDragCancel = { dragId = null; dragPosMm = null },
+                            onDragCancel = {
+                                if (round > 0 && dragId != null && !deployMode && speedIdx > 0) speedIdx = 0
+                                dragId = null; dragPosMm = null
+                            },
                         ) { change: androidx.compose.ui.input.pointer.PointerInputChange, _: androidx.compose.ui.geometry.Offset ->
                             if (dragId != null) {
                                 change.consume()
@@ -553,24 +609,77 @@ fun TabletopScreen(
                         ),
                     )
                 }
-                // Pendant un drag : trait de visée + position fantôme + limite de zone
+                // Pendant un drag : on montre les DESTINATIONS LÉGALES, pas la position libre.
+                // Vaisseau + vitesse définie => gabarit de manoeuvre (vitesse + crans).
+                // Escadron / Round 0 => disque ou bande de déploiement (comportement précédent).
                 if (dragId != null && dragPosMm != null) {
                     val dp = dragPosMm!!
                     val dragPawn = positions.find { it.id == dragId }
                     if (dragPawn != null) {
                         val from = Offset(c.x + dragPawn.xMm * PX_PER_MM * scale, c.y + dragPawn.yMm * PX_PER_MM * scale)
                         val to = Offset(c.x + dp.x * PX_PER_MM * scale, c.y + dp.y * PX_PER_MM * scale)
-                        val reach = if (dragPawn.isSquadron) dragPawn.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
-                        val dist = kotlin.math.hypot((dp.x - dragPawn.xMm).toDouble(), (dp.y - dragPawn.yMm).toDouble()).toFloat()
-                        val inRange = !dragPawn.isSquadron || dist <= reach
-                        val col = if (inRange) Color(0xCC22D3EE) else Color(0xCCF87171)
-                        drawLine(col, from, to, strokeWidth = 3f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(12f, 8f)))
-                        // fantôme du pion à la position du doigt
+                        val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(9f, 7f))
                         val (pw, ph) = baseSizeMm(dragPawn.sizeClass)
                         val pwPx = pw * PX_PER_MM * scale
                         val phPx = ph * PX_PER_MM * scale
-                        drawRect(col.copy(alpha = 0.35f), topLeft = Offset(to.x - pwPx / 2, to.y - phPx / 2), size = androidx.compose.ui.geometry.Size(pwPx, phPx))
-                        drawRect(col, topLeft = Offset(to.x - pwPx / 2, to.y - phPx / 2), size = androidx.compose.ui.geometry.Size(pwPx, phPx), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
+                        val constrained = round > 0 && !dragPawn.isSquadron && !deployMode && speedIdx > 0
+                        if (constrained) {
+                            // 1. Toutes les positions d'atterrissage possibles (points discret).
+                            val landings = dragLandings
+                            landings.forEach { land ->
+                                val p = Offset(c.x + land.xMm * PX_PER_MM * scale,
+                                    c.y + land.yMm * PX_PER_MM * scale)
+                                drawCircle(Color(0x9922D3EE), radius = 4f, center = p)
+                                drawCircle(Color(0xFF22D3EE), radius = 4f, center = p,
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f))
+                            }
+                            // 2. Cible = atterrissage le plus proche du doigt, en POINTILLÉ.
+                            val landing = nearestLanding(landings, dp.x, dp.y)
+                            if (landing != null) {
+                                val a = Offset(c.x + landing.xMm * PX_PER_MM * scale,
+                                    c.y + landing.yMm * PX_PER_MM * scale)
+                                drawLine(Color(0xFFC857), from, a, strokeWidth = 3f, pathEffect = dash)
+                                // Halo pour repérer la cible parmi les points.
+                                drawCircle(Color(0xFFFFD24A), radius = 15f, center = a,
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
+                                rotate(degrees = landing.headingDeg, pivot = a) {
+                                    drawRect(Color(0x55FFC857),
+                                        topLeft = Offset(a.x - pwPx / 2, a.y - phPx / 2),
+                                        size = androidx.compose.ui.geometry.Size(pwPx, phPx))
+                                    drawRect(Color(0xFFFFD24A),
+                                        topLeft = Offset(a.x - pwPx / 2, a.y - phPx / 2),
+                                        size = androidx.compose.ui.geometry.Size(pwPx, phPx),
+                                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                            width = 4f, pathEffect = dash))
+                                    drawLine(Color(0xFFFFD24A), a,
+                                        Offset(a.x, a.y - phPx * 0.4f), strokeWidth = 2f,
+                                        pathEffect = dash)
+                                }
+                                drawIntoCanvas { canvas ->
+                                    val paint = android.graphics.Paint().apply {
+                                        color = android.graphics.Color.rgb(255, 210, 74)
+                                        textSize = 30f
+                                        isAntiAlias = true
+                                        textAlign = android.graphics.Paint.Align.CENTER
+                                        setShadowLayer(5f, 0f, 0f, android.graphics.Color.BLACK)
+                                    }
+                                    canvas.nativeCanvas.drawText("ARRIVÉE", a.x,
+                                        a.y - phPx / 2f - 12f, paint)
+                                }
+                            }
+                            // 3. Le doigt reste visible en pointillé fin pour montrer l'écart.
+                            drawLine(Color(0x88FFC857), from, to, strokeWidth = 1.5f,
+                                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4f, 10f)))
+                        } else {
+                            // Escadron / déploiement : fantôme libre à l'emplacement du doigt.
+                            val reach = if (dragPawn.isSquadron) dragPawn.maxSpeed.coerceAtLeast(1) * 76.2f else 0f
+                            val dist = kotlin.math.hypot((dp.x - dragPawn.xMm).toDouble(), (dp.y - dragPawn.yMm).toDouble()).toFloat()
+                            val inRange = !dragPawn.isSquadron || dist <= reach
+                            val col = if (inRange) Color(0xCC22D3EE) else Color(0xCCF87171)
+                            drawLine(col, from, to, strokeWidth = 3f, pathEffect = dash)
+                            drawRect(col.copy(alpha = 0.35f), topLeft = Offset(to.x - pwPx / 2, to.y - phPx / 2), size = androidx.compose.ui.geometry.Size(pwPx, phPx))
+                            drawRect(col, topLeft = Offset(to.x - pwPx / 2, to.y - phPx / 2), size = androidx.compose.ui.geometry.Size(pwPx, phPx), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
+                        }
                     }
                 }
                 // Anneaux de portée du vaisseau sélectionné (noir=Close, bleu=Medium, rouge=Long)
@@ -844,7 +953,7 @@ fun TabletopScreen(
         }
         Text(
             if (selPawn != null && speedIdx > 0)
-                "V$speedIdx · $bendsSummary · cap final ${"%.1f".format(selPawn.headingDeg + effectiveBends.take(speedIdx).sum() * YAW_STEP_DEG)}° ≈ · ◄► plient le coude ${"①②③④"[activeJoint - 1]} · appui long = 0 · ${YAW_STEP_DEG}°/cran et ${SEGMENT_MM.toInt()} mm non sourcés"
+                "V$speedIdx · $bendsSummary · cap final ${"%.1f".format(selPawn.headingDeg + effectiveBends.take(speedIdx).sum() * YAW_STEP_DEG)}° ≈ · ◄► plient le coude ${"①②③④"[activeJoint - 1]} · appui long = 0 · ${YAW_STEP_DEG}°/cran et ${SEGMENT_MM.toInt()} mm indicatifs · chevauchement/côté non vérifiés"
             else infoLine(positions, selectedId, targetId, selectedSector),
             color = LegionColors.TextSecondary, fontSize = 11.sp,
             modifier = Modifier.padding(8.dp),
