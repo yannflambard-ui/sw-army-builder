@@ -39,9 +39,9 @@ class LegionBaseScaleTest {
 
     @Test
     fun emprise_escouade_multi_socles() {
-        val one = LegionTabletopGeometry.squadFootprintRadiusMm("small", 1)
-        val four = LegionTabletopGeometry.squadFootprintRadiusMm("small", 4)
-        val six = LegionTabletopGeometry.squadFootprintRadiusMm("small", 6)
+        val one = LegionSquadLayout.footprintRadiusMm(1, "small")
+        val four = LegionSquadLayout.footprintRadiusMm(4, "small")
+        val six = LegionSquadLayout.footprintRadiusMm(6, "small")
         // 1 figurine = rayon d'un socle unique (27/2 = 13,5 mm).
         assertEquals(13.5f, one, 0.01f)
         // 4 figurines = grille 2x2 de socles de 27 mm -> rayon englobant ~38,2 mm.
@@ -49,8 +49,8 @@ class LegionBaseScaleTest {
         // 6 figurines = grille 3x2 -> encore plus large que 4.
         assertTrue("6 socles > 4 socles", six > four)
         // Escouade plus grosse avec socle plus grand -> emprise croissante.
-        assertTrue(LegionTabletopGeometry.squadFootprintRadiusMm("large", 3) >
-                   LegionTabletopGeometry.squadFootprintRadiusMm("small", 3))
+        assertTrue(LegionSquadLayout.footprintRadiusMm(3, "large") >
+                   LegionSquadLayout.footprintRadiusMm(3, "small"))
     }
 
     @Test

@@ -164,7 +164,9 @@ fun TabletopScreen(
     battleMatName: String = "",
     onPickBattleMat: (() -> Unit)? = null,
 ) {
-    ForceLandscapeWhileMounted()
+    // Suit l'orientation physique du téléphone (portrait ET paysage) ; aucun
+    // verrouillage posé, sinon la rotation ne serait plus signalée au composable.
+    ForceLandscapeWhileMounted(enabled = null)
     // Cadrage initial : le tapis 1800x900 mm tient dans la largeur (PX_PER_MM = 2 px/mm, ~1080 px écran)
     var scale by remember { mutableStateOf(0.5f) }
     // Scale de cadrage : le plateau entier tient dans l'écran (ergonome).

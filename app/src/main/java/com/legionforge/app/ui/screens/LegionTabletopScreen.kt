@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.legionforge.app.domain.LegionTabletopGeometry
+import com.legionforge.app.domain.LegionSquadLayout
 import com.legionforge.app.ui.theme.LegionColors
 import com.legionforge.app.ui.theme.LegionDims
 import com.legionforge.app.ui.theme.LegionType
@@ -104,8 +105,17 @@ data class LegionPawn(
 )
 
 /** Rayon d'emprise du pion en mm : socle seul si 1 figurine, grille compacte si escouade. */
-private fun LegionPawn.footprintRadiusMm(): Float =
-    LegionTabletopGeometry.squadFootprintRadiusMm(baseSize, miniCount)
+/**
+ * Rayon d'emprise COURANT : calculé sur les figurines ENCORE PRÉSENTES, pas sur
+ * l'effectif nominal. En Legion la portée se mesure depuis le bord du socle le
+ * plus proche (rulebook:682-692) : conserver l'emprise de 6 socles alors qu'il
+ * n'en reste que 2 mesurerait depuis des socles retirés -> portée fausse.
+ * Un minimum d'un socle est gardé pour le hit-test des unités vaincues.
+ */
+private fun LegionPawn.footprintRadiusMm(): Float {
+    val alive = LegionSquadLayout.aliveMinis(miniCount, wounds, maxWounds, defeated)
+    return LegionSquadLayout.footprintRadiusMm(alive.coerceAtLeast(1), baseSize)
+}
 
 private enum class LegionTool { SELECT, RANGE, ARC }
 
@@ -157,11 +167,15 @@ fun LegionTabletopScreen(
     forceLandscape: Boolean? = null, // test uniquement : orientation imposée
     forceShowMatLogic: Boolean? = null, // test uniquement : bouton i (annotations)
 ) {
-    var landscape by remember { mutableStateOf(forceLandscape ?: true) }
+    // null = AUTO : on suit l'orientation PHYSIQUE du téléphone. Le bouton permet
+    // de forcer paysage (true) ou portrait (false), puis de revenir à AUTO.
+    var orientationOverride by remember { mutableStateOf(forceLandscape) }
     var showMatLogic by remember(battleMat.id) {
         mutableStateOf(forceShowMatLogic ?: (battleMat != BattleMats.NONE))
     }
-    ForceLandscapeWhileMounted(enabled = landscape)
+    // Ne verrouiller que si l'utilisateur a forcé : en AUTO on laisse le système
+    // libre de signaler la rotation (sinon le portrait devient inatteignable).
+    ForceLandscapeWhileMounted(enabled = orientationOverride)
     var selectedId by remember { mutableStateOf<String?>(if (forceBlockedDrop) "a1" else null) }
     var targetId by remember { mutableStateOf<String?>(null) }
     var tool by remember { mutableStateOf(LegionTool.SELECT) }
@@ -464,9 +478,26 @@ fun LegionTabletopScreen(
                 }
                 // Bascule orientation paysage / portrait (le tapis 2:1 peut dépasser).
                 val orientationLabel = stringResource(R.string.tabletop_toggle_orientation)
-                IconButton(onClick = { landscape = !landscape }, modifier = Modifier.size(LegionDims.TouchMin)) {
-                    Text(if (landscape) "▭" else "▯", color = LegionColors.Accent,
-                        style = MaterialTheme.typography.titleLarge,
+                IconButton(
+                    onClick = {
+                        orientationOverride = when (orientationOverride) {
+                            null -> true            // AUTO -> paysage
+                            true -> false           // paysage -> portrait
+                            false -> null           // portrait -> AUTO (suit le téléphone)
+                        }
+                    },
+                    modifier = Modifier.size(LegionDims.TouchMin)
+                ) {
+                    val glyph = when (orientationOverride) {
+                        null -> "AUTO"
+                        true -> "▭"
+                        false -> "▯"
+                    }
+                    Text(glyph, color = LegionColors.Accent,
+                        // "AUTO" = 4 lettres : titleLarge déborde du bouton 48dp et le
+                        // dernier O se fait masquer par « End round ». Glyphes seuls en grand.
+                        style = if (orientationOverride == null) MaterialTheme.typography.labelMedium
+                                else MaterialTheme.typography.titleLarge,
                         modifier = Modifier.semantics { contentDescription = orientationLabel })
                 }
                 Surface(onClick = { onRoundChange(round + 1) }, shape = RoundedCornerShape(LegionDims.Radius), color = LegionColors.Accent, modifier = Modifier.heightIn(min = LegionDims.TouchMin)) {
@@ -997,20 +1028,33 @@ private fun DrawScope.drawLegionBoard(
                 size = androidx.compose.ui.geometry.Size(r * 3.2f, r * 3.2f),
             )
         }
-        // Jeton bois ÉPAIS : ombre portée + chant sombre décalé + tranche claire.
-        drawCircle(Color(0x99000000), radius = r, center = Offset(c.x + 5f, c.y + 6f))
-        drawCircle(Color(0xFF3A2A1B), radius = r, center = Offset(c.x + 1.5f, c.y + 2.5f))  // chant (épaisseur)
-        val bmp = p.imagePath?.let { cardBitmaps[it] }
-        if (bmp != null) {
-            val side = maxOf(1f, r * 2f)
-            drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset((c.x - r).toInt(), (c.y - r).toInt()), dstSize = androidx.compose.ui.unit.IntSize(side.toInt().coerceAtLeast(1), side.toInt().coerceAtLeast(1)))
+        // ── Escouade = PLUSIEURS PETITS SOCLES qui se déplacent ensemble ──
+        // Un socle par figurine encore vivante (PV / health), rangés en 2 colonnes.
+        // Quand une figurine meurt, son socle disparaît (LegionSquadLayout.aliveMinis).
+        val aliveCount = LegionSquadLayout.aliveMinis(p.miniCount, p.wounds, p.maxWounds, p.defeated)
+        // Rayon d'UN socle. Plancher MODESTE (6 dp) : assez pour rester visible au
+        // zoom plateau (~11-24 %) sans écraser l'espacement entre socles.
+        val baseR = maxOf(
+            LegionTabletopGeometry.baseRadiusMm(p.baseSize) * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
+            6.dp.toPx()
+        )
+        val centers = if (aliveCount == 0) {
+            // Unité vaincue : un socle FANTÔME grisé pour garder la sélection possible.
+            listOf(Offset(0f, 0f))
         } else {
-            drawCircle(BattlePalette.CoinWood, radius = r, center = c)
-            val troopCol = if (p.faction.isNotBlank()) factionColor(p.faction)
-                           else if (p.isOpp) BattlePalette.TapeOwn else BattlePalette.TapeOpp
-            drawTroopSilhouette(c.x, c.y - r * 0.08f, r * 0.85f, troopCol)
+            (0 until aliveCount).map { idx ->
+                // Recentre la formation sur les socles RESTANTS : les figurines
+                // resserrent les rangs quand il y a des pertes (cohérent avec
+                // l'emprise de portée/collision calculée sur aliveCount).
+                val (ox, oy) = LegionSquadLayout.offsetMm(idx, aliveCount, p.baseSize)
+                Offset(ox * LegionTabletopGeometry.LEGION_PX_PER_MM * scale,
+                       oy * LegionTabletopGeometry.LEGION_PX_PER_MM * scale)
+            }
         }
-        // Liseré d'état : 1 seul trait, jamais d'anneau multiple.
+        val bmp = p.imagePath?.let { cardBitmaps[it] }
+        val troopCol = if (p.faction.isNotBlank()) factionColor(p.faction)
+                       else if (p.isOpp) BattlePalette.TapeOwn else BattlePalette.TapeOpp
+        // Liseré d'état : 1 seul trait par socle, jamais d'anneau multiple.
         val ring = when {
             p.id == selected?.id -> Color(0xFFFFD21A)   // or franc, distinct du parchemin
             p.activated -> Color(0xFF6FBF7A)            // vert activé franc
@@ -1018,7 +1062,29 @@ private fun DrawScope.drawLegionBoard(
             p.isOpp -> Color(0xFFC0392B)                // rouge ennemi franc (≠ bleu couvert)
             else -> Color(0xFF2E6FA8)                   // bleu allié franc (≠ bleu couvert clair)
         }
-        drawCircle(ring, radius = r, center = c, style = Stroke(width = if (p.id == selected?.id) 3f else 2f))
+        centers.forEach { off ->
+            val bc = Offset(c.x + off.x, c.y + off.y)
+            // Jeton bois ÉPAIS : ombre portée + chant sombre décalé.
+            drawCircle(Color(0x99000000), radius = baseR, center = Offset(bc.x + 3f, bc.y + 4f))
+            drawCircle(Color(0xFF3A2A1B), radius = baseR, center = Offset(bc.x + 1f, bc.y + 1.5f))
+            if (aliveCount == 0) {
+                // Unité vaincue : socle FANTÔME gris (pas de bois, pas de silhouette)
+                drawCircle(LegionColors.TextTertiary.copy(alpha = 0.45f), radius = baseR, center = bc)
+            } else if (bmp != null) {
+                val side = maxOf(1f, baseR * 2f)
+                drawImage(bmp,
+                    dstOffset = androidx.compose.ui.unit.IntOffset((bc.x - baseR).toInt(), (bc.y - baseR).toInt()),
+                    dstSize = androidx.compose.ui.unit.IntSize(side.toInt().coerceAtLeast(1), side.toInt().coerceAtLeast(1)))
+            } else {
+                drawCircle(BattlePalette.CoinWood, radius = baseR, center = bc)
+                drawTroopSilhouette(bc.x, bc.y - baseR * 0.08f, baseR * 0.85f, troopCol)
+            }
+            drawCircle(ring, radius = baseR, center = bc,
+                style = Stroke(width = if (p.id == selected?.id) 2.5f else 1.6f))
+            // Liseré de chant clair (bois taillé).
+            drawCircle(BattlePalette.Parchment.copy(alpha = 0.55f), radius = maxOf(1f, baseR - 2.dp.toPx()),
+                center = bc, style = Stroke(width = maxOf(0.6f, 0.8.dp.toPx())))
+        }
         // Feedback collision : halo rouge sur le pion dont le drop est refusé (mur IMPASSABLE).
         if (blockedDrop && p.id == selected?.id) {
             drawCircle(Color(0xFFFF3B30).copy(alpha = 0.30f), radius = r + 8.dp.toPx(), center = c)

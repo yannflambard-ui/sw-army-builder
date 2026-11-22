@@ -41,29 +41,6 @@ object LegionTabletopGeometry {
     fun baseRadiusMm(size: String): Float = baseDiameterMm(size) / 2f
 
     /**
-     * Emprise d'une ESCQADE en mm (diamètre de l'ensemble des socles serrés).
-     *
-     * Une unité Legion n'est PAS un socle unique : [miniCount] figurines sont
-     * positionnées côte à côte, touchantes (au contact, rulebook:766). Pour
-     * 1 figurine l'emprise = 1 diamètre ; pour N, on aligne les socles en 2
-     * rangées compactes. Le RAYON d'emprise sert à la collision et au rendu.
-     *
-     * Géométrie : N socles de diamètre D serrés en grille quasi-carrée
-     * (colonnes = ceil(sqrt(N))) -> largeur = cols*D, hauteur = rows*D.
-     * Le rayon circulaire englobant = hypot(largeur, hauteur)/2.
-     */
-    fun squadFootprintRadiusMm(size: String, miniCount: Int): Float {
-        val d = baseDiameterMm(size)
-        val n = miniCount.coerceAtLeast(1)
-        if (n == 1) return d / 2f // 1 figurine = rayon d'un socle unique, pas sa diagonale
-        val cols = kotlin.math.ceil(kotlin.math.sqrt(n.toDouble())).toInt().coerceAtLeast(1)
-        val rows = kotlin.math.ceil(n.toDouble() / cols).toInt().coerceAtLeast(1)
-        val w = cols * d
-        val h = rows * d
-        return hypot(w / 2f, h / 2f)
-    }
-
-    /**
      * Socle PTIT vs CRANTÉ — règle officielle (rulebook:298-303) :
      * « Troopers, Clone Troopers, Droid Troopers, and Wookiee Troopers are on
      * small bases. Everything else is on notched bases of various sizes. »

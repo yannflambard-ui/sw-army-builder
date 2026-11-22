@@ -69,6 +69,32 @@ class LegionBattleMatCaptureTest {
         }
     }
 
+    /**
+     * Gros plan sur 4 escouades de 6 figurines à PV décroissants (6/4/2/0) :
+     * doit montrer 6, 4, 2 socles puis un socle fantôme (unité vaincue).
+     */
+    @Test
+    fun escouade_multi_socles_retrait() {
+        val squad = listOf(
+            LegionPawn("s6", "6 figs / 6 PV", -110f, -40f, baseSize = "small", maxWounds = 6, wounds = 6, speed = 2, miniCount = 6),
+            LegionPawn("s4", "6 figs / 4 PV", 0f, -40f, baseSize = "small", maxWounds = 6, wounds = 4, speed = 2, miniCount = 6),
+            LegionPawn("s2", "6 figs / 2 PV", 110f, -40f, baseSize = "small", maxWounds = 6, wounds = 2, speed = 2, miniCount = 6),
+            LegionPawn("s0", "6 figs / 0 PV", 0f, 90f, baseSize = "small", maxWounds = 6, wounds = 0, speed = 2, miniCount = 6, defeated = true),
+        )
+        captureRoboImage("src/test/snapshots/legion-escouade-multi-socles.png") {
+            LegionForgeTheme {
+                LegionTabletopScreen(pawns = squad, round = 1, unitsLeft = 3,
+                    onBack = {}, onOpenPlay = {}, onActivate = {}, onCoverChange = { _, _ -> },
+                    onMove = { _, _, _, _ -> }, onRoundChange = {}, onWoundsChange = { _, _ -> },
+                    battleMat = BattleMats.NONE,
+                    forceScale = 0.7f,
+                    forceRailCollapsed = true,
+                    forceShowMatLogic = false,
+                    initialPan = androidx.compose.ui.geometry.Offset(205f, 445f))
+            }
+        }
+    }
+
     @Test
     fun ficelle_deplacement_speed3() {
         captureRoboImage("src/test/snapshots/legion-ficelle-deplacement.png") {
