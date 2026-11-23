@@ -283,7 +283,15 @@ for rnd in range(1,6):
             if foes_now:
                 nearest=min(foes_now,key=lambda t:((u['xMm']-t['xMm'])**2+(u['yMm']-t['yMm'])**2)**0.5)
                 dd=((u['xMm']-nearest['xMm'])**2+(u['yMm']-nearest['yMm'])**2)**0.5
-                total_mm=max(0.0, min(total_mm, dd-50.8))
+                # Portée de l'arme la plus longue. max=0 = corps à corps : on
+                # avance jusqu'au CONTACT (< 1"), pas jusqu'à 2". Sinon le bot
+                # s'arrête hors de portée et l'unité ne joue jamais (Vader).
+                max_range=max((wp.get('max',0) for wp in u.get('weapons',[])),default=2)
+                if max_range==0:
+                    stop_mm=0.0
+                else:
+                    stop_mm=min(50.8, max_range*25.4-1.0)
+                total_mm=max(0.0, min(total_mm, dd-stop_mm))
             u['yMm'] += (1 if player == 'REBEL' else -1) * total_mm
             log(rnd,player,'move',{'unit':u['name'],'speed':u['spd'],'mm':total_mm,
                 'moves':n_moves,'from':[round(fx,1),round(fy,1)],

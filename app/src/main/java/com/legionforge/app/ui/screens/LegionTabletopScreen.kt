@@ -11,6 +11,8 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -102,6 +104,7 @@ data class LegionPawn(
     val faction: String = "",         // factionId pour la couleur catalogue (factionColor)
     val upgrade: String = "",         // upgrade/commandant entre parenthèses -> "(c)" sur l'étiquette
     val miniCount: Int = 1,           // figurines de l'escouade (legionStats.miniCount) -> emprise
+    val suppressions: Int = 0,        // jetons suppression (rulebook V2 : +1 sur tir à distance avec Hit/Crit brut)
 )
 
 /** Rayon d'emprise du pion en mm : socle seul si 1 figurine, grille compacte si escouade. */
@@ -145,6 +148,9 @@ fun LegionTabletopScreen(
     onMove: (String, Float, Float, Float) -> Unit,
     onRoundChange: (Int) -> Unit,
     onWoundsChange: (String, Int) -> Unit,
+    // Gameplay : boucle attaque refermée + journal de partie.
+    onApplyAttack: (targetId: String, hits: Int, crits: Int, surges: Int) -> Unit = { _, _, _, _ -> },
+    onLog: (String) -> Unit = {},
     initialPan: androidx.compose.ui.geometry.Offset? = null, // test hors-cadre uniquement
     terrainCard: TerrainCard? = null,
     showMissionRail: Boolean = true,
@@ -581,7 +587,10 @@ fun LegionTabletopScreen(
         if (showDice) LegionCompactDiceSheet(
             cover = pawns.firstOrNull { it.id == targetId }?.cover ?: 0,
             targetName = pawns.firstOrNull { it.id == targetId }?.name ?: "",
+            targetId = targetId,
             onClose = { showDice = false },
+            onApply = { tgt, h, c, su -> onApplyAttack(tgt, h, c, su) },
+            onLog = onLog,
         )
 
         // ── Aide mesure ──────────────────────────────────────────────────────
@@ -1238,7 +1247,12 @@ private fun DrawScope.drawLegionBoard(
 /** Feuille de dés compacte (peek), sans clavier ni saisie numérique. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -> Unit) {
+private fun LegionCompactDiceSheet(
+    cover: Int, targetName: String, targetId: String? = null, onClose: () -> Unit,
+    onApply: (targetId: String, hits: Int, crits: Int, surges: Int) -> Unit = { _, _, _, _ -> },
+    onLog: (String) -> Unit = {},
+) {
+    val haptic = LocalHapticFeedback.current
     var mode by remember { mutableStateOf("attack") }
     var red by remember { mutableIntStateOf(2) }
     var black by remember { mutableIntStateOf(0) }
@@ -1264,6 +1278,7 @@ private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -
             }
             Button(
                 onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     // Une liste de faces par COULEUR et par MODE (LegionDiceRules, source FFG).
                     lastRoll = buildList {
                         repeat(red) { add(com.legionforge.app.domain.LegionDiceRules.faces(mode, "red").random()) }
@@ -1278,6 +1293,17 @@ private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -
                 shape = RoundedCornerShape(12.dp),
             ) { Text(stringResource(R.string.tabletop_roll), fontSize = LegionType.Body, fontWeight = FontWeight.Bold) }
             if (lastRoll.isNotEmpty()) {
+                // Gameplay : dés animés (pastille couleur + glyphe), ordre R/N/B unifié.
+                DiceTray(lastRoll.mapIndexed { i, f ->
+                    val c = if (f == "Hit" || f == "Crit" || f == "Surge" || f == "Vide") {
+                        when {
+                            red > 0 && i < red -> "R"
+                            black > 0 && i in red until red + black -> "N"
+                            else -> "B"
+                        }
+                    } else "B"
+                    c to f
+                })
                 Text(stringResource(R.string.tabletop_results, lastRoll.joinToString(" · ")), color = LegionColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
                 val successes = if (mode == "attack")
                     com.legionforge.app.domain.LegionDiceRules.hitsAfterCover(lastRoll, cover, coverRoll)
@@ -1289,6 +1315,22 @@ private fun LegionCompactDiceSheet(cover: Int, targetName: String, onClose: () -
                         stringResource(R.string.tabletop_cover_pool, stringResource(if (cover >= 2) R.string.tabletop_cover_heavy else R.string.tabletop_cover_light), coverRoll.joinToString(" ")),
                         color = LegionColors.Warning, style = MaterialTheme.typography.labelSmall,
                     )
+                    // Bouton Appliquer : ferme la boucle attaque -> dégâts -> état.
+                    val crits = lastRoll.count { it == "Crit" }
+                    val surges = lastRoll.count { it == "Surge" }
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onApply(targetId ?: targetName, successes, crits, surges)
+                            onLog("JET attaque → ${targetName.ifBlank { "cible" }} : " +
+                                lastRoll.joinToString(" ") + " · couvert $cover → $successes succès" +
+                                (if (crits > 0) " / $crits crit" else "") +
+                                (if (surges > 0) " / $surges surge" else ""))
+                            onClose()
+                        },
+                        Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(12.dp),
+                    ) { Text("Appliquer $successes dégâts", fontWeight = FontWeight.Bold) }
                 }
             }
         }

@@ -13,6 +13,11 @@ import com.legionforge.app.data.model.ArmadaSlot
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -221,6 +226,20 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                 val boardDao = com.legionforge.app.data.local.LegionForgeDatabase.getInstance(legionCtx).gameSessionDao()
                 var legionState by remember(lid) { mutableStateOf(legionPawns) }
                 var legionRound by remember(lid) { mutableIntStateOf(1) }
+                // Journal du plateau : alimenté par les jets/attaques des tabletops.
+                var boardLog by remember(lid) { mutableStateOf<List<String>>(emptyList()) }
+                fun logBoard(msg: String) { boardLog = boardLog + "[R$legionRound] $msg" }
+                // UndoStack : annule une mutation destructrice (blessure, couvert, activation).
+                val undoStack = remember(lid) { com.legionforge.app.ui.screens.UndoStack<List<com.legionforge.app.ui.screens.LegionPawn>>(10) }
+                var undoTick by remember(lid) { mutableIntStateOf(0) }
+                fun pushUndo(owner: String = "me") { undoStack.push(owner, legionState); undoTick++ }
+                fun doUndo() {
+                    undoStack.undo("me")?.let { prev ->
+                        legionState = prev
+                        logBoard("Annulation de la dernière action")
+                        undoTick++
+                    }
+                }
                 var terrainCard by remember(lid) { mutableStateOf<com.legionforge.app.ui.screens.TerrainCard?>(null) }
                 var showTerrainPicker by remember(lid) { mutableStateOf(false) }
                 // Tapis PAR DÉFAUT : Tatooine (nom visible en haut, changeable).
@@ -318,6 +337,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     onCoverChange = { id, c -> legionState = legionState.map { if (it.id == id) it.copy(cover = c.coerceIn(0, 2)) else it } },
                     onRoundChange = { legionRound = it },
                     onWoundsChange = { id, w ->
+                        pushUndo()
                         legionState = legionState.map { p ->
                             if (p.id == id) {
                                 val (nw, dead) = com.legionforge.app.domain.LegionTabletopGeometry.applyWounds(p.wounds, p.maxWounds, w)
@@ -325,6 +345,22 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                             } else p
                         }
                     },
+                    // Gameplay : le jet de dés applique directement les dégâts à la cible.
+                    onApplyAttack = { target, hits, _, _ ->
+                        if (target.isNotBlank() && hits > 0) {
+                            pushUndo()
+                            legionState = legionState.map { p ->
+                                if (p.id == target) {
+                                    // applyWounds attend la valeur ABSOLUE (coerce 0..max).
+                                    val (nw, dead) = com.legionforge.app.domain.LegionTabletopGeometry.applyWounds(p.wounds, p.maxWounds, p.wounds + hits)
+                                    // Règle V2 : +1 suppression sur attaque à distance avec Hit/Crit brut.
+                                    p.copy(wounds = nw, defeated = dead, suppressions = p.suppressions + 1)
+                                } else p
+                            }
+                            logBoard("Attaque : $hits dégâts appliqués à $target")
+                        }
+                    },
+                    onLog = { logBoard(it) },
                     terrainCard = terrainCard,
                     onPickTerrain = { showTerrainPicker = true },
                     battleMat = battleMat,
@@ -344,6 +380,31 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                     missionBitmaps = battleBitmaps,
                     onPickMissionCard = { slot -> missionSlot = slot },
                 )
+                // Bouton ↶ : annule la dernière mutation (undoTick force la recomposition).
+                androidx.compose.foundation.layout.Box(
+                    Modifier
+                        .align(androidx.compose.ui.Alignment.TopEnd)
+                        .padding(top = 4.dp, end = 4.dp)
+                ) {
+                    undoTick
+                    androidx.compose.material3.Button(
+                        onClick = { doUndo() },
+                        enabled = undoStack.canUndo,
+                        modifier = Modifier.height(40.dp),
+                    ) { Text("↶", fontSize = 18.sp) }
+                }
+                // Journal du plateau : 3 dernières lignes, visible pendant la partie.
+                if (boardLog.isNotEmpty()) {
+                    androidx.compose.foundation.layout.Column(
+                        Modifier
+                            .align(androidx.compose.ui.Alignment.BottomStart)
+                            .padding(start = 8.dp, bottom = 8.dp)
+                    ) {
+                        boardLog.takeLast(3).forEach { line ->
+                            Text(line, color = androidx.compose.ui.graphics.Color(0xFFCBD5E1), fontSize = 11.sp, maxLines = 1)
+                        }
+                    }
+                }
                 if (showTerrainPicker) {
                     com.legionforge.app.ui.screens.TerrainPickerSheet(
                         current = terrainCard,
@@ -412,6 +473,7 @@ fun LegionForgeNavHost(navController: NavHostController = rememberNavController(
                         val detailState = base.copy(
                             wounds = shownWounds, cover = pawn.cover,
                             defeated = shownDead, activated = pawn.activated,
+                            suppressions = if (pawn.suppressions > 0) pawn.suppressions else base.suppressions,
                         )
                         val connected = legionSyncVm.mode.collectAsState().value == com.legionforge.app.data.nearby.ShareMode.CONNECTED
                         val readOnlyDetail = connected && isOppDetail

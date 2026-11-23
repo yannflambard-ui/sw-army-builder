@@ -11,9 +11,9 @@ Positions/PV/boucliers/secteurs complets dans le JSONL (cle snapshot).
 [007] R0 EMPIRE   DEPLOY  Black Squadron [-185.0, -287.2] zone NORD
 [008] R0 EMPIRE   DEPLOY  Gamma Squadron [-155.0, -267.2] zone NORD
 [009] R1 SYSTEM   PHASE                {"phase": "COMMAND"} -> début phase commandement
-[010] R1 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "FEU"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[011] R1 REPUBLIC REVEAL_COMMAND_DIAL  {"token": "NAV", "stock": {"NAV": 1}} -> cadran révélé et crédité (1 copie max/type)
-[012] R1 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[010] R1 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["ING", "ESC", "NAV"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[011] R1 REPUBLIC REVEAL_COMMAND_DIAL  {"token": "ING", "stock": {"ING": 1}} -> cadran révélé et crédité (1 copie max/type)
+[012] R1 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ESC"]} -> pile FIFO rechargée à la valeur de commande (RRG)
 [013] R1 EMPIRE   REVEAL_COMMAND_DIAL  {"token": "NAV", "stock": {"NAV": 1}} -> cadran révélé et crédité (1 copie max/type)
 [014] R1 SYSTEM   PHASE                {"phase": "SHIP"} -> début phase vaisseau
 [015] R1 REPUBLIC MANEUVR Venator I-class Star Destroyer v3 [-225.0, 307.2] -> [-225.0, 187.2]
@@ -40,21 +40,21 @@ Positions/PV/boucliers/secteurs complets dans le JSONL (cle snapshot).
 [036] R1 EMPIRE   REPAIR               {"unit": "Arquitens-class Command Cruiser", "engineering": 3, "boucliers_regen": 0, "shiel -> 0 bouclier(s) régénéré(s)
 [037] R1 SYSTEM  SCORE   REPUBLIC {'REPUBLIC': 2, 'EMPIRE': 0}
 [038] R2 SYSTEM   PHASE                {"phase": "COMMAND"} -> début phase commandement
-[039] R2 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "FEU"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[040] R2 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
-[041] R2 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[042] R2 EMPIRE   ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
+[039] R2 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "ESC"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[040] R2 REPUBLIC REVEAL_COMMAND_DIAL  {"token": "NAV", "stock": {"ING": 1, "NAV": 1}} -> cadran révélé et crédité (1 copie max/type)
+[041] R2 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["ESC", "ESC"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[042] R2 EMPIRE   REVEAL_COMMAND_DIAL  {"token": "ESC", "stock": {"NAV": 1, "ESC": 1}} -> cadran révélé et crédité (1 copie max/type)
 [043] R2 SYSTEM   PHASE                {"phase": "SHIP"} -> début phase vaisseau
 [044] R2 REPUBLIC MANEUVR Venator I-class Star Destroyer v3 [-225.0, 187.2] -> [-225.0, 67.2]
 [045] R2 REPUBLIC NO_TARGET_IN_RANGE   {"unit": "Venator I-class Star Destroyer"} -> aucune cible à portée
 [046] R2 REPUBLIC MANEUVR Acclamator I-class Assault Ship v3 [-75.0, 187.2] -> [-75.0, 67.2]
 [047] R2 REPUBLIC NO_TARGET_IN_RANGE   {"unit": "Acclamator I-class Assault Ship"} -> aucune cible à portée
 [048] R2 EMPIRE   MANEUVR Gladiator I-class Star Destroyer v3 [-225.0, -187.2] -> [-225.0, -67.2]
-[049] R2 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 0 acc 2 bouclier 2 COQUE 0
+[049] R2 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 2 acc 1 bouclier 2 COQUE 0
 [050] R2 EMPIRE   ATTACK_SKIP          {"unit": "Gladiator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [051] R2 EMPIRE   MANEUVR Arquitens-class Command Cruiser v3 [-75.0, -187.2] -> [-75.0, -67.2]
-[052] R2 EMPIRE   ATK     Arquitens-class Command Cruiser -> Venator I-class Star Destroyer sect front des [1, 1, 0] crit 0 acc 1 bouclier 0 COQUE 0
-[053] R2 EMPIRE   ATK     Arquitens-class Command Cruiser -> Acclamator I-class Assault Ship sect left des [3, 0, 0] crit 2 acc 0 bouclier 2 COQUE 3
+[052] R2 EMPIRE   ATK     Arquitens-class Command Cruiser -> Acclamator I-class Assault Ship sect left des [3, 0, 0] crit 2 acc 0 bouclier 2 COQUE 3
+[053] R2 EMPIRE   ATTACK_SKIP          {"unit": "Arquitens-class Command Cruiser", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [054] R2 SYSTEM   PHASE                {"phase": "SQUADRON"} -> début phase escadron
 [055] R2 REPUBLIC SQUADRON_MOVE        {"unit": "V-19 Torrent Squadron", "from": [-191.4, 211.2], "to": [-200.5, 135.3], "mm": 76 -> escadron avance
 [056] R2 REPUBLIC SQUADRON_NO_TARGET   {"unit": "V-19 Torrent Squadron"} -> aucune cible à distance 1
@@ -71,23 +71,23 @@ Positions/PV/boucliers/secteurs complets dans le JSONL (cle snapshot).
 [067] R2 EMPIRE   REPAIR               {"unit": "Arquitens-class Command Cruiser", "engineering": 3, "boucliers_regen": 0, "shiel -> 0 bouclier(s) régénéré(s)
 [068] R2 SYSTEM  SCORE   EMPIRE {'REPUBLIC': 2, 'EMPIRE': 2}
 [069] R3 SYSTEM   PHASE                {"phase": "COMMAND"} -> début phase commandement
-[070] R3 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "FEU"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[071] R3 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
-[072] R3 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[073] R3 EMPIRE   ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
+[070] R3 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["FEU", "ESC", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[071] R3 REPUBLIC REVEAL_COMMAND_DIAL  {"token": "FEU", "stock": {"ING": 1, "NAV": 1, "FEU": 1}} -> cadran révélé et crédité (1 copie max/type)
+[072] R3 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["FEU", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[073] R3 EMPIRE   REVEAL_COMMAND_DIAL  {"token": "FEU", "stock": {"NAV": 1, "ESC": 1, "FEU": 1}} -> cadran révélé et crédité (1 copie max/type)
 [074] R3 SYSTEM   PHASE                {"phase": "SHIP"} -> début phase vaisseau
 [075] R3 REPUBLIC MANEUVR Venator I-class Star Destroyer v3 [-225.0, 67.2] -> [-225.0, -7.2]
-[076] R3 REPUBLIC ATK     Venator I-class Star Destroyer -> Gamma Squadron sect left des [1, 1, 2] crit 0 acc 1 bouclier 0 COQUE 1
-[077] R3 REPUBLIC ATK     Venator I-class Star Destroyer -> Arquitens-class Command Cruiser sect front des [3, 0, 3] crit 2 acc 0 bouclier 2 COQUE 3
+[076] R3 REPUBLIC ATK     Venator I-class Star Destroyer -> Gamma Squadron sect left des [1, 1, 2] crit 0 acc 1 bouclier 0 COQUE 2
+[077] R3 REPUBLIC ATTACK_SKIP          {"unit": "Venator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [078] R3 REPUBLIC MANEUVR Acclamator I-class Assault Ship v3 [-75.0, 67.2] -> [-75.0, -7.2]
-[079] R3 REPUBLIC ATK     Acclamator I-class Assault Ship -> Arquitens-class Command Cruiser sect left des [2, 0, 1] crit 0 acc 1 bouclier 1 COQUE 0
+[079] R3 REPUBLIC ATK     Acclamator I-class Assault Ship -> Arquitens-class Command Cruiser sect left des [2, 0, 1] crit 1 acc 0 bouclier 2 COQUE 1
 [080] R3 REPUBLIC ATTACK_SKIP          {"unit": "Acclamator I-class Assault Ship", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [081] R3 EMPIRE   MANEUVR Gladiator I-class Star Destroyer v3 [-225.0, -67.2] -> [-225.0, -67.2]
-[082] R3 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 1 acc 0 bouclier 2 COQUE 0
+[082] R3 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 1 acc 1 bouclier 2 COQUE 0
 [083] R3 EMPIRE   ATTACK_SKIP          {"unit": "Gladiator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [084] R3 EMPIRE   MANEUVR Arquitens-class Command Cruiser v3 [-75.0, -67.2] -> [-75.0, -67.2]
-[085] R3 EMPIRE   ATK     Arquitens-class Command Cruiser -> Venator I-class Star Destroyer sect front des [1, 1, 0] crit 1 acc 1 bouclier 2 COQUE 0
-[086] R3 EMPIRE   ATK     Arquitens-class Command Cruiser -> Acclamator I-class Assault Ship sect left des [3, 0, 0] crit 0 acc 0 bouclier 2 COQUE 0
+[085] R3 EMPIRE   ATK     Arquitens-class Command Cruiser -> Acclamator I-class Assault Ship sect left des [3, 0, 0] crit 0 acc 0 bouclier 2 COQUE 0
+[086] R3 EMPIRE   ATTACK_SKIP          {"unit": "Arquitens-class Command Cruiser", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [087] R3 SYSTEM   PHASE                {"phase": "SQUADRON"} -> début phase escadron
 [088] R3 REPUBLIC SQUADRON_MOVE        {"unit": "V-19 Torrent Squadron", "from": [-200.5, 135.3], "to": [-197.9, 59.1], "mm": 76. -> escadron avance
 [089] R3 REPUBLIC SQUADRON_NO_TARGET   {"unit": "V-19 Torrent Squadron"} -> aucune cible à distance 1
@@ -96,92 +96,92 @@ Positions/PV/boucliers/secteurs complets dans le JSONL (cle snapshot).
 [092] R3 EMPIRE   SQUADRON_MOVE        {"unit": "Black Squadron", "from": [-206.1, -84.5], "to": [-210.7, -65.2], "mm": 19.6} -> escadron avance
 [093] R3 EMPIRE   SQUAD   Black Squadron -> Venator I-class Star Destroyer PV RESTANTS 9 / des [0, 1, 0]
 [094] R3 EMPIRE   SQUADRON_MOVE        {"unit": "Gamma Squadron", "from": [-193.6, -65.6], "to": [-196.6, -59.9], "mm": 6.3} -> escadron avance
-[095] R3 EMPIRE   SQUAD   Gamma Squadron -> Venator I-class Star Destroyer PV RESTANTS 8 / des [1, 0, 0]
+[095] R3 EMPIRE   SQUAD   Gamma Squadron -> Venator I-class Star Destroyer PV RESTANTS 9 / des [1, 0, 0]
 [096] R3 SYSTEM   PHASE                {"phase": "STATUS"} -> début phase statut
-[097] R3 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 4, "shield -> 4 bouclier(s) régénéré(s)
+[097] R3 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 2, "shield -> 2 bouclier(s) régénéré(s)
 [098] R3 REPUBLIC REPAIR               {"unit": "Acclamator I-class Assault Ship", "engineering": 4, "boucliers_regen": 2, "shiel -> 2 bouclier(s) régénéré(s)
 [099] R3 EMPIRE   REPAIR               {"unit": "Gladiator I-class Star Destroyer", "engineering": 3, "boucliers_regen": 0, "shie -> 0 bouclier(s) régénéré(s)
-[100] R3 EMPIRE   REPAIR               {"unit": "Arquitens-class Command Cruiser", "engineering": 3, "boucliers_regen": 3, "shiel -> 3 bouclier(s) régénéré(s)
+[100] R3 EMPIRE   REPAIR               {"unit": "Arquitens-class Command Cruiser", "engineering": 3, "boucliers_regen": 2, "shiel -> 2 bouclier(s) régénéré(s)
 [101] R3 SYSTEM  SCORE   REPUBLIC {'REPUBLIC': 4, 'EMPIRE': 2}
 [102] R4 SYSTEM   PHASE                {"phase": "COMMAND"} -> début phase commandement
-[103] R4 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "FEU"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[104] R4 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
-[105] R4 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[103] R4 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["FEU", "FEU", "ESC"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[104] R4 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "FEU"} -> doublon défaussé immédiatement (1 copie max/type)
+[105] R4 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ESC"]} -> pile FIFO rechargée à la valeur de commande (RRG)
 [106] R4 EMPIRE   ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
 [107] R4 SYSTEM   PHASE                {"phase": "SHIP"} -> début phase vaisseau
 [108] R4 REPUBLIC MANEUVR Venator I-class Star Destroyer v3 [-225.0, -7.2] -> [-225.0, -7.2]
-[109] R4 REPUBLIC ATK     Venator I-class Star Destroyer -> Black Squadron sect left des [1, 1, 2] crit 0 acc 0 bouclier 0 COQUE 1
-[110] R4 REPUBLIC ATTACK_SKIP          {"unit": "Venator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
+[109] R4 REPUBLIC ATK     Venator I-class Star Destroyer -> Arquitens-class Command Cruiser sect front des [3, 0, 3] crit 1 acc 1 bouclier 2 COQUE 2
+[110] R4 REPUBLIC ATK     Venator I-class Star Destroyer -> Black Squadron sect left des [1, 1, 2] crit 0 acc 1 bouclier 0 COQUE 2
 [111] R4 REPUBLIC MANEUVR Acclamator I-class Assault Ship v3 [-75.0, -7.2] -> [-75.0, -7.2]
 [112] R4 REPUBLIC ATK     Acclamator I-class Assault Ship -> Arquitens-class Command Cruiser sect left des [2, 0, 1] crit 0 acc 0 bouclier 2 COQUE 1
 [113] R4 REPUBLIC ATTACK_SKIP          {"unit": "Acclamator I-class Assault Ship", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [114] R4 EMPIRE   MANEUVR Gladiator I-class Star Destroyer v3 [-225.0, -67.2] -> [-225.0, -67.2]
-[115] R4 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 1 acc 1 bouclier 3 COQUE 0
+[115] R4 EMPIRE   ATK     Gladiator I-class Star Destroyer -> V-19 Torrent Squadron sect left des [0, 0, 4] crit 0 acc 0 bouclier 0 COQUE 3
 [116] R4 EMPIRE   ATTACK_SKIP          {"unit": "Gladiator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [117] R4 EMPIRE   MANEUVR Arquitens-class Command Cruiser v3 [-75.0, -67.2] -> [-75.0, -67.2]
-[118] R4 EMPIRE   ATK     Arquitens-class Command Cruiser -> Venator I-class Star Destroyer sect front des [1, 1, 0] crit 0 acc 0 bouclier 1 COQUE 0
-[119] R4 EMPIRE   ATK     Arquitens-class Command Cruiser -> Acclamator I-class Assault Ship sect left des [3, 0, 0] crit 1 acc 0 bouclier 2 COQUE 1
+[118] R4 EMPIRE   ATK     Arquitens-class Command Cruiser -> Venator I-class Star Destroyer sect front des [1, 1, 0] crit 0 acc 1 bouclier 1 COQUE 0
+[119] R4 EMPIRE   ATK     Arquitens-class Command Cruiser -> Acclamator I-class Assault Ship sect left des [3, 0, 0] crit 1 acc 0 bouclier 2 COQUE 2
 [120] R4 SYSTEM   PHASE                {"phase": "SQUADRON"} -> début phase escadron
 [121] R4 REPUBLIC SQUADRON_MOVE        {"unit": "V-19 Torrent Squadron", "from": [-197.9, 59.1], "to": [-197.2, 0.1], "mm": 59.0} -> escadron avance
-[122] R4 REPUBLIC SQUAD   V-19 Torrent Squadron -> Gamma Squadron PV RESTANTS 2 / des [0, 2, 1]
+[122] R4 REPUBLIC SQUAD   V-19 Torrent Squadron -> Gladiator I-class Star Destroyer PV RESTANTS 4 / des [0, 0, 1]
 [123] R4 REPUBLIC SQUADRON_MOVE        {"unit": "ARC-170 Squadron", "from": [-175.8, 156.0], "to": [-180.7, 105.3], "mm": 50.8} -> escadron avance
 [124] R4 REPUBLIC SQUADRON_NO_TARGET   {"unit": "ARC-170 Squadron"} -> aucune cible à distance 1
 [125] R4 EMPIRE   SQUADRON_MOVE        {"unit": "Black Squadron", "from": [-210.7, -65.2], "to": [-210.7, -65.2], "mm": 0.0} -> escadron avance
-[126] R4 EMPIRE   SQUAD   Black Squadron -> Venator I-class Star Destroyer PV RESTANTS 7 / des [0, 1, 0]
+[126] R4 EMPIRE   SQUAD   Black Squadron -> V-19 Torrent Squadron PV RESTANTS 0 / des [0, 3, 0]
 [127] R4 EMPIRE   SQUADRON_MOVE        {"unit": "Gamma Squadron", "from": [-196.6, -59.9], "to": [-196.6, -59.9], "mm": 0.0} -> escadron avance
-[128] R4 EMPIRE   SQUAD   Gamma Squadron -> Venator I-class Star Destroyer PV RESTANTS 7 / des [1, 0, 0]
+[128] R4 EMPIRE   SQUAD   Gamma Squadron -> Venator I-class Star Destroyer PV RESTANTS 8 / des [1, 0, 0]
 [129] R4 SYSTEM   PHASE                {"phase": "STATUS"} -> début phase statut
-[130] R4 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 4, "shield -> 4 bouclier(s) régénéré(s)
+[130] R4 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 1, "shield -> 1 bouclier(s) régénéré(s)
 [131] R4 REPUBLIC REPAIR               {"unit": "Acclamator I-class Assault Ship", "engineering": 4, "boucliers_regen": 2, "shiel -> 2 bouclier(s) régénéré(s)
 [132] R4 EMPIRE   REPAIR               {"unit": "Gladiator I-class Star Destroyer", "engineering": 3, "boucliers_regen": 0, "shie -> 0 bouclier(s) régénéré(s)
-[133] R4 EMPIRE   REPAIR               {"unit": "Arquitens-class Command Cruiser", "engineering": 3, "boucliers_regen": 2, "shiel -> 2 bouclier(s) régénéré(s)
+[133] R4 EMPIRE   REPAIR               {"unit": "Arquitens-class Command Cruiser", "engineering": 3, "boucliers_regen": 3, "shiel -> 3 bouclier(s) régénéré(s)
 [134] R4 SYSTEM  SCORE   EMPIRE {'REPUBLIC': 4, 'EMPIRE': 4}
 [135] R5 SYSTEM   PHASE                {"phase": "COMMAND"} -> début phase commandement
-[136] R5 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "FEU"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[137] R5 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
-[138] R5 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
-[139] R5 EMPIRE   ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
+[136] R5 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["ING", "ESC", "NAV"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[137] R5 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "ING"} -> doublon défaussé immédiatement (1 copie max/type)
+[138] R5 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["ING", "ESC"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[139] R5 EMPIRE   REVEAL_COMMAND_DIAL  {"token": "ING", "stock": {"NAV": 1, "ESC": 1, "FEU": 1, "ING": 1}} -> cadran révélé et crédité (1 copie max/type)
 [140] R5 SYSTEM   PHASE                {"phase": "SHIP"} -> début phase vaisseau
 [141] R5 REPUBLIC MANEUVR Venator I-class Star Destroyer v3 [-225.0, -7.2] -> [-225.0, -7.2]
-[142] R5 REPUBLIC ATK     Venator I-class Star Destroyer -> Black Squadron sect left des [1, 1, 2] crit 0 acc 1 bouclier 0 COQUE 2
+[142] R5 REPUBLIC ATK     Venator I-class Star Destroyer -> Black Squadron sect left des [1, 1, 2] crit 0 acc 2 bouclier 0 COQUE 1
 [143] R5 REPUBLIC ATTACK_SKIP          {"unit": "Venator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [144] R5 REPUBLIC MANEUVR Acclamator I-class Assault Ship v3 [-75.0, -7.2] -> [-75.0, -7.2]
-[145] R5 REPUBLIC ATK     Acclamator I-class Assault Ship -> Arquitens-class Command Cruiser sect left des [2, 0, 1] crit 1 acc 0 bouclier 2 COQUE 2
+[145] R5 REPUBLIC ATK     Acclamator I-class Assault Ship -> Arquitens-class Command Cruiser sect left des [2, 0, 1] crit 1 acc 0 bouclier 1 COQUE 4
 [146] R5 REPUBLIC NO_TARGET_IN_RANGE   {"unit": "Acclamator I-class Assault Ship"} -> aucune cible à portée
 [147] R5 EMPIRE   MANEUVR Gladiator I-class Star Destroyer v3 [-225.0, -67.2] -> [-225.0, -67.2]
-[148] R5 EMPIRE   ATK     Gladiator I-class Star Destroyer -> V-19 Torrent Squadron sect left des [0, 0, 4] crit 0 acc 0 bouclier 0 COQUE 6
+[148] R5 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 0 acc 0 bouclier 3 COQUE 0
 [149] R5 EMPIRE   ATTACK_SKIP          {"unit": "Gladiator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [150] R5 SYSTEM   PHASE                {"phase": "SQUADRON"} -> début phase escadron
 [151] R5 REPUBLIC SQUADRON_MOVE        {"unit": "ARC-170 Squadron", "from": [-180.7, 105.3], "to": [-185.6, 54.6], "mm": 50.8} -> escadron avance
 [152] R5 REPUBLIC SQUADRON_NO_TARGET   {"unit": "ARC-170 Squadron"} -> aucune cible à distance 1
 [153] R5 EMPIRE   SQUADRON_MOVE        {"unit": "Gamma Squadron", "from": [-196.6, -59.9], "to": [-196.6, -59.9], "mm": 0.0} -> escadron avance
-[154] R5 EMPIRE   SQUAD   Gamma Squadron -> Venator I-class Star Destroyer PV RESTANTS 7 / des [1, 0, 0]
+[154] R5 EMPIRE   SQUAD   Gamma Squadron -> Venator I-class Star Destroyer PV RESTANTS 8 / des [1, 0, 0]
 [155] R5 SYSTEM   PHASE                {"phase": "STATUS"} -> début phase statut
-[156] R5 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 0, "shield -> 0 bouclier(s) régénéré(s)
+[156] R5 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 3, "shield -> 3 bouclier(s) régénéré(s)
 [157] R5 REPUBLIC REPAIR               {"unit": "Acclamator I-class Assault Ship", "engineering": 4, "boucliers_regen": 0, "shiel -> 0 bouclier(s) régénéré(s)
 [158] R5 EMPIRE   REPAIR               {"unit": "Gladiator I-class Star Destroyer", "engineering": 3, "boucliers_regen": 0, "shie -> 0 bouclier(s) régénéré(s)
 [159] R5 SYSTEM  SCORE   REPUBLIC {'REPUBLIC': 6, 'EMPIRE': 4}
 [160] R6 SYSTEM   PHASE                {"phase": "COMMAND"} -> début phase commandement
-[161] R6 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ING", "FEU"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[161] R6 REPUBLIC RECHARGE_COMMAND_STACK {"capacite": 3, "pile": ["NAV", "ESC", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
 [162] R6 REPUBLIC ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
-[163] R6 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "ING"]} -> pile FIFO rechargée à la valeur de commande (RRG)
+[163] R6 EMPIRE   RECHARGE_COMMAND_STACK {"capacite": 2, "pile": ["NAV", "NAV"]} -> pile FIFO rechargée à la valeur de commande (RRG)
 [164] R6 EMPIRE   ORDER_TOKEN_DISCARDED {"token": "NAV"} -> doublon défaussé immédiatement (1 copie max/type)
 [165] R6 SYSTEM   PHASE                {"phase": "SHIP"} -> début phase vaisseau
 [166] R6 REPUBLIC MANEUVR Venator I-class Star Destroyer v3 [-225.0, -7.2] -> [-225.0, -7.2]
-[167] R6 REPUBLIC ATK     Venator I-class Star Destroyer -> Gladiator I-class Star Destroyer sect left des [1, 1, 2] crit 1 acc 1 bouclier 2 COQUE 1
+[167] R6 REPUBLIC ATK     Venator I-class Star Destroyer -> Gamma Squadron sect left des [1, 1, 2] crit 0 acc 1 bouclier 0 COQUE 3
 [168] R6 REPUBLIC ATTACK_SKIP          {"unit": "Venator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
-[169] R6 REPUBLIC MANEUVR Acclamator I-class Assault Ship v3 [-75.0, -7.2] -> [-75.0, -79.7]
+[169] R6 REPUBLIC MANEUVR Acclamator I-class Assault Ship v3 [-75.0, -7.2] -> [-75.0, -108.8]
 [170] R6 REPUBLIC NO_TARGET_IN_RANGE   {"unit": "Acclamator I-class Assault Ship"} -> aucune cible à portée
 [171] R6 EMPIRE   MANEUVR Gladiator I-class Star Destroyer v3 [-225.0, -67.2] -> [-225.0, -67.2]
-[172] R6 EMPIRE   ATK     Gladiator I-class Star Destroyer -> ARC-170 Squadron sect left des [0, 0, 4] crit 0 acc 0 bouclier 0 COQUE 3
+[172] R6 EMPIRE   ATK     Gladiator I-class Star Destroyer -> Venator I-class Star Destroyer sect left des [0, 0, 4] crit 3 acc 0 bouclier 3 COQUE 1
 [173] R6 EMPIRE   ATTACK_SKIP          {"unit": "Gladiator I-class Star Destroyer", "sector": "left"} -> secteur déjà utilisé (2 tirs = 2 zones distinctes)
 [174] R6 SYSTEM   PHASE                {"phase": "SQUADRON"} -> début phase escadron
-[175] R6 REPUBLIC SQUADRON_MOVE        {"unit": "ARC-170 Squadron", "from": [-185.6, 54.6], "to": [-190.4, 3.9], "mm": 50.8} -> escadron avance
-[176] R6 REPUBLIC SQUAD   ARC-170 Squadron -> Gamma Squadron PV RESTANTS 0 / des [0, 2, 1]
+[175] R6 REPUBLIC SQUADRON_MOVE        {"unit": "ARC-170 Squadron", "from": [-185.6, 54.6], "to": [-201.2, 4.8], "mm": 50.8} -> escadron avance
+[176] R6 REPUBLIC SQUAD   ARC-170 Squadron -> Gladiator I-class Star Destroyer PV RESTANTS 2 / des [0, 2, 0]
 [177] R6 SYSTEM   PHASE                {"phase": "STATUS"} -> début phase statut
-[178] R6 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 0, "shield -> 0 bouclier(s) régénéré(s)
+[178] R6 REPUBLIC REPAIR               {"unit": "Venator I-class Star Destroyer", "engineering": 4, "boucliers_regen": 3, "shield -> 3 bouclier(s) régénéré(s)
 [179] R6 REPUBLIC REPAIR               {"unit": "Acclamator I-class Assault Ship", "engineering": 4, "boucliers_regen": 0, "shiel -> 0 bouclier(s) régénéré(s)
-[180] R6 EMPIRE   REPAIR               {"unit": "Gladiator I-class Star Destroyer", "engineering": 3, "boucliers_regen": 2, "shie -> 2 bouclier(s) régénéré(s)
+[180] R6 EMPIRE   REPAIR               {"unit": "Gladiator I-class Star Destroyer", "engineering": 3, "boucliers_regen": 0, "shie -> 0 bouclier(s) régénéré(s)
 [181] R6 SYSTEM  SCORE   EMPIRE {'REPUBLIC': 6, 'EMPIRE': 6}
 [182] R6 SYSTEM   SCORE_FLEET_DESTROYED {"side": "REPUBLIC", "flotte_détruite": "EMPIRE", "points": 78, "scores": {"REPUBLIC": 84, -> 78 points de la flotte EMPIRE détruite crédités à REPUBLIC
 [183] R6 SYSTEM   SCORE_FLEET_DESTROYED {"side": "EMPIRE", "flotte_détruite": "REPUBLIC", "points": 12, "scores": {"REPUBLIC": 84, -> 12 points de la flotte REPUBLIC détruite crédités à EMPIRE

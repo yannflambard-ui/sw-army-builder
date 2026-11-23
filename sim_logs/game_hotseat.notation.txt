@@ -12,123 +12,121 @@ Chaque coup est rejouable via le JSONL (cle snapshot).
 010. EMPIRE donne 2 ordres
 011. create_order_pool SYSTEM {'rebel': 1, 'empire': 2, 'total': 3} -> Order Pool créé après les deux Issue Orders
 012. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
-013. REBEL Luke Skywalker (Hero of the Rebellion) avance 49.2mm
+013. REBEL Luke Skywalker (Hero of the Rebellion) avance 50.2mm
 014. REBEL Luke Skywalker (Hero of the Rebellion) tire sur Darth Vader (Dark Lord of the Sith) -> 0 degats
 015. apply_wounds SYSTEM {'unit': 'Darth Vader (Dark Lord of the Sith)', 'damage': 0} -> 8/8 PV restants
-016. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
-017. no_target_in_range EMPIRE {'unit': 'Darth Vader (Dark Lord of the Sith)', 'ennemis': 3} -> aucune cible légale à portée
-018. REBEL Rebel Troopers avance 89.2mm
-019. REBEL Rebel Troopers tire sur Stormtroopers -> 1 degats
-020. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 1} -> 3/4 PV restants
-021. SUPPRIME Stormtroopers
-022. rally EMPIRE {'unit': 'Stormtroopers', 'dice': 1, 'faces': ['blank']} -> 0 suppression(s) retirée(s)
-023. EMPIRE Stormtroopers avance 0.0mm
-024. REBEL AT-RT avance 49.2mm
-025. REBEL AT-RT tire sur Scout Troopers -> 1 degats
-026. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 1} -> 3/4 PV restants
-027. EMPIRE Scout Troopers avance 0.0mm
-028. EMPIRE Scout Troopers tire sur AT-RT -> 1 degats
-029. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 1} -> 5/6 PV restants
-030. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 2, 'EMPIRE': 0}} -> VP marqués
-031. REBEL joue 3 pips
-032. EMPIRE joue 1 pips
-033. priority SYSTEM {'pips_rebel': 3, 'pips_empire': 1} -> EMPIRE
-034. EMPIRE donne 1 ordres
-035. REBEL donne 3 ordres
-036. create_order_pool SYSTEM {'rebel': 3, 'empire': 1, 'total': 4} -> Order Pool créé après les deux Issue Orders
-037. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
-038. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
-039. no_target_in_range EMPIRE {'unit': 'Darth Vader (Dark Lord of the Sith)', 'ennemis': 3} -> aucune cible légale à portée
-040. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
-041. REBEL Luke Skywalker (Hero of the Rebellion) tire sur Darth Vader (Dark Lord of the Sith) -> 0 degats
-042. apply_wounds SYSTEM {'unit': 'Darth Vader (Dark Lord of the Sith)', 'damage': 0} -> 8/8 PV restants
-043. EMPIRE Stormtroopers avance 0.0mm
-044. EMPIRE Stormtroopers tire sur Rebel Troopers -> 1 degats
-045. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 1} -> 3/4 PV restants
-046. SUPPRIME Rebel Troopers
-047. rally REBEL {'unit': 'Rebel Troopers', 'dice': 1, 'faces': ['blank']} -> 0 suppression(s) retirée(s)
-048. REBEL Rebel Troopers avance 0.0mm
-049. EMPIRE Scout Troopers avance 0.0mm
-050. EMPIRE Scout Troopers tire sur AT-RT -> 0 degats
-051. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 0} -> 5/6 PV restants
-052. REBEL AT-RT avance 0.0mm
-053. REBEL AT-RT tire sur Scout Troopers -> 0 degats
-054. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 0} -> 3/4 PV restants
-055. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 4, 'EMPIRE': 0}} -> VP marqués
-056. REBEL joue 3 pips
-057. EMPIRE joue 1 pips
-058. priority SYSTEM {'pips_rebel': 3, 'pips_empire': 1} -> EMPIRE
-059. EMPIRE donne 1 ordres
-060. REBEL donne 3 ordres
-061. create_order_pool SYSTEM {'rebel': 3, 'empire': 1, 'total': 4} -> Order Pool créé après les deux Issue Orders
-062. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
-063. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
-064. no_target_in_range EMPIRE {'unit': 'Darth Vader (Dark Lord of the Sith)', 'ennemis': 3} -> aucune cible légale à portée
-065. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
-066. deflect REBEL {'unit': 'Darth Vader (Dark Lord of the Sith)', 'surges': 1} -> 1 blessure(s) à l attaquant
-067. REBEL Luke Skywalker (Hero of the Rebellion) tire sur Darth Vader (Dark Lord of the Sith) -> 0 degats
-068. apply_wounds SYSTEM {'unit': 'Darth Vader (Dark Lord of the Sith)', 'damage': 0} -> 8/8 PV restants
-069. EMPIRE Stormtroopers avance 0.0mm
-070. EMPIRE Stormtroopers tire sur Rebel Troopers -> 1 degats
-071. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 1} -> 2/4 PV restants
-072. SUPPRIME Rebel Troopers
-073. rally REBEL {'unit': 'Rebel Troopers', 'dice': 1, 'faces': ['blank']} -> 0 suppression(s) retirée(s)
-074. REBEL Rebel Troopers avance 0.0mm
-075. EMPIRE Scout Troopers avance 0.0mm
-076. EMPIRE Scout Troopers tire sur AT-RT -> 0 degats
-077. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 0} -> 5/6 PV restants
-078. REBEL AT-RT avance 0.0mm
-079. REBEL AT-RT tire sur Scout Troopers -> 1 degats
-080. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 1} -> 2/4 PV restants
-081. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 6, 'EMPIRE': 0}} -> VP marqués
-082. REBEL joue 1 pips
-083. EMPIRE joue 1 pips
-084. priority_tiebreak SYSTEM {'die': 'red_defense_d6', 'face': 'block', 'block': True, 'roller': 'REBEL', 'rule': 'moins d ordres lance (1415-1417)'} -> REBEL
-085. priority SYSTEM {'pips_rebel': 1, 'pips_empire': 1} -> REBEL
-086. REBEL donne 1 ordres
-087. EMPIRE donne 1 ordres
-088. create_order_pool SYSTEM {'rebel': 1, 'empire': 1, 'total': 2} -> Order Pool créé après les deux Issue Orders
+016. EMPIRE Darth Vader (Dark Lord of the Sith) avance 49.8mm
+017. EMPIRE Darth Vader (Dark Lord of the Sith) tire sur Luke Skywalker (Hero of the Rebellion) -> 0 degats
+018. apply_wounds SYSTEM {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'damage': 0} -> 6/6 PV restants
+019. REBEL Rebel Troopers avance 88.2mm
+020. REBEL Rebel Troopers tire sur Stormtroopers -> 1 degats
+021. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 1} -> 3/4 PV restants
+022. SUPPRIME Stormtroopers
+023. rally EMPIRE {'unit': 'Stormtroopers', 'dice': 1, 'faces': ['blank']} -> 0 suppression(s) retirée(s)
+024. EMPIRE Stormtroopers avance 1.0mm
+025. REBEL AT-RT avance 49.2mm
+026. REBEL AT-RT tire sur Scout Troopers -> 0 degats
+027. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 0} -> 4/4 PV restants
+028. EMPIRE Scout Troopers avance 1.0mm
+029. EMPIRE Scout Troopers tire sur AT-RT -> 0 degats
+030. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 0} -> 6/6 PV restants
+031. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 2, 'EMPIRE': 0}} -> VP marqués
+032. REBEL joue 3 pips
+033. EMPIRE joue 3 pips
+034. priority_tiebreak SYSTEM {'die': 'red_defense_d6', 'face': 'blank', 'block': False, 'roller': 'REBEL', 'rule': 'moins d ordres lance (1415-1417)'} -> EMPIRE
+035. priority SYSTEM {'pips_rebel': 3, 'pips_empire': 3} -> EMPIRE
+036. EMPIRE donne 3 ordres
+037. REBEL donne 3 ordres
+038. create_order_pool SYSTEM {'rebel': 3, 'empire': 3, 'total': 6} -> Order Pool créé après les deux Issue Orders
+039. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
+040. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
+041. EMPIRE Darth Vader (Dark Lord of the Sith) tire sur Luke Skywalker (Hero of the Rebellion) -> 1 degats
+042. apply_wounds SYSTEM {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'damage': 1} -> 5/6 PV restants
+043. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
+044. no_target_in_range REBEL {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'ennemis': 3} -> aucune cible légale à portée
+045. EMPIRE Stormtroopers avance 0.0mm
+046. EMPIRE Stormtroopers tire sur Rebel Troopers -> 1 degats
+047. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 1} -> 3/4 PV restants
+048. SUPPRIME Rebel Troopers
+049. rally REBEL {'unit': 'Rebel Troopers', 'dice': 1, 'faces': ['blank']} -> 0 suppression(s) retirée(s)
+050. REBEL Rebel Troopers avance 0.0mm
+051. EMPIRE Scout Troopers avance 0.0mm
+052. EMPIRE Scout Troopers tire sur AT-RT -> 0 degats
+053. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 0} -> 6/6 PV restants
+054. REBEL AT-RT avance 0.0mm
+055. REBEL AT-RT tire sur Scout Troopers -> 1 degats
+056. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 1} -> 3/4 PV restants
+057. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 4, 'EMPIRE': 0}} -> VP marqués
+058. REBEL joue 3 pips
+059. EMPIRE joue 2 pips
+060. priority SYSTEM {'pips_rebel': 3, 'pips_empire': 2} -> EMPIRE
+061. EMPIRE donne 2 ordres
+062. REBEL donne 3 ordres
+063. create_order_pool SYSTEM {'rebel': 3, 'empire': 2, 'total': 5} -> Order Pool créé après les deux Issue Orders
+064. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
+065. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
+066. EMPIRE Darth Vader (Dark Lord of the Sith) tire sur Luke Skywalker (Hero of the Rebellion) -> 0 degats
+067. apply_wounds SYSTEM {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'damage': 0} -> 5/6 PV restants
+068. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
+069. no_target_in_range REBEL {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'ennemis': 3} -> aucune cible légale à portée
+070. EMPIRE Stormtroopers avance 0.0mm
+071. EMPIRE Stormtroopers tire sur Rebel Troopers -> 0 degats
+072. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 0} -> 3/4 PV restants
+073. REBEL Rebel Troopers avance 0.0mm
+074. REBEL Rebel Troopers tire sur Stormtroopers -> 0 degats
+075. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 0} -> 3/4 PV restants
+076. EMPIRE Scout Troopers avance 0.0mm
+077. EMPIRE Scout Troopers tire sur AT-RT -> 0 degats
+078. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 0} -> 6/6 PV restants
+079. REBEL AT-RT avance 0.0mm
+080. REBEL AT-RT tire sur Scout Troopers -> 2 degats
+081. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 2} -> 1/4 PV restants
+082. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 6, 'EMPIRE': 0}} -> VP marqués
+083. REBEL joue 3 pips
+084. EMPIRE joue 1 pips
+085. priority SYSTEM {'pips_rebel': 3, 'pips_empire': 1} -> EMPIRE
+086. EMPIRE donne 1 ordres
+087. REBEL donne 3 ordres
+088. create_order_pool SYSTEM {'rebel': 3, 'empire': 1, 'total': 4} -> Order Pool créé après les deux Issue Orders
 089. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
-090. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
-091. deflect REBEL {'unit': 'Darth Vader (Dark Lord of the Sith)', 'surges': 1} -> 1 blessure(s) à l attaquant
-092. REBEL Luke Skywalker (Hero of the Rebellion) tire sur Darth Vader (Dark Lord of the Sith) -> 1 degats
-093. apply_wounds SYSTEM {'unit': 'Darth Vader (Dark Lord of the Sith)', 'damage': 1} -> 7/8 PV restants
-094. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
-095. no_target_in_range EMPIRE {'unit': 'Darth Vader (Dark Lord of the Sith)', 'ennemis': 3} -> aucune cible légale à portée
-096. REBEL Rebel Troopers avance 0.0mm
-097. REBEL Rebel Troopers tire sur Stormtroopers -> 0 degats
-098. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 0} -> 3/4 PV restants
-099. EMPIRE Stormtroopers avance 0.0mm
-100. EMPIRE Stormtroopers tire sur Rebel Troopers -> 0 degats
-101. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 0} -> 2/4 PV restants
-102. REBEL AT-RT avance 0.0mm
-103. REBEL AT-RT tire sur Scout Troopers -> 0 degats
-104. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 0} -> 2/4 PV restants
-105. EMPIRE Scout Troopers avance 0.0mm
-106. EMPIRE Scout Troopers tire sur AT-RT -> 0 degats
-107. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 0} -> 5/6 PV restants
-108. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 8, 'EMPIRE': 0}} -> VP marqués
-109. REBEL joue 1 pips
-110. EMPIRE joue 2 pips
-111. priority SYSTEM {'pips_rebel': 1, 'pips_empire': 2} -> REBEL
-112. REBEL donne 1 ordres
-113. EMPIRE donne 2 ordres
-114. create_order_pool SYSTEM {'rebel': 1, 'empire': 2, 'total': 3} -> Order Pool créé après les deux Issue Orders
-115. create_pass_pool SYSTEM {'diff_non_vaincues': 0, 'bénéficiaire': None} -> 
-116. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
-117. REBEL Luke Skywalker (Hero of the Rebellion) tire sur Darth Vader (Dark Lord of the Sith) -> 2 degats
-118. apply_wounds SYSTEM {'unit': 'Darth Vader (Dark Lord of the Sith)', 'damage': 2} -> 5/8 PV restants
-119. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
-120. no_target_in_range EMPIRE {'unit': 'Darth Vader (Dark Lord of the Sith)', 'ennemis': 3} -> aucune cible légale à portée
-121. REBEL Rebel Troopers avance 0.0mm
-122. REBEL Rebel Troopers tire sur Stormtroopers -> 1 degats
-123. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 1} -> 2/4 PV restants
-124. SUPPRIME Stormtroopers
-125. rally EMPIRE {'unit': 'Stormtroopers', 'dice': 1, 'faces': ['blank']} -> 0 suppression(s) retirée(s)
-126. EMPIRE Stormtroopers avance 0.0mm
-127. REBEL AT-RT avance 0.0mm
-128. REBEL AT-RT tire sur Scout Troopers -> 2 degats
-129. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 2} -> 0/4 PV restants
-130. activation_skipped SYSTEM {'unit': 'Scout Troopers', 'raison': 'vaincue avant activation'} -> unité vaincue : activation annulée
-131. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 10, 'EMPIRE': 0}} -> VP marqués
-132. RESULTAT REBEL {'scores': {'REBEL': 10, 'EMPIRE': 0}, 'rule': 'plus de VP en fin de Round 5 (1332-1345)'}
+090. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
+091. EMPIRE Darth Vader (Dark Lord of the Sith) tire sur Luke Skywalker (Hero of the Rebellion) -> 1 degats
+092. apply_wounds SYSTEM {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'damage': 1} -> 4/6 PV restants
+093. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
+094. no_target_in_range REBEL {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'ennemis': 3} -> aucune cible légale à portée
+095. EMPIRE Stormtroopers avance 0.0mm
+096. EMPIRE Stormtroopers tire sur Rebel Troopers -> 0 degats
+097. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 0} -> 3/4 PV restants
+098. REBEL Rebel Troopers avance 0.0mm
+099. REBEL Rebel Troopers tire sur Stormtroopers -> 0 degats
+100. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 0} -> 3/4 PV restants
+101. EMPIRE Scout Troopers avance 0.0mm
+102. EMPIRE Scout Troopers tire sur AT-RT -> 1 degats
+103. apply_wounds SYSTEM {'unit': 'AT-RT', 'damage': 1} -> 5/6 PV restants
+104. REBEL AT-RT avance 0.0mm
+105. REBEL AT-RT tire sur Scout Troopers -> 1 degats
+106. apply_wounds SYSTEM {'unit': 'Scout Troopers', 'damage': 1} -> 0/4 PV restants
+107. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 8, 'EMPIRE': 0}} -> VP marqués
+108. REBEL joue 3 pips
+109. EMPIRE joue 2 pips
+110. priority SYSTEM {'pips_rebel': 3, 'pips_empire': 2} -> EMPIRE
+111. EMPIRE donne 2 ordres
+112. REBEL donne 3 ordres
+113. create_order_pool SYSTEM {'rebel': 3, 'empire': 2, 'total': 5} -> Order Pool créé après les deux Issue Orders
+114. create_pass_pool EMPIRE {'diff_non_vaincues': 1, 'bénéficiaire': 'EMPIRE'} -> 
+115. EMPIRE Darth Vader (Dark Lord of the Sith) avance 0.0mm
+116. EMPIRE Darth Vader (Dark Lord of the Sith) tire sur Luke Skywalker (Hero of the Rebellion) -> 1 degats
+117. apply_wounds SYSTEM {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'damage': 1} -> 3/6 PV restants
+118. REBEL Luke Skywalker (Hero of the Rebellion) avance 0.0mm
+119. no_target_in_range REBEL {'unit': 'Luke Skywalker (Hero of the Rebellion)', 'ennemis': 2} -> aucune cible légale à portée
+120. EMPIRE Stormtroopers avance 0.0mm
+121. EMPIRE Stormtroopers tire sur Rebel Troopers -> 0 degats
+122. apply_wounds SYSTEM {'unit': 'Rebel Troopers', 'damage': 0} -> 3/4 PV restants
+123. REBEL Rebel Troopers avance 0.0mm
+124. REBEL Rebel Troopers tire sur Stormtroopers -> 1 degats
+125. apply_wounds SYSTEM {'unit': 'Stormtroopers', 'damage': 1} -> 2/4 PV restants
+126. SUPPRIME Stormtroopers
+127. REBEL AT-RT avance 88.0mm
+128. no_target_in_range REBEL {'unit': 'AT-RT', 'ennemis': 2} -> aucune cible légale à portée
+129. score_objective SYSTEM {'holder': 'REBEL', 'scores': {'REBEL': 10, 'EMPIRE': 0}} -> VP marqués
+130. RESULTAT REBEL {'scores': {'REBEL': 10, 'EMPIRE': 0}, 'rule': 'plus de VP en fin de Round 5 (1332-1345)'}

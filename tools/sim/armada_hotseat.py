@@ -203,7 +203,9 @@ try:
         # Le catalogue n'expose pas les vraies icônes de cadran : on cycle sur
         # NAV/ING/FEU/ESC (approximation SIGNALÉE, pas une icône fictive 'I').
         icons=['NAV','ING','FEU','ESC']
-        command_stacks[side]=[icons[i%len(icons)] for i in range(cap)]
+        # Choix aléatoire (audit gameplay : le cycle fixe ne révélait que NAV,
+        # les cadrans ING/FEU n'étaient jamais joués).
+        command_stacks[side]=[random.choice(icons) for _ in range(cap)]
         log(rnd,side,'recharge_command_stack',
             {'capacite':cap,'pile':list(command_stacks[side])},
             'pile FIFO rechargée à la valeur de commande (RRG)')

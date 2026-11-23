@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -275,6 +277,16 @@ fun TabletopScreen(
     var targetId by remember { mutableStateOf<String?>(null) }
     var speedIdx by remember { mutableStateOf(forceSpeedIdx) }
     var attackResult by remember { mutableStateOf<String?>(null) }
+    // Gameplay : dégâts en attente d'application (boucle attaque -> état refermée).
+    data class PendingDamage(val targetId: String, val hits: Int, val crits: Int, val accuracy: Int, val defenderSector: String = "front")
+    var pendingDamage by remember { mutableStateOf<PendingDamage?>(null) }
+    var pendingArmadaRoll by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
+    var damageByShip by remember(sessionId) { mutableStateOf<Map<String, Int>>(emptyMap()) }
+    // Boucliers RESTANTS par vaisseau et secteur (déplétés à chaque tir, RRG).
+    var shieldsByShip by remember(sessionId) { mutableStateOf<Map<String, Map<String, Int>>>(emptyMap()) }
+    val haptic = LocalHapticFeedback.current
+    var boardLog by remember(sessionId) { mutableStateOf<List<String>>(emptyList()) }
+    fun logBoard(msg: String) { boardLog = (boardLog + "[$phase] $msg").takeLast(6) }
     var manualAntiDice by remember { mutableStateOf(ArmadaDiceBag()) }
     var blackDice by remember { mutableStateOf(0) }
     var blueDice by remember { mutableStateOf(0) }
@@ -768,6 +780,26 @@ fun TabletopScreen(
                             drawCardImage(p.imagePath?.let { bitmaps[it] }, center, wp, hp)
                         }
                     }
+                    // Gameplay : coque entamée visible sous le pion + badge ÉPAVE.
+                    val dmg = damageByShip[p.id] ?: 0
+                    if (dmg > 0) {
+                        val sunk = if (p.isSquadron) {
+                            dmg >= p.figureCount.coerceAtLeast(1)
+                        } else p.hull > 0 && dmg >= p.hull
+                        if (sunk) {
+                            // ÉPAVE : voile sombre + croix rouge sur le socle.
+                            drawCircle(Color(0x66202020), radius = maxOf(wp, hp) * 0.46f, center = center)
+                            val r = maxOf(wp, hp) * 0.26f
+                            drawLine(Color(0xFFFF6B6B), Offset(center.x - r, center.y - r), Offset(center.x + r, center.y + r), strokeWidth = 4f)
+                            drawLine(Color(0xFFFF6B6B), Offset(center.x + r, center.y - r), Offset(center.x - r, center.y + r), strokeWidth = 4f)
+                        } else {
+                            val ratio = (1f - dmg.toFloat() / p.hull.coerceAtLeast(1)).coerceIn(0f, 1f)
+                            drawRect(Color(0xFF3B221F), topLeft = Offset(center.x - wp / 2, center.y + hp / 2 + 3f),
+                                size = androidx.compose.ui.geometry.Size(wp, 5f))
+                            drawRect(Color(0xFF4ADE80), topLeft = Offset(center.x - wp / 2, center.y + hp / 2 + 3f),
+                                size = androidx.compose.ui.geometry.Size(wp * ratio, 5f))
+                        }
+                    }
                 }
             }
         }
@@ -786,6 +818,67 @@ fun TabletopScreen(
             }
         }
         attackResult?.let { Text(it, color = LegionColors.Accent, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp)) }
+        // Gameplay : dés Armada animés dans la MÊME convention que Legion.
+        pendingArmadaRoll?.let { rolls ->
+            DiceTray(rolls.map { (color, face) ->
+                color.uppercase() to when (face.lowercase()) {
+                    "hit" -> "hit"; "crit" -> "crit"; "acc" -> "acc"; else -> "blank"
+                }
+            })
+        }
+        // Bouton Appliquer : consomme le bouclier du secteur puis la coque, et journalise.
+        pendingDamage?.let { pd ->
+            Button(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    val tgt = positions.firstOrNull { it.id == pd.targetId }
+                    if (tgt != null && !tgt.isSquadron) {
+                        // RRG : 1 dégât = -1 bouclier dans la zone de coque DÉFENDUE,
+                        // puis le reste entame la coque. Les boucliers ne se rechargent
+                        // qu'en phase de statut (non modélisée ici).
+                        val initial = when (pd.defenderSector) {
+                            "front" -> tgt.shieldFront; "rear" -> tgt.shieldRear
+                            "left" -> tgt.shieldPort; else -> tgt.shieldStarboard
+                        }
+                        val perShip = shieldsByShip[pd.targetId] ?: mapOf(
+                            "front" to tgt.shieldFront, "rear" to tgt.shieldRear,
+                            "left" to tgt.shieldPort, "right" to tgt.shieldStarboard)
+                        val current = perShip[pd.defenderSector] ?: initial
+                        val absorbed = minOf(pd.hits, current)
+                        val toHull = pd.hits - absorbed
+                        shieldsByShip = shieldsByShip + (pd.targetId to (perShip + (pd.defenderSector to (current - absorbed))))
+                        val prev = damageByShip[pd.targetId] ?: 0
+                        damageByShip = damageByShip + (pd.targetId to (prev + toHull))
+                        val sunk = prev + toHull >= tgt.hull && tgt.hull > 0
+                        logBoard("TIR → ${tgt.name} sect ${pd.defenderSector} : ${pd.hits} dégâts " +
+                            "(bouclier $absorbed, coque $toHull)" +
+                            (if (pd.crits > 0) " · ${pd.crits} crit" else "") +
+                            (if (sunk) " · ÉPAVE" else ""))
+                        attackResult = "Appliqué à ${tgt.name} : coque ${(tgt.hull - prev - toHull).coerceAtLeast(0)}/${tgt.hull}" +
+                            (if (sunk) " · ÉPAVE" else "")
+                    } else if (tgt != null) {
+                        // Escadron : pas de bouclier, 1 dégât = 1 figurine abattue.
+                        val prev = damageByShip[pd.targetId] ?: 0
+                        val figures = if (tgt.figureCount > 1) tgt.figureCount else 3
+                        damageByShip = damageByShip + (pd.targetId to (prev + pd.hits))
+                        val wiped = prev + pd.hits >= figures
+                        logBoard("TIR → ${tgt.name} : ${pd.hits} dégâts escadron" + (if (wiped) " · DÉTRUIT" else ""))
+                        attackResult = "Appliqué : ${pd.hits} dégâts escadron" + (if (wiped) " · DÉTRUIT" else "")
+                    }
+                    pendingDamage = null
+                },
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(48.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+            ) { Text("Appliquer ${pd.hits} dégâts", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+        }
+        // Bandeau journal : 3 dernières lignes, visible pendant la partie (audit gameplay).
+        if (boardLog.isNotEmpty()) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)) {
+                boardLog.takeLast(3).forEach { line ->
+                    Text(line, color = LegionColors.TextSecondary, fontSize = 10.sp, maxLines = 1)
+                }
+            }
+        }
         // Boutons d'action du vaisseau sélectionné : Déplacer et Tirer, toujours visibles.
         // Tirer est grisé (pas supprimé) quand le vaisseau a déjà tiré 2 fois cette manche.
         if (selPawn != null && !selPawn.isSquadron) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -897,6 +990,7 @@ fun TabletopScreen(
                                     val allowed = tabletopEligibleDice(att, tgt, tabletopBaseDistance(att, tgt), selectedSector, if (antiShipMissing) manualAntiDice else null)
                                     if (blackDice + blueDice + redDice == 0 || blackDice > allowed.black || blueDice > allowed.blue || redDice > allowed.red) return@Button
                                     val rolls = ArmadaDiceRoller.roll(blackDice, blueDice, redDice)
+                                    pendingArmadaRoll = armadaRollsToTray(rolls)
                                     currentAttackRolls.value = rolls
                                     // TabletopPawn : isSquadron distingue escadron ( fighter ) de vaisseau.
                                     val attackerIsShip = !att.isSquadron
@@ -906,7 +1000,8 @@ fun TabletopScreen(
                                     val critCount = if (attackerIsShip && targetIsShip) rolls.count { it.face.crit } else 0
                                     val critPart = if (critCount > 0) " · critiques $critCount" else ""
                                     val acc = ArmadaDiceRoller.accuracies(rolls)
-                                    attackResult = "Dégâts $hits$critPart · précisions $acc — appliquez défense, effets et dégâts manuellement"
+pendingDamage = PendingDamage(tgt.id, hits, critCount, acc, defenseSectorFor(tgt, att))
+                                    attackResult = "Dégâts $hits$critPart · précisions $acc — bouton Appliquer ci-dessous"
                                     com.legionforge.app.ui.viewmodel.ArmadaShotCounter.record(att.id)
                                     // RRG : 2 tirs max par vaisseau, depuis 2 zones de coque distinctes.
                                     usedSectors = usedSectors + (att.id to (usedSectors[att.id].orEmpty() + listOfNotNull(chosenAttackSector)))
@@ -939,6 +1034,7 @@ fun TabletopScreen(
                             ArmadaDieColor.RED -> ArmadaDiceRoller.roll(0, 0, 1)
                         }
                         val rolls = currentAttackRolls.value + addition
+                        pendingArmadaRoll = armadaRollsToTray(rolls)
                         currentAttackRolls.value = rolls
                         val attackerIsShip = selPawn?.isSquadron == false
                         val targetIsShip = targetPawn?.isSquadron == false
@@ -946,7 +1042,8 @@ fun TabletopScreen(
                         val critCount = if (attackerIsShip && targetIsShip) rolls.count { it.face.crit } else 0
                         val critPart = if (critCount > 0) " · critiques $critCount" else ""
                         val acc = ArmadaDiceRoller.accuracies(rolls)
-                        attackResult = "Dégâts $hits$critPart · précisions $acc — appliquez défense, effets et dégâts manuellement"
+pendingDamage = PendingDamage(targetPawn!!.id, hits, critCount, acc, defenseSectorFor(targetPawn!!, selPawn!!))
+                        attackResult = "Dégâts $hits$critPart · précisions $acc — bouton Appliquer ci-dessous"
                     }) { Text("+$label", fontSize = 12.sp) }
                 }
             }
@@ -1471,6 +1568,18 @@ private fun sectorOf(att: TabletopPawn, tgt: TabletopPawn): String {
     }
 }
 
+
+/** Mapping dés Armada -> DiceTray (convention unifiée N/B/R). */
+private fun armadaRollsToTray(rolls: List<ArmadaRoll>): List<Pair<String, String>> = rolls.map { r ->
+    val c = when (r.color) { ArmadaDieColor.BLACK -> "N"; ArmadaDieColor.BLUE -> "B"; ArmadaDieColor.RED -> "R" }
+    val f = when (r.face) {
+        ArmadaFace.CRIT, ArmadaFace.HIT_CRIT -> "crit"
+        ArmadaFace.ACCURACY -> "acc"
+        ArmadaFace.BLANK -> "blank"
+        else -> "hit"
+    }
+    c to f
+}
 /** Secteur indicatif depuis le centre, aux mêmes angles que le dessin. */
 private fun attackSectorFor(att: TabletopPawn, angle: Float): String {
     val relative = (((angle - att.headingDeg + 180f) % 360f + 360f) % 360f) - 180f
@@ -1479,6 +1588,24 @@ private fun attackSectorFor(att: TabletopPawn, angle: Float): String {
     return when {
         kotlin.math.abs(relative) <= frontHalf -> "front"
         kotlin.math.abs(relative) >= 180f - rearHalf -> "rear"
+        relative > 0f -> "right"
+        else -> "left"
+    }
+}
+
+/**
+ * Secteur DÉFENDU de la cible : d'où vient le tir, relativement à son propre cap.
+ * RRG : 1 dégât = -1 bouclier dans la zone de coque défendue, puis carte de dégât.
+ */
+internal fun defenseSectorFor(defender: TabletopPawn, attacker: TabletopPawn): String {
+    val angle = Math.toDegrees(
+        kotlin.math.atan2(attacker.yMm - defender.yMm, attacker.xMm - defender.xMm).toDouble()
+    ).toFloat() + 90f // cap 0 = proue vers le haut (-y) : atan2(dy,dx)+90 aligne North->front
+    val relative = (((angle - defender.headingDeg + 180f) % 360f + 360f) % 360f) - 180f
+    val half = 45f // zones de coque = 4 quarts (front/right/left/rear)
+    return when {
+        kotlin.math.abs(relative) <= half -> "front"
+        kotlin.math.abs(relative) >= 180f - half -> "rear"
         relative > 0f -> "right"
         else -> "left"
     }
